@@ -1,16 +1,16 @@
-.PHONY: generate turnkey_client sourcery clean
+.PHONY: generate turnkey_client_types turnkey_client clean format
 
-generate: turnkey_client sourcery clean
+generate: turnkey_client_types turnkey_client clean format
 
-turnkey_client:
+turnkey_client_types:
 	swift run swift-openapi-generator generate \
 	--output-directory Sources/TurnkeySDK/Generated \
 	--config Sources/TurnkeySDK/openapi-generator-config.yaml Sources/TurnkeySDK/openapi.yaml
 
-sourcery:
+turnkey_client:
 	sourcery --sources Sources/TurnkeySDK/Generated \
-	--output Sources/TurnkeySDK/TurnkeyClient.swift \
-	--templates $(TEMPLATES) \
+	--output Sources/TurnkeySDK/TurnkeyClient.generated.swift \
+	--templates templates/TurnkeyClient.stencil \
 	$(if $(WATCH),--watch,)
 
 clean:
@@ -20,5 +20,7 @@ test:
 	make clean
 	swift test
 
-TEMPLATES ?= TurnkeyClient.stencil
+format:
+	swift-format Tests Sources -i -r
+
 WATCH ?=

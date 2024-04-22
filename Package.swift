@@ -4,8 +4,8 @@
 import PackageDescription
 
 let package = Package(
-    name: "TurnkeySDK",
-    platforms: [.macOS(.v13), .iOS(.v13), .tvOS(.v13), .watchOS(.v6), .visionOS(.v1)],
+    name: "swift-sdk",
+    platforms: [.macOS(.v13), .iOS(.v16), .tvOS(.v16), .watchOS(.v9), .visionOS(.v1)],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
@@ -17,6 +17,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-openapi-runtime", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-openapi-urlsession", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-http-types", from: "1.0.2"),
+        .package(url: "https://github.com/thebarndog/swift-dotenv.git", from: "2.0.0")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -40,6 +41,6 @@ let package = Package(
         ),
         .testTarget(
             name: "TurnkeySDKTests",
-            dependencies: ["TurnkeySDK"]),
+            dependencies: ["TurnkeySDK", .product(name: "SwiftDotenv", package: "swift-dotenv")]),
     ]
 )
