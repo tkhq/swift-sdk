@@ -1,12 +1,12 @@
 // Generated using Sourcery 2.2.2 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
+import AuthStampMiddleware
 import AuthenticationServices
 import CryptoKit
 import Foundation
 import OpenAPIRuntime
 import OpenAPIURLSession
-import AuthStampMiddleware
 import Shared
 
 public struct TurnkeyClient {

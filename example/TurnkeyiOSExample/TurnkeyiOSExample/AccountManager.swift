@@ -106,7 +106,7 @@ class AccountManager: NSObject, ASAuthorizationControllerPresentationContextProv
     func signUp(email: String, anchor: ASPresentationAnchor) {
         self.authenticationAnchor = anchor
         
-        passkeyRegistration = PasskeyRegistration(rpId: domain)
+        passkeyRegistration = PasskeyManager(rpId: domain)
         passkeyRegistration?.registerPasskey(email: email, presentationAnchor: anchor)
         
         isPerformingModalRequest = true
