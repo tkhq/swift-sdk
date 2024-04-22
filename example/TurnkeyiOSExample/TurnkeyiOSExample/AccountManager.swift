@@ -8,7 +8,7 @@
 import AuthenticationServices
 import Foundation
 import os
-import TurnkeySDK
+import Shared
 
 extension NSNotification.Name {
     static let UserSignedIn = Notification.Name("UserSignedInNotification")
@@ -22,7 +22,7 @@ class AccountManager: NSObject, ASAuthorizationControllerPresentationContextProv
     let domain = "turnkey-nextjs-demo-weld.vercel.app"
     var authenticationAnchor: ASPresentationAnchor?
     var isPerformingModalRequest = false
-    private var passkeyRegistration: PasskeyRegistration?
+    private var passkeyRegistration: PasskeyManager?
     
     override init() {
             super.init()

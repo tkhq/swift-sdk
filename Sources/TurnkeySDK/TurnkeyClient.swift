@@ -1,32 +1,40 @@
 // Generated using Sourcery 2.2.2 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
-import AuthStampMiddleware
+import AuthenticationServices
 import CryptoKit
 import Foundation
 import OpenAPIRuntime
 import OpenAPIURLSession
+import AuthStampMiddleware
+import Shared
 
 public struct TurnkeyClient {
   private let underlyingClient: any APIProtocol
-  private let apiPrivateKey: String
-  private let apiPublicKey: String
 
-  internal init(underlyingClient: any APIProtocol, apiPrivateKey: String, apiPublicKey: String) {
+  internal init(underlyingClient: any APIProtocol) {
     self.underlyingClient = underlyingClient
-    self.apiPrivateKey = apiPrivateKey
-    self.apiPublicKey = apiPublicKey
   }
 
   public init(apiPrivateKey: String, apiPublicKey: String) {
+    let stamper = Stamper(apiPublicKey: apiPublicKey, apiPrivateKey: apiPrivateKey)
     self.init(
       underlyingClient: Client(
         serverURL: URL(string: "https://api.turnkey.com")!,
         transport: URLSessionTransport(),
-        middlewares: [AuthStampMiddleware(apiPrivateKey: apiPrivateKey, apiPublicKey: apiPublicKey)]
-      ),
-      apiPrivateKey: apiPrivateKey,
-      apiPublicKey: apiPublicKey
+        middlewares: [AuthStampMiddleware(stamper: stamper)]
+      )
+    )
+  }
+
+  public init(rpId: String, presentationAnchor: ASPresentationAnchor) {
+    let stamper = Stamper(rpId: rpId, presentationAnchor: presentationAnchor)
+    self.init(
+      underlyingClient: Client(
+        serverURL: URL(string: "https://api.turnkey.com")!,
+        transport: URLSessionTransport(),
+        middlewares: [AuthStampMiddleware(stamper: stamper)]
+      )
     )
   }
 

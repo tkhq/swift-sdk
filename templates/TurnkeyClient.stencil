@@ -1,34 +1,40 @@
 {% import "macros.stencil" %}
+import AuthenticationServices
+import CryptoKit
+import Foundation
 import OpenAPIRuntime
 import OpenAPIURLSession
-import Foundation
-import CryptoKit
 import AuthStampMiddleware
+import Shared
 
 public struct TurnkeyClient {
-    private let underlyingClient: any APIProtocol
-    private let apiPrivateKey: String
-    private let apiPublicKey: String
-    
+  private let underlyingClient: any APIProtocol
 
-    internal init(underlyingClient: any APIProtocol, apiPrivateKey: String, apiPublicKey: String) {
-        self.underlyingClient = underlyingClient
-        self.apiPrivateKey = apiPrivateKey
-        self.apiPublicKey = apiPublicKey
-    }
-    
+  internal init(underlyingClient: any APIProtocol) {
+    self.underlyingClient = underlyingClient
+  }
 
-    public init(apiPrivateKey: String, apiPublicKey: String) {
-        self.init(
-            underlyingClient: Client(
-                serverURL: URL(string: "https://api.turnkey.com")!,
-                transport: URLSessionTransport(),
-                middlewares: [AuthStampMiddleware(apiPrivateKey: apiPrivateKey, apiPublicKey: apiPublicKey)]
-            ),
-            apiPrivateKey: apiPrivateKey,
-            apiPublicKey: apiPublicKey
-        )
-    }
+  public init(apiPrivateKey: String, apiPublicKey: String) {
+    let stamper = Stamper(apiPublicKey: apiPublicKey, apiPrivateKey: apiPrivateKey)
+    self.init(
+      underlyingClient: Client(
+        serverURL: URL(string: "https://api.turnkey.com")!,
+        transport: URLSessionTransport(),
+        middlewares: [AuthStampMiddleware(stamper: stamper)]
+      )
+    )
+  }
+
+  public init(rpId: String, presentationAnchor: ASPresentationAnchor) {
+    let stamper = Stamper(rpId: rpId, presentationAnchor: presentationAnchor)
+    self.init(
+      underlyingClient: Client(
+        serverURL: URL(string: "https://api.turnkey.com")!,
+        transport: URLSessionTransport(),
+        middlewares: [AuthStampMiddleware(stamper: stamper)]
+      )
+    )
+  }
 
 {% for class in types.implementing.APIProtocol %}
     {% for method in class.instanceMethods %}

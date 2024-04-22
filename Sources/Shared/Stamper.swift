@@ -2,84 +2,83 @@ import AuthenticationServices
 import CryptoKit
 import Foundation
 
-  extension Data {
-    init?(hexString: String) {
-      let len = hexString.count / 2
-      var data = Data(capacity: len)
-      for i in 0..<len {
-        let j = hexString.index(hexString.startIndex, offsetBy: i * 2)
-        let k = hexString.index(j, offsetBy: 2)
-        let bytes = hexString[j..<k]
-        if var num = UInt8(bytes, radix: 16) {
-          data.append(&num, count: 1)
-        } else {
-          return nil
-        }
+extension Data {
+  init?(hexString: String) {
+    let len = hexString.count / 2
+    var data = Data(capacity: len)
+    for i in 0..<len {
+      let j = hexString.index(hexString.startIndex, offsetBy: i * 2)
+      let k = hexString.index(j, offsetBy: 2)
+      let bytes = hexString[j..<k]
+      if var num = UInt8(bytes, radix: 16) {
+        data.append(&num, count: 1)
+      } else {
+        return nil
       }
-      self = data
     }
-    func toHexString() -> String {
-      return map { String(format: "%02x", $0) }.joined()
-    }
-    func base64URLEncodedString() -> String {
-      let base64String = self.base64EncodedString()
-      let base64URLString =
-        base64String
-        .replacingOccurrences(of: "+", with: "-")
-        .replacingOccurrences(of: "/", with: "_")
-        .trimmingCharacters(in: CharacterSet(charactersIn: "="))
-      return base64URLString
-    }
+    self = data
+  }
+  func toHexString() -> String {
+    return map { String(format: "%02x", $0) }.joined()
+  }
+  func base64URLEncodedString() -> String {
+    let base64String = self.base64EncodedString()
+    let base64URLString =
+      base64String
+      .replacingOccurrences(of: "+", with: "-")
+      .replacingOccurrences(of: "/", with: "_")
+      .trimmingCharacters(in: CharacterSet(charactersIn: "="))
+    return base64URLString
+  }
+}
+
+extension String {
+  var hex: some Sequence<UInt8> {
+    self[...].hex
   }
 
-  extension String {
-    var hex: some Sequence<UInt8> {
-      self[...].hex
-    }
-
-    var hexData: Data {
-      return Data(hex)
-    }
+  var hexData: Data {
+    return Data(hex)
   }
+}
 
-  extension Substring {
-    var hex: some Sequence<UInt8> {
-      sequence(
-        state: self,
-        next: { remainder in
-          guard remainder.count > 2 else { return nil }
-          let nextTwo = remainder.prefix(2)
-          remainder.removeFirst(2)
-          return UInt8(nextTwo, radix: 16)
-        })
-    }
+extension Substring {
+  var hex: some Sequence<UInt8> {
+    sequence(
+      state: self,
+      next: { remainder in
+        guard remainder.count > 2 else { return nil }
+        let nextTwo = remainder.prefix(2)
+        remainder.removeFirst(2)
+        return UInt8(nextTwo, radix: 16)
+      })
   }
+}
 
-class Stamper {
+public class Stamper {
   private let apiPublicKey: String?
   private let apiPrivateKey: String?
   private let presentationAnchor: ASPresentationAnchor?
   private let passkeyManager: PasskeyManager?
 
   // Define a typealias for the completion handler
-  typealias StampCompletion = (Result<(stampHeaderName: String, stampHeaderValue: String), Error>)
-    -> Void
+  public typealias StampCompletion = (Result<String, Error>) -> Void
 
-  init(apiPublicKey: String, apiPrivateKey: String) {
+  public init(apiPublicKey: String, apiPrivateKey: String) {
     self.apiPublicKey = apiPublicKey
     self.apiPrivateKey = apiPrivateKey
     self.presentationAnchor = nil
     self.passkeyManager = nil
   }
 
-  init(rpId: String, presentationAnchor: ASPresentationAnchor) {
+  public init(rpId: String, presentationAnchor: ASPresentationAnchor) {
     self.apiPublicKey = nil
     self.apiPrivateKey = nil
     self.presentationAnchor = presentationAnchor
     self.passkeyManager = PasskeyManager(rpId: rpId)
   }
 
-  func stamp(payload: String, completion: @escaping StampCompletion) {
+  public func stamp(payload: String, completion: @escaping StampCompletion) {
     if let apiPublicKey = apiPublicKey, let apiPrivateKey = apiPrivateKey {
       Task {
         do {
@@ -125,7 +124,7 @@ class Stamper {
         do {
           let jsonData = try JSONSerialization.data(withJSONObject: assertionInfo, options: [])
           let jsonString = String(data: jsonData, encoding: .utf8) ?? ""
-          completion(.success(("X-Stamp", jsonString)))
+          completion(.success(jsonString))
         } catch {
           completion(.failure(error))
         }
@@ -138,13 +137,13 @@ class Stamper {
       }
     }
 
-      // Perform the assertion
+    // Perform the assertion
     if let manager = self.passkeyManager {
-        manager.assertPasskey(
-            challenge: Data(payload.utf8), presentationAnchor: presentationAnchor)
+      manager.assertPasskey(
+        challenge: Data(payload.utf8), presentationAnchor: presentationAnchor)
     } else {
-        // Handle the case where passkeyManager is nil
-        completion(.failure(StampError.passkeyManagerNotSet))
+      // Handle the case where passkeyManager is nil
+      completion(.failure(StampError.passkeyManagerNotSet))
     }
   }
 
@@ -168,9 +167,9 @@ class Stamper {
     case invalidPayload
   }
 
-  private func apiKeyStamp(payload: String, apiPublicKey: String, apiPrivateKey: String) async throws -> (
-    stampHeaderName: String, stampHeaderValue: String
-  ) {
+  private func apiKeyStamp(payload: String, apiPublicKey: String, apiPrivateKey: String)
+    async throws -> String
+  {
     // Convert the hex string to Data
     guard let privateKeyData = Data(hexString: apiPrivateKey) else {
       throw APIKeyStampError.invalidHexCharacter
@@ -187,9 +186,9 @@ class Stamper {
       throw APIKeyStampError.mismatchedPublicKey(expected: apiPublicKey, actual: derivedPublicKey)
     }
 
-        // Convert payload string to Data
+    // Convert payload string to Data
     guard let payloadData = payload.data(using: .utf8) else {
-        throw PasskeyStampError.invalidPayload
+      throw PasskeyStampError.invalidPayload
     }
 
     let dataHash = SHA256.hash(data: payloadData)
@@ -205,7 +204,7 @@ class Stamper {
     let jsonData = try JSONSerialization.data(withJSONObject: stamp, options: [])
     let base64Stamp = jsonData.base64URLEncodedString()
 
-    return ("X-Stamp", base64Stamp)
+    return base64Stamp
   }
 
   enum DecodingError: Error {

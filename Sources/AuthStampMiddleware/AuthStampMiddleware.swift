@@ -2,14 +2,13 @@ import CryptoKit
 import Foundation
 import HTTPTypes
 import OpenAPIRuntime
+import Shared
 
 package struct AuthStampMiddleware {
-  private let apiPrivateKey: String
-  private let apiPublicKey: String
+  private let stamper: Stamper
 
-  package init(apiPrivateKey: String, apiPublicKey: String) {
-    self.apiPrivateKey = apiPrivateKey
-    self.apiPublicKey = apiPublicKey
+  package init(stamper: Stamper) {
+    self.stamper = stamper
   }
 }
 
@@ -32,69 +31,25 @@ extension AuthStampMiddleware: ClientMiddleware {
     if let body = body {
       bodyString = try await String(collecting: body, upTo: maxBytes)
 
-      let stamp = try await turnkeyStamp(data: bodyString)
+      // Convert the callback-based stamp method to async/await using a continuation
+      let stampResult = try await withCheckedThrowingContinuation { continuation in
+        stamper.stamp(payload: bodyString) { result in
+          switch result {
+          case .success(let stamp):
+            continuation.resume(returning: stamp)
+          case .failure(let error):
+            continuation.resume(throwing: error)
+          }
+        }
+      }
 
-      let stampHeader = HTTPField(name: HTTPField.Name("X-Stamp")!, value: stamp)
+      // Create and append the stamp header
+      let stampHeader = HTTPField(name: HTTPField.Name("X-Stamp")!, value: stampResult)
       request.headerFields.append(stampHeader)
     }
     // generateCurlCommand(
     //   request: request, body: bodyString, baseURL: baseURL, operationID: operationID)
     return try await next(request, body, baseURL)
-  }
-
-  func turnkeyStamp(data: String) async throws -> String {
-    // Convert the hex string to Data
-    guard let privateKeyData = Data(hexString: apiPrivateKey) else {
-      fatalError("Invalid hex string")
-    }
-
-    guard let privateKey = try? P256.Signing.PrivateKey(rawRepresentation: privateKeyData) else {
-      throw TurnkeyError.invalidPrivateKey
-    }
-
-    let derivedPublicKey = privateKey.publicKey.compressedRepresentation.toHexString()
-    _ = privateKey.publicKey.rawRepresentation.map { String(format: "%02x", $0) }.joined()
-
-    if derivedPublicKey != apiPublicKey {
-      throw TurnkeyError.mismatchedPublicKey(expected: apiPublicKey, actual: derivedPublicKey)
-    }
-
-    let dataHash = SHA256.hash(data: data.data(using: .utf8)!)
-    let signature = try privateKey.signature(for: dataHash)
-    let signatureHex = signature.derRepresentation.toHexString()
-
-    let stamp: [String: Any] = [
-      "publicKey": apiPublicKey,
-      "scheme": "SIGNATURE_SCHEME_TK_API_P256",
-      "signature": signatureHex,
-    ]
-
-    let jsonData = try JSONSerialization.data(withJSONObject: stamp, options: [])
-    let base64Stamp = jsonData.base64URLEncodedString()
-
-    return base64Stamp
-  }
-
-  private func decodeHex(_ hex: String) throws -> Data {
-    guard hex.count % 2 == 0 else {
-      throw DecodingError.oddLengthString
-    }
-
-    var data = Data()
-    var bytePair = ""
-
-    for char in hex {
-      bytePair += String(char)
-      if bytePair.count == 2 {
-        guard let byte = UInt8(bytePair, radix: 16) else {
-          throw DecodingError.invalidHexCharacter
-        }
-        data.append(byte)
-        bytePair = ""
-      }
-    }
-
-    return data
   }
 
 }
@@ -118,67 +73,4 @@ func generateCurlCommand(
 
   print("cURL command:")
   print(curlCommand)
-}
-
-enum TurnkeyError: Error {
-  case invalidPrivateKey
-  case mismatchedPublicKey(expected: String, actual: String)
-}
-
-enum DecodingError: Error {
-  case oddLengthString
-  case invalidHexCharacter
-}
-
-extension Data {
-  init?(hexString: String) {
-    let len = hexString.count / 2
-    var data = Data(capacity: len)
-    for i in 0..<len {
-      let j = hexString.index(hexString.startIndex, offsetBy: i * 2)
-      let k = hexString.index(j, offsetBy: 2)
-      let bytes = hexString[j..<k]
-      if var num = UInt8(bytes, radix: 16) {
-        data.append(&num, count: 1)
-      } else {
-        return nil
-      }
-    }
-    self = data
-  }
-  func toHexString() -> String {
-    return map { String(format: "%02x", $0) }.joined()
-  }
-  func base64URLEncodedString() -> String {
-    let base64String = self.base64EncodedString()
-    let base64URLString =
-      base64String
-      .replacingOccurrences(of: "+", with: "-")
-      .replacingOccurrences(of: "/", with: "_")
-      .trimmingCharacters(in: CharacterSet(charactersIn: "="))
-    return base64URLString
-  }
-}
-
-extension String {
-  var hex: some Sequence<UInt8> {
-    self[...].hex
-  }
-
-  var hexData: Data {
-    return Data(hex)
-  }
-}
-
-extension Substring {
-  var hex: some Sequence<UInt8> {
-    sequence(
-      state: self,
-      next: { remainder in
-        guard remainder.count > 2 else { return nil }
-        let nextTwo = remainder.prefix(2)
-        remainder.removeFirst(2)
-        return UInt8(nextTwo, radix: 16)
-      })
-  }
 }
