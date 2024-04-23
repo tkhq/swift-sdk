@@ -11,9 +11,11 @@ import Shared
 
 public struct TurnkeyClient {
   private let underlyingClient: any APIProtocol
+  private let passkeyManager: PasskeyManager?
 
-  internal init(underlyingClient: any APIProtocol) {
+  internal init(underlyingClient: any APIProtocol, passkeyManager: PasskeyManager?) {
     self.underlyingClient = underlyingClient
+    self.passkeyManager = passkeyManager
   }
 
   public init(apiPrivateKey: String, apiPublicKey: String) {
@@ -23,7 +25,8 @@ public struct TurnkeyClient {
         serverURL: URL(string: "https://api.turnkey.com")!,
         transport: URLSessionTransport(),
         middlewares: [AuthStampMiddleware(stamper: stamper)]
-      )
+      ),
+      passkeyManager: nil
     )
   }
 
@@ -34,10 +37,19 @@ public struct TurnkeyClient {
         serverURL: URL(string: "https://api.turnkey.com")!,
         transport: URLSessionTransport(),
         middlewares: [AuthStampMiddleware(stamper: stamper)]
-      )
+      ),
+      passkeyManager: PasskeyManager(rpId: rpId, presentationAnchor: presentationAnchor)
     )
   }
 
+  public func registerPasskey(email: String, completion: @escaping (Result<Bool, Error>) -> Void) {
+    if let manager = self.passkeyManager {
+      manager.registerPasskey(email: email)
+    } else {
+      // Handle the case where passkeyManager is nil
+      print("error")
+    }
+  }
   public func getActivity(organizationId: String, activityId: String) async throws
     -> Operations.GetActivity.Output
   {

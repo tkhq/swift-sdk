@@ -41,12 +41,12 @@ public class PasskeyManager: NSObject, ASAuthorizationControllerDelegate,
   private var isPerformingModalRequest = false
 
   // Initialize with rpId and presentationAnchor
-  public init(rpId: String) {
+  public init(rpId: String, presentationAnchor: ASPresentationAnchor) {
     self.rpId = rpId
+    self.presentationAnchor = presentationAnchor
   }
 
-  public func registerPasskey(email: String, presentationAnchor: ASPresentationAnchor) {
-    self.presentationAnchor = presentationAnchor
+  public func registerPasskey(email: String) {
 
     let challenge = generateRandomBuffer()
     let userID = Data(UUID().uuidString.utf8)
@@ -70,8 +70,7 @@ public class PasskeyManager: NSObject, ASAuthorizationControllerDelegate,
     isPerformingModalRequest = true
   }
 
-  public func assertPasskey(challenge: Data, presentationAnchor: ASPresentationAnchor) {
-    self.presentationAnchor = presentationAnchor
+  public func assertPasskey(challenge: Data) {
     let publicKeyCredentialProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(
       relyingPartyIdentifier: rpId)
 

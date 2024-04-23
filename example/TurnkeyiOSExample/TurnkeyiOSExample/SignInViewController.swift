@@ -52,14 +52,37 @@ class SignInViewController: UIViewController {
         guard let window = self.view.window else { fatalError("The view was not in the app's view hierarchy!") }
         (UIApplication.shared.delegate as? AppDelegate)?.accountManager.signUp(email: email, anchor: window)
     }
-
-    func showSignInForm() {
-        emailLabel.isHidden = false
-        emailField.isHidden = false
-
+    
+    @IBAction func signIn(_ sender: Any) {
+        guard let email = emailField.text else {
+            Logger().log("No email provided")
+            return
+        }
+        Logger().log("signIn: email provided: \(email)")
         guard let window = self.view.window else { fatalError("The view was not in the app's view hierarchy!") }
-        (UIApplication.shared.delegate as? AppDelegate)?.accountManager.beginAutoFillAssistedPasskeySignIn(anchor: window)
+        
+        // Using Task to handle the asynchronous signIn method
+        Task {
+            do {
+                try await (UIApplication.shared.delegate as? AppDelegate)?.accountManager.signIn(email: email, anchor: window)
+            } catch {
+                // Handle errors that might be thrown by the signIn method
+                DispatchQueue.main.async {
+                    // Ensure UI updates are on the main thread
+                    Logger().log("Failed to sign in: \(error)")
+                }
+            }
+        }
     }
+
+//    func showSignInForm() {
+//        emailLabel.isHidden = false
+//        emailField.isHidden = false
+//
+//        guard let window = self.view.window else { fatalError("The view was not in the app's view hierarchy!") }
+//        (UIApplication.shared.delegate as? AppDelegate)?.accountManager.signIn(anchor: window, preferImmediatelyAvailableCredentials: <#T##Bool#>)
+////        (UIApplication.shared.delegate as? AppDelegate)?.accountManager.beginAutoFillAssistedPasskeySignIn(anchor: window)
+//    }
 
     func didFinishSignIn() {
         self.view.window?.rootViewController = UIStoryboard(name: "Main", bundle: nil)

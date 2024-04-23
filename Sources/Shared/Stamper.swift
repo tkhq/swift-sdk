@@ -62,7 +62,9 @@ public class Stamper {
   private let passkeyManager: PasskeyManager?
 
   // Define a typealias for the completion handler
-  public typealias StampCompletion = (Result<String, Error>) -> Void
+  public typealias StampCompletion = (
+    Result<(stampHeaderName: String, stampHeaderValue: String), Error>
+  ) -> Void
 
   public init(apiPublicKey: String, apiPrivateKey: String) {
     self.apiPublicKey = apiPublicKey
@@ -75,75 +77,66 @@ public class Stamper {
     self.apiPublicKey = nil
     self.apiPrivateKey = nil
     self.presentationAnchor = presentationAnchor
-    self.passkeyManager = PasskeyManager(rpId: rpId)
+    self.passkeyManager = PasskeyManager(rpId: rpId, presentationAnchor: presentationAnchor)
   }
 
-  public func stamp(payload: String, completion: @escaping StampCompletion) {
-    if let apiPublicKey = apiPublicKey, let apiPrivateKey = apiPrivateKey {
-      Task {
-        do {
-          let result = try await apiKeyStamp(
-            payload: payload, apiPublicKey: apiPublicKey, apiPrivateKey: apiPrivateKey)
-          completion(.success(result))
-        } catch let error as APIKeyStampError {
-          completion(.failure(error))
-        } catch {
-          completion(.failure(StampError.unknownError))
-        }
-      }
-    } else if let presentationAnchor = presentationAnchor {
-      passkeyStamp(payload: payload, presentationAnchor: presentationAnchor, completion: completion)
-    } else {
-      completion(.failure(StampError.unknownError))
-    }
-  }
-  private func passkeyStamp(
-    payload: String, presentationAnchor: ASPresentationAnchor, completion: @escaping StampCompletion
+  public func stamp(payload: String) async throws -> (
+    stampHeaderName: String, stampHeaderValue: String
   ) {
-
-    // Set up listening before making the assertion
-    var observer: NSObjectProtocol?
-    observer = NotificationCenter.default.addObserver(
-      forName: .PasskeyAssertionCompleted, object: nil, queue: nil
-    ) { [weak observer] notification in
-      if let obs = observer {
-        NotificationCenter.default.removeObserver(obs)
-      }
-
-      if let assertionResult = notification.userInfo?["result"]
-        as? ASAuthorizationPlatformPublicKeyCredentialAssertion
-      {
-        // Handle the successful assertion
-        let assertionInfo = [
-          "authenticatorData": assertionResult.rawAuthenticatorData.base64EncodedString(),
-          "clientDataJson": String(data: assertionResult.rawClientDataJSON, encoding: .utf8) ?? "",
-          "credentialId": assertionResult.credentialID.base64EncodedString(),
-          "signature": assertionResult.signature.base64EncodedString(),
-        ]
-
-        do {
-          let jsonData = try JSONSerialization.data(withJSONObject: assertionInfo, options: [])
-          let jsonString = String(data: jsonData, encoding: .utf8) ?? ""
-          completion(.success(jsonString))
-        } catch {
-          completion(.failure(error))
-        }
-      } else if let error = notification.userInfo?["error"] as? Error {
-        // Handle any errors that occurred during the assertion
-        completion(.failure(error))
-      } else {
-        // Handle the general failure case
-        completion(.failure(StampError.assertionFailed))
-      }
+    // Convert payload string to Data
+    guard let payloadData = payload.data(using: .utf8) else {
+      throw PasskeyStampError.invalidPayload
     }
 
-    // Perform the assertion
-    if let manager = self.passkeyManager {
-      manager.assertPasskey(
-        challenge: Data(payload.utf8), presentationAnchor: presentationAnchor)
+    let payloadHash = SHA256.hash(data: payloadData)
+    if let apiPublicKey = apiPublicKey, let apiPrivateKey = apiPrivateKey {
+      let result = try apiKeyStamp(
+        payload: payloadHash, apiPublicKey: apiPublicKey, apiPrivateKey: apiPrivateKey)
+      return ("X-Stamp", result)
+    } else if let manager = passkeyManager {
+      let result = try await passkeyStamp(payload: payloadHash)
+      return ("X-Stamp-WebAuthn", result)
     } else {
-      // Handle the case where passkeyManager is nil
-      completion(.failure(StampError.passkeyManagerNotSet))
+      throw StampError.unknownError
+    }
+  }
+
+  private func passkeyStamp(payload: SHA256Digest) async throws -> String {
+    // Convert the completion-based method to async/await using a continuation
+    return try await withCheckedThrowingContinuation { continuation in
+      var observer: NSObjectProtocol?
+      observer = NotificationCenter.default.addObserver(
+        forName: .PasskeyAssertionCompleted, object: nil, queue: nil
+      ) { notification in
+        NotificationCenter.default.removeObserver(observer!)
+
+        if let assertionResult = notification.userInfo?["result"]
+          as? ASAuthorizationPlatformPublicKeyCredentialAssertion
+        {
+          // Construct the result from the assertion
+          let assertionInfo = [
+            "authenticatorData": assertionResult.rawAuthenticatorData.base64EncodedString(),
+            "clientDataJson": assertionResult.rawClientDataJSON.base64EncodedString(),
+            "credentialId": assertionResult.credentialID.base64EncodedString(),
+            "signature": assertionResult.signature.base64EncodedString(),
+          ]
+
+          do {
+            let jsonData = try JSONSerialization.data(withJSONObject: assertionInfo, options: [])
+            let base64Stamp = jsonData.base64URLEncodedString()
+            continuation.resume(returning: base64Stamp)
+          } catch {
+            continuation.resume(throwing: error)
+          }
+        } else if let error = notification.userInfo?["error"] as? Error {
+          continuation.resume(throwing: error)
+        } else {
+          continuation.resume(throwing: StampError.assertionFailed)
+        }
+      }
+
+      // Assuming there is some method to start the process that will lead to the notification being posted
+      self.passkeyManager?.assertPasskey(challenge: Data(payload))
     }
   }
 
@@ -167,8 +160,8 @@ public class Stamper {
     case invalidPayload
   }
 
-  private func apiKeyStamp(payload: String, apiPublicKey: String, apiPrivateKey: String)
-    async throws -> String
+  private func apiKeyStamp(payload: SHA256Digest, apiPublicKey: String, apiPrivateKey: String)
+    throws -> String
   {
     // Convert the hex string to Data
     guard let privateKeyData = Data(hexString: apiPrivateKey) else {
@@ -186,13 +179,7 @@ public class Stamper {
       throw APIKeyStampError.mismatchedPublicKey(expected: apiPublicKey, actual: derivedPublicKey)
     }
 
-    // Convert payload string to Data
-    guard let payloadData = payload.data(using: .utf8) else {
-      throw PasskeyStampError.invalidPayload
-    }
-
-    let dataHash = SHA256.hash(data: payloadData)
-    let signature = try privateKey.signature(for: dataHash)
+    let signature = try privateKey.signature(for: payload)
     let signatureHex = signature.derRepresentation.toHexString()
 
     let stamp: [String: Any] = [

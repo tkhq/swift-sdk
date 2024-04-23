@@ -9,6 +9,7 @@ import AuthenticationServices
 import Foundation
 import os
 import Shared
+import TurnkeySDK
 
 extension NSNotification.Name {
     static let UserSignedIn = Notification.Name("UserSignedInNotification")
@@ -52,38 +53,35 @@ class AccountManager: NSObject, ASAuthorizationControllerPresentationContextProv
             // Remove observers when the AccountManager instance is deallocated
             NotificationCenter.default.removeObserver(self)
         }
+    // func signIn(anchor: ASPresentationAnchor, preferImmediatelyAvailableCredentials: Bool) {
+    func signIn(email: String, anchor: ASPresentationAnchor) async {
+        let turnkeyClient = TurnkeyClient(rpId: domain, presentationAnchor: anchor)
+        print("Here")
 
-    func signIn(anchor: ASPresentationAnchor, preferImmediatelyAvailableCredentials: Bool) {
-        self.authenticationAnchor = anchor
-        let publicKeyCredentialProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: domain)
-
-        // Fetch the challenge from the server. The challenge needs to be unique for each request.
-        let challenge = Data()
-
-        let assertionRequest = publicKeyCredentialProvider.createCredentialAssertionRequest(challenge: challenge)
-
-        // Also allow the user to use a saved password, if they have one.
-        let passwordCredentialProvider = ASAuthorizationPasswordProvider()
-        let passwordRequest = passwordCredentialProvider.createRequest()
-
-        // Pass in any mix of supported sign-in request types.
-        let authController = ASAuthorizationController(authorizationRequests: [ assertionRequest, passwordRequest ] )
-        authController.delegate = self
-        authController.presentationContextProvider = self
-
-        if preferImmediatelyAvailableCredentials {
-            // If credentials are available, presents a modal sign-in sheet.
-            // If there are no locally saved credentials, no UI appears and
-            // the system passes ASAuthorizationError.Code.canceled to call
-            // `AccountManager.authorizationController(controller:didCompleteWithError:)`.
-            authController.performRequests(options: .preferImmediatelyAvailableCredentials)
-        } else {
-            // If credentials are available, presents a modal sign-in sheet.
-            // If there are no locally saved credentials, the system presents a QR code to allow signing in with a
-            // passkey from a nearby device.
-            authController.performRequests()
+        do {
+            // Call the GetWhoami method on the TurnkeyClient instance
+            let output = try await turnkeyClient.getWhoami(organizationId: "acd0bc97-2af5-475b-bc34-0fa7ca3bdc75")
+            
+            // Assert the response
+            switch output {
+            case .ok(let response):
+                switch response.body {
+                case .json(let whoamiResponse):
+                    print(whoamiResponse)
+                }
+            case .undocumented(let statusCode, let undocumentedPayload):
+                // Handle the undocumented response
+                if let body = undocumentedPayload.body {
+                    // Convert the HTTPBody to a string
+                    let bodyString = try await String(collecting: body, upTo: .max)
+                    print("Undocumented response body: \(bodyString)")
+                }
+                print("Undocumented response: \(statusCode)")
+            }
+        } catch {
+            print("Error occurred: \(error)")
         }
-
+        
         isPerformingModalRequest = true
     }
 
@@ -106,8 +104,8 @@ class AccountManager: NSObject, ASAuthorizationControllerPresentationContextProv
     func signUp(email: String, anchor: ASPresentationAnchor) {
         self.authenticationAnchor = anchor
         
-        passkeyRegistration = PasskeyManager(rpId: domain)
-        passkeyRegistration?.registerPasskey(email: email, presentationAnchor: anchor)
+        passkeyRegistration = PasskeyManager(rpId: domain, presentationAnchor: anchor)
+        passkeyRegistration?.registerPasskey(email: email)
         
         isPerformingModalRequest = true
     }

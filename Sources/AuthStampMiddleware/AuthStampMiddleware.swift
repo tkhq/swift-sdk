@@ -31,20 +31,10 @@ extension AuthStampMiddleware: ClientMiddleware {
     if let body = body {
       bodyString = try await String(collecting: body, upTo: maxBytes)
 
-      // Convert the callback-based stamp method to async/await using a continuation
-      let stampResult = try await withCheckedThrowingContinuation { continuation in
-        stamper.stamp(payload: bodyString) { result in
-          switch result {
-          case .success(let stamp):
-            continuation.resume(returning: stamp)
-          case .failure(let error):
-            continuation.resume(throwing: error)
-          }
-        }
-      }
-
+      let (stampHeaderName, stampHeaderValue) = try await stamper.stamp(payload: bodyString)
+      print("Stamp header name: \(stampHeaderName), value: \(stampHeaderValue)")
       // Create and append the stamp header
-      let stampHeader = HTTPField(name: HTTPField.Name("X-Stamp")!, value: stampResult)
+      let stampHeader = HTTPField(name: HTTPField.Name(stampHeaderName)!, value: stampHeaderValue)
       request.headerFields.append(stampHeader)
     }
     // generateCurlCommand(
