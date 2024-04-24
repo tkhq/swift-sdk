@@ -9,10 +9,12 @@ import Shared
 public struct TurnkeyClient {
   private let underlyingClient: any APIProtocol
   private let passkeyManager: PasskeyManager?
+  private let proxyURL: URL?
 
-  internal init(underlyingClient: any APIProtocol, passkeyManager: PasskeyManager?) {
+  internal init(underlyingClient: any APIProtocol, passkeyManager: PasskeyManager?, proxyURL: URL?) {
     self.underlyingClient = underlyingClient
     self.passkeyManager = passkeyManager
+    self.proxyURL = proxyURL
   }
 
   public init(apiPrivateKey: String, apiPublicKey: String) {
@@ -39,14 +41,15 @@ public struct TurnkeyClient {
     )
   }
 
-  public func registerPasskey(email: String, completion: @escaping (Result<Bool, Error>) -> Void) {
-    if let manager = self.passkeyManager {
-      manager.registerPasskey(email: email)
-    } else {
-      // Handle the case where passkeyManager is nil
-      print("error")
+  private func getProxiedClient() -> any APIProtocol {
+        let proxyMiddleware = ProxyMiddleware(proxyURL: proxyURL!)
+        return Client(
+            serverURL: proxyURL!,
+            transport: URLSessionTransport(),
+            middlewares: [proxyMiddleware]
+        )
     }
-  }
+
 {% import "macros.stencil" %}
 {% for class in types.implementing.APIProtocol %}
     {% for method in class.instanceMethods %}
@@ -70,7 +73,8 @@ public struct TurnkeyClient {
             {% call generateActivityMethod method.callName -%}
         {% else -%}
 
-    public func {{ method.callName|lowerFirstLetter }}({% call addMethodParams method.callName %}) async throws -> {{ returnType }} {
+    public func {{ method.callName|lowerFirstLetter }}({% call addMethodParams method.callName %}, useProxy: Bool = false) async throws -> {{ returnType }} {
+        let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
         // Create the {{ requestStructName }}
         let {{ method.callName|lowerFirstLetter }}Request = Components.Schemas.{{ requestStructName }}(
@@ -85,7 +89,7 @@ public struct TurnkeyClient {
             headers: .init(accept: [.init(contentType: .json)]),
             body: .json({{ requestStructName|lowerFirstLetter }})
         )
-        return try await underlyingClient.{{method.callName}}(input)
+        return try await client.{{method.callName}}(input)
     }
         {% endif -%}
     {% endfor %}

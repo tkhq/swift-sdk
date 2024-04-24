@@ -34,6 +34,13 @@ let package = Package(
             ]
         ),
         .target(
+            name: "ProxyMiddleware",
+            dependencies: [
+                .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
+                .product(name: "HTTPTypes", package: "swift-http-types"),
+            ]
+        ),
+        .target(
             name: "TurnkeySDK",
             dependencies: [
                 "AuthStampMiddleware", .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),

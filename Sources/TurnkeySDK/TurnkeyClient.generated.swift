@@ -7,15 +7,19 @@ import CryptoKit
 import Foundation
 import OpenAPIRuntime
 import OpenAPIURLSession
+import ProxyMiddleware
 import Shared
 
 public struct TurnkeyClient {
   private let underlyingClient: any APIProtocol
   private let passkeyManager: PasskeyManager?
+  private let proxyURL: URL?
 
-  internal init(underlyingClient: any APIProtocol, passkeyManager: PasskeyManager?) {
+  internal init(underlyingClient: any APIProtocol, passkeyManager: PasskeyManager?, proxyURL: URL?)
+  {
     self.underlyingClient = underlyingClient
     self.passkeyManager = passkeyManager
+    self.proxyURL = proxyURL
   }
 
   public init(apiPrivateKey: String, apiPublicKey: String) {
@@ -42,17 +46,19 @@ public struct TurnkeyClient {
     )
   }
 
-  public func registerPasskey(email: String, completion: @escaping (Result<Bool, Error>) -> Void) {
-    if let manager = self.passkeyManager {
-      manager.registerPasskey(email: email)
-    } else {
-      // Handle the case where passkeyManager is nil
-      print("error")
-    }
+  private func getProxiedClient() -> any APIProtocol {
+    let proxyMiddleware = ProxyMiddleware(proxyURL: proxyURL!)
+    return Client(
+      serverURL: proxyURL!,
+      transport: URLSessionTransport(),
+      middlewares: [proxyMiddleware]
+    )
   }
-  public func getActivity(organizationId: String, activityId: String) async throws
-    -> Operations.GetActivity.Output
+
+  public func getActivity(organizationId: String, activityId: String, useProxy: Bool = false)
+    async throws -> Operations.GetActivity.Output
   {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the GetActivityRequest
     let getActivityRequest = Components.Schemas.GetActivityRequest(
@@ -63,11 +69,12 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getActivityRequest)
     )
-    return try await underlyingClient.GetActivity(input)
+    return try await client.GetActivity(input)
   }
-  public func getApiKey(organizationId: String, apiKeyId: String) async throws
-    -> Operations.GetApiKey.Output
+  public func getApiKey(organizationId: String, apiKeyId: String, useProxy: Bool = false)
+    async throws -> Operations.GetApiKey.Output
   {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the GetApiKeyRequest
     let getApiKeyRequest = Components.Schemas.GetApiKeyRequest(
@@ -78,11 +85,12 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getApiKeyRequest)
     )
-    return try await underlyingClient.GetApiKey(input)
+    return try await client.GetApiKey(input)
   }
-  public func getApiKeys(organizationId: String, userId: String?) async throws
-    -> Operations.GetApiKeys.Output
+  public func getApiKeys(organizationId: String, userId: String?, useProxy: Bool = false)
+    async throws -> Operations.GetApiKeys.Output
   {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the GetApiKeysRequest
     let getApiKeysRequest = Components.Schemas.GetApiKeysRequest(
@@ -93,11 +101,12 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getApiKeysRequest)
     )
-    return try await underlyingClient.GetApiKeys(input)
+    return try await client.GetApiKeys(input)
   }
-  public func getAuthenticator(organizationId: String, authenticatorId: String) async throws
-    -> Operations.GetAuthenticator.Output
-  {
+  public func getAuthenticator(
+    organizationId: String, authenticatorId: String, useProxy: Bool = false
+  ) async throws -> Operations.GetAuthenticator.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the GetAuthenticatorRequest
     let getAuthenticatorRequest = Components.Schemas.GetAuthenticatorRequest(
@@ -108,11 +117,12 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getAuthenticatorRequest)
     )
-    return try await underlyingClient.GetAuthenticator(input)
+    return try await client.GetAuthenticator(input)
   }
-  public func getAuthenticators(organizationId: String, userId: String) async throws
-    -> Operations.GetAuthenticators.Output
+  public func getAuthenticators(organizationId: String, userId: String, useProxy: Bool = false)
+    async throws -> Operations.GetAuthenticators.Output
   {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the GetAuthenticatorsRequest
     let getAuthenticatorsRequest = Components.Schemas.GetAuthenticatorsRequest(
@@ -123,11 +133,12 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getAuthenticatorsRequest)
     )
-    return try await underlyingClient.GetAuthenticators(input)
+    return try await client.GetAuthenticators(input)
   }
-  public func getPolicy(organizationId: String, policyId: String) async throws
-    -> Operations.GetPolicy.Output
+  public func getPolicy(organizationId: String, policyId: String, useProxy: Bool = false)
+    async throws -> Operations.GetPolicy.Output
   {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the GetPolicyRequest
     let getPolicyRequest = Components.Schemas.GetPolicyRequest(
@@ -138,11 +149,12 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getPolicyRequest)
     )
-    return try await underlyingClient.GetPolicy(input)
+    return try await client.GetPolicy(input)
   }
-  public func getPrivateKey(organizationId: String, privateKeyId: String) async throws
-    -> Operations.GetPrivateKey.Output
+  public func getPrivateKey(organizationId: String, privateKeyId: String, useProxy: Bool = false)
+    async throws -> Operations.GetPrivateKey.Output
   {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the GetPrivateKeyRequest
     let getPrivateKeyRequest = Components.Schemas.GetPrivateKeyRequest(
@@ -153,11 +165,12 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getPrivateKeyRequest)
     )
-    return try await underlyingClient.GetPrivateKey(input)
+    return try await client.GetPrivateKey(input)
   }
-  public func getUser(organizationId: String, userId: String) async throws
+  public func getUser(organizationId: String, userId: String, useProxy: Bool = false) async throws
     -> Operations.GetUser.Output
   {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the GetUserRequest
     let getUserRequest = Components.Schemas.GetUserRequest(
@@ -168,11 +181,12 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getUserRequest)
     )
-    return try await underlyingClient.GetUser(input)
+    return try await client.GetUser(input)
   }
-  public func getWallet(organizationId: String, walletId: String) async throws
-    -> Operations.GetWallet.Output
+  public func getWallet(organizationId: String, walletId: String, useProxy: Bool = false)
+    async throws -> Operations.GetWallet.Output
   {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the GetWalletRequest
     let getWalletRequest = Components.Schemas.GetWalletRequest(
@@ -183,13 +197,14 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getWalletRequest)
     )
-    return try await underlyingClient.GetWallet(input)
+    return try await client.GetWallet(input)
   }
   public func getActivities(
     organizationId: String, filterByStatus: [Components.Schemas.ActivityStatus]?,
     paginationOptions: Components.Schemas.Pagination?,
-    filterByType: [Components.Schemas.ActivityType]?
+    filterByType: [Components.Schemas.ActivityType]?, useProxy: Bool = false
   ) async throws -> Operations.GetActivities.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the GetActivitiesRequest
     let getActivitiesRequest = Components.Schemas.GetActivitiesRequest(
@@ -201,9 +216,12 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getActivitiesRequest)
     )
-    return try await underlyingClient.GetActivities(input)
+    return try await client.GetActivities(input)
   }
-  public func getPolicies(organizationId: String) async throws -> Operations.GetPolicies.Output {
+  public func getPolicies(organizationId: String, useProxy: Bool = false) async throws
+    -> Operations.GetPolicies.Output
+  {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the GetPoliciesRequest
     let getPoliciesRequest = Components.Schemas.GetPoliciesRequest(
@@ -214,11 +232,12 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getPoliciesRequest)
     )
-    return try await underlyingClient.GetPolicies(input)
+    return try await client.GetPolicies(input)
   }
-  public func listPrivateKeyTags(organizationId: String) async throws
+  public func listPrivateKeyTags(organizationId: String, useProxy: Bool = false) async throws
     -> Operations.ListPrivateKeyTags.Output
   {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the ListPrivateKeyTagsRequest
     let listPrivateKeyTagsRequest = Components.Schemas.ListPrivateKeyTagsRequest(
@@ -229,11 +248,12 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(listPrivateKeyTagsRequest)
     )
-    return try await underlyingClient.ListPrivateKeyTags(input)
+    return try await client.ListPrivateKeyTags(input)
   }
-  public func getPrivateKeys(organizationId: String) async throws
+  public func getPrivateKeys(organizationId: String, useProxy: Bool = false) async throws
     -> Operations.GetPrivateKeys.Output
   {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the GetPrivateKeysRequest
     let getPrivateKeysRequest = Components.Schemas.GetPrivateKeysRequest(
@@ -244,12 +264,13 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getPrivateKeysRequest)
     )
-    return try await underlyingClient.GetPrivateKeys(input)
+    return try await client.GetPrivateKeys(input)
   }
   public func getSubOrgIds(
     organizationId: String, filterType: String?, filterValue: String?,
-    paginationOptions: Components.Schemas.Pagination?
+    paginationOptions: Components.Schemas.Pagination?, useProxy: Bool = false
   ) async throws -> Operations.GetSubOrgIds.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the GetSubOrgIdsRequest
     let getSubOrgIdsRequest = Components.Schemas.GetSubOrgIdsRequest(
@@ -261,9 +282,12 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getSubOrgIdsRequest)
     )
-    return try await underlyingClient.GetSubOrgIds(input)
+    return try await client.GetSubOrgIds(input)
   }
-  public func listUserTags(organizationId: String) async throws -> Operations.ListUserTags.Output {
+  public func listUserTags(organizationId: String, useProxy: Bool = false) async throws
+    -> Operations.ListUserTags.Output
+  {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the ListUserTagsRequest
     let listUserTagsRequest = Components.Schemas.ListUserTagsRequest(
@@ -274,9 +298,12 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(listUserTagsRequest)
     )
-    return try await underlyingClient.ListUserTags(input)
+    return try await client.ListUserTags(input)
   }
-  public func getUsers(organizationId: String) async throws -> Operations.GetUsers.Output {
+  public func getUsers(organizationId: String, useProxy: Bool = false) async throws
+    -> Operations.GetUsers.Output
+  {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the GetUsersRequest
     let getUsersRequest = Components.Schemas.GetUsersRequest(
@@ -287,11 +314,13 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getUsersRequest)
     )
-    return try await underlyingClient.GetUsers(input)
+    return try await client.GetUsers(input)
   }
   public func getWalletAccounts(
-    organizationId: String, walletId: String, paginationOptions: Components.Schemas.Pagination?
+    organizationId: String, walletId: String, paginationOptions: Components.Schemas.Pagination?,
+    useProxy: Bool = false
   ) async throws -> Operations.GetWalletAccounts.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the GetWalletAccountsRequest
     let getWalletAccountsRequest = Components.Schemas.GetWalletAccountsRequest(
@@ -302,9 +331,12 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getWalletAccountsRequest)
     )
-    return try await underlyingClient.GetWalletAccounts(input)
+    return try await client.GetWalletAccounts(input)
   }
-  public func getWallets(organizationId: String) async throws -> Operations.GetWallets.Output {
+  public func getWallets(organizationId: String, useProxy: Bool = false) async throws
+    -> Operations.GetWallets.Output
+  {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the GetWalletsRequest
     let getWalletsRequest = Components.Schemas.GetWalletsRequest(
@@ -315,9 +347,12 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getWalletsRequest)
     )
-    return try await underlyingClient.GetWallets(input)
+    return try await client.GetWallets(input)
   }
-  public func getWhoami(organizationId: String) async throws -> Operations.GetWhoami.Output {
+  public func getWhoami(organizationId: String, useProxy: Bool = false) async throws
+    -> Operations.GetWhoami.Output
+  {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the GetWhoamiRequest
     let getWhoamiRequest = Components.Schemas.GetWhoamiRequest(
@@ -328,7 +363,7 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getWhoamiRequest)
     )
-    return try await underlyingClient.GetWhoami(input)
+    return try await client.GetWhoami(input)
   }
 
   public func approveActivity(
