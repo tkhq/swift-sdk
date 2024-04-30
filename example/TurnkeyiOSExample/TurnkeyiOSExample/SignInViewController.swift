@@ -15,12 +15,17 @@ class SignInViewController: UIViewController {
 
     private var signInObserver: NSObjectProtocol?
     private var signInErrorObserver: NSObjectProtocol?
+    private var initEmailAuthObserver: NSObjectProtocol?
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
 
         signInObserver = NotificationCenter.default.addObserver(forName: .UserSignedIn, object: nil, queue: nil) {_ in
             self.didFinishSignIn()
+        }
+        
+        initEmailAuthObserver = NotificationCenter.default.addObserver(forName: .InitEmailAuth, object: nil, queue: nil) {_ in
+            self.initEmailAuth()
         }
 
 //        signInErrorObserver = NotificationCenter.default.addObserver(forName: .ModalSignInSheetCanceled, object: nil, queue: nil) { _ in
@@ -38,6 +43,10 @@ class SignInViewController: UIViewController {
 
         if let signInErrorObserver = signInErrorObserver {
             NotificationCenter.default.removeObserver(signInErrorObserver)
+        }
+        
+        if let initEmailAuthObserver = initEmailAuthObserver {
+            NotificationCenter.default.removeObserver(initEmailAuthObserver)
         }
         
         super.viewDidDisappear(animated)
@@ -64,7 +73,7 @@ class SignInViewController: UIViewController {
         // Using Task to handle the asynchronous signIn method
         Task {
             do {
-                try await (UIApplication.shared.delegate as? AppDelegate)?.accountManager.signIn(email: email, anchor: window)
+                try await (UIApplication.shared.delegate as? AppDelegate)?.accountManager.signInEmailAuth(email: email, anchor: window)
             } catch {
                 // Handle errors that might be thrown by the signIn method
                 DispatchQueue.main.async {
@@ -87,6 +96,11 @@ class SignInViewController: UIViewController {
     func didFinishSignIn() {
         self.view.window?.rootViewController = UIStoryboard(name: "Main", bundle: nil)
             .instantiateViewController(withIdentifier: "UserHomeViewController")
+    }
+    
+    func initEmailAuth() {
+        self.view.window?.rootViewController = UIStoryboard(name: "Main", bundle: nil)
+            .instantiateViewController(withIdentifier: "EmailAuthViewController")
     }
 
     @IBAction func tappedBackground(_ sender: Any) {

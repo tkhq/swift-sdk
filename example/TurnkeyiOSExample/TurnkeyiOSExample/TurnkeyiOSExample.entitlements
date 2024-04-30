@@ -6,5 +6,7 @@
 	<array>
 		<string>webcredentials:turnkey-nextjs-demo-weld.vercel.app?mode=developer</string>
 	</array>
+	<key>keychain-access-groups</key>
+	<array/>
 </dict>
 </plist>

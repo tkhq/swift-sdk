@@ -1,13 +1,12 @@
 // Generated using Sourcery 2.2.2 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
-import AuthStampMiddleware
 import AuthenticationServices
 import CryptoKit
 import Foundation
+import Middleware
 import OpenAPIRuntime
 import OpenAPIURLSession
-import ProxyMiddleware
 import Shared
 
 public struct TurnkeyClient {
@@ -15,14 +14,15 @@ public struct TurnkeyClient {
   private let passkeyManager: PasskeyManager?
   private let proxyURL: URL?
 
-  internal init(underlyingClient: any APIProtocol, passkeyManager: PasskeyManager?, proxyURL: URL?)
-  {
+  internal init(
+    underlyingClient: any APIProtocol, passkeyManager: PasskeyManager?, proxyURL: URL? = nil
+  ) {
     self.underlyingClient = underlyingClient
     self.passkeyManager = passkeyManager
     self.proxyURL = proxyURL
   }
 
-  public init(apiPrivateKey: String, apiPublicKey: String) {
+  public init(apiPrivateKey: String, apiPublicKey: String, proxyURL: URL? = nil) {
     let stamper = Stamper(apiPublicKey: apiPublicKey, apiPrivateKey: apiPrivateKey)
     self.init(
       underlyingClient: Client(
@@ -30,11 +30,12 @@ public struct TurnkeyClient {
         transport: URLSessionTransport(),
         middlewares: [AuthStampMiddleware(stamper: stamper)]
       ),
-      passkeyManager: nil
+      passkeyManager: nil,
+      proxyURL: proxyURL
     )
   }
 
-  public init(rpId: String, presentationAnchor: ASPresentationAnchor) {
+  public init(rpId: String, presentationAnchor: ASPresentationAnchor, proxyURL: URL? = nil) {
     let stamper = Stamper(rpId: rpId, presentationAnchor: presentationAnchor)
     self.init(
       underlyingClient: Client(
@@ -42,14 +43,15 @@ public struct TurnkeyClient {
         transport: URLSessionTransport(),
         middlewares: [AuthStampMiddleware(stamper: stamper)]
       ),
-      passkeyManager: PasskeyManager(rpId: rpId, presentationAnchor: presentationAnchor)
+      passkeyManager: PasskeyManager(rpId: rpId, presentationAnchor: presentationAnchor),
+      proxyURL: proxyURL
     )
   }
 
   private func getProxiedClient() -> any APIProtocol {
     let proxyMiddleware = ProxyMiddleware(proxyURL: proxyURL!)
     return Client(
-      serverURL: proxyURL!,
+      serverURL: URL(string: "https://api.turnkey.com")!,
       transport: URLSessionTransport(),
       middlewares: [proxyMiddleware]
     )
@@ -368,8 +370,9 @@ public struct TurnkeyClient {
 
   public func approveActivity(
     organizationId: String,
-    fingerprint: String
+    fingerprint: String, useProxy: Bool = false
   ) async throws -> Operations.ApproveActivity.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the ApproveActivityIntent
     let approveActivityIntent = Components.Schemas.ApproveActivityIntent(
@@ -390,13 +393,14 @@ public struct TurnkeyClient {
     )
 
     // Call the ApproveActivity method using the underlyingClient
-    return try await underlyingClient.ApproveActivity(input)
+    return try await client.ApproveActivity(input)
   }
 
   public func createApiKeys(
     organizationId: String,
-    apiKeys: [Components.Schemas.ApiKeyParams], userId: String
+    apiKeys: [Components.Schemas.ApiKeyParams], userId: String, useProxy: Bool = false
   ) async throws -> Operations.CreateApiKeys.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the CreateApiKeysIntent
     let createApiKeysIntent = Components.Schemas.CreateApiKeysIntent(
@@ -417,13 +421,15 @@ public struct TurnkeyClient {
     )
 
     // Call the CreateApiKeys method using the underlyingClient
-    return try await underlyingClient.CreateApiKeys(input)
+    return try await client.CreateApiKeys(input)
   }
 
   public func createAuthenticators(
     organizationId: String,
-    authenticators: [Components.Schemas.AuthenticatorParamsV2], userId: String
+    authenticators: [Components.Schemas.AuthenticatorParamsV2], userId: String,
+    useProxy: Bool = false
   ) async throws -> Operations.CreateAuthenticators.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the CreateAuthenticatorsIntentV2
     let createAuthenticatorsIntent = Components.Schemas.CreateAuthenticatorsIntentV2(
@@ -444,13 +450,14 @@ public struct TurnkeyClient {
     )
 
     // Call the CreateAuthenticators method using the underlyingClient
-    return try await underlyingClient.CreateAuthenticators(input)
+    return try await client.CreateAuthenticators(input)
   }
 
   public func createInvitations(
     organizationId: String,
-    invitations: [Components.Schemas.InvitationParams]
+    invitations: [Components.Schemas.InvitationParams], useProxy: Bool = false
   ) async throws -> Operations.CreateInvitations.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the CreateInvitationsIntent
     let createInvitationsIntent = Components.Schemas.CreateInvitationsIntent(
@@ -471,13 +478,14 @@ public struct TurnkeyClient {
     )
 
     // Call the CreateInvitations method using the underlyingClient
-    return try await underlyingClient.CreateInvitations(input)
+    return try await client.CreateInvitations(input)
   }
 
   public func createPolicies(
     organizationId: String,
-    policies: [Components.Schemas.CreatePolicyIntentV3]
+    policies: [Components.Schemas.CreatePolicyIntentV3], useProxy: Bool = false
   ) async throws -> Operations.CreatePolicies.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the CreatePoliciesIntent
     let createPoliciesIntent = Components.Schemas.CreatePoliciesIntent(
@@ -498,14 +506,15 @@ public struct TurnkeyClient {
     )
 
     // Call the CreatePolicies method using the underlyingClient
-    return try await underlyingClient.CreatePolicies(input)
+    return try await client.CreatePolicies(input)
   }
 
   public func createPolicy(
     organizationId: String,
     policyName: String, effect: Components.Schemas.Effect, condition: String?, consensus: String?,
-    notes: String?
+    notes: String?, useProxy: Bool = false
   ) async throws -> Operations.CreatePolicy.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the CreatePolicyIntentV3
     let createPolicyIntent = Components.Schemas.CreatePolicyIntentV3(
@@ -527,13 +536,14 @@ public struct TurnkeyClient {
     )
 
     // Call the CreatePolicy method using the underlyingClient
-    return try await underlyingClient.CreatePolicy(input)
+    return try await client.CreatePolicy(input)
   }
 
   public func createPrivateKeyTag(
     organizationId: String,
-    privateKeyTagName: String, privateKeyIds: [String]
+    privateKeyTagName: String, privateKeyIds: [String], useProxy: Bool = false
   ) async throws -> Operations.CreatePrivateKeyTag.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the CreatePrivateKeyTagIntent
     let createPrivateKeyTagIntent = Components.Schemas.CreatePrivateKeyTagIntent(
@@ -554,13 +564,14 @@ public struct TurnkeyClient {
     )
 
     // Call the CreatePrivateKeyTag method using the underlyingClient
-    return try await underlyingClient.CreatePrivateKeyTag(input)
+    return try await client.CreatePrivateKeyTag(input)
   }
 
   public func createPrivateKeys(
     organizationId: String,
-    privateKeys: [Components.Schemas.PrivateKeyParams]
+    privateKeys: [Components.Schemas.PrivateKeyParams], useProxy: Bool = false
   ) async throws -> Operations.CreatePrivateKeys.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the CreatePrivateKeysIntentV2
     let createPrivateKeysIntent = Components.Schemas.CreatePrivateKeysIntentV2(
@@ -581,15 +592,16 @@ public struct TurnkeyClient {
     )
 
     // Call the CreatePrivateKeys method using the underlyingClient
-    return try await underlyingClient.CreatePrivateKeys(input)
+    return try await client.CreatePrivateKeys(input)
   }
 
   public func createSubOrganization(
     organizationId: String,
     subOrganizationName: String, rootUsers: [Components.Schemas.RootUserParams],
     rootQuorumThreshold: Int32, wallet: Components.Schemas.WalletParams?,
-    disableEmailRecovery: Bool?, disableEmailAuth: Bool?
+    disableEmailRecovery: Bool?, disableEmailAuth: Bool?, useProxy: Bool = false
   ) async throws -> Operations.CreateSubOrganization.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the CreateSubOrganizationIntentV4
     let createSubOrganizationIntent = Components.Schemas.CreateSubOrganizationIntentV4(
@@ -612,13 +624,14 @@ public struct TurnkeyClient {
     )
 
     // Call the CreateSubOrganization method using the underlyingClient
-    return try await underlyingClient.CreateSubOrganization(input)
+    return try await client.CreateSubOrganization(input)
   }
 
   public func createUserTag(
     organizationId: String,
-    userTagName: String, userIds: [String]
+    userTagName: String, userIds: [String], useProxy: Bool = false
   ) async throws -> Operations.CreateUserTag.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the CreateUserTagIntent
     let createUserTagIntent = Components.Schemas.CreateUserTagIntent(
@@ -639,13 +652,14 @@ public struct TurnkeyClient {
     )
 
     // Call the CreateUserTag method using the underlyingClient
-    return try await underlyingClient.CreateUserTag(input)
+    return try await client.CreateUserTag(input)
   }
 
   public func createUsers(
     organizationId: String,
-    users: [Components.Schemas.UserParamsV2]
+    users: [Components.Schemas.UserParamsV2], useProxy: Bool = false
   ) async throws -> Operations.CreateUsers.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the CreateUsersIntentV2
     let createUsersIntent = Components.Schemas.CreateUsersIntentV2(
@@ -666,13 +680,15 @@ public struct TurnkeyClient {
     )
 
     // Call the CreateUsers method using the underlyingClient
-    return try await underlyingClient.CreateUsers(input)
+    return try await client.CreateUsers(input)
   }
 
   public func createWallet(
     organizationId: String,
-    walletName: String, accounts: [Components.Schemas.WalletAccountParams], mnemonicLength: Int32?
+    walletName: String, accounts: [Components.Schemas.WalletAccountParams], mnemonicLength: Int32?,
+    useProxy: Bool = false
   ) async throws -> Operations.CreateWallet.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the CreateWalletIntent
     let createWalletIntent = Components.Schemas.CreateWalletIntent(
@@ -693,13 +709,14 @@ public struct TurnkeyClient {
     )
 
     // Call the CreateWallet method using the underlyingClient
-    return try await underlyingClient.CreateWallet(input)
+    return try await client.CreateWallet(input)
   }
 
   public func createWalletAccounts(
     organizationId: String,
-    walletId: String, accounts: [Components.Schemas.WalletAccountParams]
+    walletId: String, accounts: [Components.Schemas.WalletAccountParams], useProxy: Bool = false
   ) async throws -> Operations.CreateWalletAccounts.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the CreateWalletAccountsIntent
     let createWalletAccountsIntent = Components.Schemas.CreateWalletAccountsIntent(
@@ -720,13 +737,14 @@ public struct TurnkeyClient {
     )
 
     // Call the CreateWalletAccounts method using the underlyingClient
-    return try await underlyingClient.CreateWalletAccounts(input)
+    return try await client.CreateWalletAccounts(input)
   }
 
   public func deleteApiKeys(
     organizationId: String,
-    userId: String, apiKeyIds: [String]
+    userId: String, apiKeyIds: [String], useProxy: Bool = false
   ) async throws -> Operations.DeleteApiKeys.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the DeleteApiKeysIntent
     let deleteApiKeysIntent = Components.Schemas.DeleteApiKeysIntent(
@@ -747,13 +765,14 @@ public struct TurnkeyClient {
     )
 
     // Call the DeleteApiKeys method using the underlyingClient
-    return try await underlyingClient.DeleteApiKeys(input)
+    return try await client.DeleteApiKeys(input)
   }
 
   public func deleteAuthenticators(
     organizationId: String,
-    userId: String, authenticatorIds: [String]
+    userId: String, authenticatorIds: [String], useProxy: Bool = false
   ) async throws -> Operations.DeleteAuthenticators.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the DeleteAuthenticatorsIntent
     let deleteAuthenticatorsIntent = Components.Schemas.DeleteAuthenticatorsIntent(
@@ -774,13 +793,14 @@ public struct TurnkeyClient {
     )
 
     // Call the DeleteAuthenticators method using the underlyingClient
-    return try await underlyingClient.DeleteAuthenticators(input)
+    return try await client.DeleteAuthenticators(input)
   }
 
   public func deleteInvitation(
     organizationId: String,
-    invitationId: String
+    invitationId: String, useProxy: Bool = false
   ) async throws -> Operations.DeleteInvitation.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the DeleteInvitationIntent
     let deleteInvitationIntent = Components.Schemas.DeleteInvitationIntent(
@@ -801,13 +821,14 @@ public struct TurnkeyClient {
     )
 
     // Call the DeleteInvitation method using the underlyingClient
-    return try await underlyingClient.DeleteInvitation(input)
+    return try await client.DeleteInvitation(input)
   }
 
   public func deletePolicy(
     organizationId: String,
-    policyId: String
+    policyId: String, useProxy: Bool = false
   ) async throws -> Operations.DeletePolicy.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the DeletePolicyIntent
     let deletePolicyIntent = Components.Schemas.DeletePolicyIntent(
@@ -828,13 +849,14 @@ public struct TurnkeyClient {
     )
 
     // Call the DeletePolicy method using the underlyingClient
-    return try await underlyingClient.DeletePolicy(input)
+    return try await client.DeletePolicy(input)
   }
 
   public func deletePrivateKeyTags(
     organizationId: String,
-    privateKeyTagIds: [String]
+    privateKeyTagIds: [String], useProxy: Bool = false
   ) async throws -> Operations.DeletePrivateKeyTags.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the DeletePrivateKeyTagsIntent
     let deletePrivateKeyTagsIntent = Components.Schemas.DeletePrivateKeyTagsIntent(
@@ -855,13 +877,14 @@ public struct TurnkeyClient {
     )
 
     // Call the DeletePrivateKeyTags method using the underlyingClient
-    return try await underlyingClient.DeletePrivateKeyTags(input)
+    return try await client.DeletePrivateKeyTags(input)
   }
 
   public func deleteUserTags(
     organizationId: String,
-    userTagIds: [String]
+    userTagIds: [String], useProxy: Bool = false
   ) async throws -> Operations.DeleteUserTags.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the DeleteUserTagsIntent
     let deleteUserTagsIntent = Components.Schemas.DeleteUserTagsIntent(
@@ -882,13 +905,14 @@ public struct TurnkeyClient {
     )
 
     // Call the DeleteUserTags method using the underlyingClient
-    return try await underlyingClient.DeleteUserTags(input)
+    return try await client.DeleteUserTags(input)
   }
 
   public func deleteUsers(
     organizationId: String,
-    userIds: [String]
+    userIds: [String], useProxy: Bool = false
   ) async throws -> Operations.DeleteUsers.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the DeleteUsersIntent
     let deleteUsersIntent = Components.Schemas.DeleteUsersIntent(
@@ -909,14 +933,15 @@ public struct TurnkeyClient {
     )
 
     // Call the DeleteUsers method using the underlyingClient
-    return try await underlyingClient.DeleteUsers(input)
+    return try await client.DeleteUsers(input)
   }
 
   public func emailAuth(
     organizationId: String,
     email: String, targetPublicKey: String, apiKeyName: String?, expirationSeconds: String?,
-    emailCustomization: Components.Schemas.EmailCustomizationParams?
+    emailCustomization: Components.Schemas.EmailCustomizationParams?, useProxy: Bool = false
   ) async throws -> Operations.EmailAuth.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the EmailAuthIntent
     let emailAuthIntent = Components.Schemas.EmailAuthIntent(
@@ -938,13 +963,14 @@ public struct TurnkeyClient {
     )
 
     // Call the EmailAuth method using the underlyingClient
-    return try await underlyingClient.EmailAuth(input)
+    return try await client.EmailAuth(input)
   }
 
   public func exportPrivateKey(
     organizationId: String,
-    privateKeyId: String, targetPublicKey: String
+    privateKeyId: String, targetPublicKey: String, useProxy: Bool = false
   ) async throws -> Operations.ExportPrivateKey.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the ExportPrivateKeyIntent
     let exportPrivateKeyIntent = Components.Schemas.ExportPrivateKeyIntent(
@@ -965,13 +991,15 @@ public struct TurnkeyClient {
     )
 
     // Call the ExportPrivateKey method using the underlyingClient
-    return try await underlyingClient.ExportPrivateKey(input)
+    return try await client.ExportPrivateKey(input)
   }
 
   public func exportWallet(
     organizationId: String,
-    walletId: String, targetPublicKey: String, language: Components.Schemas.MnemonicLanguage?
+    walletId: String, targetPublicKey: String, language: Components.Schemas.MnemonicLanguage?,
+    useProxy: Bool = false
   ) async throws -> Operations.ExportWallet.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the ExportWalletIntent
     let exportWalletIntent = Components.Schemas.ExportWalletIntent(
@@ -992,13 +1020,14 @@ public struct TurnkeyClient {
     )
 
     // Call the ExportWallet method using the underlyingClient
-    return try await underlyingClient.ExportWallet(input)
+    return try await client.ExportWallet(input)
   }
 
   public func exportWalletAccount(
     organizationId: String,
-    address: String, targetPublicKey: String
+    address: String, targetPublicKey: String, useProxy: Bool = false
   ) async throws -> Operations.ExportWalletAccount.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the ExportWalletAccountIntent
     let exportWalletAccountIntent = Components.Schemas.ExportWalletAccountIntent(
@@ -1019,14 +1048,16 @@ public struct TurnkeyClient {
     )
 
     // Call the ExportWalletAccount method using the underlyingClient
-    return try await underlyingClient.ExportWalletAccount(input)
+    return try await client.ExportWalletAccount(input)
   }
 
   public func importPrivateKey(
     organizationId: String,
     userId: String, privateKeyName: String, encryptedBundle: String,
-    curve: Components.Schemas.Curve, addressFormats: [Components.Schemas.AddressFormat]
+    curve: Components.Schemas.Curve, addressFormats: [Components.Schemas.AddressFormat],
+    useProxy: Bool = false
   ) async throws -> Operations.ImportPrivateKey.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the ImportPrivateKeyIntent
     let importPrivateKeyIntent = Components.Schemas.ImportPrivateKeyIntent(
@@ -1048,14 +1079,15 @@ public struct TurnkeyClient {
     )
 
     // Call the ImportPrivateKey method using the underlyingClient
-    return try await underlyingClient.ImportPrivateKey(input)
+    return try await client.ImportPrivateKey(input)
   }
 
   public func importWallet(
     organizationId: String,
     userId: String, walletName: String, encryptedBundle: String,
-    accounts: [Components.Schemas.WalletAccountParams]
+    accounts: [Components.Schemas.WalletAccountParams], useProxy: Bool = false
   ) async throws -> Operations.ImportWallet.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the ImportWalletIntent
     let importWalletIntent = Components.Schemas.ImportWalletIntent(
@@ -1076,13 +1108,14 @@ public struct TurnkeyClient {
     )
 
     // Call the ImportWallet method using the underlyingClient
-    return try await underlyingClient.ImportWallet(input)
+    return try await client.ImportWallet(input)
   }
 
   public func initImportPrivateKey(
     organizationId: String,
-    userId: String
+    userId: String, useProxy: Bool = false
   ) async throws -> Operations.InitImportPrivateKey.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the InitImportPrivateKeyIntent
     let initImportPrivateKeyIntent = Components.Schemas.InitImportPrivateKeyIntent(
@@ -1103,13 +1136,14 @@ public struct TurnkeyClient {
     )
 
     // Call the InitImportPrivateKey method using the underlyingClient
-    return try await underlyingClient.InitImportPrivateKey(input)
+    return try await client.InitImportPrivateKey(input)
   }
 
   public func initImportWallet(
     organizationId: String,
-    userId: String
+    userId: String, useProxy: Bool = false
   ) async throws -> Operations.InitImportWallet.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the InitImportWalletIntent
     let initImportWalletIntent = Components.Schemas.InitImportWalletIntent(
@@ -1130,14 +1164,15 @@ public struct TurnkeyClient {
     )
 
     // Call the InitImportWallet method using the underlyingClient
-    return try await underlyingClient.InitImportWallet(input)
+    return try await client.InitImportWallet(input)
   }
 
   public func initUserEmailRecovery(
     organizationId: String,
     email: String, targetPublicKey: String, expirationSeconds: String?,
-    emailCustomization: Components.Schemas.EmailCustomizationParams?
+    emailCustomization: Components.Schemas.EmailCustomizationParams?, useProxy: Bool = false
   ) async throws -> Operations.InitUserEmailRecovery.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the InitUserEmailRecoveryIntent
     let initUserEmailRecoveryIntent = Components.Schemas.InitUserEmailRecoveryIntent(
@@ -1159,13 +1194,14 @@ public struct TurnkeyClient {
     )
 
     // Call the InitUserEmailRecovery method using the underlyingClient
-    return try await underlyingClient.InitUserEmailRecovery(input)
+    return try await client.InitUserEmailRecovery(input)
   }
 
   public func recoverUser(
     organizationId: String,
-    authenticator: Components.Schemas.AuthenticatorParamsV2, userId: String
+    authenticator: Components.Schemas.AuthenticatorParamsV2, userId: String, useProxy: Bool = false
   ) async throws -> Operations.RecoverUser.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the RecoverUserIntent
     let recoverUserIntent = Components.Schemas.RecoverUserIntent(
@@ -1186,13 +1222,14 @@ public struct TurnkeyClient {
     )
 
     // Call the RecoverUser method using the underlyingClient
-    return try await underlyingClient.RecoverUser(input)
+    return try await client.RecoverUser(input)
   }
 
   public func rejectActivity(
     organizationId: String,
-    fingerprint: String
+    fingerprint: String, useProxy: Bool = false
   ) async throws -> Operations.RejectActivity.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the RejectActivityIntent
     let rejectActivityIntent = Components.Schemas.RejectActivityIntent(
@@ -1213,13 +1250,14 @@ public struct TurnkeyClient {
     )
 
     // Call the RejectActivity method using the underlyingClient
-    return try await underlyingClient.RejectActivity(input)
+    return try await client.RejectActivity(input)
   }
 
   public func removeOrganizationFeature(
     organizationId: String,
-    name: Components.Schemas.FeatureName
+    name: Components.Schemas.FeatureName, useProxy: Bool = false
   ) async throws -> Operations.RemoveOrganizationFeature.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the RemoveOrganizationFeatureIntent
     let removeOrganizationFeatureIntent = Components.Schemas.RemoveOrganizationFeatureIntent(
@@ -1240,13 +1278,14 @@ public struct TurnkeyClient {
     )
 
     // Call the RemoveOrganizationFeature method using the underlyingClient
-    return try await underlyingClient.RemoveOrganizationFeature(input)
+    return try await client.RemoveOrganizationFeature(input)
   }
 
   public func setOrganizationFeature(
     organizationId: String,
-    name: Components.Schemas.FeatureName, value: String
+    name: Components.Schemas.FeatureName, value: String, useProxy: Bool = false
   ) async throws -> Operations.SetOrganizationFeature.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the SetOrganizationFeatureIntent
     let setOrganizationFeatureIntent = Components.Schemas.SetOrganizationFeatureIntent(
@@ -1267,14 +1306,15 @@ public struct TurnkeyClient {
     )
 
     // Call the SetOrganizationFeature method using the underlyingClient
-    return try await underlyingClient.SetOrganizationFeature(input)
+    return try await client.SetOrganizationFeature(input)
   }
 
   public func signRawPayload(
     organizationId: String,
     signWith: String, payload: String, encoding: Components.Schemas.PayloadEncoding,
-    hashFunction: Components.Schemas.HashFunction
+    hashFunction: Components.Schemas.HashFunction, useProxy: Bool = false
   ) async throws -> Operations.SignRawPayload.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the SignRawPayloadIntentV2
     let signRawPayloadIntent = Components.Schemas.SignRawPayloadIntentV2(
@@ -1295,14 +1335,15 @@ public struct TurnkeyClient {
     )
 
     // Call the SignRawPayload method using the underlyingClient
-    return try await underlyingClient.SignRawPayload(input)
+    return try await client.SignRawPayload(input)
   }
 
   public func signRawPayloads(
     organizationId: String,
     signWith: String, payloads: [String], encoding: Components.Schemas.PayloadEncoding,
-    hashFunction: Components.Schemas.HashFunction
+    hashFunction: Components.Schemas.HashFunction, useProxy: Bool = false
   ) async throws -> Operations.SignRawPayloads.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the SignRawPayloadsIntent
     let signRawPayloadsIntent = Components.Schemas.SignRawPayloadsIntent(
@@ -1323,13 +1364,15 @@ public struct TurnkeyClient {
     )
 
     // Call the SignRawPayloads method using the underlyingClient
-    return try await underlyingClient.SignRawPayloads(input)
+    return try await client.SignRawPayloads(input)
   }
 
   public func signTransaction(
     organizationId: String,
-    signWith: String, unsignedTransaction: String, _type: Components.Schemas.TransactionType
+    signWith: String, unsignedTransaction: String, _type: Components.Schemas.TransactionType,
+    useProxy: Bool = false
   ) async throws -> Operations.SignTransaction.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the SignTransactionIntentV2
     let signTransactionIntent = Components.Schemas.SignTransactionIntentV2(
@@ -1350,14 +1393,15 @@ public struct TurnkeyClient {
     )
 
     // Call the SignTransaction method using the underlyingClient
-    return try await underlyingClient.SignTransaction(input)
+    return try await client.SignTransaction(input)
   }
 
   public func updatePolicy(
     organizationId: String,
     policyId: String, policyName: String?, policyEffect: Components.Schemas.Effect?,
-    policyCondition: String?, policyConsensus: String?, policyNotes: String?
+    policyCondition: String?, policyConsensus: String?, policyNotes: String?, useProxy: Bool = false
   ) async throws -> Operations.UpdatePolicy.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the UpdatePolicyIntent
     let updatePolicyIntent = Components.Schemas.UpdatePolicyIntent(
@@ -1379,14 +1423,15 @@ public struct TurnkeyClient {
     )
 
     // Call the UpdatePolicy method using the underlyingClient
-    return try await underlyingClient.UpdatePolicy(input)
+    return try await client.UpdatePolicy(input)
   }
 
   public func updatePrivateKeyTag(
     organizationId: String,
     privateKeyTagId: String, newPrivateKeyTagName: String?, addPrivateKeyIds: [String],
-    removePrivateKeyIds: [String]
+    removePrivateKeyIds: [String], useProxy: Bool = false
   ) async throws -> Operations.UpdatePrivateKeyTag.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the UpdatePrivateKeyTagIntent
     let updatePrivateKeyTagIntent = Components.Schemas.UpdatePrivateKeyTagIntent(
@@ -1408,13 +1453,14 @@ public struct TurnkeyClient {
     )
 
     // Call the UpdatePrivateKeyTag method using the underlyingClient
-    return try await underlyingClient.UpdatePrivateKeyTag(input)
+    return try await client.UpdatePrivateKeyTag(input)
   }
 
   public func updateRootQuorum(
     organizationId: String,
-    threshold: Int32, userIds: [String]
+    threshold: Int32, userIds: [String], useProxy: Bool = false
   ) async throws -> Operations.UpdateRootQuorum.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the UpdateRootQuorumIntent
     let updateRootQuorumIntent = Components.Schemas.UpdateRootQuorumIntent(
@@ -1435,13 +1481,15 @@ public struct TurnkeyClient {
     )
 
     // Call the UpdateRootQuorum method using the underlyingClient
-    return try await underlyingClient.UpdateRootQuorum(input)
+    return try await client.UpdateRootQuorum(input)
   }
 
   public func updateUser(
     organizationId: String,
-    userId: String, userName: String?, userEmail: String?, userTagIds: [String]?
+    userId: String, userName: String?, userEmail: String?, userTagIds: [String]?,
+    useProxy: Bool = false
   ) async throws -> Operations.UpdateUser.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the UpdateUserIntent
     let updateUserIntent = Components.Schemas.UpdateUserIntent(
@@ -1462,13 +1510,15 @@ public struct TurnkeyClient {
     )
 
     // Call the UpdateUser method using the underlyingClient
-    return try await underlyingClient.UpdateUser(input)
+    return try await client.UpdateUser(input)
   }
 
   public func updateUserTag(
     organizationId: String,
-    userTagId: String, newUserTagName: String?, addUserIds: [String], removeUserIds: [String]
+    userTagId: String, newUserTagName: String?, addUserIds: [String], removeUserIds: [String],
+    useProxy: Bool = false
   ) async throws -> Operations.UpdateUserTag.Output {
+    let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
     // Create the UpdateUserTagIntent
     let updateUserTagIntent = Components.Schemas.UpdateUserTagIntent(
@@ -1490,6 +1540,6 @@ public struct TurnkeyClient {
     )
 
     // Call the UpdateUserTag method using the underlyingClient
-    return try await underlyingClient.UpdateUserTag(input)
+    return try await client.UpdateUserTag(input)
   }
 }

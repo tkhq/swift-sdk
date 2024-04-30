@@ -17,6 +17,7 @@ extension NSNotification.Name {
     static let PasskeyRegistrationCompleted = Notification.Name("PasskeyRegistrationCompletedNotification")
     static let PasskeyRegistrationFailed = Notification.Name("PasskeyRegistrationFailedNotification")
     static let PasskeyRegistrationCanceled = Notification.Name("PasskeyRegistrationCanceledNotification")
+    static let InitEmailAuth = Notification.Name("InitEmailAuthNotification")
 }
 
 class AccountManager: NSObject, ASAuthorizationControllerPresentationContextProviding, ASAuthorizationControllerDelegate {
@@ -24,6 +25,7 @@ class AccountManager: NSObject, ASAuthorizationControllerPresentationContextProv
     var authenticationAnchor: ASPresentationAnchor?
     var isPerformingModalRequest = false
     private var passkeyRegistration: PasskeyManager?
+    private var keyManager = KeyManager()
     
     override init() {
             super.init()
@@ -55,9 +57,11 @@ class AccountManager: NSObject, ASAuthorizationControllerPresentationContextProv
         }
     // func signIn(anchor: ASPresentationAnchor, preferImmediatelyAvailableCredentials: Bool) {
     func signIn(email: String, anchor: ASPresentationAnchor) async {
-        let turnkeyClient = TurnkeyClient(rpId: domain, presentationAnchor: anchor)
-        print("Here")
-
+        let proxyURL = URL(string: "http://localhost:3000/api/email-auth")
+        let turnkeyClient = TurnkeyClient(rpId: domain, presentationAnchor: anchor, proxyURL: proxyURL)
+        
+        let organizationId = "acd0bc97-2af5-475b-bc34-0fa7ca3bdc75"
+        
         do {
             // Call the GetWhoami method on the TurnkeyClient instance
             let output = try await turnkeyClient.getWhoami(organizationId: "acd0bc97-2af5-475b-bc34-0fa7ca3bdc75")
@@ -83,6 +87,65 @@ class AccountManager: NSObject, ASAuthorizationControllerPresentationContextProv
         }
         
         isPerformingModalRequest = true
+    }
+
+    func signInEmailAuth(email: String, anchor: ASPresentationAnchor) async {
+        let proxyURL = URL(string: "http://localhost:3000/api/email-auth")
+        let turnkeyClient = TurnkeyClient(rpId: domain, presentationAnchor: anchor, proxyURL: proxyURL)
+        let organizationId = "70189536-9086-4810-a9f0-990d4e7cd622"
+
+        do {
+            let publicKey = try keyManager.createKeyPair()
+//            guard let publicKeyData = SecKeyCopyExternalRepresentation(publicKey as! SecKey, nil) as Data? else {
+//                throw NSError(domain: "KeyConversionError", code: 1001, userInfo: [NSLocalizedDescriptionKey: "Unable to extract the public key data"])
+//            }
+
+            var targetPublicKey = Data([0x04])
+            let rawRepresentation = publicKey.rawRepresentation
+            targetPublicKey.append(rawRepresentation)
+            
+            print("targetPublicKey", targetPublicKey.map{ String(format: "%02x", $0) }.joined())
+
+            let output = try await turnkeyClient.emailAuth(
+                organizationId: organizationId,
+                email: email,
+                targetPublicKey: targetPublicKey.map{ String(format: "%02x", $0) }.joined(),
+                apiKeyName: "test-api-key-swift-sdk",
+                expirationSeconds: "3600",
+                emailCustomization: nil,
+                useProxy: true
+            )
+
+            // Assert the response
+            switch output {
+            case .ok(let response):
+                switch response.body {
+                case .json(let emailAuthResponse):
+                    print(emailAuthResponse)
+                    DispatchQueue.main.async {
+                        self.initEmailAuth()
+                    }
+                }
+            case .undocumented(let statusCode, let undocumentedPayload):
+                // Handle the undocumented response
+                if let body = undocumentedPayload.body {
+                    let bodyString = try await String(collecting: body, upTo: .max)
+                    print("Undocumented response body: \(bodyString)")
+                }
+                print("Undocumented response: \(statusCode)")
+            }
+        } catch {
+            print("Error occurred: \(error)")
+        }
+    }
+    
+    func verifyEncryptedBundle(bundle: String) {
+        do {
+            let decryptedString = try keyManager.decryptBundle(bundle)
+            print("decryptedString", decryptedString)
+        } catch {
+            print("Error occurred: \(error)")
+        }
     }
 
     func beginAutoFillAssistedPasskeySignIn(anchor: ASPresentationAnchor) {
@@ -214,6 +277,10 @@ class AccountManager: NSObject, ASAuthorizationControllerPresentationContextProv
 
     func didCancelModalSheet() {
         NotificationCenter.default.post(name: .ModalSignInSheetCanceled, object: nil)
+    }
+
+    func initEmailAuth() {
+        NotificationCenter.default.post(name: .InitEmailAuth, object: nil)
     }
 }
 

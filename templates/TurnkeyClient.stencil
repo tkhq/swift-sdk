@@ -1,4 +1,4 @@
-import AuthStampMiddleware
+import Middleware
 import AuthenticationServices
 import CryptoKit
 import Foundation
@@ -11,13 +11,13 @@ public struct TurnkeyClient {
   private let passkeyManager: PasskeyManager?
   private let proxyURL: URL?
 
-  internal init(underlyingClient: any APIProtocol, passkeyManager: PasskeyManager?, proxyURL: URL?) {
+  internal init(underlyingClient: any APIProtocol, passkeyManager: PasskeyManager?, proxyURL: URL? = nil) {
     self.underlyingClient = underlyingClient
     self.passkeyManager = passkeyManager
     self.proxyURL = proxyURL
   }
 
-  public init(apiPrivateKey: String, apiPublicKey: String) {
+  public init(apiPrivateKey: String, apiPublicKey: String, proxyURL: URL? = nil) {
     let stamper = Stamper(apiPublicKey: apiPublicKey, apiPrivateKey: apiPrivateKey)
     self.init(
       underlyingClient: Client(
@@ -25,11 +25,12 @@ public struct TurnkeyClient {
         transport: URLSessionTransport(),
         middlewares: [AuthStampMiddleware(stamper: stamper)]
       ),
-      passkeyManager: nil
+      passkeyManager: nil,
+      proxyURL: proxyURL
     )
   }
 
-  public init(rpId: String, presentationAnchor: ASPresentationAnchor) {
+  public init(rpId: String, presentationAnchor: ASPresentationAnchor, proxyURL: URL? = nil) {
     let stamper = Stamper(rpId: rpId, presentationAnchor: presentationAnchor)
     self.init(
       underlyingClient: Client(
@@ -37,14 +38,15 @@ public struct TurnkeyClient {
         transport: URLSessionTransport(),
         middlewares: [AuthStampMiddleware(stamper: stamper)]
       ),
-      passkeyManager: PasskeyManager(rpId: rpId, presentationAnchor: presentationAnchor)
+      passkeyManager: PasskeyManager(rpId: rpId, presentationAnchor: presentationAnchor),
+      proxyURL: proxyURL
     )
   }
 
   private func getProxiedClient() -> any APIProtocol {
         let proxyMiddleware = ProxyMiddleware(proxyURL: proxyURL!)
         return Client(
-            serverURL: proxyURL!,
+            serverURL: URL(string: "https://api.turnkey.com")!,
             transport: URLSessionTransport(),
             middlewares: [proxyMiddleware]
         )

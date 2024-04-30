@@ -64,7 +64,8 @@
             {%- endfor %}
         {%- endset %}
 
-    public func {{ method.callName|lowerFirstLetter }}({% call addActivityMethodParams method.callName %}) async throws -> Operations.{{method.callName}}.Output {
+    public func {{ method.callName|lowerFirstLetter }}({% call addActivityMethodParams method.callName %}, useProxy: Bool = false) async throws -> Operations.{{method.callName}}.Output {
+        let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
 
         // Create the {{ intentStructName }}
         let {{ method.callName|lowerFirstLetter }}Intent = Components.Schemas.{{ intentStructName }}({% call getIntentParams intentStructName %})
@@ -93,6 +94,6 @@
         
 
         // Call the {{ method.callName }} method using the underlyingClient
-        return try await underlyingClient.{{ method.callName }}(input)
+        return try await client.{{ method.callName }}(input)
     }
 {%- endmacro %}

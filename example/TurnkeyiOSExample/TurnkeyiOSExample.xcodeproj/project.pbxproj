@@ -15,11 +15,12 @@
 		1E37D5932BD2D77C00962F0D /* AccountManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E37D5922BD2D77C00962F0D /* AccountManager.swift */; };
 		1E37D59A2BD2FFDD00962F0D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1E37D5992BD2FFDD00962F0D /* LaunchScreen.storyboard */; };
 		1E37D59E2BD3004D00962F0D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1E37D59D2BD3004D00962F0D /* Main.storyboard */; };
-		1E37D5A02BD721E100962F0D /* TurnkeySDK in Frameworks */ = {isa = PBXBuildFile; productRef = 1E37D59F2BD721E100962F0D /* TurnkeySDK */; };
 		1E4FCBCA2BCB71820042A4B2 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E4FCBC92BCB71820042A4B2 /* AppDelegate.swift */; };
 		1E4FCBCC2BCDCA6C0042A4B2 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E4FCBCB2BCDCA6C0042A4B2 /* SceneDelegate.swift */; };
 		1E4FCBD02BCDCAB80042A4B2 /* UserHomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E4FCBCF2BCDCAB80042A4B2 /* UserHomeViewController.swift */; };
 		1E4FCBD22BCDCAD00042A4B2 /* SignInViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E4FCBD12BCDCAD00042A4B2 /* SignInViewController.swift */; };
+		1E81BE842BDC2755006A9A0A /* EmailAuthViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E81BE832BDC2755006A9A0A /* EmailAuthViewController.swift */; };
+		1E81BE862BE03792006A9A0A /* TurnkeySDK in Frameworks */ = {isa = PBXBuildFile; productRef = 1E81BE852BE03792006A9A0A /* TurnkeySDK */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,6 +58,7 @@
 		1E4FCBCB2BCDCA6C0042A4B2 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		1E4FCBCF2BCDCAB80042A4B2 /* UserHomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserHomeViewController.swift; sourceTree = "<group>"; };
 		1E4FCBD12BCDCAD00042A4B2 /* SignInViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInViewController.swift; sourceTree = "<group>"; };
+		1E81BE832BDC2755006A9A0A /* EmailAuthViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailAuthViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -64,7 +66,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1E37D5A02BD721E100962F0D /* TurnkeySDK in Frameworks */,
+				1E81BE862BE03792006A9A0A /* TurnkeySDK in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -119,6 +121,7 @@
 				1E37D5922BD2D77C00962F0D /* AccountManager.swift */,
 				1E37D5992BD2FFDD00962F0D /* LaunchScreen.storyboard */,
 				1E37D59D2BD3004D00962F0D /* Main.storyboard */,
+				1E81BE832BDC2755006A9A0A /* EmailAuthViewController.swift */,
 			);
 			path = TurnkeyiOSExample;
 			sourceTree = "<group>";
@@ -165,7 +168,7 @@
 			);
 			name = TurnkeyiOSExample;
 			packageProductDependencies = (
-				1E37D59F2BD721E100962F0D /* TurnkeySDK */,
+				1E81BE852BE03792006A9A0A /* TurnkeySDK */,
 			);
 			productName = TurnkeyiOSExample;
 			productReference = 1E27801D2BCA349300AE790C /* TurnkeyiOSExample.app */;
@@ -286,6 +289,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1E81BE842BDC2755006A9A0A /* EmailAuthViewController.swift in Sources */,
 				1E4FCBD02BCDCAB80042A4B2 /* UserHomeViewController.swift in Sources */,
 				1E37D5932BD2D77C00962F0D /* AccountManager.swift in Sources */,
 				1E4FCBCA2BCB71820042A4B2 /* AppDelegate.swift in Sources */,
@@ -629,7 +633,7 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		1E37D59F2BD721E100962F0D /* TurnkeySDK */ = {
+		1E81BE852BE03792006A9A0A /* TurnkeySDK */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TurnkeySDK;
 		};

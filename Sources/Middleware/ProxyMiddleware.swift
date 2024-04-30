@@ -11,7 +11,6 @@ package struct ProxyMiddleware {
 }
 
 extension ProxyMiddleware: ClientMiddleware {
-
   package func intercept(
     _ request: HTTPRequest,
     body: HTTPBody?,
@@ -19,49 +18,19 @@ extension ProxyMiddleware: ClientMiddleware {
     operationID: String,
     next: (HTTPRequest, HTTPBody?, URL) async throws -> (HTTPResponse, HTTPBody?)
   ) async throws -> (HTTPResponse, HTTPBody?) {
-    // Create a dictionary to hold the proxy request data
-    var proxyRequestData: [String: Any] = [:]
+    // Save the current full path of the request (baseUrl + request.path)
+    let originalURL = baseURL.appendingPathComponent(request.path ?? "")
 
-    // Set the request headers
-    var headers: [String: String] = [:]
-    for header in request.headerFields {
-      headers[header.name.rawValue] = header.value
-    }
-    proxyRequestData["headers"] = headers
+    // Set the X-Forwarded-For header with the saved original request URL
+    var request = request
+    let xForwardedForHeader = HTTPField(
+      name: HTTPField.Name("X-Forwarded-For")!, value: originalURL.absoluteString)
+    request.headerFields.append(xForwardedForHeader)
 
-    // Set the request body
-    if let body = body {
-      let bodyData = try await body.collect()
-      proxyRequestData["body"] = String(data: bodyData, encoding: .utf8)
-    }
+    // Remove the request path and just forward to the proxyBaseURL
+    request.path = ""
 
-    // Set the destination URL
-    let destinationURL = baseURL.appendingPathComponent(request.path).absoluteString
-    proxyRequestData["destinationURL"] = destinationURL
-
-    // Convert the proxy request data to JSON
-    let jsonData = try JSONSerialization.data(withJSONObject: proxyRequestData, options: [])
-
-    // Create a new URL request with the proxy URL
-    var proxyRequest = URLRequest(url: proxyURL)
-    proxyRequest.httpMethod = "POST"
-    proxyRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    proxyRequest.httpBody = jsonData
-
-    // Send the proxied request
-    let (data, urlResponse) = try await URLSession.shared.data(for: proxyRequest)
-
-    // Create an HTTPResponse from the URL response
-    let httpResponse = HTTPResponse(
-      status: HTTPResponseStatus(rawValue: (urlResponse as? HTTPURLResponse)?.statusCode ?? 500)!,
-      version: request.version,
-      headerFields: HTTPFields(
-        urlResponse.allHeaderFields.map {
-          HTTPField(name: HTTPField.Name($0.key)!, value: "\($0.value)")
-        }),
-      body: data
-    )
-
-    return (httpResponse, nil)
+    // Call and return the next middleware with the modified request and proxy base URL
+    return try await next(request, body, proxyURL)
   }
 }
