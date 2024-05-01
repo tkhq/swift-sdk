@@ -90,7 +90,9 @@ class AccountManager: NSObject, ASAuthorizationControllerPresentationContextProv
     }
 
     func signInEmailAuth(email: String, anchor: ASPresentationAnchor) async {
+        // For email auth we need to proxy the request to a backend that can stamp it
         let proxyURL = URL(string: "http://localhost:3000/api/email-auth")
+        // We create a proxied instance of the Turnkey Client that can proxy requests to the backend
         let turnkeyClient = TurnkeyClient(rpId: domain, presentationAnchor: anchor, proxyURL: proxyURL)
         let organizationId = "70189536-9086-4810-a9f0-990d4e7cd622"
 

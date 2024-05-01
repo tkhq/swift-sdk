@@ -9,15 +9,13 @@ import Shared
 public struct TurnkeyClient {
   private let underlyingClient: any APIProtocol
   private let passkeyManager: PasskeyManager?
-  private let proxyURL: URL?
 
-  internal init(underlyingClient: any APIProtocol, passkeyManager: PasskeyManager?, proxyURL: URL? = nil) {
+  internal init(underlyingClient: any APIProtocol, passkeyManager: PasskeyManager?) {
     self.underlyingClient = underlyingClient
     self.passkeyManager = passkeyManager
-    self.proxyURL = proxyURL
   }
 
-  public init(apiPrivateKey: String, apiPublicKey: String, proxyURL: URL? = nil) {
+  public init(apiPrivateKey: String, apiPublicKey: String) {
     let stamper = Stamper(apiPublicKey: apiPublicKey, apiPrivateKey: apiPrivateKey)
     self.init(
       underlyingClient: Client(
@@ -30,7 +28,7 @@ public struct TurnkeyClient {
     )
   }
 
-  public init(rpId: String, presentationAnchor: ASPresentationAnchor, proxyURL: URL? = nil) {
+  public init(rpId: String, presentationAnchor: ASPresentationAnchor) {
     let stamper = Stamper(rpId: rpId, presentationAnchor: presentationAnchor)
     self.init(
       underlyingClient: Client(
@@ -38,19 +36,9 @@ public struct TurnkeyClient {
         transport: URLSessionTransport(),
         middlewares: [AuthStampMiddleware(stamper: stamper)]
       ),
-      passkeyManager: PasskeyManager(rpId: rpId, presentationAnchor: presentationAnchor),
-      proxyURL: proxyURL
+      passkeyManager: PasskeyManager(rpId: rpId, presentationAnchor: presentationAnchor)
     )
   }
-
-  private func getProxiedClient() -> any APIProtocol {
-        let proxyMiddleware = ProxyMiddleware(proxyURL: proxyURL!)
-        return Client(
-            serverURL: URL(string: "https://api.turnkey.com")!,
-            transport: URLSessionTransport(),
-            middlewares: [proxyMiddleware]
-        )
-    }
 
 {% import "macros.stencil" %}
 {% for class in types.implementing.APIProtocol %}
@@ -75,8 +63,7 @@ public struct TurnkeyClient {
             {% call generateActivityMethod method.callName -%}
         {% else -%}
 
-    public func {{ method.callName|lowerFirstLetter }}({% call addMethodParams method.callName %}, useProxy: Bool = false) async throws -> {{ returnType }} {
-        let client: any APIProtocol = useProxy ? getProxiedClient() : underlyingClient
+    public func {{ method.callName|lowerFirstLetter }}({% call addMethodParams method.callName %}) async throws -> {{ returnType }} {
 
         // Create the {{ requestStructName }}
         let {{ method.callName|lowerFirstLetter }}Request = Components.Schemas.{{ requestStructName }}(
@@ -91,7 +78,7 @@ public struct TurnkeyClient {
             headers: .init(accept: [.init(contentType: .json)]),
             body: .json({{ requestStructName|lowerFirstLetter }})
         )
-        return try await client.{{method.callName}}(input)
+        return try await underlyingClient.{{method.callName}}(input)
     }
         {% endif -%}
     {% endfor %}
