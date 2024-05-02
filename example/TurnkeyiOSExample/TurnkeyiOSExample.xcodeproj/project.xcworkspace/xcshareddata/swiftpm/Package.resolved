@@ -118,6 +118,15 @@
       }
     },
     {
+      "identity" : "valet",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Square/Valet",
+      "state" : {
+        "revision" : "3df8eaa90e1fa0d80830733cdc3c9e098146af3d",
+        "version" : "4.3.0"
+      }
+    },
+    {
       "identity" : "yams",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/jpsim/Yams",

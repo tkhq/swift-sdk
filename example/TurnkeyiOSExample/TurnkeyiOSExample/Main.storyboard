@@ -59,8 +59,14 @@
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <state key="normal" title="Button"/>
                                 <buttonConfiguration key="configuration" style="plain" title="Sign In"/>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="SEb-fO-80t">
+                                <rect key="frame" x="153" y="465" width="87" height="35"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="tinted" title="Passkey"/>
                                 <connections>
-                                    <action selector="signIn:" destination="Dqu-qO-NiQ" eventType="touchUpInside" id="7bb-Au-VGc"/>
+                                    <action selector="signInPasskey:" destination="Dqu-qO-NiQ" eventType="touchUpInside" id="RJZ-a1-8Gr"/>
                                 </connections>
                             </button>
                         </subviews>

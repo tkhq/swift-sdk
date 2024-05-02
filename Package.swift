@@ -5,7 +5,7 @@ import PackageDescription
 
 let package = Package(
   name: "swift-sdk",
-  platforms: [.macOS(.v13), .iOS(.v17), .tvOS(.v16), .watchOS(.v9), .visionOS(.v1)],
+  platforms: [.macOS(.v14), .iOS(.v17), .tvOS(.v16), .watchOS(.v9), .visionOS(.v1)],
   products: [
     // Products define the executables and libraries a package produces, making them visible to other packages.
     .library(
@@ -19,7 +19,9 @@ let package = Package(
     .package(url: "https://github.com/apple/swift-http-types", from: "1.0.2"),
     .package(url: "https://github.com/thebarndog/swift-dotenv.git", from: "2.0.0"),
     .package(url: "https://github.com/mkrd/Swift-BigInt.git", from: "2.0.0"),
-    .package(url: "https://github.com/anquii/Base58Check.git", from: "1.0.0")
+    .package(url: "https://github.com/anquii/Base58Check.git", from: "1.0.0"),
+    .package(url: "https://github.com/Square/Valet", from: "4.0.0"),
+    .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.0.0")
   ],
   targets: [
     // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -28,7 +30,8 @@ let package = Package(
       name: "Shared",
       dependencies: [
         .product(name: "BigNumber", package: "Swift-BigInt"),
-        .product(name: "Base58Check", package: "Base58Check")
+        .product(name: "Base58Check", package: "Base58Check"),
+        .product(name: "Valet", package: "Valet")
       ]
     ),
     .target(
@@ -36,7 +39,7 @@ let package = Package(
       dependencies: [
         .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
         .product(name: "HTTPTypes", package: "swift-http-types"),
-        "Shared",
+        "Shared"
       ],
       path: "Sources/Middleware"
     ),
@@ -45,8 +48,8 @@ let package = Package(
       dependencies: [
         "Middleware", .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
         .product(name: "OpenAPIURLSession", package: "swift-openapi-urlsession"),
-        "Shared",
-        .product(name: "BigNumber", package: "Swift-BigInt")
+        .product(name: "BigNumber", package: "Swift-BigInt"),
+        "Shared"
       ],
       plugins: [
         .plugin(name: "OpenAPIGenerator", package: "swift-openapi-generator")

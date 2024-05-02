@@ -188,7 +188,7 @@ final class TurnkeySDKTests: XCTestCase {
     let proxyURL = URL(string: "http://localhost:3000/api/email-auth")
     // Create an instance of TurnkeyClient with a proxy URL
     let client = TurnkeyClient(
-      apiPrivateKey: apiPrivateKey!, apiPublicKey: apiPublicKey!, proxyURL: proxyURL)
+      apiPrivateKey: apiPrivateKey!, apiPublicKey: apiPublicKey!)
 
     // Define the test input
     let email = "taylor+swift-sdk-test@turnkey.io"
@@ -208,8 +208,7 @@ final class TurnkeySDKTests: XCTestCase {
       targetPublicKey: targetPublicKey,
       apiKeyName: apiKeyName,
       expirationSeconds: expirationSeconds,
-      emailCustomization: nil,
-      useProxy: true
+      emailCustomization: Components.Schemas.EmailCustomizationParams()
     )
 
     // Assert the response

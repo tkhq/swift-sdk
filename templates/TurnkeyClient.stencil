@@ -7,36 +7,98 @@ import OpenAPIURLSession
 import Shared
 
 public struct TurnkeyClient {
+  public static let baseURLString = "https://api.turnkey.com"
+
   private let underlyingClient: any APIProtocol
-  private let passkeyManager: PasskeyManager?
 
-  internal init(underlyingClient: any APIProtocol, passkeyManager: PasskeyManager?) {
+  internal init(underlyingClient: any APIProtocol) {
     self.underlyingClient = underlyingClient
-    self.passkeyManager = passkeyManager
   }
-
-  public init(apiPrivateKey: String, apiPublicKey: String) {
-    let stamper = Stamper(apiPublicKey: apiPublicKey, apiPrivateKey: apiPrivateKey)
+  
+  /// Initializes a `TurnkeyClient` with a proxy server URL.
+  ///
+  /// This initializer configures the `TurnkeyClient` to route all requests through a specified proxy server.
+  /// The proxy server is responsible for forwarding these requests to a backend capable of authenticating them using an API private key.
+  /// This setup is particularly useful during onboarding flows, such as email authentication and creating new sub-organizations,
+  /// where direct authenticated requests are not feasible.
+  ///
+  /// - Parameter proxyURL: The URL of the proxy server that will forward requests to the authenticating backend.
+  ///
+  /// - Note: The `TurnkeyClient` initialized with this method does not directly send authenticated requests. Instead, it relies on the proxy server to handle the authentication.
+  public init(proxyURL: String) {
     self.init(
       underlyingClient: Client(
         serverURL: URL(string: "https://api.turnkey.com")!,
         transport: URLSessionTransport(),
-        middlewares: [AuthStampMiddleware(stamper: stamper)]
-      ),
-      passkeyManager: nil,
-      proxyURL: proxyURL
+        middlewares: [ProxyMiddleware(proxyURL: URL(string: proxyURL)!)]
+      )
     )
   }
 
-  public init(rpId: String, presentationAnchor: ASPresentationAnchor) {
+  {# TODO: Add this function in the future to initialize a TurnkeyClient instance 
+    that uses the stored private key and public key to authenticate the user.
+
+  public init(useDeviceCredentials: bool = false) {
+    let stamper = Stamper(useDeviceCredentials: useDeviceCredentials)
+    self.init(underlyingClient: Client(serverURL: URL(string: "https://api.turnkey.com")!, transport: URLSessionTransport(), middlewares: []), passkeyManager: nil)
+  }
+  #}
+  /// Initializes a `TurnkeyClient` with API keys for authentication.
+  ///
+  /// This initializer creates an instance of `TurnkeyClient` using the provided `apiPrivateKey` and `apiPublicKey`.
+  /// These keys are typically obtained through the Turnkey CLI or your account dashboard. The client uses these keys
+  /// to authenticate requests via a `Stamper` which stamps each request with the key pair.
+  ///
+  /// - Parameters:
+  ///   - apiPrivateKey: The private key obtained from Turnkey, used for signing requests.
+  ///   - apiPublicKey: The public key obtained from Turnkey, used to identify the client.
+  ///   - baseUrl: The base URL of the Turnkey API. Defaults to "https://api.turnkey.com".
+  ///
+  /// - Note: For client-side usage where all authenticated requests need secure key management,
+  ///   it is recommended to use the `AuthKeyManager` for creating, storing, and securely using key pairs.
+  ///   For more details, refer to the [AuthKeyManager](#AuthKeyManager).
+  ///
+  /// - Example:
+  ///   ```
+  ///   let client = TurnkeyClient(apiPrivateKey: "your_api_private_key", apiPublicKey: "your_api_public_key")
+  ///   ```
+  public init(apiPrivateKey: String, apiPublicKey: String, baseUrl: String = "https://api.turnkey.com") {
+    let stamper = Stamper(apiPublicKey: apiPublicKey, apiPrivateKey: apiPrivateKey)
+    self.init(
+      underlyingClient: Client(
+        serverURL: URL(string: baseUrl)!,
+        transport: URLSessionTransport(),
+        middlewares: [AuthStampMiddleware(stamper: stamper)]
+      )
+    )
+  }
+
+  /// Creates an instance of the TurnkeyClient that uses passkeys for authentication.
+  ///
+  /// This initializer sets up the TurnkeyClient with a specific `rpId` (Relying Party Identifier) and `presentationAnchor`.
+  ///
+  /// - Important:
+  ///   You need to have an associated domain with the `webcredentials` service type when making a registration or assertion request;
+  ///   otherwise, the request returns an error. For more information, see [Supporting Associated Domains](https://developer.apple.com/documentation/xcode/supporting-associated-domains).
+  ///
+  /// - Parameters:
+  ///   - rpId: The relying party identifier used for passkey authentication.
+  ///   - presentationAnchor: The presentation anchor used for displaying authentication interfaces.
+  ///   - baseUrl: The base URL of the Turnkey API. Defaults to "https://api.turnkey.com".
+  ///
+  /// - Example:
+  ///   ```
+  ///   let presentationAnchor = ASPresentationAnchor()
+  ///   let client = TurnkeyClient(rpId: "com.example.domain", presentationAnchor: presentationAnchor)
+  ///   ```
+  public init(rpId: String, presentationAnchor: ASPresentationAnchor, baseUrl: String = "https://api.turnkey.com") {
     let stamper = Stamper(rpId: rpId, presentationAnchor: presentationAnchor)
     self.init(
       underlyingClient: Client(
-        serverURL: URL(string: "https://api.turnkey.com")!,
+        serverURL: URL(string: baseUrl)!,
         transport: URLSessionTransport(),
         middlewares: [AuthStampMiddleware(stamper: stamper)]
-      ),
-      passkeyManager: PasskeyManager(rpId: rpId, presentationAnchor: presentationAnchor)
+      )
     )
   }
 
