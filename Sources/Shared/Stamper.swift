@@ -103,7 +103,6 @@ public class Stamper {
           do {
             let jsonData = try JSONSerialization.data(withJSONObject: assertionInfo, options: [])
             if let jsonString = String(data: jsonData, encoding: .utf8) {
-              print(jsonString)
               // Alternatively, resume continuation directly with jsonString
               continuation.resume(returning: jsonString)
             }
@@ -146,7 +145,6 @@ public class Stamper {
     if derivedPublicKey != apiPublicKey {
       throw APIKeyStampError.mismatchedPublicKey(expected: apiPublicKey, actual: derivedPublicKey)
     }
-    print("here")
     return try apiKeyStamp(
       payload: payload, publicKey: privateKey.publicKey, privateKey: privateKey)
   }

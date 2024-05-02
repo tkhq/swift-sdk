@@ -49,7 +49,6 @@ final class TurnkeySDKTests: XCTestCase {
         XCTAssertEqual(whoamiResponse.organizationName, "SDK E2E")
         XCTAssertEqual(whoamiResponse.userId, "c1fe55f0-28b7-450b-8cb6-47d175cb66f5")
         XCTAssertEqual(whoamiResponse.username, "Root user")
-      // print(whoamiResponse)
       // Add more assertions based on the expected response
       }
     case .undocumented(let statusCode, let undocumentedPayload):
@@ -150,14 +149,6 @@ final class TurnkeySDKTests: XCTestCase {
         // Assert the expected properties in the activityResponse
         XCTAssertEqual(activityResponse.activity.organizationId, organizationId)
 
-        // Print the activity as JSON
-        // let encoder = JSONEncoder()
-        // encoder.outputFormatting = .prettyPrinted
-        // let jsonData = try encoder.encode(activityResponse.activity.result)
-        // if let jsonString = String(data: jsonData, encoding: .utf8) {
-        //   print(jsonString)
-        // }
-
         // Assert that the result is not nil
         XCTAssertNotNil(activityResponse.activity.result)
 
@@ -198,10 +189,7 @@ final class TurnkeySDKTests: XCTestCase {
     let apiKeyName = "email-auth-key"
     let expirationSeconds = "3600"
 
-    // let publicKey = try? P256.Signing.PublicKey(compressedRepresentation: targetPublicKey)
-    // let uncompressedPublicKey = publicKey.rawRepresentation.map { String(format: "%02x", $0) }.joined()
-    // print("uncompressedPublicKey", uncompressedPublicKey)
-    // Call the emailAuth method on the TurnkeyClient instance with useProxy set to true
+ 
     let output = try await client.emailAuth(
       organizationId: organizationId!,
       email: email,
@@ -216,9 +204,8 @@ final class TurnkeySDKTests: XCTestCase {
     case .ok(let response):
       switch response.body {
       case .json(let emailAuthResponse):
-        print(emailAuthResponse)
       // Assert the expected properties in the emailAuthResponse
-      // XCTAssertNotNil(emailAuthResponse.activityId)
+      XCTAssertNotNil(emailAuthResponse.activityId)
       // XCTAssertEqual(emailAuthResponse.status, "Success")
       }
     case .undocumented(let statusCode, let undocumentedPayload):
