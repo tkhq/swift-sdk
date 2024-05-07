@@ -136,67 +136,16 @@ public class PasskeyManager: NSObject, ASAuthorizationControllerDelegate,
       let attestationObject = rawAttestationObject.base64URLEncodedString()
       let clientDataJson = credentialRegistration.rawClientDataJSON.base64URLEncodedString()
       let credentialId = credentialRegistration.credentialID.base64URLEncodedString()
-        
-        
 
       let attestation = Attestation(
-        credentialId: credentialId, clientDataJson: clientDataJson, attestationObject: attestationObject)
+        credentialId: credentialId, clientDataJson: clientDataJson,
+        attestationObject: attestationObject)
 
       let registrationResult = PasskeyRegistrationResult(
         challenge: challenge, attestation: attestation)
 
       notifyRegistrationCompleted(result: registrationResult)
       return
-    //        credentialRegistration.rawAttestationObject?.base64URLEncodedString()
-    //
-    //
-    //      guard
-    //        let clientDataJSON = try? JSONDecoder().decode(
-    //          ClientDataJSON.self, from: credentialRegistration.rawClientDataJSON)
-    //      else {
-    //        notifyRegistrationFailed(error: PasskeyRegistrationError.invalidClientDataJSON)
-    //        return
-    //      }
-    //
-    //      guard let rawAttestationData = credentialRegistration.rawAttestationObject else {
-    //        notifyRegistrationFailed(error: PasskeyRegistrationError.invalidAttestation)
-    //        return
-    //      }
-
-    //    guard
-    //      let attestation = try? JSONDecoder().decode(
-    //        ClientDataJSON.self, from: rawAttestationData)
-    //    else {
-    //      notifyRegistrationFailed(error: PasskeyRegistrationError.invalidClientDataJSON)
-    //      return
-    //    }
-
-    //        do {
-    //            guard let jsonData = try JSONSerialization.data(withJSONObject: rawAttestationData, options: [])
-    //            else {
-    //                notifyRegistrationFailed(error: PasskeyRegistrationError.invalidAttestation)
-    //                return
-    //            }
-    //
-    //            guard let jsonString = String(data: jsonData, encoding: .utf8)  else {
-    //                notifyRegistrationFailed(error: PasskeyRegistrationError.invalidAttestation)
-    //                return
-    //            }
-    //        }
-    //        catch {
-    //
-    //        }
-
-    //      let attestation =
-    //        String(data: attestationData, encoding: .utf8) ?? "Invalid attestation encoding"
-    //
-    //      let challenge = clientDataJSON.challenge
-
-    //      let registrationResult = PasskeyRegistrationResult(
-    //        challenge: challenge, attestation: attestation)
-    //
-    //      notifyRegistrationCompleted(result: registrationResult)
-
     case let credentialAssertion as ASAuthorizationPlatformPublicKeyCredentialAssertion:
       logger.log("A passkey was used to sign in: \(credentialAssertion)")
       notifyPasskeyAssertionCompleted(result: credentialAssertion)

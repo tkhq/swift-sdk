@@ -185,18 +185,17 @@ final class TurnkeySDKTests: XCTestCase {
     let email = "taylor+swift-sdk-test@turnkey.io"
     let targetPublicKey =
       "04d3f967632eb6a317059a164b7b71704c22fb2b0f20e6f27f62fdadeea14da558318a88bb9bb06c5886397666b4f1a1e3b92337c3ebebb4d570d4c735bc46fe83"
-    // Data(hexString: apiPrivateKey!)
+
     let apiKeyName = "email-auth-key"
     let expirationSeconds = "3600"
 
- 
     let output = try await client.emailAuth(
       organizationId: organizationId!,
       email: email,
       targetPublicKey: targetPublicKey,
       apiKeyName: apiKeyName,
       expirationSeconds: expirationSeconds,
-      emailCustomization: Components.Schemas.EmailCustomizationParams()
+      emailCustomization: nil
     )
 
     // Assert the response
@@ -204,9 +203,9 @@ final class TurnkeySDKTests: XCTestCase {
     case .ok(let response):
       switch response.body {
       case .json(let emailAuthResponse):
-      // Assert the expected properties in the emailAuthResponse
-      XCTAssertNotNil(emailAuthResponse.activityId)
-      // XCTAssertEqual(emailAuthResponse.status, "Success")
+
+        // Assert the expected properties in the emailAuthResponse
+        XCTAssertNotNil(emailAuthResponse.activity.id)
       }
     case .undocumented(let statusCode, let undocumentedPayload):
       // Handle the undocumented response

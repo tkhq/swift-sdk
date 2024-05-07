@@ -11,16 +11,8 @@ The TurnkeySDK is built to support macOS, iOS, tvOS, watchOS, and visionOS, maki
 To integrate the TurnkeySDK into your Swift project, you need to add it as a dependency in your Package.swift file:
 
 ```swift
-dependencies: [
-    .package(url: "https://github.com/your-organization/swift-sdk", .upToNextMajor(from: "1.0.0"))
-]
+.package(url: "https://github.com/tkhq/swift-sdk", from: "1.0.0")
 ```
-
-Ensure to replace `"https://github.com/your-organization/swift-sdk"` with the actual URL of the Swift SDK repository.
-
-## Usage
-
-Here's a quick guide on how to use the TurnkeySDK in your Swift project:
 
 ## Contributing
 

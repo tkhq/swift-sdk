@@ -21,6 +21,11 @@
 		1E4FCBD02BCDCAB80042A4B2 /* UserHomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E4FCBCF2BCDCAB80042A4B2 /* UserHomeViewController.swift */; };
 		1E4FCBD22BCDCAD00042A4B2 /* SignInViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E4FCBD12BCDCAD00042A4B2 /* SignInViewController.swift */; };
 		1E81BE842BDC2755006A9A0A /* EmailAuthViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E81BE832BDC2755006A9A0A /* EmailAuthViewController.swift */; };
+		1EABCB2A2BE468B00037DD52 /* web3swift in Frameworks */ = {isa = PBXBuildFile; productRef = 1EABCB292BE468B00037DD52 /* web3swift */; };
+		1EABCB2C2BE491790037DD52 /* UserManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EABCB2B2BE491790037DD52 /* UserManager.swift */; };
+		1EABCB2F2BE498A50037DD52 /* UserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EABCB2E2BE498A50037DD52 /* UserModel.swift */; };
+		1EABCB6B2BE4B0000037DD52 /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EABCB6A2BE4B0000037DD52 /* SessionManager.swift */; };
+		1EABCB6F2BE56B4F0037DD52 /* SendTransactionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EABCB6E2BE56B4F0037DD52 /* SendTransactionViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -59,6 +64,10 @@
 		1E4FCBCF2BCDCAB80042A4B2 /* UserHomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserHomeViewController.swift; sourceTree = "<group>"; };
 		1E4FCBD12BCDCAD00042A4B2 /* SignInViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInViewController.swift; sourceTree = "<group>"; };
 		1E81BE832BDC2755006A9A0A /* EmailAuthViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailAuthViewController.swift; sourceTree = "<group>"; };
+		1EABCB2B2BE491790037DD52 /* UserManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManager.swift; sourceTree = "<group>"; };
+		1EABCB2E2BE498A50037DD52 /* UserModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserModel.swift; sourceTree = "<group>"; };
+		1EABCB6A2BE4B0000037DD52 /* SessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SessionManager.swift; path = ../../../../../../../../Documents/SessionManager.swift; sourceTree = "<group>"; };
+		1EABCB6E2BE56B4F0037DD52 /* SendTransactionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendTransactionViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -67,6 +76,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1E4CD78B2BE2CF180097E2CB /* TurnkeySDK in Frameworks */,
+				1EABCB2A2BE468B00037DD52 /* web3swift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -110,7 +120,9 @@
 		1E27801F2BCA349300AE790C /* TurnkeyiOSExample */ = {
 			isa = PBXGroup;
 			children = (
+				1EABCB2D2BE498930037DD52 /* Models */,
 				1E37D5972BD2F3A400962F0D /* Info.plist */,
+				1EABCB2E2BE498A50037DD52 /* UserModel.swift */,
 				1E37D5962BD2EBD200962F0D /* TurnkeyiOSExample.entitlements */,
 				1E2780242BCA349400AE790C /* Assets.xcassets */,
 				1E2780262BCA349400AE790C /* Preview Content */,
@@ -122,6 +134,9 @@
 				1E37D5992BD2FFDD00962F0D /* LaunchScreen.storyboard */,
 				1E37D59D2BD3004D00962F0D /* Main.storyboard */,
 				1E81BE832BDC2755006A9A0A /* EmailAuthViewController.swift */,
+				1EABCB2B2BE491790037DD52 /* UserManager.swift */,
+				1EABCB6A2BE4B0000037DD52 /* SessionManager.swift */,
+				1EABCB6E2BE56B4F0037DD52 /* SendTransactionViewController.swift */,
 			);
 			path = TurnkeyiOSExample;
 			sourceTree = "<group>";
@@ -151,6 +166,13 @@
 			path = TurnkeyiOSExampleUITests;
 			sourceTree = "<group>";
 		};
+		1EABCB2D2BE498930037DD52 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -169,6 +191,7 @@
 			name = TurnkeyiOSExample;
 			packageProductDependencies = (
 				1E4CD78A2BE2CF180097E2CB /* TurnkeySDK */,
+				1EABCB292BE468B00037DD52 /* web3swift */,
 			);
 			productName = TurnkeyiOSExample;
 			productReference = 1E27801D2BCA349300AE790C /* TurnkeyiOSExample.app */;
@@ -244,6 +267,7 @@
 			mainGroup = 1E2780142BCA349300AE790C;
 			packageReferences = (
 				1E4351F82BCDDBAD00BF67F2 /* XCLocalSwiftPackageReference "../.." */,
+				1EABCB282BE468B00037DD52 /* XCRemoteSwiftPackageReference "web3swift" */,
 			);
 			productRefGroup = 1E27801E2BCA349300AE790C /* Products */;
 			projectDirPath = "";
@@ -291,8 +315,12 @@
 			files = (
 				1E81BE842BDC2755006A9A0A /* EmailAuthViewController.swift in Sources */,
 				1E4FCBD02BCDCAB80042A4B2 /* UserHomeViewController.swift in Sources */,
+				1EABCB6B2BE4B0000037DD52 /* SessionManager.swift in Sources */,
+				1EABCB2F2BE498A50037DD52 /* UserModel.swift in Sources */,
+				1EABCB2C2BE491790037DD52 /* UserManager.swift in Sources */,
 				1E37D5932BD2D77C00962F0D /* AccountManager.swift in Sources */,
 				1E4FCBCA2BCB71820042A4B2 /* AppDelegate.swift in Sources */,
+				1EABCB6F2BE56B4F0037DD52 /* SendTransactionViewController.swift in Sources */,
 				1E4FCBD22BCDCAD00042A4B2 /* SignInViewController.swift in Sources */,
 				1E4FCBCC2BCDCA6C0042A4B2 /* SceneDelegate.swift in Sources */,
 			);
@@ -632,10 +660,26 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		1EABCB282BE468B00037DD52 /* XCRemoteSwiftPackageReference "web3swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/web3swift-team/web3swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.2.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		1E4CD78A2BE2CF180097E2CB /* TurnkeySDK */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TurnkeySDK;
+		};
+		1EABCB292BE468B00037DD52 /* web3swift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1EABCB282BE468B00037DD52 /* XCRemoteSwiftPackageReference "web3swift" */;
+			productName = web3swift;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
