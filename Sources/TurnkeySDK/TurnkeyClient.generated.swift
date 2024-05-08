@@ -9,14 +9,6 @@ import OpenAPIRuntime
 import OpenAPIURLSession
 import Shared
 
-func unwrappingError<R>(_ invocation: @autoclosure () async throws -> R) async throws -> R {
-  do {
-    return try await invocation()
-  } catch let error as ClientError {
-    throw error.underlyingError
-  }
-}
-
 public struct TurnkeyClient {
   public static let baseURLString = "https://api.turnkey.com"
 
@@ -107,6 +99,63 @@ public struct TurnkeyClient {
         middlewares: [AuthStampMiddleware(stamper: stamper)]
       )
     )
+  }
+
+  public struct AuthResult {
+    var whoamiResponse: Operations.GetWhoami.Output
+    var apiPublicKey: String
+    var apiPrivateKey: String
+  }
+
+  /// Performs email-based authentication for an organization.
+  ///
+  /// This method initiates an email authentication process by generating an ephemeral private key and using its public counterpart
+  /// to authenticate the email. It returns a tuple containing the authentication response and a closure to verify the encrypted bundle.
+  ///
+  /// - Parameters:
+  ///   - organizationId: The identifier of the organization initiating the authentication.
+  ///   - email: The email address to authenticate.
+  ///   - apiKeyName: Optional. The name of the API key used in the authentication process.
+  ///   - expirationSeconds: Optional. The duration in seconds before the authentication request expires.
+  ///   - emailCustomization: Optional. Customization parameters for the authentication email.
+  ///
+  /// - Returns: A tuple containing the `Operations.EmailAuth.Output` and a closure `(String) async throws -> Void` that accepts an encrypted bundle for verification.
+  ///
+  /// - Throws: An error if the authentication process fails.
+  ///
+  /// - Note: The method internally handles the generation of ephemeral keys and requires proper error handling when calling the returned closure for bundle verification.
+  public func emailAuth(
+    organizationId: String,
+    email: String, apiKeyName: String?, expirationSeconds: String?,
+    emailCustomization: Components.Schemas.EmailCustomizationParams?
+  ) async throws -> (Operations.EmailAuth.Output, (String) async throws -> AuthResult) {
+    let ephemeralPrivateKey = P256.KeyAgreement.PrivateKey()
+    let targetPublicKey = try ephemeralPrivateKey.publicKey.toString(representation: .x963)
+
+    let response = try await emailAuth(
+      organizationId: organizationId, email: email, targetPublicKey: targetPublicKey,
+      apiKeyName: apiKeyName, expirationSeconds: expirationSeconds,
+      emailCustomization: emailCustomization)
+    let authResponseOrganizationId = try response.ok.body.json.activity.organizationId
+
+    let verify: (String) async throws -> AuthResult = { encryptedBundle in
+      let (privateKey:privateKey, publicKey:publicKey) = try AuthManager.decryptBundle(
+        encryptedBundle: encryptedBundle, ephemeralPrivateKey: ephemeralPrivateKey)
+
+      let apiPublicKey = try publicKey.toString(representation: .compressed)
+      let apiPrivateKey = try privateKey.toString(representation: .raw)
+
+      let turnkeyClient = TurnkeyClient(apiPrivateKey: apiPrivateKey, apiPublicKey: apiPublicKey)
+
+      let whoamiResponse = try await turnkeyClient.getWhoami(
+        organizationId: authResponseOrganizationId)
+
+      let result = AuthResult(
+        whoamiResponse: whoamiResponse, apiPublicKey: apiPublicKey, apiPrivateKey: apiPrivateKey)
+      return result
+    }
+
+    return (response, verify)
   }
 
   public func getActivity(organizationId: String, activityId: String) async throws
@@ -962,7 +1011,7 @@ public struct TurnkeyClient {
     )
 
     // Call the EmailAuth method using the underlyingClient
-    return try await unwrappingError(try await underlyingClient.EmailAuth(input))
+    return try await underlyingClient.EmailAuth(input)
   }
 
   public func exportPrivateKey(

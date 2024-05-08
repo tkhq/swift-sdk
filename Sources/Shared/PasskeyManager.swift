@@ -46,12 +46,18 @@ public class PasskeyManager: NSObject, ASAuthorizationControllerDelegate,
   private var presentationAnchor: ASPresentationAnchor?
   private var isPerformingModalRequest = false
 
-  // Initialize with rpId and presentationAnchor
+  /// Initializes a new instance of `PasskeyManager` with the specified relying party identifier and presentation anchor.
+  /// - Parameters:
+  ///   - rpId: The relying party identifier. Note: The `rpId` must correspond to a domain with `webcredentials` configured.
+  ///   See Apple docs for more: https://developer.apple.com/documentation/authenticationservices/public-private_key_authentication/supporting_passkeys
+  ///   - presentationAnchor: The presentation anchor for displaying authorization interfaces.
   public init(rpId: String, presentationAnchor: ASPresentationAnchor) {
     self.rpId = rpId
     self.presentationAnchor = presentationAnchor
   }
 
+  /// Initiates the registration of a new passkey.
+  /// - Parameter email: The email address associated with the new passkey.
   public func registerPasskey(email: String) {
 
     let challenge = generateRandomBuffer()
@@ -76,6 +82,8 @@ public class PasskeyManager: NSObject, ASAuthorizationControllerDelegate,
     isPerformingModalRequest = true
   }
 
+  /// Initiates the assertion of a passkey using the specified challenge.
+  /// - Parameter challenge: The challenge data used for passkey assertion.
   public func assertPasskey(challenge: Data) {
     let publicKeyCredentialProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(
       relyingPartyIdentifier: rpId)
@@ -91,6 +99,8 @@ public class PasskeyManager: NSObject, ASAuthorizationControllerDelegate,
     isPerformingModalRequest = true
   }
 
+  /// Generates a random buffer to be used as a challenge in passkey operations.
+  /// - Returns: A `Data` object containing random bytes.
   private func generateRandomBuffer() -> Data {
     var bytes = [UInt8](repeating: 0, count: 32)
     _ = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
@@ -108,6 +118,10 @@ public class PasskeyManager: NSObject, ASAuthorizationControllerDelegate,
 
   // MARK: - ASAuthorizationControllerDelegate
 
+  /// Handles the completion of an authorization request.
+  /// - Parameters:
+  ///   - controller: The authorization controller handling the request.
+  ///   - authorization: The authorization provided by the system.
   public func authorizationController(
     controller: ASAuthorizationController,
     didCompleteWithAuthorization authorization: ASAuthorization
@@ -156,6 +170,14 @@ public class PasskeyManager: NSObject, ASAuthorizationControllerDelegate,
     isPerformingModalRequest = false
   }
 
+  /// Handles the completion of an authorization request that ended with an error.
+  ///
+  /// This method processes errors from an `ASAuthorizationController` and notifies relevant parties
+  /// about the specific type of error that occurred, whether it's a cancellation or an unexpected error.
+  ///
+  /// - Parameters:
+  ///   - controller: The `ASAuthorizationController` that managed the authorization request.
+  ///   - error: The error that occurred during the authorization process.
   public func authorizationController(
     controller: ASAuthorizationController, didCompleteWithError error: Error
   ) {
@@ -190,7 +212,7 @@ public class PasskeyManager: NSObject, ASAuthorizationControllerDelegate,
     return presentationAnchor!
   }
 
-  // MARK: - Notification
+  // MARK: - Notifications
 
   private func notifyRegistrationCompleted(result: PasskeyRegistrationResult) {
     NotificationCenter.default.post(

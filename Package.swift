@@ -58,5 +58,12 @@ let package = Package(
     .testTarget(
       name: "TurnkeySDKTests",
       dependencies: ["TurnkeySDK", .product(name: "SwiftDotenv", package: "swift-dotenv")]),
+    // Empty target that builds the DocC catalog at /SwiftDocCPluginDocumentation/SwiftDocCPlugin.docc.
+    // The SwiftDocCPlugin catalog includes high-level, user-facing documentation about using
+    // the Swift-DocC plugin from the command-line.
+    .target(
+        name: "TurnkeySDKDocumentation",
+        path: "Sources/TurnkeySDKDocumentation"
+    )
   ]
 )

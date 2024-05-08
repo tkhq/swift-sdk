@@ -1,6 +1,6 @@
 # Email Authentication
 
-This guide provides a walkthrough for implementing email authentication in a Swift application using the [TurnkeyClient](../Sources/TurnkeySDK/TurnkeyClient.generated.swift) and [AuthKeyManager](../Sources/Shared/AuthKeyManager.swift). This process involves generating key pairs, handling encrypted bundles, and verifying user identity.
+This guide provides a walkthrough for implementing email authentication in a Swift application using the [TurnkeyClient](../Sources/TurnkeySDK/TurnkeyClient.generated.swift). This process involves generating key pairs, handling encrypted bundles, and verifying user identity.
 
 For a more detailed explanation of the email authentication process, please refer to the [Turnkey API documentation](https://docs.turnkey.com/features/email-auth).
 
@@ -26,13 +26,15 @@ You may also forgo the use of the provided proxy middleware and make the request
 
 ## Step 2: Generate Ephemeral Key Pair
 
-Use AuthKeyManager to generate a new ephemeral key pair for the email authentication flow.
-This key pair is not persisted and is used temporarily during the authentication process.
-Note: The 'domain' is used for scoping the key storage specific to an app and is optional for persisting the key.
+Next we'll generate an ephemeral key pair, which is will be used to decrypt the encrypted bundle sent
+that the user will receive in their email.
 
 ```swift
-let authKeyManager = AuthKeyManager(domain: "your_domain")
-let publicKey = try authKeyManager.createKeyPair()
+// Create a new ephemeral private key using P-256 curve for key agreement.
+let ephemeralPrivateKey = P256.KeyAgreement.PrivateKey()
+
+// Extract the public key from the private key and convert it to a string using the x963 representation.
+let targetPublicKey = try ephemeralPrivateKey.publicKey.toString(representation: .x963)
 ```
 
 ## Step 3: Define Authentication Parameters
@@ -47,7 +49,7 @@ let emailCustomization = Components.Schemas.EmailCustomizationParams() // Custom
 
 ## Step 4: Send Email Authentication Request
 
-With the TurnkeyClient initialized and the ephemeral key pair generated, you can now send an email authentication request. This involves using the emailAuth method of the TurnkeyClient, passing the necessary parameters.
+With the TurnkeyClient initialized and the ephemeral key pair generated, you can now send an email authentication request. This involves using the `emailAuth` method of the TurnkeyClient, passing in the necessary parameters.
 
 ```swift
 let emailAuthResult = try await client.emailAuth(
@@ -60,14 +62,14 @@ let emailAuthResult = try await client.emailAuth(
 )
 ```
 
-After sending the email authentication request, it's important to handle the response appropriately.If the authentication is successful, you should save the user's sub-organizationId from the response for future use. You'll need this organizationId later to verify the user's keys.
+After sending the email authentication request, it's important to handle the response appropriately. If the authentication is successful, you should save the user's sub-organizationId from the response for future use. You'll need this organizationId later to verify the user's keys.
 
 ```swift
 switch emailAuthResult {
 case .ok(let response):
     // The user's sub-organizationId:
     let organizationId = response.activity.organizationId
-    // Proceed with user session creation or update
+    // Proceed with user session creation
 case .undocumented(let statusCode, let undocumentedPayload):
     // Handle error, possibly retry or log
 }
@@ -75,10 +77,10 @@ case .undocumented(let statusCode, let undocumentedPayload):
 
 ## Step 6: Verify Encrypted Bundle
 
-After your user receives the encrypted bundle from Turnkey, via email, you need to decrypt this bundle to retrieve the necessary keys for further authentication steps. Use the [`decryptBundle`](../Sources/Shared/AuthKeyManager.swift?plain=1#L160) method from the `AuthKeyManager` to handle this.
+After your user receives the encrypted bundle from Turnkey, via email, you need to decrypt this bundle to retrieve the necessary keys for further authentication steps. Use the [`decryptBundle`](../Sources/Shared/AuthManager.swift) method from the `AuthManager` to handle this.
 
 ```swift
-let (privateKey, publicKey) = try authManager.decryptBundle(encryptedBundle)
+let (privateKey, publicKey) = try AuthManager.decryptBundle(encryptedBundle)
 ```
 
 This method will decrypt the encrypted bundle and provide you with the private and public keys needed for the session.
@@ -89,7 +91,7 @@ At this point in the authentication process, you have two options:
 
 Note: Since the decrypted API key is similar to a session key, it should be handled with the same level of security as authentication tokens.
 
-## Step 7: Initializing the TurnkeyClient and Verify the user
+## Step 7: Initialize the TurnkeyClient and Verify the user
 
 After successfully decrypting the encrypted bundle and retrieving the private and public API keys, you can initialize a TurnkeyClient instance using these keys for further authenticated requests:
 
@@ -107,9 +109,11 @@ let turnkeyClient = TurnkeyClient(apiPrivateKey: apiPrivateKey, apiPublicKey: ap
 
 After initializing the TurnkeyClient with the decrypted API keys, it is recommended to verify the validity of these credentials. This can be done using the `getWhoami` method, which checks the active status of the credentials against the Turnkey API.
 
+Note: We're using the `organizationId` from the email authentication result as the `organizationId` for the `getWhoami` request.
+
 ```swift
 do {
-    let whoamiResponse = try await turnkeyClient.getWhoami(organizationId: organizationId /* from emailAuthResult */)
+    let whoamiResponse = try await turnkeyClient.getWhoami(organizationId: organizationId)
 
     switch whoamiResponse {
     case .ok(let response):
@@ -120,6 +124,4 @@ do {
 } catch {
     print("Error during credential verification: \(error)")
 }
-
-
 ```

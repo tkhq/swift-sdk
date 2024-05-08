@@ -7,39 +7,34 @@ public class Stamper {
   private let apiPrivateKey: String?
   private let presentationAnchor: ASPresentationAnchor?
   private let passkeyManager: PasskeyManager?
-  private let authKeyManager: AuthKeyManager?
-  private let keyIdentifier: String?
+  private var observer: NSObjectProtocol?
 
   // TODO: We will want to in the future create a Stamper super class
-  // and then create subclasses AuthKeyStamper, APIKeyStamper, and PasskeyStamper
+  // and then create subclasses APIKeyStamper, and PasskeyStamper
   // then we can have a method that takes a Stamper and then calls the appropriate
   // stamp method based on the type of the stamper.
   // This will reduce a lot of duplication in the code and the nil initializations
-  public init(domain: String, keyIdentifier: String) throws {
-    self.apiPublicKey = nil
-    self.apiPrivateKey = nil
-    self.presentationAnchor = nil
-    self.passkeyManager = nil
-    self.authKeyManager = try AuthKeyManager(domain: domain)
-    self.keyIdentifier = keyIdentifier
-  }
 
+  /// Initializes a Stamper instance for API key-based stamping.
+  /// - Parameters:
+  ///   - apiPublicKey: The public key used for API key stamping.
+  ///   - apiPrivateKey: The private key used for API key stamping.
   public init(apiPublicKey: String, apiPrivateKey: String) {
     self.apiPublicKey = apiPublicKey
     self.apiPrivateKey = apiPrivateKey
     self.presentationAnchor = nil
     self.passkeyManager = nil
-    self.authKeyManager = nil
-    self.keyIdentifier = nil
   }
 
+  /// Initializes a Stamper instance for Passkey-based stamping.
+  /// - Parameters:
+  ///   - rpId: The relying party identifier for WebAuthn.
+  ///   - presentationAnchor: The presentation anchor for the authentication session.
   public init(rpId: String, presentationAnchor: ASPresentationAnchor) {
     self.apiPublicKey = nil
     self.apiPrivateKey = nil
     self.presentationAnchor = presentationAnchor
     self.passkeyManager = PasskeyManager(rpId: rpId, presentationAnchor: presentationAnchor)
-    self.authKeyManager = nil
-    self.keyIdentifier = nil
   }
 
   public enum StampError: Error {
@@ -51,11 +46,14 @@ public class Stamper {
     case invalidPayload
   }
 
+  /// Asynchronously stamps the given payload string.
+  /// - Parameter payload: The string payload to stamp.
+  /// - Returns: A tuple containing the header name and the header value for the stamped payload.
+  /// - Throws: `StampError` if the payload cannot be processed or if appropriate credentials are missing.
   public func stamp(payload: String) async throws -> (
     stampHeaderName: String, stampHeaderValue: String
   ) {
 
-    // Convert payload string to Data
     guard let payloadData = payload.data(using: .utf8) else {
       throw StampError.invalidPayload
     }
@@ -68,7 +66,7 @@ public class Stamper {
         payload: payloadHash, apiPublicKey: apiPublicKey, apiPrivateKey: apiPrivateKey)
 
       return ("X-Stamp", stamp)
-    } else if let manager = passkeyManager {
+    } else if passkeyManager != nil {
       let stamp = try await passkeyStamp(payload: payloadHash)
       return ("X-Stamp-WebAuthn", stamp)
     } else {
@@ -80,14 +78,18 @@ public class Stamper {
     case assertionFailed
   }
 
+  /// Asynchronously performs a Passkey stamp operation using the given SHA256 digest of the payload.
+  /// - Parameter payload: The SHA256 digest of the payload to stamp.
+  /// - Returns: A JSON string representing the stamp.
+  /// - Throws: `PasskeyStampError` on failure.
   public func passkeyStamp(payload: SHA256Digest) async throws -> String {
-    // Convert the completion-based method to async/await using a continuation
     return try await withCheckedThrowingContinuation { continuation in
-      var observer: NSObjectProtocol?
-      observer = NotificationCenter.default.addObserver(
+      self.observer = NotificationCenter.default.addObserver(
         forName: .PasskeyAssertionCompleted, object: nil, queue: nil
-      ) { notification in
-        NotificationCenter.default.removeObserver(observer!)
+      ) { [weak self] notification in
+        guard let self = self else { return }
+        NotificationCenter.default.removeObserver(self.observer!)
+        self.observer = nil
 
         if let assertionResult = notification.userInfo?["result"]
           as? ASAuthorizationPlatformPublicKeyCredentialAssertion
@@ -103,7 +105,6 @@ public class Stamper {
           do {
             let jsonData = try JSONSerialization.data(withJSONObject: assertionInfo, options: [])
             if let jsonString = String(data: jsonData, encoding: .utf8) {
-              // Alternatively, resume continuation directly with jsonString
               continuation.resume(returning: jsonString)
             }
           } catch {
@@ -122,12 +123,20 @@ public class Stamper {
 
   public enum APIKeyStampError: Error {
     case invalidPrivateKey
+    case invalidPublicKey
     case mismatchedPublicKey(expected: String, actual: String)
     case invalidHexCharacter
     case signatureFailed
     case failedToSerializePayloadToJSON(Error)
   }
 
+  /// Synchronously stamps the given SHA256 digest of the payload using API keys.
+  /// - Parameters:
+  ///   - payload: The SHA256 digest of the payload.
+  ///   - apiPublicKey: The public key used for stamping.
+  ///   - apiPrivateKey: The private key used for stamping.
+  /// - Returns: A base64-encoded JSON string representing the stamp.
+  /// - Throws: `APIKeyStampError` on failure.
   public func apiKeyStamp(payload: SHA256Digest, apiPublicKey: String, apiPrivateKey: String)
     throws -> String
   {
@@ -153,6 +162,10 @@ public class Stamper {
     payload: SHA256Digest, publicKey: P256.Signing.PublicKey, privateKey: P256.Signing.PrivateKey
   ) throws -> String {
 
+    guard let apiPublicKey = apiPublicKey else {
+      throw APIKeyStampError.invalidPublicKey  // Use an appropriate error
+    }
+
     guard let signature = try? privateKey.signature(for: payload) else {
       throw APIKeyStampError.signatureFailed
     }
@@ -173,75 +186,4 @@ public class Stamper {
     }
   }
 
-  /// Generates an API key stamp using cryptographic keys persisted in the keychain.
-  /// Typically these keys would be added during the email auth flow.
-  ///
-  /// This method retrieves a persisted key pair using `usePersistedKey` and then
-  /// uses these keys to generate an API key stamp. It ensures that the private key
-  /// is cleared from memory after its usage to maintain security.
-  ///
-  /// - Parameter payload: The SHA256 digest that needs to be stamped.
-  /// - Returns: A string representing the base64 URL encoded JSON containing the public key, signature scheme, and signature.
-  /// - Throws: Throws an error if the key retrieval or API key stamp generation fails.
-  private func apiKeyStamp(payload: SHA256Digest) throws -> String {
-    let keys = try usePersistedKey()
-    defer {
-      // Clear privateKey from memory in AuthKeyManager
-      authKeyManager?.clearPrivateKey()
-    }
-    return try apiKeyStamp(payload: payload, publicKey: keys.publicKey, privateKey: keys.privateKey)
-  }
-
-  enum AuthKeyError: Error {
-    case noKeyIdentifier
-    case noPrivateKeyAvailable
-  }
-
-  /// Retrieves a persisted cryptographic key pair from the authentication key manager.
-  ///
-  /// This method attempts to fetch a stored private key using the `authKeyManager`. If successful,
-  /// it also derives the corresponding public key from the private key.
-  ///
-  /// - Returns: A tuple containing the private key and its corresponding public key.
-  /// - Throws: `AuthKeyError.noPrivateKeyAvailable` if no private key could be retrieved.
-  ///
-  private func usePersistedKey() throws -> (
-    privateKey: P256.Signing.PrivateKey, publicKey: P256.Signing.PublicKey
-  ) {
-    guard let keyIdentifier = keyIdentifier else {
-      throw AuthKeyError.noKeyIdentifier
-    }
-    guard let privateKey = try authKeyManager?.getPrivateKey(keyIdentifier: keyIdentifier) else {
-      throw AuthKeyError.noPrivateKeyAvailable
-    }
-    let publicKey = privateKey.publicKey
-    return (privateKey, publicKey)
-  }
-
-  public enum DecodingError: Error {
-    case oddLengthString
-    case invalidHexCharacter
-  }
-
-  private func decodeHex(_ hex: String) throws -> Data {
-    guard hex.count % 2 == 0 else {
-      throw DecodingError.oddLengthString
-    }
-
-    var data = Data()
-    var bytePair = ""
-
-    for char in hex {
-      bytePair += String(char)
-      if bytePair.count == 2 {
-        guard let byte = UInt8(bytePair, radix: 16) else {
-          throw DecodingError.invalidHexCharacter
-        }
-        data.append(byte)
-        bytePair = ""
-      }
-    }
-
-    return data
-  }
 }
