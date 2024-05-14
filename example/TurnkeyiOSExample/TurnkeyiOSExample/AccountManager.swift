@@ -153,7 +153,7 @@ class AccountManager: NSObject, ASAuthorizationControllerPresentationContextProv
     func verifyEncryptedBundle(bundle: String) async {
         do {
             let (privateKey, publicKey) = try authKeyManager.decryptBundle(bundle)
-
+            
             let apiPublicKey = try publicKey.toString(representation: .compressed)
             let apiPrivateKey = try privateKey.toString(representation: .raw)
 

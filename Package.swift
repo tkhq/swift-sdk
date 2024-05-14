@@ -21,7 +21,8 @@ let package = Package(
     .package(url: "https://github.com/mkrd/Swift-BigInt.git", from: "2.0.0"),
     .package(url: "https://github.com/anquii/Base58Check.git", from: "1.0.0"),
     .package(url: "https://github.com/Square/Valet", from: "4.0.0"),
-    .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.0.0")
+    .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.0.0"),
+    .package(url: "https://github.com/Boilertalk/Web3.swift.git", from: "0.6.0")
   ],
   targets: [
     // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -57,7 +58,12 @@ let package = Package(
     ),
     .testTarget(
       name: "TurnkeySDKTests",
-      dependencies: ["TurnkeySDK", .product(name: "SwiftDotenv", package: "swift-dotenv")]),
+      dependencies: ["TurnkeySDK",
+         .product(name: "SwiftDotenv", package: "swift-dotenv"),
+         .product(name: "Web3", package: "Web3.swift"),
+         .product(name: "Web3PromiseKit", package: "Web3.swift"),
+      ]
+    ),
     // Empty target that builds the DocC catalog at /SwiftDocCPluginDocumentation/SwiftDocCPlugin.docc.
     // The SwiftDocCPlugin catalog includes high-level, user-facing documentation about using
     // the Swift-DocC plugin from the command-line.

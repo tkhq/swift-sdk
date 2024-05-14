@@ -26,4 +26,4 @@ This setup is especially useful for operations like:
 
 ## Conclusion
 
-While `ProxyMiddleware` is not required, it provides a flexible and powerful way to manage preliminary request handling and authentication, providing a flexible and secure way to integrate with Turnkey's services.
+While `ProxyMiddleware` is not required, it provides a convenient way to send requests on behalf of unauthenticated users looking to perform
