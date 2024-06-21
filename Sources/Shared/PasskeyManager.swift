@@ -2,19 +2,6 @@ import AuthenticationServices
 import Foundation
 import os
 
-extension Notification.Name {
-  static let PasskeyManagerModalSheetCanceled = Notification.Name(
-    "PasskeyManagerModalSheetCanceledNotification")
-  static let PasskeyManagerError = Notification.Name("PasskeyManagerErrorNotification")
-  static let PasskeyRegistrationCompleted = Notification.Name(
-    "PasskeyRegistrationCompletedNotification")
-  static let PasskeyRegistrationFailed = Notification.Name("PasskeyRegistrationFailedNotification")
-  static let PasskeyRegistrationCanceled = Notification.Name(
-    "PasskeyRegistrationCanceledNotification")
-  static let PasskeyAssertionCompleted = Notification.Name(
-    "PasskeyAssertionCompletedNotification")
-}
-
 public struct Attestation {
   public let credentialId: String
   public let clientDataJson: String
@@ -44,7 +31,8 @@ public class PasskeyManager: NSObject, ASAuthorizationControllerDelegate,
 {
   private let rpId: String
   private var presentationAnchor: ASPresentationAnchor?
-  private var isPerformingModalRequest = false
+  private var registrationContinuation: CheckedContinuation<PasskeyRegistrationResult, Error>?
+  private var assertionContinuation: CheckedContinuation<ASAuthorizationPlatformPublicKeyCredentialAssertion, Error>?
 
   /// Initializes a new instance of `PasskeyManager` with the specified relying party identifier and presentation anchor.
   /// - Parameters:
@@ -58,45 +46,40 @@ public class PasskeyManager: NSObject, ASAuthorizationControllerDelegate,
 
   /// Initiates the registration of a new passkey.
   /// - Parameter email: The email address associated with the new passkey.
-  public func registerPasskey(email: String) {
+  public func registerPasskey(email: String) async throws -> PasskeyRegistrationResult {
+    return try await withCheckedThrowingContinuation { continuation in
+      self.registrationContinuation = continuation
+      let challenge = generateRandomBuffer()
+      let userID = Data(UUID().uuidString.utf8)
 
-    let challenge = generateRandomBuffer()
-    let userID = Data(UUID().uuidString.utf8)
+      let publicKeyCredentialProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: rpId)
+      let registrationRequest = publicKeyCredentialProvider.createCredentialRegistrationRequest(
+        challenge: challenge,
+        name: email.components(separatedBy: "@").first ?? "",
+        userID: userID
+      )
 
-    let publicKeyCredentialProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(
-      relyingPartyIdentifier: rpId)
-
-    let registrationRequest = publicKeyCredentialProvider.createCredentialRegistrationRequest(
-      challenge: challenge,
-      name: email.components(separatedBy: "@").first ?? "",
-      userID: userID
-    )
-
-    let authorizationController = ASAuthorizationController(authorizationRequests: [
-      registrationRequest
-    ])
-    authorizationController.delegate = self
-    authorizationController.presentationContextProvider = self
-    authorizationController.performRequests()
-
-    isPerformingModalRequest = true
+      let authorizationController = ASAuthorizationController(authorizationRequests: [
+        registrationRequest
+      ])
+      authorizationController.delegate = self
+      authorizationController.presentationContextProvider = self
+      authorizationController.performRequests()
+    }
   }
 
   /// Initiates the assertion of a passkey using the specified challenge.
   /// - Parameter challenge: The challenge data used for passkey assertion.
-  public func assertPasskey(challenge: Data) {
-    let publicKeyCredentialProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(
-      relyingPartyIdentifier: rpId)
-
-    let assertionRequest = publicKeyCredentialProvider.createCredentialAssertionRequest(
-      challenge: challenge)
-
-    let authController = ASAuthorizationController(authorizationRequests: [assertionRequest])
-    authController.delegate = self
-    authController.presentationContextProvider = self
-    authController.performRequests()
-
-    isPerformingModalRequest = true
+  public func assertPasskey(challenge: Data) async throws -> ASAuthorizationPlatformPublicKeyCredentialAssertion {
+    return try await withCheckedThrowingContinuation { continuation in
+      self.assertionContinuation = continuation
+      let publicKeyCredentialProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: rpId)
+      let assertionRequest = publicKeyCredentialProvider.createCredentialAssertionRequest(challenge: challenge)
+      let authController = ASAuthorizationController(authorizationRequests: [assertionRequest])
+      authController.delegate = self
+      authController.presentationContextProvider = self
+      authController.performRequests()
+    }
   }
 
   /// Generates a random buffer to be used as a challenge in passkey operations.
@@ -133,7 +116,7 @@ public class PasskeyManager: NSObject, ASAuthorizationControllerDelegate,
     case let credentialRegistration as ASAuthorizationPlatformPublicKeyCredentialRegistration:
 
       guard let rawAttestationObject = credentialRegistration.rawAttestationObject else {
-        notifyRegistrationFailed(error: PasskeyRegistrationError.invalidAttestation)
+        registrationContinuation?.resume(throwing: PasskeyRegistrationError.invalidAttestation)
         return
       }
 
@@ -141,7 +124,7 @@ public class PasskeyManager: NSObject, ASAuthorizationControllerDelegate,
         let clientDataJSON = try? JSONDecoder().decode(
           ClientDataJSON.self, from: credentialRegistration.rawClientDataJSON)
       else {
-        notifyRegistrationFailed(error: PasskeyRegistrationError.invalidClientDataJSON)
+        registrationContinuation?.resume(throwing: PasskeyRegistrationError.invalidClientDataJSON)
         return
       }
 
@@ -158,16 +141,15 @@ public class PasskeyManager: NSObject, ASAuthorizationControllerDelegate,
       let registrationResult = PasskeyRegistrationResult(
         challenge: challenge, attestation: attestation)
 
-      notifyRegistrationCompleted(result: registrationResult)
+      registrationContinuation?.resume(returning: registrationResult)
       return
     case let credentialAssertion as ASAuthorizationPlatformPublicKeyCredentialAssertion:
       logger.log("A passkey was used to sign in: \(credentialAssertion)")
-      notifyPasskeyAssertionCompleted(result: credentialAssertion)
+      assertionContinuation?.resume(returning: credentialAssertion)
     default:
-      notifyPasskeyManagerError(error: PasskeyManagerError.unknownAuthorizationType)
+      assertionContinuation?.resume(throwing: PasskeyManagerError.unknownAuthorizationType)
+      registrationContinuation?.resume(throwing: PasskeyManagerError.unknownAuthorizationType)
     }
-
-    isPerformingModalRequest = false
   }
 
   /// Handles the completion of an authorization request that ended with an error.
@@ -183,22 +165,20 @@ public class PasskeyManager: NSObject, ASAuthorizationControllerDelegate,
   ) {
     let logger = Logger()
     guard let authorizationError = error as? ASAuthorizationError else {
-      isPerformingModalRequest = false
       logger.error("Unexpected authorization error: \(error.localizedDescription)")
-      notifyPasskeyManagerError(error: PasskeyManagerError.authorizationFailed(error))
+      assertionContinuation?.resume(throwing: PasskeyManagerError.authorizationFailed(error))
+      registrationContinuation?.resume(throwing: PasskeyManagerError.authorizationFailed(error))
       return
     }
 
     if authorizationError.code == .canceled {
-      if isPerformingModalRequest {
-        notifyModalSheetCanceled()
-      }
+      registrationContinuation?.resume(throwing: CancellationError())
+      assertionContinuation?.resume(throwing: CancellationError())
     } else {
       logger.error("Error: \((error as NSError).userInfo)")
-      notifyPasskeyManagerError(error: PasskeyManagerError.authorizationFailed(error))
+      assertionContinuation?.resume(throwing: PasskeyManagerError.authorizationFailed(error))
+      registrationContinuation?.resume(throwing: PasskeyManagerError.authorizationFailed(error))
     }
-
-    isPerformingModalRequest = false
   }
 
   struct ClientDataJSON: Codable {
@@ -210,37 +190,5 @@ public class PasskeyManager: NSObject, ASAuthorizationControllerDelegate,
   public func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor
   {
     return presentationAnchor!
-  }
-
-  // MARK: - Notifications
-
-  private func notifyRegistrationCompleted(result: PasskeyRegistrationResult) {
-    NotificationCenter.default.post(
-      name: .PasskeyRegistrationCompleted, object: self, userInfo: ["result": result])
-  }
-
-  private func notifyRegistrationFailed(error: PasskeyRegistrationError) {
-    NotificationCenter.default.post(
-      name: .PasskeyRegistrationFailed, object: self, userInfo: ["error": error])
-  }
-
-  private func notifyRegistrationCanceled() {
-    NotificationCenter.default.post(name: .PasskeyRegistrationCanceled, object: self)
-  }
-
-  private func notifyModalSheetCanceled() {
-    NotificationCenter.default.post(name: .PasskeyManagerModalSheetCanceled, object: self)
-  }
-
-  private func notifyPasskeyManagerError(error: PasskeyManagerError) {
-    NotificationCenter.default.post(
-      name: .PasskeyManagerError, object: self, userInfo: ["error": error])
-  }
-
-  private func notifyPasskeyAssertionCompleted(
-    result: ASAuthorizationPlatformPublicKeyCredentialAssertion
-  ) {
-    NotificationCenter.default.post(
-      name: .PasskeyAssertionCompleted, object: self, userInfo: ["result": result])
   }
 }

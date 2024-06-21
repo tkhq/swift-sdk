@@ -7,7 +7,6 @@ public class Stamper {
   private let apiPrivateKey: String?
   private let presentationAnchor: ASPresentationAnchor?
   private let passkeyManager: PasskeyManager?
-  private var observer: NSObjectProtocol?
 
   // TODO: We will want to in the future create a Stamper super class
   // and then create subclasses APIKeyStamper, and PasskeyStamper
@@ -83,42 +82,21 @@ public class Stamper {
   /// - Returns: A JSON string representing the stamp.
   /// - Throws: `PasskeyStampError` on failure.
   public func passkeyStamp(payload: SHA256Digest) async throws -> String {
-    return try await withCheckedThrowingContinuation { continuation in
-      self.observer = NotificationCenter.default.addObserver(
-        forName: .PasskeyAssertionCompleted, object: nil, queue: nil
-      ) { [weak self] notification in
-        guard let self = self else { return }
-        NotificationCenter.default.removeObserver(self.observer!)
-        self.observer = nil
-
-        if let assertionResult = notification.userInfo?["result"]
-          as? ASAuthorizationPlatformPublicKeyCredentialAssertion
-        {
-          // Construct the result from the assertion
-          let assertionInfo = [
-            "authenticatorData": assertionResult.rawAuthenticatorData.base64URLEncodedString(),
-            "clientDataJson": assertionResult.rawClientDataJSON.base64URLEncodedString(),
-            "credentialId": assertionResult.credentialID.base64URLEncodedString(),
-            "signature": assertionResult.signature.base64URLEncodedString(),
-          ]
-
-          do {
-            let jsonData = try JSONSerialization.data(withJSONObject: assertionInfo, options: [])
-            if let jsonString = String(data: jsonData, encoding: .utf8) {
-              continuation.resume(returning: jsonString)
-            }
-          } catch {
-            continuation.resume(throwing: error)
-          }
-        } else if let error = notification.userInfo?["error"] as? Error {
-          continuation.resume(throwing: error)
-        } else {
-          continuation.resume(throwing: StampError.assertionFailed)
-        }
-      }
-
-      self.passkeyManager?.assertPasskey(challenge: Data(payload))
-    }
+    guard let passkeyManager else { throw StampError.assertionFailed }
+    let assertionResult = try await passkeyManager.assertPasskey(
+      challenge: payload.compactMap { String(format: "%02x", $0) }.joined().data(using: .utf8)!
+    )
+      
+    let assertionInfo = [
+      "authenticatorData": assertionResult.rawAuthenticatorData.base64URLEncodedString(),
+      "clientDataJson": assertionResult.rawClientDataJSON.base64URLEncodedString(),
+      "credentialId": assertionResult.credentialID.base64URLEncodedString(),
+      "signature": assertionResult.signature.base64URLEncodedString(),
+    ]
+      
+    let jsonData = try JSONSerialization.data(withJSONObject: assertionInfo, options: [])
+    guard let result = String(data: jsonData, encoding: .utf8) else { throw StampError.assertionFailed }
+    return result
   }
 
   public enum APIKeyStampError: Error {
