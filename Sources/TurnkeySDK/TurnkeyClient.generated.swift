@@ -1,4 +1,4 @@
-// Generated using Sourcery 2.2.2 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.2.5 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
 import AuthenticationServices
@@ -158,1411 +158,1052 @@ public struct TurnkeyClient {
     return (response, verify)
   }
 
-  public func getActivity(organizationId: String, activityId: String) async throws
-    -> Operations.GetActivity.Output
+  public func publicApiService_GetActivity() async throws
+    -> Operations.PublicApiService_GetActivity.Output
   {
 
-    // Create the GetActivityRequest
-    let getActivityRequest = Components.Schemas.GetActivityRequest(
-      organizationId: organizationId, activityId: activityId
-    )
+    // Create the PublicApiService_GetActivityRequest
+    let publicApiService_GetActivityRequest = Components.Schemas
+      .PublicApiService_GetActivityRequest()
 
-    let input = Operations.GetActivity.Input(
+    let input = Operations.PublicApiService_GetActivity.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(getActivityRequest)
+      body: .json(publicApiService_GetActivityRequest)
     )
-    return try await underlyingClient.GetActivity(input)
+    return try await underlyingClient.PublicApiService_GetActivity(input)
   }
-  public func getApiKey(organizationId: String, apiKeyId: String) async throws
-    -> Operations.GetApiKey.Output
+  public func publicApiService_GetApiKey() async throws
+    -> Operations.PublicApiService_GetApiKey.Output
   {
 
-    // Create the GetApiKeyRequest
-    let getApiKeyRequest = Components.Schemas.GetApiKeyRequest(
-      organizationId: organizationId, apiKeyId: apiKeyId
-    )
+    // Create the PublicApiService_GetApiKeyRequest
+    let publicApiService_GetApiKeyRequest = Components.Schemas.PublicApiService_GetApiKeyRequest()
 
-    let input = Operations.GetApiKey.Input(
+    let input = Operations.PublicApiService_GetApiKey.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(getApiKeyRequest)
+      body: .json(publicApiService_GetApiKeyRequest)
     )
-    return try await underlyingClient.GetApiKey(input)
+    return try await underlyingClient.PublicApiService_GetApiKey(input)
   }
-  public func getApiKeys(organizationId: String, userId: String?) async throws
-    -> Operations.GetApiKeys.Output
+  public func publicApiService_GetApiKeys() async throws
+    -> Operations.PublicApiService_GetApiKeys.Output
   {
 
-    // Create the GetApiKeysRequest
-    let getApiKeysRequest = Components.Schemas.GetApiKeysRequest(
-      organizationId: organizationId, userId: userId
-    )
+    // Create the PublicApiService_GetApiKeysRequest
+    let publicApiService_GetApiKeysRequest = Components.Schemas.PublicApiService_GetApiKeysRequest()
 
-    let input = Operations.GetApiKeys.Input(
+    let input = Operations.PublicApiService_GetApiKeys.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(getApiKeysRequest)
+      body: .json(publicApiService_GetApiKeysRequest)
     )
-    return try await underlyingClient.GetApiKeys(input)
+    return try await underlyingClient.PublicApiService_GetApiKeys(input)
   }
-  public func getAuthenticator(organizationId: String, authenticatorId: String) async throws
-    -> Operations.GetAuthenticator.Output
+  public func publicApiService_GetAttestationDocument() async throws
+    -> Operations.PublicApiService_GetAttestationDocument.Output
   {
 
-    // Create the GetAuthenticatorRequest
-    let getAuthenticatorRequest = Components.Schemas.GetAuthenticatorRequest(
-      organizationId: organizationId, authenticatorId: authenticatorId
-    )
+    // Create the PublicApiService_GetAttestationDocumentRequest
+    let publicApiService_GetAttestationDocumentRequest = Components.Schemas
+      .PublicApiService_GetAttestationDocumentRequest()
 
-    let input = Operations.GetAuthenticator.Input(
+    let input = Operations.PublicApiService_GetAttestationDocument.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(getAuthenticatorRequest)
+      body: .json(publicApiService_GetAttestationDocumentRequest)
     )
-    return try await underlyingClient.GetAuthenticator(input)
+    return try await underlyingClient.PublicApiService_GetAttestationDocument(input)
   }
-  public func getAuthenticators(organizationId: String, userId: String) async throws
-    -> Operations.GetAuthenticators.Output
+  public func publicApiService_GetAuthenticator() async throws
+    -> Operations.PublicApiService_GetAuthenticator.Output
   {
 
-    // Create the GetAuthenticatorsRequest
-    let getAuthenticatorsRequest = Components.Schemas.GetAuthenticatorsRequest(
-      organizationId: organizationId, userId: userId
-    )
+    // Create the PublicApiService_GetAuthenticatorRequest
+    let publicApiService_GetAuthenticatorRequest = Components.Schemas
+      .PublicApiService_GetAuthenticatorRequest()
 
-    let input = Operations.GetAuthenticators.Input(
+    let input = Operations.PublicApiService_GetAuthenticator.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(getAuthenticatorsRequest)
+      body: .json(publicApiService_GetAuthenticatorRequest)
     )
-    return try await underlyingClient.GetAuthenticators(input)
+    return try await underlyingClient.PublicApiService_GetAuthenticator(input)
   }
-  public func getPolicy(organizationId: String, policyId: String) async throws
-    -> Operations.GetPolicy.Output
+  public func publicApiService_GetAuthenticators() async throws
+    -> Operations.PublicApiService_GetAuthenticators.Output
   {
 
-    // Create the GetPolicyRequest
-    let getPolicyRequest = Components.Schemas.GetPolicyRequest(
-      organizationId: organizationId, policyId: policyId
-    )
+    // Create the PublicApiService_GetAuthenticatorsRequest
+    let publicApiService_GetAuthenticatorsRequest = Components.Schemas
+      .PublicApiService_GetAuthenticatorsRequest()
 
-    let input = Operations.GetPolicy.Input(
+    let input = Operations.PublicApiService_GetAuthenticators.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(getPolicyRequest)
+      body: .json(publicApiService_GetAuthenticatorsRequest)
     )
-    return try await underlyingClient.GetPolicy(input)
+    return try await underlyingClient.PublicApiService_GetAuthenticators(input)
   }
-  public func getPrivateKey(organizationId: String, privateKeyId: String) async throws
-    -> Operations.GetPrivateKey.Output
+  public func publicApiService_GetOauthProviders() async throws
+    -> Operations.PublicApiService_GetOauthProviders.Output
   {
 
-    // Create the GetPrivateKeyRequest
-    let getPrivateKeyRequest = Components.Schemas.GetPrivateKeyRequest(
-      organizationId: organizationId, privateKeyId: privateKeyId
-    )
+    // Create the PublicApiService_GetOauthProvidersRequest
+    let publicApiService_GetOauthProvidersRequest = Components.Schemas
+      .PublicApiService_GetOauthProvidersRequest()
 
-    let input = Operations.GetPrivateKey.Input(
+    let input = Operations.PublicApiService_GetOauthProviders.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(getPrivateKeyRequest)
+      body: .json(publicApiService_GetOauthProvidersRequest)
     )
-    return try await underlyingClient.GetPrivateKey(input)
+    return try await underlyingClient.PublicApiService_GetOauthProviders(input)
   }
-  public func getUser(organizationId: String, userId: String) async throws
-    -> Operations.GetUser.Output
+  public func publicApiService_GetOrganization() async throws
+    -> Operations.PublicApiService_GetOrganization.Output
   {
 
-    // Create the GetUserRequest
-    let getUserRequest = Components.Schemas.GetUserRequest(
-      organizationId: organizationId, userId: userId
-    )
+    // Create the PublicApiService_GetOrganizationRequest
+    let publicApiService_GetOrganizationRequest = Components.Schemas
+      .PublicApiService_GetOrganizationRequest()
 
-    let input = Operations.GetUser.Input(
+    let input = Operations.PublicApiService_GetOrganization.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(getUserRequest)
+      body: .json(publicApiService_GetOrganizationRequest)
     )
-    return try await underlyingClient.GetUser(input)
+    return try await underlyingClient.PublicApiService_GetOrganization(input)
   }
-  public func getWallet(organizationId: String, walletId: String) async throws
-    -> Operations.GetWallet.Output
+  public func publicApiService_GetOrganizationConfigs() async throws
+    -> Operations.PublicApiService_GetOrganizationConfigs.Output
   {
 
-    // Create the GetWalletRequest
-    let getWalletRequest = Components.Schemas.GetWalletRequest(
-      organizationId: organizationId, walletId: walletId
-    )
+    // Create the PublicApiService_GetOrganizationConfigsRequest
+    let publicApiService_GetOrganizationConfigsRequest = Components.Schemas
+      .PublicApiService_GetOrganizationConfigsRequest()
 
-    let input = Operations.GetWallet.Input(
+    let input = Operations.PublicApiService_GetOrganizationConfigs.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(getWalletRequest)
+      body: .json(publicApiService_GetOrganizationConfigsRequest)
     )
-    return try await underlyingClient.GetWallet(input)
+    return try await underlyingClient.PublicApiService_GetOrganizationConfigs(input)
   }
-  public func getActivities(
-    organizationId: String, filterByStatus: [Components.Schemas.ActivityStatus]?,
-    paginationOptions: Components.Schemas.Pagination?,
-    filterByType: [Components.Schemas.ActivityType]?
-  ) async throws -> Operations.GetActivities.Output {
-
-    // Create the GetActivitiesRequest
-    let getActivitiesRequest = Components.Schemas.GetActivitiesRequest(
-      organizationId: organizationId, filterByStatus: filterByStatus,
-      paginationOptions: paginationOptions, filterByType: filterByType
-    )
-
-    let input = Operations.GetActivities.Input(
-      headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(getActivitiesRequest)
-    )
-    return try await underlyingClient.GetActivities(input)
-  }
-  public func getPolicies(organizationId: String) async throws -> Operations.GetPolicies.Output {
-
-    // Create the GetPoliciesRequest
-    let getPoliciesRequest = Components.Schemas.GetPoliciesRequest(
-      organizationId: organizationId
-    )
-
-    let input = Operations.GetPolicies.Input(
-      headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(getPoliciesRequest)
-    )
-    return try await underlyingClient.GetPolicies(input)
-  }
-  public func listPrivateKeyTags(organizationId: String) async throws
-    -> Operations.ListPrivateKeyTags.Output
+  public func publicApiService_GetPolicy() async throws
+    -> Operations.PublicApiService_GetPolicy.Output
   {
 
-    // Create the ListPrivateKeyTagsRequest
-    let listPrivateKeyTagsRequest = Components.Schemas.ListPrivateKeyTagsRequest(
-      organizationId: organizationId
-    )
+    // Create the PublicApiService_GetPolicyRequest
+    let publicApiService_GetPolicyRequest = Components.Schemas.PublicApiService_GetPolicyRequest()
 
-    let input = Operations.ListPrivateKeyTags.Input(
+    let input = Operations.PublicApiService_GetPolicy.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(listPrivateKeyTagsRequest)
+      body: .json(publicApiService_GetPolicyRequest)
     )
-    return try await underlyingClient.ListPrivateKeyTags(input)
+    return try await underlyingClient.PublicApiService_GetPolicy(input)
   }
-  public func getPrivateKeys(organizationId: String) async throws
-    -> Operations.GetPrivateKeys.Output
+  public func publicApiService_GetPrivateKey() async throws
+    -> Operations.PublicApiService_GetPrivateKey.Output
   {
 
-    // Create the GetPrivateKeysRequest
-    let getPrivateKeysRequest = Components.Schemas.GetPrivateKeysRequest(
-      organizationId: organizationId
-    )
+    // Create the PublicApiService_GetPrivateKeyRequest
+    let publicApiService_GetPrivateKeyRequest = Components.Schemas
+      .PublicApiService_GetPrivateKeyRequest()
 
-    let input = Operations.GetPrivateKeys.Input(
+    let input = Operations.PublicApiService_GetPrivateKey.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(getPrivateKeysRequest)
+      body: .json(publicApiService_GetPrivateKeyRequest)
     )
-    return try await underlyingClient.GetPrivateKeys(input)
+    return try await underlyingClient.PublicApiService_GetPrivateKey(input)
   }
-  public func getSubOrgIds(
-    organizationId: String, filterType: String?, filterValue: String?,
-    paginationOptions: Components.Schemas.Pagination?
-  ) async throws -> Operations.GetSubOrgIds.Output {
+  public func publicApiService_GetUser() async throws -> Operations.PublicApiService_GetUser.Output
+  {
 
-    // Create the GetSubOrgIdsRequest
-    let getSubOrgIdsRequest = Components.Schemas.GetSubOrgIdsRequest(
-      organizationId: organizationId, filterType: filterType, filterValue: filterValue,
-      paginationOptions: paginationOptions
-    )
+    // Create the PublicApiService_GetUserRequest
+    let publicApiService_GetUserRequest = Components.Schemas.PublicApiService_GetUserRequest()
 
-    let input = Operations.GetSubOrgIds.Input(
+    let input = Operations.PublicApiService_GetUser.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(getSubOrgIdsRequest)
+      body: .json(publicApiService_GetUserRequest)
     )
-    return try await underlyingClient.GetSubOrgIds(input)
+    return try await underlyingClient.PublicApiService_GetUser(input)
   }
-  public func listUserTags(organizationId: String) async throws -> Operations.ListUserTags.Output {
+  public func publicApiService_GetWallet() async throws
+    -> Operations.PublicApiService_GetWallet.Output
+  {
 
-    // Create the ListUserTagsRequest
-    let listUserTagsRequest = Components.Schemas.ListUserTagsRequest(
-      organizationId: organizationId
-    )
+    // Create the PublicApiService_GetWalletRequest
+    let publicApiService_GetWalletRequest = Components.Schemas.PublicApiService_GetWalletRequest()
 
-    let input = Operations.ListUserTags.Input(
+    let input = Operations.PublicApiService_GetWallet.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(listUserTagsRequest)
+      body: .json(publicApiService_GetWalletRequest)
     )
-    return try await underlyingClient.ListUserTags(input)
+    return try await underlyingClient.PublicApiService_GetWallet(input)
   }
-  public func getUsers(organizationId: String) async throws -> Operations.GetUsers.Output {
+  public func publicApiService_GetActivities() async throws
+    -> Operations.PublicApiService_GetActivities.Output
+  {
 
-    // Create the GetUsersRequest
-    let getUsersRequest = Components.Schemas.GetUsersRequest(
-      organizationId: organizationId
-    )
+    // Create the PublicApiService_GetActivitiesRequest
+    let publicApiService_GetActivitiesRequest = Components.Schemas
+      .PublicApiService_GetActivitiesRequest()
 
-    let input = Operations.GetUsers.Input(
+    let input = Operations.PublicApiService_GetActivities.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(getUsersRequest)
+      body: .json(publicApiService_GetActivitiesRequest)
     )
-    return try await underlyingClient.GetUsers(input)
+    return try await underlyingClient.PublicApiService_GetActivities(input)
   }
-  public func getWalletAccounts(
-    organizationId: String, walletId: String, paginationOptions: Components.Schemas.Pagination?
-  ) async throws -> Operations.GetWalletAccounts.Output {
+  public func publicApiService_GetPolicies() async throws
+    -> Operations.PublicApiService_GetPolicies.Output
+  {
 
-    // Create the GetWalletAccountsRequest
-    let getWalletAccountsRequest = Components.Schemas.GetWalletAccountsRequest(
-      organizationId: organizationId, walletId: walletId, paginationOptions: paginationOptions
-    )
+    // Create the PublicApiService_GetPoliciesRequest
+    let publicApiService_GetPoliciesRequest = Components.Schemas
+      .PublicApiService_GetPoliciesRequest()
 
-    let input = Operations.GetWalletAccounts.Input(
+    let input = Operations.PublicApiService_GetPolicies.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(getWalletAccountsRequest)
+      body: .json(publicApiService_GetPoliciesRequest)
     )
-    return try await underlyingClient.GetWalletAccounts(input)
+    return try await underlyingClient.PublicApiService_GetPolicies(input)
   }
-  public func getWallets(organizationId: String) async throws -> Operations.GetWallets.Output {
+  public func publicApiService_ListPrivateKeyTags() async throws
+    -> Operations.PublicApiService_ListPrivateKeyTags.Output
+  {
 
-    // Create the GetWalletsRequest
-    let getWalletsRequest = Components.Schemas.GetWalletsRequest(
-      organizationId: organizationId
-    )
+    // Create the PublicApiService_ListPrivateKeyTagsRequest
+    let publicApiService_ListPrivateKeyTagsRequest = Components.Schemas
+      .PublicApiService_ListPrivateKeyTagsRequest()
 
-    let input = Operations.GetWallets.Input(
+    let input = Operations.PublicApiService_ListPrivateKeyTags.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(getWalletsRequest)
+      body: .json(publicApiService_ListPrivateKeyTagsRequest)
     )
-    return try await underlyingClient.GetWallets(input)
+    return try await underlyingClient.PublicApiService_ListPrivateKeyTags(input)
   }
-  public func getWhoami(organizationId: String) async throws -> Operations.GetWhoami.Output {
+  public func publicApiService_GetPrivateKeys() async throws
+    -> Operations.PublicApiService_GetPrivateKeys.Output
+  {
 
-    // Create the GetWhoamiRequest
-    let getWhoamiRequest = Components.Schemas.GetWhoamiRequest(
-      organizationId: organizationId
-    )
+    // Create the PublicApiService_GetPrivateKeysRequest
+    let publicApiService_GetPrivateKeysRequest = Components.Schemas
+      .PublicApiService_GetPrivateKeysRequest()
 
-    let input = Operations.GetWhoami.Input(
+    let input = Operations.PublicApiService_GetPrivateKeys.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(getWhoamiRequest)
+      body: .json(publicApiService_GetPrivateKeysRequest)
     )
-    return try await underlyingClient.GetWhoami(input)
+    return try await underlyingClient.PublicApiService_GetPrivateKeys(input)
   }
+  public func publicApiService_GetSubOrgIds() async throws
+    -> Operations.PublicApiService_GetSubOrgIds.Output
+  {
 
-  public func approveActivity(
-    organizationId: String,
-    fingerprint: String
-  ) async throws -> Operations.ApproveActivity.Output {
+    // Create the PublicApiService_GetSubOrgIdsRequest
+    let publicApiService_GetSubOrgIdsRequest = Components.Schemas
+      .PublicApiService_GetSubOrgIdsRequest()
 
-    // Create the ApproveActivityIntent
-    let approveActivityIntent = Components.Schemas.ApproveActivityIntent(
-      fingerprint: fingerprint)
-
-    // Create the ApproveActivityRequest
-    let approveActivityRequest = Components.Schemas.ApproveActivityRequest(
-      _type: .ACTIVITY_TYPE_APPROVE_ACTIVITY,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: approveActivityIntent
-    )
-
-    // Create the input for the ApproveActivity method
-    let input = Operations.ApproveActivity.Input(
+    let input = Operations.PublicApiService_GetSubOrgIds.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(approveActivityRequest)
+      body: .json(publicApiService_GetSubOrgIdsRequest)
     )
-
-    // Call the ApproveActivity method using the underlyingClient
-    return try await underlyingClient.ApproveActivity(input)
+    return try await underlyingClient.PublicApiService_GetSubOrgIds(input)
   }
+  public func publicApiService_ListUserTags() async throws
+    -> Operations.PublicApiService_ListUserTags.Output
+  {
 
-  public func createApiKeys(
-    organizationId: String,
-    apiKeys: [Components.Schemas.ApiKeyParams], userId: String
-  ) async throws -> Operations.CreateApiKeys.Output {
+    // Create the PublicApiService_ListUserTagsRequest
+    let publicApiService_ListUserTagsRequest = Components.Schemas
+      .PublicApiService_ListUserTagsRequest()
 
-    // Create the CreateApiKeysIntent
-    let createApiKeysIntent = Components.Schemas.CreateApiKeysIntent(
-      apiKeys: apiKeys, userId: userId)
-
-    // Create the CreateApiKeysRequest
-    let createApiKeysRequest = Components.Schemas.CreateApiKeysRequest(
-      _type: .ACTIVITY_TYPE_CREATE_API_KEYS,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: createApiKeysIntent
-    )
-
-    // Create the input for the CreateApiKeys method
-    let input = Operations.CreateApiKeys.Input(
+    let input = Operations.PublicApiService_ListUserTags.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(createApiKeysRequest)
+      body: .json(publicApiService_ListUserTagsRequest)
     )
-
-    // Call the CreateApiKeys method using the underlyingClient
-    return try await underlyingClient.CreateApiKeys(input)
+    return try await underlyingClient.PublicApiService_ListUserTags(input)
   }
+  public func publicApiService_GetUsers() async throws
+    -> Operations.PublicApiService_GetUsers.Output
+  {
 
-  public func createAuthenticators(
-    organizationId: String,
-    authenticators: [Components.Schemas.AuthenticatorParamsV2], userId: String
-  ) async throws -> Operations.CreateAuthenticators.Output {
+    // Create the PublicApiService_GetUsersRequest
+    let publicApiService_GetUsersRequest = Components.Schemas.PublicApiService_GetUsersRequest()
 
-    // Create the CreateAuthenticatorsIntentV2
-    let createAuthenticatorsIntent = Components.Schemas.CreateAuthenticatorsIntentV2(
-      authenticators: authenticators, userId: userId)
-
-    // Create the CreateAuthenticatorsRequest
-    let createAuthenticatorsRequest = Components.Schemas.CreateAuthenticatorsRequest(
-      _type: .ACTIVITY_TYPE_CREATE_AUTHENTICATORS_V2,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: createAuthenticatorsIntent
-    )
-
-    // Create the input for the CreateAuthenticators method
-    let input = Operations.CreateAuthenticators.Input(
+    let input = Operations.PublicApiService_GetUsers.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(createAuthenticatorsRequest)
+      body: .json(publicApiService_GetUsersRequest)
     )
-
-    // Call the CreateAuthenticators method using the underlyingClient
-    return try await underlyingClient.CreateAuthenticators(input)
+    return try await underlyingClient.PublicApiService_GetUsers(input)
   }
+  public func publicApiService_GetWalletAccounts() async throws
+    -> Operations.PublicApiService_GetWalletAccounts.Output
+  {
 
-  public func createInvitations(
-    organizationId: String,
-    invitations: [Components.Schemas.InvitationParams]
-  ) async throws -> Operations.CreateInvitations.Output {
+    // Create the PublicApiService_GetWalletAccountsRequest
+    let publicApiService_GetWalletAccountsRequest = Components.Schemas
+      .PublicApiService_GetWalletAccountsRequest()
 
-    // Create the CreateInvitationsIntent
-    let createInvitationsIntent = Components.Schemas.CreateInvitationsIntent(
-      invitations: invitations)
-
-    // Create the CreateInvitationsRequest
-    let createInvitationsRequest = Components.Schemas.CreateInvitationsRequest(
-      _type: .ACTIVITY_TYPE_CREATE_INVITATIONS,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: createInvitationsIntent
-    )
-
-    // Create the input for the CreateInvitations method
-    let input = Operations.CreateInvitations.Input(
+    let input = Operations.PublicApiService_GetWalletAccounts.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(createInvitationsRequest)
+      body: .json(publicApiService_GetWalletAccountsRequest)
     )
-
-    // Call the CreateInvitations method using the underlyingClient
-    return try await underlyingClient.CreateInvitations(input)
+    return try await underlyingClient.PublicApiService_GetWalletAccounts(input)
   }
+  public func publicApiService_GetWallets() async throws
+    -> Operations.PublicApiService_GetWallets.Output
+  {
 
-  public func createPolicies(
-    organizationId: String,
-    policies: [Components.Schemas.CreatePolicyIntentV3]
-  ) async throws -> Operations.CreatePolicies.Output {
+    // Create the PublicApiService_GetWalletsRequest
+    let publicApiService_GetWalletsRequest = Components.Schemas.PublicApiService_GetWalletsRequest()
 
-    // Create the CreatePoliciesIntent
-    let createPoliciesIntent = Components.Schemas.CreatePoliciesIntent(
-      policies: policies)
-
-    // Create the CreatePoliciesRequest
-    let createPoliciesRequest = Components.Schemas.CreatePoliciesRequest(
-      _type: .ACTIVITY_TYPE_CREATE_POLICIES,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: createPoliciesIntent
-    )
-
-    // Create the input for the CreatePolicies method
-    let input = Operations.CreatePolicies.Input(
+    let input = Operations.PublicApiService_GetWallets.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(createPoliciesRequest)
+      body: .json(publicApiService_GetWalletsRequest)
     )
-
-    // Call the CreatePolicies method using the underlyingClient
-    return try await underlyingClient.CreatePolicies(input)
+    return try await underlyingClient.PublicApiService_GetWallets(input)
   }
+  public func publicApiService_GetWhoami() async throws
+    -> Operations.PublicApiService_GetWhoami.Output
+  {
 
-  public func createPolicy(
-    organizationId: String,
-    policyName: String, effect: Components.Schemas.Effect, condition: String?, consensus: String?,
-    notes: String?
-  ) async throws -> Operations.CreatePolicy.Output {
+    // Create the PublicApiService_GetWhoamiRequest
+    let publicApiService_GetWhoamiRequest = Components.Schemas.PublicApiService_GetWhoamiRequest()
 
-    // Create the CreatePolicyIntentV3
-    let createPolicyIntent = Components.Schemas.CreatePolicyIntentV3(
-      policyName: policyName, effect: effect, condition: condition, consensus: consensus,
-      notes: notes)
-
-    // Create the CreatePolicyRequest
-    let createPolicyRequest = Components.Schemas.CreatePolicyRequest(
-      _type: .ACTIVITY_TYPE_CREATE_POLICY_V3,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: createPolicyIntent
-    )
-
-    // Create the input for the CreatePolicy method
-    let input = Operations.CreatePolicy.Input(
+    let input = Operations.PublicApiService_GetWhoami.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(createPolicyRequest)
+      body: .json(publicApiService_GetWhoamiRequest)
     )
-
-    // Call the CreatePolicy method using the underlyingClient
-    return try await underlyingClient.CreatePolicy(input)
+    return try await underlyingClient.PublicApiService_GetWhoami(input)
   }
+  public func publicApiService_ApproveActivity() async throws
+    -> Operations.PublicApiService_ApproveActivity.Output
+  {
 
-  public func createPrivateKeyTag(
-    organizationId: String,
-    privateKeyTagName: String, privateKeyIds: [String]
-  ) async throws -> Operations.CreatePrivateKeyTag.Output {
+    // Create the PublicApiService_ApproveActivityRequest
+    let publicApiService_ApproveActivityRequest = Components.Schemas
+      .PublicApiService_ApproveActivityRequest()
 
-    // Create the CreatePrivateKeyTagIntent
-    let createPrivateKeyTagIntent = Components.Schemas.CreatePrivateKeyTagIntent(
-      privateKeyTagName: privateKeyTagName, privateKeyIds: privateKeyIds)
-
-    // Create the CreatePrivateKeyTagRequest
-    let createPrivateKeyTagRequest = Components.Schemas.CreatePrivateKeyTagRequest(
-      _type: .ACTIVITY_TYPE_CREATE_PRIVATE_KEY_TAG,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: createPrivateKeyTagIntent
-    )
-
-    // Create the input for the CreatePrivateKeyTag method
-    let input = Operations.CreatePrivateKeyTag.Input(
+    let input = Operations.PublicApiService_ApproveActivity.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(createPrivateKeyTagRequest)
+      body: .json(publicApiService_ApproveActivityRequest)
     )
-
-    // Call the CreatePrivateKeyTag method using the underlyingClient
-    return try await underlyingClient.CreatePrivateKeyTag(input)
+    return try await underlyingClient.PublicApiService_ApproveActivity(input)
   }
+  public func publicApiService_CreateApiKeys() async throws
+    -> Operations.PublicApiService_CreateApiKeys.Output
+  {
 
-  public func createPrivateKeys(
-    organizationId: String,
-    privateKeys: [Components.Schemas.PrivateKeyParams]
-  ) async throws -> Operations.CreatePrivateKeys.Output {
+    // Create the PublicApiService_CreateApiKeysRequest
+    let publicApiService_CreateApiKeysRequest = Components.Schemas
+      .PublicApiService_CreateApiKeysRequest()
 
-    // Create the CreatePrivateKeysIntentV2
-    let createPrivateKeysIntent = Components.Schemas.CreatePrivateKeysIntentV2(
-      privateKeys: privateKeys)
-
-    // Create the CreatePrivateKeysRequest
-    let createPrivateKeysRequest = Components.Schemas.CreatePrivateKeysRequest(
-      _type: .ACTIVITY_TYPE_CREATE_PRIVATE_KEYS_V2,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: createPrivateKeysIntent
-    )
-
-    // Create the input for the CreatePrivateKeys method
-    let input = Operations.CreatePrivateKeys.Input(
+    let input = Operations.PublicApiService_CreateApiKeys.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(createPrivateKeysRequest)
+      body: .json(publicApiService_CreateApiKeysRequest)
     )
-
-    // Call the CreatePrivateKeys method using the underlyingClient
-    return try await underlyingClient.CreatePrivateKeys(input)
+    return try await underlyingClient.PublicApiService_CreateApiKeys(input)
   }
+  public func publicApiService_CreateApiOnlyUsers() async throws
+    -> Operations.PublicApiService_CreateApiOnlyUsers.Output
+  {
 
-  public func createSubOrganization(
-    organizationId: String,
-    subOrganizationName: String, rootUsers: [Components.Schemas.RootUserParams],
-    rootQuorumThreshold: Int32, wallet: Components.Schemas.WalletParams?,
-    disableEmailRecovery: Bool?, disableEmailAuth: Bool?
-  ) async throws -> Operations.CreateSubOrganization.Output {
+    // Create the PublicApiService_CreateApiOnlyUsersRequest
+    let publicApiService_CreateApiOnlyUsersRequest = Components.Schemas
+      .PublicApiService_CreateApiOnlyUsersRequest()
 
-    // Create the CreateSubOrganizationIntentV4
-    let createSubOrganizationIntent = Components.Schemas.CreateSubOrganizationIntentV4(
-      subOrganizationName: subOrganizationName, rootUsers: rootUsers,
-      rootQuorumThreshold: rootQuorumThreshold, wallet: wallet,
-      disableEmailRecovery: disableEmailRecovery, disableEmailAuth: disableEmailAuth)
-
-    // Create the CreateSubOrganizationRequest
-    let createSubOrganizationRequest = Components.Schemas.CreateSubOrganizationRequest(
-      _type: .ACTIVITY_TYPE_CREATE_SUB_ORGANIZATION_V4,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: createSubOrganizationIntent
-    )
-
-    // Create the input for the CreateSubOrganization method
-    let input = Operations.CreateSubOrganization.Input(
+    let input = Operations.PublicApiService_CreateApiOnlyUsers.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(createSubOrganizationRequest)
+      body: .json(publicApiService_CreateApiOnlyUsersRequest)
     )
-
-    // Call the CreateSubOrganization method using the underlyingClient
-    return try await underlyingClient.CreateSubOrganization(input)
+    return try await underlyingClient.PublicApiService_CreateApiOnlyUsers(input)
   }
+  public func publicApiService_CreateAuthenticators() async throws
+    -> Operations.PublicApiService_CreateAuthenticators.Output
+  {
 
-  public func createUserTag(
-    organizationId: String,
-    userTagName: String, userIds: [String]
-  ) async throws -> Operations.CreateUserTag.Output {
+    // Create the PublicApiService_CreateAuthenticatorsRequest
+    let publicApiService_CreateAuthenticatorsRequest = Components.Schemas
+      .PublicApiService_CreateAuthenticatorsRequest()
 
-    // Create the CreateUserTagIntent
-    let createUserTagIntent = Components.Schemas.CreateUserTagIntent(
-      userTagName: userTagName, userIds: userIds)
-
-    // Create the CreateUserTagRequest
-    let createUserTagRequest = Components.Schemas.CreateUserTagRequest(
-      _type: .ACTIVITY_TYPE_CREATE_USER_TAG,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: createUserTagIntent
-    )
-
-    // Create the input for the CreateUserTag method
-    let input = Operations.CreateUserTag.Input(
+    let input = Operations.PublicApiService_CreateAuthenticators.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(createUserTagRequest)
+      body: .json(publicApiService_CreateAuthenticatorsRequest)
     )
-
-    // Call the CreateUserTag method using the underlyingClient
-    return try await underlyingClient.CreateUserTag(input)
+    return try await underlyingClient.PublicApiService_CreateAuthenticators(input)
   }
+  public func publicApiService_CreateInvitations() async throws
+    -> Operations.PublicApiService_CreateInvitations.Output
+  {
 
-  public func createUsers(
-    organizationId: String,
-    users: [Components.Schemas.UserParamsV2]
-  ) async throws -> Operations.CreateUsers.Output {
+    // Create the PublicApiService_CreateInvitationsRequest
+    let publicApiService_CreateInvitationsRequest = Components.Schemas
+      .PublicApiService_CreateInvitationsRequest()
 
-    // Create the CreateUsersIntentV2
-    let createUsersIntent = Components.Schemas.CreateUsersIntentV2(
-      users: users)
-
-    // Create the CreateUsersRequest
-    let createUsersRequest = Components.Schemas.CreateUsersRequest(
-      _type: .ACTIVITY_TYPE_CREATE_USERS_V2,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: createUsersIntent
-    )
-
-    // Create the input for the CreateUsers method
-    let input = Operations.CreateUsers.Input(
+    let input = Operations.PublicApiService_CreateInvitations.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(createUsersRequest)
+      body: .json(publicApiService_CreateInvitationsRequest)
     )
-
-    // Call the CreateUsers method using the underlyingClient
-    return try await underlyingClient.CreateUsers(input)
+    return try await underlyingClient.PublicApiService_CreateInvitations(input)
   }
+  public func publicApiService_CreateOauthProviders() async throws
+    -> Operations.PublicApiService_CreateOauthProviders.Output
+  {
 
-  public func createWallet(
-    organizationId: String,
-    walletName: String, accounts: [Components.Schemas.WalletAccountParams], mnemonicLength: Int32?
-  ) async throws -> Operations.CreateWallet.Output {
+    // Create the PublicApiService_CreateOauthProvidersRequest
+    let publicApiService_CreateOauthProvidersRequest = Components.Schemas
+      .PublicApiService_CreateOauthProvidersRequest()
 
-    // Create the CreateWalletIntent
-    let createWalletIntent = Components.Schemas.CreateWalletIntent(
-      walletName: walletName, accounts: accounts, mnemonicLength: mnemonicLength)
-
-    // Create the CreateWalletRequest
-    let createWalletRequest = Components.Schemas.CreateWalletRequest(
-      _type: .ACTIVITY_TYPE_CREATE_WALLET,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: createWalletIntent
-    )
-
-    // Create the input for the CreateWallet method
-    let input = Operations.CreateWallet.Input(
+    let input = Operations.PublicApiService_CreateOauthProviders.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(createWalletRequest)
+      body: .json(publicApiService_CreateOauthProvidersRequest)
     )
-
-    // Call the CreateWallet method using the underlyingClient
-    return try await underlyingClient.CreateWallet(input)
+    return try await underlyingClient.PublicApiService_CreateOauthProviders(input)
   }
+  public func publicApiService_CreatePolicies() async throws
+    -> Operations.PublicApiService_CreatePolicies.Output
+  {
 
-  public func createWalletAccounts(
-    organizationId: String,
-    walletId: String, accounts: [Components.Schemas.WalletAccountParams]
-  ) async throws -> Operations.CreateWalletAccounts.Output {
+    // Create the PublicApiService_CreatePoliciesRequest
+    let publicApiService_CreatePoliciesRequest = Components.Schemas
+      .PublicApiService_CreatePoliciesRequest()
 
-    // Create the CreateWalletAccountsIntent
-    let createWalletAccountsIntent = Components.Schemas.CreateWalletAccountsIntent(
-      walletId: walletId, accounts: accounts)
-
-    // Create the CreateWalletAccountsRequest
-    let createWalletAccountsRequest = Components.Schemas.CreateWalletAccountsRequest(
-      _type: .ACTIVITY_TYPE_CREATE_WALLET_ACCOUNTS,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: createWalletAccountsIntent
-    )
-
-    // Create the input for the CreateWalletAccounts method
-    let input = Operations.CreateWalletAccounts.Input(
+    let input = Operations.PublicApiService_CreatePolicies.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(createWalletAccountsRequest)
+      body: .json(publicApiService_CreatePoliciesRequest)
     )
-
-    // Call the CreateWalletAccounts method using the underlyingClient
-    return try await underlyingClient.CreateWalletAccounts(input)
+    return try await underlyingClient.PublicApiService_CreatePolicies(input)
   }
+  public func publicApiService_CreatePolicy() async throws
+    -> Operations.PublicApiService_CreatePolicy.Output
+  {
 
-  public func deleteApiKeys(
-    organizationId: String,
-    userId: String, apiKeyIds: [String]
-  ) async throws -> Operations.DeleteApiKeys.Output {
+    // Create the PublicApiService_CreatePolicyRequest
+    let publicApiService_CreatePolicyRequest = Components.Schemas
+      .PublicApiService_CreatePolicyRequest()
 
-    // Create the DeleteApiKeysIntent
-    let deleteApiKeysIntent = Components.Schemas.DeleteApiKeysIntent(
-      userId: userId, apiKeyIds: apiKeyIds)
-
-    // Create the DeleteApiKeysRequest
-    let deleteApiKeysRequest = Components.Schemas.DeleteApiKeysRequest(
-      _type: .ACTIVITY_TYPE_DELETE_API_KEYS,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: deleteApiKeysIntent
-    )
-
-    // Create the input for the DeleteApiKeys method
-    let input = Operations.DeleteApiKeys.Input(
+    let input = Operations.PublicApiService_CreatePolicy.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(deleteApiKeysRequest)
+      body: .json(publicApiService_CreatePolicyRequest)
     )
-
-    // Call the DeleteApiKeys method using the underlyingClient
-    return try await underlyingClient.DeleteApiKeys(input)
+    return try await underlyingClient.PublicApiService_CreatePolicy(input)
   }
+  public func publicApiService_CreatePrivateKeyTag() async throws
+    -> Operations.PublicApiService_CreatePrivateKeyTag.Output
+  {
 
-  public func deleteAuthenticators(
-    organizationId: String,
-    userId: String, authenticatorIds: [String]
-  ) async throws -> Operations.DeleteAuthenticators.Output {
+    // Create the PublicApiService_CreatePrivateKeyTagRequest
+    let publicApiService_CreatePrivateKeyTagRequest = Components.Schemas
+      .PublicApiService_CreatePrivateKeyTagRequest()
 
-    // Create the DeleteAuthenticatorsIntent
-    let deleteAuthenticatorsIntent = Components.Schemas.DeleteAuthenticatorsIntent(
-      userId: userId, authenticatorIds: authenticatorIds)
-
-    // Create the DeleteAuthenticatorsRequest
-    let deleteAuthenticatorsRequest = Components.Schemas.DeleteAuthenticatorsRequest(
-      _type: .ACTIVITY_TYPE_DELETE_AUTHENTICATORS,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: deleteAuthenticatorsIntent
-    )
-
-    // Create the input for the DeleteAuthenticators method
-    let input = Operations.DeleteAuthenticators.Input(
+    let input = Operations.PublicApiService_CreatePrivateKeyTag.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(deleteAuthenticatorsRequest)
+      body: .json(publicApiService_CreatePrivateKeyTagRequest)
     )
-
-    // Call the DeleteAuthenticators method using the underlyingClient
-    return try await underlyingClient.DeleteAuthenticators(input)
+    return try await underlyingClient.PublicApiService_CreatePrivateKeyTag(input)
   }
+  public func publicApiService_CreatePrivateKeys() async throws
+    -> Operations.PublicApiService_CreatePrivateKeys.Output
+  {
 
-  public func deleteInvitation(
-    organizationId: String,
-    invitationId: String
-  ) async throws -> Operations.DeleteInvitation.Output {
+    // Create the PublicApiService_CreatePrivateKeysRequest
+    let publicApiService_CreatePrivateKeysRequest = Components.Schemas
+      .PublicApiService_CreatePrivateKeysRequest()
 
-    // Create the DeleteInvitationIntent
-    let deleteInvitationIntent = Components.Schemas.DeleteInvitationIntent(
-      invitationId: invitationId)
-
-    // Create the DeleteInvitationRequest
-    let deleteInvitationRequest = Components.Schemas.DeleteInvitationRequest(
-      _type: .ACTIVITY_TYPE_DELETE_INVITATION,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: deleteInvitationIntent
-    )
-
-    // Create the input for the DeleteInvitation method
-    let input = Operations.DeleteInvitation.Input(
+    let input = Operations.PublicApiService_CreatePrivateKeys.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(deleteInvitationRequest)
+      body: .json(publicApiService_CreatePrivateKeysRequest)
     )
-
-    // Call the DeleteInvitation method using the underlyingClient
-    return try await underlyingClient.DeleteInvitation(input)
+    return try await underlyingClient.PublicApiService_CreatePrivateKeys(input)
   }
+  public func publicApiService_CreateReadOnlySession() async throws
+    -> Operations.PublicApiService_CreateReadOnlySession.Output
+  {
 
-  public func deletePolicy(
-    organizationId: String,
-    policyId: String
-  ) async throws -> Operations.DeletePolicy.Output {
+    // Create the PublicApiService_CreateReadOnlySessionRequest
+    let publicApiService_CreateReadOnlySessionRequest = Components.Schemas
+      .PublicApiService_CreateReadOnlySessionRequest()
 
-    // Create the DeletePolicyIntent
-    let deletePolicyIntent = Components.Schemas.DeletePolicyIntent(
-      policyId: policyId)
-
-    // Create the DeletePolicyRequest
-    let deletePolicyRequest = Components.Schemas.DeletePolicyRequest(
-      _type: .ACTIVITY_TYPE_DELETE_POLICY,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: deletePolicyIntent
-    )
-
-    // Create the input for the DeletePolicy method
-    let input = Operations.DeletePolicy.Input(
+    let input = Operations.PublicApiService_CreateReadOnlySession.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(deletePolicyRequest)
+      body: .json(publicApiService_CreateReadOnlySessionRequest)
     )
-
-    // Call the DeletePolicy method using the underlyingClient
-    return try await underlyingClient.DeletePolicy(input)
+    return try await underlyingClient.PublicApiService_CreateReadOnlySession(input)
   }
+  public func publicApiService_CreateReadWriteSession() async throws
+    -> Operations.PublicApiService_CreateReadWriteSession.Output
+  {
 
-  public func deletePrivateKeyTags(
-    organizationId: String,
-    privateKeyTagIds: [String]
-  ) async throws -> Operations.DeletePrivateKeyTags.Output {
+    // Create the PublicApiService_CreateReadWriteSessionRequest
+    let publicApiService_CreateReadWriteSessionRequest = Components.Schemas
+      .PublicApiService_CreateReadWriteSessionRequest()
 
-    // Create the DeletePrivateKeyTagsIntent
-    let deletePrivateKeyTagsIntent = Components.Schemas.DeletePrivateKeyTagsIntent(
-      privateKeyTagIds: privateKeyTagIds)
-
-    // Create the DeletePrivateKeyTagsRequest
-    let deletePrivateKeyTagsRequest = Components.Schemas.DeletePrivateKeyTagsRequest(
-      _type: .ACTIVITY_TYPE_DELETE_PRIVATE_KEY_TAGS,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: deletePrivateKeyTagsIntent
-    )
-
-    // Create the input for the DeletePrivateKeyTags method
-    let input = Operations.DeletePrivateKeyTags.Input(
+    let input = Operations.PublicApiService_CreateReadWriteSession.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(deletePrivateKeyTagsRequest)
+      body: .json(publicApiService_CreateReadWriteSessionRequest)
     )
-
-    // Call the DeletePrivateKeyTags method using the underlyingClient
-    return try await underlyingClient.DeletePrivateKeyTags(input)
+    return try await underlyingClient.PublicApiService_CreateReadWriteSession(input)
   }
+  public func publicApiService_CreateSubOrganization() async throws
+    -> Operations.PublicApiService_CreateSubOrganization.Output
+  {
 
-  public func deleteUserTags(
-    organizationId: String,
-    userTagIds: [String]
-  ) async throws -> Operations.DeleteUserTags.Output {
+    // Create the PublicApiService_CreateSubOrganizationRequest
+    let publicApiService_CreateSubOrganizationRequest = Components.Schemas
+      .PublicApiService_CreateSubOrganizationRequest()
 
-    // Create the DeleteUserTagsIntent
-    let deleteUserTagsIntent = Components.Schemas.DeleteUserTagsIntent(
-      userTagIds: userTagIds)
-
-    // Create the DeleteUserTagsRequest
-    let deleteUserTagsRequest = Components.Schemas.DeleteUserTagsRequest(
-      _type: .ACTIVITY_TYPE_DELETE_USER_TAGS,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: deleteUserTagsIntent
-    )
-
-    // Create the input for the DeleteUserTags method
-    let input = Operations.DeleteUserTags.Input(
+    let input = Operations.PublicApiService_CreateSubOrganization.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(deleteUserTagsRequest)
+      body: .json(publicApiService_CreateSubOrganizationRequest)
     )
-
-    // Call the DeleteUserTags method using the underlyingClient
-    return try await underlyingClient.DeleteUserTags(input)
+    return try await underlyingClient.PublicApiService_CreateSubOrganization(input)
   }
+  public func publicApiService_CreateUserTag() async throws
+    -> Operations.PublicApiService_CreateUserTag.Output
+  {
 
-  public func deleteUsers(
-    organizationId: String,
-    userIds: [String]
-  ) async throws -> Operations.DeleteUsers.Output {
+    // Create the PublicApiService_CreateUserTagRequest
+    let publicApiService_CreateUserTagRequest = Components.Schemas
+      .PublicApiService_CreateUserTagRequest()
 
-    // Create the DeleteUsersIntent
-    let deleteUsersIntent = Components.Schemas.DeleteUsersIntent(
-      userIds: userIds)
-
-    // Create the DeleteUsersRequest
-    let deleteUsersRequest = Components.Schemas.DeleteUsersRequest(
-      _type: .ACTIVITY_TYPE_DELETE_USERS,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: deleteUsersIntent
-    )
-
-    // Create the input for the DeleteUsers method
-    let input = Operations.DeleteUsers.Input(
+    let input = Operations.PublicApiService_CreateUserTag.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(deleteUsersRequest)
+      body: .json(publicApiService_CreateUserTagRequest)
     )
-
-    // Call the DeleteUsers method using the underlyingClient
-    return try await underlyingClient.DeleteUsers(input)
+    return try await underlyingClient.PublicApiService_CreateUserTag(input)
   }
+  public func publicApiService_CreateUsers() async throws
+    -> Operations.PublicApiService_CreateUsers.Output
+  {
 
-  public func emailAuth(
-    organizationId: String,
-    email: String, targetPublicKey: String, apiKeyName: String?, expirationSeconds: String?,
-    emailCustomization: Components.Schemas.EmailCustomizationParams?
-  ) async throws -> Operations.EmailAuth.Output {
+    // Create the PublicApiService_CreateUsersRequest
+    let publicApiService_CreateUsersRequest = Components.Schemas
+      .PublicApiService_CreateUsersRequest()
 
-    // Create the EmailAuthIntent
-    let emailAuthIntent = Components.Schemas.EmailAuthIntent(
-      email: email, targetPublicKey: targetPublicKey, apiKeyName: apiKeyName,
-      expirationSeconds: expirationSeconds, emailCustomization: emailCustomization)
-
-    // Create the EmailAuthRequest
-    let emailAuthRequest = Components.Schemas.EmailAuthRequest(
-      _type: .ACTIVITY_TYPE_EMAIL_AUTH,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: emailAuthIntent
-    )
-
-    // Create the input for the EmailAuth method
-    let input = Operations.EmailAuth.Input(
+    let input = Operations.PublicApiService_CreateUsers.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(emailAuthRequest)
+      body: .json(publicApiService_CreateUsersRequest)
     )
-
-    // Call the EmailAuth method using the underlyingClient
-    return try await underlyingClient.EmailAuth(input)
+    return try await underlyingClient.PublicApiService_CreateUsers(input)
   }
+  public func publicApiService_CreateWallet() async throws
+    -> Operations.PublicApiService_CreateWallet.Output
+  {
 
-  public func exportPrivateKey(
-    organizationId: String,
-    privateKeyId: String, targetPublicKey: String
-  ) async throws -> Operations.ExportPrivateKey.Output {
+    // Create the PublicApiService_CreateWalletRequest
+    let publicApiService_CreateWalletRequest = Components.Schemas
+      .PublicApiService_CreateWalletRequest()
 
-    // Create the ExportPrivateKeyIntent
-    let exportPrivateKeyIntent = Components.Schemas.ExportPrivateKeyIntent(
-      privateKeyId: privateKeyId, targetPublicKey: targetPublicKey)
-
-    // Create the ExportPrivateKeyRequest
-    let exportPrivateKeyRequest = Components.Schemas.ExportPrivateKeyRequest(
-      _type: .ACTIVITY_TYPE_EXPORT_PRIVATE_KEY,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: exportPrivateKeyIntent
-    )
-
-    // Create the input for the ExportPrivateKey method
-    let input = Operations.ExportPrivateKey.Input(
+    let input = Operations.PublicApiService_CreateWallet.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(exportPrivateKeyRequest)
+      body: .json(publicApiService_CreateWalletRequest)
     )
-
-    // Call the ExportPrivateKey method using the underlyingClient
-    return try await underlyingClient.ExportPrivateKey(input)
+    return try await underlyingClient.PublicApiService_CreateWallet(input)
   }
+  public func publicApiService_CreateWalletAccounts() async throws
+    -> Operations.PublicApiService_CreateWalletAccounts.Output
+  {
 
-  public func exportWallet(
-    organizationId: String,
-    walletId: String, targetPublicKey: String, language: Components.Schemas.MnemonicLanguage?
-  ) async throws -> Operations.ExportWallet.Output {
+    // Create the PublicApiService_CreateWalletAccountsRequest
+    let publicApiService_CreateWalletAccountsRequest = Components.Schemas
+      .PublicApiService_CreateWalletAccountsRequest()
 
-    // Create the ExportWalletIntent
-    let exportWalletIntent = Components.Schemas.ExportWalletIntent(
-      walletId: walletId, targetPublicKey: targetPublicKey, language: language)
-
-    // Create the ExportWalletRequest
-    let exportWalletRequest = Components.Schemas.ExportWalletRequest(
-      _type: .ACTIVITY_TYPE_EXPORT_WALLET,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: exportWalletIntent
-    )
-
-    // Create the input for the ExportWallet method
-    let input = Operations.ExportWallet.Input(
+    let input = Operations.PublicApiService_CreateWalletAccounts.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(exportWalletRequest)
+      body: .json(publicApiService_CreateWalletAccountsRequest)
     )
-
-    // Call the ExportWallet method using the underlyingClient
-    return try await underlyingClient.ExportWallet(input)
+    return try await underlyingClient.PublicApiService_CreateWalletAccounts(input)
   }
+  public func publicApiService_DeleteApiKeys() async throws
+    -> Operations.PublicApiService_DeleteApiKeys.Output
+  {
 
-  public func exportWalletAccount(
-    organizationId: String,
-    address: String, targetPublicKey: String
-  ) async throws -> Operations.ExportWalletAccount.Output {
+    // Create the PublicApiService_DeleteApiKeysRequest
+    let publicApiService_DeleteApiKeysRequest = Components.Schemas
+      .PublicApiService_DeleteApiKeysRequest()
 
-    // Create the ExportWalletAccountIntent
-    let exportWalletAccountIntent = Components.Schemas.ExportWalletAccountIntent(
-      address: address, targetPublicKey: targetPublicKey)
-
-    // Create the ExportWalletAccountRequest
-    let exportWalletAccountRequest = Components.Schemas.ExportWalletAccountRequest(
-      _type: .ACTIVITY_TYPE_EXPORT_WALLET_ACCOUNT,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: exportWalletAccountIntent
-    )
-
-    // Create the input for the ExportWalletAccount method
-    let input = Operations.ExportWalletAccount.Input(
+    let input = Operations.PublicApiService_DeleteApiKeys.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(exportWalletAccountRequest)
+      body: .json(publicApiService_DeleteApiKeysRequest)
     )
-
-    // Call the ExportWalletAccount method using the underlyingClient
-    return try await underlyingClient.ExportWalletAccount(input)
+    return try await underlyingClient.PublicApiService_DeleteApiKeys(input)
   }
+  public func publicApiService_DeleteAuthenticators() async throws
+    -> Operations.PublicApiService_DeleteAuthenticators.Output
+  {
 
-  public func importPrivateKey(
-    organizationId: String,
-    userId: String, privateKeyName: String, encryptedBundle: String,
-    curve: Components.Schemas.Curve, addressFormats: [Components.Schemas.AddressFormat]
-  ) async throws -> Operations.ImportPrivateKey.Output {
+    // Create the PublicApiService_DeleteAuthenticatorsRequest
+    let publicApiService_DeleteAuthenticatorsRequest = Components.Schemas
+      .PublicApiService_DeleteAuthenticatorsRequest()
 
-    // Create the ImportPrivateKeyIntent
-    let importPrivateKeyIntent = Components.Schemas.ImportPrivateKeyIntent(
-      userId: userId, privateKeyName: privateKeyName, encryptedBundle: encryptedBundle,
-      curve: curve, addressFormats: addressFormats)
-
-    // Create the ImportPrivateKeyRequest
-    let importPrivateKeyRequest = Components.Schemas.ImportPrivateKeyRequest(
-      _type: .ACTIVITY_TYPE_IMPORT_PRIVATE_KEY,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: importPrivateKeyIntent
-    )
-
-    // Create the input for the ImportPrivateKey method
-    let input = Operations.ImportPrivateKey.Input(
+    let input = Operations.PublicApiService_DeleteAuthenticators.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(importPrivateKeyRequest)
+      body: .json(publicApiService_DeleteAuthenticatorsRequest)
     )
-
-    // Call the ImportPrivateKey method using the underlyingClient
-    return try await underlyingClient.ImportPrivateKey(input)
+    return try await underlyingClient.PublicApiService_DeleteAuthenticators(input)
   }
+  public func publicApiService_DeleteInvitation() async throws
+    -> Operations.PublicApiService_DeleteInvitation.Output
+  {
 
-  public func importWallet(
-    organizationId: String,
-    userId: String, walletName: String, encryptedBundle: String,
-    accounts: [Components.Schemas.WalletAccountParams]
-  ) async throws -> Operations.ImportWallet.Output {
+    // Create the PublicApiService_DeleteInvitationRequest
+    let publicApiService_DeleteInvitationRequest = Components.Schemas
+      .PublicApiService_DeleteInvitationRequest()
 
-    // Create the ImportWalletIntent
-    let importWalletIntent = Components.Schemas.ImportWalletIntent(
-      userId: userId, walletName: walletName, encryptedBundle: encryptedBundle, accounts: accounts)
-
-    // Create the ImportWalletRequest
-    let importWalletRequest = Components.Schemas.ImportWalletRequest(
-      _type: .ACTIVITY_TYPE_IMPORT_WALLET,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: importWalletIntent
-    )
-
-    // Create the input for the ImportWallet method
-    let input = Operations.ImportWallet.Input(
+    let input = Operations.PublicApiService_DeleteInvitation.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(importWalletRequest)
+      body: .json(publicApiService_DeleteInvitationRequest)
     )
-
-    // Call the ImportWallet method using the underlyingClient
-    return try await underlyingClient.ImportWallet(input)
+    return try await underlyingClient.PublicApiService_DeleteInvitation(input)
   }
+  public func publicApiService_DeleteOauthProviders() async throws
+    -> Operations.PublicApiService_DeleteOauthProviders.Output
+  {
 
-  public func initImportPrivateKey(
-    organizationId: String,
-    userId: String
-  ) async throws -> Operations.InitImportPrivateKey.Output {
+    // Create the PublicApiService_DeleteOauthProvidersRequest
+    let publicApiService_DeleteOauthProvidersRequest = Components.Schemas
+      .PublicApiService_DeleteOauthProvidersRequest()
 
-    // Create the InitImportPrivateKeyIntent
-    let initImportPrivateKeyIntent = Components.Schemas.InitImportPrivateKeyIntent(
-      userId: userId)
-
-    // Create the InitImportPrivateKeyRequest
-    let initImportPrivateKeyRequest = Components.Schemas.InitImportPrivateKeyRequest(
-      _type: .ACTIVITY_TYPE_INIT_IMPORT_PRIVATE_KEY,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: initImportPrivateKeyIntent
-    )
-
-    // Create the input for the InitImportPrivateKey method
-    let input = Operations.InitImportPrivateKey.Input(
+    let input = Operations.PublicApiService_DeleteOauthProviders.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(initImportPrivateKeyRequest)
+      body: .json(publicApiService_DeleteOauthProvidersRequest)
     )
-
-    // Call the InitImportPrivateKey method using the underlyingClient
-    return try await underlyingClient.InitImportPrivateKey(input)
+    return try await underlyingClient.PublicApiService_DeleteOauthProviders(input)
   }
+  public func publicApiService_DeletePolicy() async throws
+    -> Operations.PublicApiService_DeletePolicy.Output
+  {
 
-  public func initImportWallet(
-    organizationId: String,
-    userId: String
-  ) async throws -> Operations.InitImportWallet.Output {
+    // Create the PublicApiService_DeletePolicyRequest
+    let publicApiService_DeletePolicyRequest = Components.Schemas
+      .PublicApiService_DeletePolicyRequest()
 
-    // Create the InitImportWalletIntent
-    let initImportWalletIntent = Components.Schemas.InitImportWalletIntent(
-      userId: userId)
-
-    // Create the InitImportWalletRequest
-    let initImportWalletRequest = Components.Schemas.InitImportWalletRequest(
-      _type: .ACTIVITY_TYPE_INIT_IMPORT_WALLET,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: initImportWalletIntent
-    )
-
-    // Create the input for the InitImportWallet method
-    let input = Operations.InitImportWallet.Input(
+    let input = Operations.PublicApiService_DeletePolicy.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(initImportWalletRequest)
+      body: .json(publicApiService_DeletePolicyRequest)
     )
-
-    // Call the InitImportWallet method using the underlyingClient
-    return try await underlyingClient.InitImportWallet(input)
+    return try await underlyingClient.PublicApiService_DeletePolicy(input)
   }
+  public func publicApiService_DeletePrivateKeyTags() async throws
+    -> Operations.PublicApiService_DeletePrivateKeyTags.Output
+  {
 
-  public func initUserEmailRecovery(
-    organizationId: String,
-    email: String, targetPublicKey: String, expirationSeconds: String?,
-    emailCustomization: Components.Schemas.EmailCustomizationParams?
-  ) async throws -> Operations.InitUserEmailRecovery.Output {
+    // Create the PublicApiService_DeletePrivateKeyTagsRequest
+    let publicApiService_DeletePrivateKeyTagsRequest = Components.Schemas
+      .PublicApiService_DeletePrivateKeyTagsRequest()
 
-    // Create the InitUserEmailRecoveryIntent
-    let initUserEmailRecoveryIntent = Components.Schemas.InitUserEmailRecoveryIntent(
-      email: email, targetPublicKey: targetPublicKey, expirationSeconds: expirationSeconds,
-      emailCustomization: emailCustomization)
-
-    // Create the InitUserEmailRecoveryRequest
-    let initUserEmailRecoveryRequest = Components.Schemas.InitUserEmailRecoveryRequest(
-      _type: .ACTIVITY_TYPE_INIT_USER_EMAIL_RECOVERY,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: initUserEmailRecoveryIntent
-    )
-
-    // Create the input for the InitUserEmailRecovery method
-    let input = Operations.InitUserEmailRecovery.Input(
+    let input = Operations.PublicApiService_DeletePrivateKeyTags.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(initUserEmailRecoveryRequest)
+      body: .json(publicApiService_DeletePrivateKeyTagsRequest)
     )
-
-    // Call the InitUserEmailRecovery method using the underlyingClient
-    return try await underlyingClient.InitUserEmailRecovery(input)
+    return try await underlyingClient.PublicApiService_DeletePrivateKeyTags(input)
   }
+  public func publicApiService_DeletePrivateKeys() async throws
+    -> Operations.PublicApiService_DeletePrivateKeys.Output
+  {
 
-  public func recoverUser(
-    organizationId: String,
-    authenticator: Components.Schemas.AuthenticatorParamsV2, userId: String
-  ) async throws -> Operations.RecoverUser.Output {
+    // Create the PublicApiService_DeletePrivateKeysRequest
+    let publicApiService_DeletePrivateKeysRequest = Components.Schemas
+      .PublicApiService_DeletePrivateKeysRequest()
 
-    // Create the RecoverUserIntent
-    let recoverUserIntent = Components.Schemas.RecoverUserIntent(
-      authenticator: authenticator, userId: userId)
-
-    // Create the RecoverUserRequest
-    let recoverUserRequest = Components.Schemas.RecoverUserRequest(
-      _type: .ACTIVITY_TYPE_RECOVER_USER,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: recoverUserIntent
-    )
-
-    // Create the input for the RecoverUser method
-    let input = Operations.RecoverUser.Input(
+    let input = Operations.PublicApiService_DeletePrivateKeys.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(recoverUserRequest)
+      body: .json(publicApiService_DeletePrivateKeysRequest)
     )
-
-    // Call the RecoverUser method using the underlyingClient
-    return try await underlyingClient.RecoverUser(input)
+    return try await underlyingClient.PublicApiService_DeletePrivateKeys(input)
   }
+  public func publicApiService_DeleteSubOrganization() async throws
+    -> Operations.PublicApiService_DeleteSubOrganization.Output
+  {
 
-  public func rejectActivity(
-    organizationId: String,
-    fingerprint: String
-  ) async throws -> Operations.RejectActivity.Output {
+    // Create the PublicApiService_DeleteSubOrganizationRequest
+    let publicApiService_DeleteSubOrganizationRequest = Components.Schemas
+      .PublicApiService_DeleteSubOrganizationRequest()
 
-    // Create the RejectActivityIntent
-    let rejectActivityIntent = Components.Schemas.RejectActivityIntent(
-      fingerprint: fingerprint)
-
-    // Create the RejectActivityRequest
-    let rejectActivityRequest = Components.Schemas.RejectActivityRequest(
-      _type: .ACTIVITY_TYPE_REJECT_ACTIVITY,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: rejectActivityIntent
-    )
-
-    // Create the input for the RejectActivity method
-    let input = Operations.RejectActivity.Input(
+    let input = Operations.PublicApiService_DeleteSubOrganization.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(rejectActivityRequest)
+      body: .json(publicApiService_DeleteSubOrganizationRequest)
     )
-
-    // Call the RejectActivity method using the underlyingClient
-    return try await underlyingClient.RejectActivity(input)
+    return try await underlyingClient.PublicApiService_DeleteSubOrganization(input)
   }
+  public func publicApiService_DeleteUserTags() async throws
+    -> Operations.PublicApiService_DeleteUserTags.Output
+  {
 
-  public func removeOrganizationFeature(
-    organizationId: String,
-    name: Components.Schemas.FeatureName
-  ) async throws -> Operations.RemoveOrganizationFeature.Output {
+    // Create the PublicApiService_DeleteUserTagsRequest
+    let publicApiService_DeleteUserTagsRequest = Components.Schemas
+      .PublicApiService_DeleteUserTagsRequest()
 
-    // Create the RemoveOrganizationFeatureIntent
-    let removeOrganizationFeatureIntent = Components.Schemas.RemoveOrganizationFeatureIntent(
-      name: name)
-
-    // Create the RemoveOrganizationFeatureRequest
-    let removeOrganizationFeatureRequest = Components.Schemas.RemoveOrganizationFeatureRequest(
-      _type: .ACTIVITY_TYPE_REMOVE_ORGANIZATION_FEATURE,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: removeOrganizationFeatureIntent
-    )
-
-    // Create the input for the RemoveOrganizationFeature method
-    let input = Operations.RemoveOrganizationFeature.Input(
+    let input = Operations.PublicApiService_DeleteUserTags.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(removeOrganizationFeatureRequest)
+      body: .json(publicApiService_DeleteUserTagsRequest)
     )
-
-    // Call the RemoveOrganizationFeature method using the underlyingClient
-    return try await underlyingClient.RemoveOrganizationFeature(input)
+    return try await underlyingClient.PublicApiService_DeleteUserTags(input)
   }
+  public func publicApiService_DeleteUsers() async throws
+    -> Operations.PublicApiService_DeleteUsers.Output
+  {
 
-  public func setOrganizationFeature(
-    organizationId: String,
-    name: Components.Schemas.FeatureName, value: String
-  ) async throws -> Operations.SetOrganizationFeature.Output {
+    // Create the PublicApiService_DeleteUsersRequest
+    let publicApiService_DeleteUsersRequest = Components.Schemas
+      .PublicApiService_DeleteUsersRequest()
 
-    // Create the SetOrganizationFeatureIntent
-    let setOrganizationFeatureIntent = Components.Schemas.SetOrganizationFeatureIntent(
-      name: name, value: value)
-
-    // Create the SetOrganizationFeatureRequest
-    let setOrganizationFeatureRequest = Components.Schemas.SetOrganizationFeatureRequest(
-      _type: .ACTIVITY_TYPE_SET_ORGANIZATION_FEATURE,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: setOrganizationFeatureIntent
-    )
-
-    // Create the input for the SetOrganizationFeature method
-    let input = Operations.SetOrganizationFeature.Input(
+    let input = Operations.PublicApiService_DeleteUsers.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(setOrganizationFeatureRequest)
+      body: .json(publicApiService_DeleteUsersRequest)
     )
-
-    // Call the SetOrganizationFeature method using the underlyingClient
-    return try await underlyingClient.SetOrganizationFeature(input)
+    return try await underlyingClient.PublicApiService_DeleteUsers(input)
   }
+  public func publicApiService_DeleteWallets() async throws
+    -> Operations.PublicApiService_DeleteWallets.Output
+  {
 
-  public func signRawPayload(
-    organizationId: String,
-    signWith: String, payload: String, encoding: Components.Schemas.PayloadEncoding,
-    hashFunction: Components.Schemas.HashFunction
-  ) async throws -> Operations.SignRawPayload.Output {
+    // Create the PublicApiService_DeleteWalletsRequest
+    let publicApiService_DeleteWalletsRequest = Components.Schemas
+      .PublicApiService_DeleteWalletsRequest()
 
-    // Create the SignRawPayloadIntentV2
-    let signRawPayloadIntent = Components.Schemas.SignRawPayloadIntentV2(
-      signWith: signWith, payload: payload, encoding: encoding, hashFunction: hashFunction)
-
-    // Create the SignRawPayloadRequest
-    let signRawPayloadRequest = Components.Schemas.SignRawPayloadRequest(
-      _type: .ACTIVITY_TYPE_SIGN_RAW_PAYLOAD_V2,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: signRawPayloadIntent
-    )
-
-    // Create the input for the SignRawPayload method
-    let input = Operations.SignRawPayload.Input(
+    let input = Operations.PublicApiService_DeleteWallets.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(signRawPayloadRequest)
+      body: .json(publicApiService_DeleteWalletsRequest)
     )
-
-    // Call the SignRawPayload method using the underlyingClient
-    return try await underlyingClient.SignRawPayload(input)
+    return try await underlyingClient.PublicApiService_DeleteWallets(input)
   }
+  public func publicApiService_EmailAuth() async throws
+    -> Operations.PublicApiService_EmailAuth.Output
+  {
 
-  public func signRawPayloads(
-    organizationId: String,
-    signWith: String, payloads: [String], encoding: Components.Schemas.PayloadEncoding,
-    hashFunction: Components.Schemas.HashFunction
-  ) async throws -> Operations.SignRawPayloads.Output {
+    // Create the PublicApiService_EmailAuthRequest
+    let publicApiService_EmailAuthRequest = Components.Schemas.PublicApiService_EmailAuthRequest()
 
-    // Create the SignRawPayloadsIntent
-    let signRawPayloadsIntent = Components.Schemas.SignRawPayloadsIntent(
-      signWith: signWith, payloads: payloads, encoding: encoding, hashFunction: hashFunction)
-
-    // Create the SignRawPayloadsRequest
-    let signRawPayloadsRequest = Components.Schemas.SignRawPayloadsRequest(
-      _type: .ACTIVITY_TYPE_SIGN_RAW_PAYLOADS,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: signRawPayloadsIntent
-    )
-
-    // Create the input for the SignRawPayloads method
-    let input = Operations.SignRawPayloads.Input(
+    let input = Operations.PublicApiService_EmailAuth.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(signRawPayloadsRequest)
+      body: .json(publicApiService_EmailAuthRequest)
     )
-
-    // Call the SignRawPayloads method using the underlyingClient
-    return try await underlyingClient.SignRawPayloads(input)
+    return try await underlyingClient.PublicApiService_EmailAuth(input)
   }
+  public func publicApiService_ExportPrivateKey() async throws
+    -> Operations.PublicApiService_ExportPrivateKey.Output
+  {
 
-  public func signTransaction(
-    organizationId: String,
-    signWith: String, unsignedTransaction: String, _type: Components.Schemas.TransactionType
-  ) async throws -> Operations.SignTransaction.Output {
+    // Create the PublicApiService_ExportPrivateKeyRequest
+    let publicApiService_ExportPrivateKeyRequest = Components.Schemas
+      .PublicApiService_ExportPrivateKeyRequest()
 
-    // Create the SignTransactionIntentV2
-    let signTransactionIntent = Components.Schemas.SignTransactionIntentV2(
-      signWith: signWith, unsignedTransaction: unsignedTransaction, _type: _type)
-
-    // Create the SignTransactionRequest
-    let signTransactionRequest = Components.Schemas.SignTransactionRequest(
-      _type: .ACTIVITY_TYPE_SIGN_TRANSACTION_V2,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: signTransactionIntent
-    )
-
-    // Create the input for the SignTransaction method
-    let input = Operations.SignTransaction.Input(
+    let input = Operations.PublicApiService_ExportPrivateKey.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(signTransactionRequest)
+      body: .json(publicApiService_ExportPrivateKeyRequest)
     )
-
-    // Call the SignTransaction method using the underlyingClient
-    return try await underlyingClient.SignTransaction(input)
+    return try await underlyingClient.PublicApiService_ExportPrivateKey(input)
   }
+  public func publicApiService_ExportWallet() async throws
+    -> Operations.PublicApiService_ExportWallet.Output
+  {
 
-  public func updatePolicy(
-    organizationId: String,
-    policyId: String, policyName: String?, policyEffect: Components.Schemas.Effect?,
-    policyCondition: String?, policyConsensus: String?, policyNotes: String?
-  ) async throws -> Operations.UpdatePolicy.Output {
+    // Create the PublicApiService_ExportWalletRequest
+    let publicApiService_ExportWalletRequest = Components.Schemas
+      .PublicApiService_ExportWalletRequest()
 
-    // Create the UpdatePolicyIntent
-    let updatePolicyIntent = Components.Schemas.UpdatePolicyIntent(
-      policyId: policyId, policyName: policyName, policyEffect: policyEffect,
-      policyCondition: policyCondition, policyConsensus: policyConsensus, policyNotes: policyNotes)
-
-    // Create the UpdatePolicyRequest
-    let updatePolicyRequest = Components.Schemas.UpdatePolicyRequest(
-      _type: .ACTIVITY_TYPE_UPDATE_POLICY,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: updatePolicyIntent
-    )
-
-    // Create the input for the UpdatePolicy method
-    let input = Operations.UpdatePolicy.Input(
+    let input = Operations.PublicApiService_ExportWallet.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(updatePolicyRequest)
+      body: .json(publicApiService_ExportWalletRequest)
     )
-
-    // Call the UpdatePolicy method using the underlyingClient
-    return try await underlyingClient.UpdatePolicy(input)
+    return try await underlyingClient.PublicApiService_ExportWallet(input)
   }
+  public func publicApiService_ExportWalletAccount() async throws
+    -> Operations.PublicApiService_ExportWalletAccount.Output
+  {
 
-  public func updatePrivateKeyTag(
-    organizationId: String,
-    privateKeyTagId: String, newPrivateKeyTagName: String?, addPrivateKeyIds: [String],
-    removePrivateKeyIds: [String]
-  ) async throws -> Operations.UpdatePrivateKeyTag.Output {
+    // Create the PublicApiService_ExportWalletAccountRequest
+    let publicApiService_ExportWalletAccountRequest = Components.Schemas
+      .PublicApiService_ExportWalletAccountRequest()
 
-    // Create the UpdatePrivateKeyTagIntent
-    let updatePrivateKeyTagIntent = Components.Schemas.UpdatePrivateKeyTagIntent(
-      privateKeyTagId: privateKeyTagId, newPrivateKeyTagName: newPrivateKeyTagName,
-      addPrivateKeyIds: addPrivateKeyIds, removePrivateKeyIds: removePrivateKeyIds)
-
-    // Create the UpdatePrivateKeyTagRequest
-    let updatePrivateKeyTagRequest = Components.Schemas.UpdatePrivateKeyTagRequest(
-      _type: .ACTIVITY_TYPE_UPDATE_PRIVATE_KEY_TAG,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: updatePrivateKeyTagIntent
-    )
-
-    // Create the input for the UpdatePrivateKeyTag method
-    let input = Operations.UpdatePrivateKeyTag.Input(
+    let input = Operations.PublicApiService_ExportWalletAccount.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(updatePrivateKeyTagRequest)
+      body: .json(publicApiService_ExportWalletAccountRequest)
     )
-
-    // Call the UpdatePrivateKeyTag method using the underlyingClient
-    return try await underlyingClient.UpdatePrivateKeyTag(input)
+    return try await underlyingClient.PublicApiService_ExportWalletAccount(input)
   }
+  public func publicApiService_ImportPrivateKey() async throws
+    -> Operations.PublicApiService_ImportPrivateKey.Output
+  {
 
-  public func updateRootQuorum(
-    organizationId: String,
-    threshold: Int32, userIds: [String]
-  ) async throws -> Operations.UpdateRootQuorum.Output {
+    // Create the PublicApiService_ImportPrivateKeyRequest
+    let publicApiService_ImportPrivateKeyRequest = Components.Schemas
+      .PublicApiService_ImportPrivateKeyRequest()
 
-    // Create the UpdateRootQuorumIntent
-    let updateRootQuorumIntent = Components.Schemas.UpdateRootQuorumIntent(
-      threshold: threshold, userIds: userIds)
-
-    // Create the UpdateRootQuorumRequest
-    let updateRootQuorumRequest = Components.Schemas.UpdateRootQuorumRequest(
-      _type: .ACTIVITY_TYPE_UPDATE_ROOT_QUORUM,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: updateRootQuorumIntent
-    )
-
-    // Create the input for the UpdateRootQuorum method
-    let input = Operations.UpdateRootQuorum.Input(
+    let input = Operations.PublicApiService_ImportPrivateKey.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(updateRootQuorumRequest)
+      body: .json(publicApiService_ImportPrivateKeyRequest)
     )
-
-    // Call the UpdateRootQuorum method using the underlyingClient
-    return try await underlyingClient.UpdateRootQuorum(input)
+    return try await underlyingClient.PublicApiService_ImportPrivateKey(input)
   }
+  public func publicApiService_ImportWallet() async throws
+    -> Operations.PublicApiService_ImportWallet.Output
+  {
 
-  public func updateUser(
-    organizationId: String,
-    userId: String, userName: String?, userEmail: String?, userTagIds: [String]?
-  ) async throws -> Operations.UpdateUser.Output {
+    // Create the PublicApiService_ImportWalletRequest
+    let publicApiService_ImportWalletRequest = Components.Schemas
+      .PublicApiService_ImportWalletRequest()
 
-    // Create the UpdateUserIntent
-    let updateUserIntent = Components.Schemas.UpdateUserIntent(
-      userId: userId, userName: userName, userEmail: userEmail, userTagIds: userTagIds)
-
-    // Create the UpdateUserRequest
-    let updateUserRequest = Components.Schemas.UpdateUserRequest(
-      _type: .ACTIVITY_TYPE_UPDATE_USER,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: updateUserIntent
-    )
-
-    // Create the input for the UpdateUser method
-    let input = Operations.UpdateUser.Input(
+    let input = Operations.PublicApiService_ImportWallet.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(updateUserRequest)
+      body: .json(publicApiService_ImportWalletRequest)
     )
-
-    // Call the UpdateUser method using the underlyingClient
-    return try await underlyingClient.UpdateUser(input)
+    return try await underlyingClient.PublicApiService_ImportWallet(input)
   }
+  public func publicApiService_InitImportPrivateKey() async throws
+    -> Operations.PublicApiService_InitImportPrivateKey.Output
+  {
 
-  public func updateUserTag(
-    organizationId: String,
-    userTagId: String, newUserTagName: String?, addUserIds: [String], removeUserIds: [String]
-  ) async throws -> Operations.UpdateUserTag.Output {
+    // Create the PublicApiService_InitImportPrivateKeyRequest
+    let publicApiService_InitImportPrivateKeyRequest = Components.Schemas
+      .PublicApiService_InitImportPrivateKeyRequest()
 
-    // Create the UpdateUserTagIntent
-    let updateUserTagIntent = Components.Schemas.UpdateUserTagIntent(
-      userTagId: userTagId, newUserTagName: newUserTagName, addUserIds: addUserIds,
-      removeUserIds: removeUserIds)
-
-    // Create the UpdateUserTagRequest
-    let updateUserTagRequest = Components.Schemas.UpdateUserTagRequest(
-      _type: .ACTIVITY_TYPE_UPDATE_USER_TAG,
-      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
-      organizationId: organizationId,
-      parameters: updateUserTagIntent
-    )
-
-    // Create the input for the UpdateUserTag method
-    let input = Operations.UpdateUserTag.Input(
+    let input = Operations.PublicApiService_InitImportPrivateKey.Input(
       headers: .init(accept: [.init(contentType: .json)]),
-      body: .json(updateUserTagRequest)
+      body: .json(publicApiService_InitImportPrivateKeyRequest)
     )
+    return try await underlyingClient.PublicApiService_InitImportPrivateKey(input)
+  }
+  public func publicApiService_InitImportWallet() async throws
+    -> Operations.PublicApiService_InitImportWallet.Output
+  {
 
-    // Call the UpdateUserTag method using the underlyingClient
-    return try await underlyingClient.UpdateUserTag(input)
+    // Create the PublicApiService_InitImportWalletRequest
+    let publicApiService_InitImportWalletRequest = Components.Schemas
+      .PublicApiService_InitImportWalletRequest()
+
+    let input = Operations.PublicApiService_InitImportWallet.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(publicApiService_InitImportWalletRequest)
+    )
+    return try await underlyingClient.PublicApiService_InitImportWallet(input)
+  }
+  public func publicApiService_InitOtpAuth() async throws
+    -> Operations.PublicApiService_InitOtpAuth.Output
+  {
+
+    // Create the PublicApiService_InitOtpAuthRequest
+    let publicApiService_InitOtpAuthRequest = Components.Schemas
+      .PublicApiService_InitOtpAuthRequest()
+
+    let input = Operations.PublicApiService_InitOtpAuth.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(publicApiService_InitOtpAuthRequest)
+    )
+    return try await underlyingClient.PublicApiService_InitOtpAuth(input)
+  }
+  public func publicApiService_InitUserEmailRecovery() async throws
+    -> Operations.PublicApiService_InitUserEmailRecovery.Output
+  {
+
+    // Create the PublicApiService_InitUserEmailRecoveryRequest
+    let publicApiService_InitUserEmailRecoveryRequest = Components.Schemas
+      .PublicApiService_InitUserEmailRecoveryRequest()
+
+    let input = Operations.PublicApiService_InitUserEmailRecovery.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(publicApiService_InitUserEmailRecoveryRequest)
+    )
+    return try await underlyingClient.PublicApiService_InitUserEmailRecovery(input)
+  }
+  public func publicApiService_Oauth() async throws -> Operations.PublicApiService_Oauth.Output {
+
+    // Create the PublicApiService_OauthRequest
+    let publicApiService_OauthRequest = Components.Schemas.PublicApiService_OauthRequest()
+
+    let input = Operations.PublicApiService_Oauth.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(publicApiService_OauthRequest)
+    )
+    return try await underlyingClient.PublicApiService_Oauth(input)
+  }
+  public func publicApiService_OtpAuth() async throws -> Operations.PublicApiService_OtpAuth.Output
+  {
+
+    // Create the PublicApiService_OtpAuthRequest
+    let publicApiService_OtpAuthRequest = Components.Schemas.PublicApiService_OtpAuthRequest()
+
+    let input = Operations.PublicApiService_OtpAuth.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(publicApiService_OtpAuthRequest)
+    )
+    return try await underlyingClient.PublicApiService_OtpAuth(input)
+  }
+  public func publicApiService_RecoverUser() async throws
+    -> Operations.PublicApiService_RecoverUser.Output
+  {
+
+    // Create the PublicApiService_RecoverUserRequest
+    let publicApiService_RecoverUserRequest = Components.Schemas
+      .PublicApiService_RecoverUserRequest()
+
+    let input = Operations.PublicApiService_RecoverUser.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(publicApiService_RecoverUserRequest)
+    )
+    return try await underlyingClient.PublicApiService_RecoverUser(input)
+  }
+  public func publicApiService_RejectActivity() async throws
+    -> Operations.PublicApiService_RejectActivity.Output
+  {
+
+    // Create the PublicApiService_RejectActivityRequest
+    let publicApiService_RejectActivityRequest = Components.Schemas
+      .PublicApiService_RejectActivityRequest()
+
+    let input = Operations.PublicApiService_RejectActivity.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(publicApiService_RejectActivityRequest)
+    )
+    return try await underlyingClient.PublicApiService_RejectActivity(input)
+  }
+  public func publicApiService_RemoveOrganizationFeature() async throws
+    -> Operations.PublicApiService_RemoveOrganizationFeature.Output
+  {
+
+    // Create the PublicApiService_RemoveOrganizationFeatureRequest
+    let publicApiService_RemoveOrganizationFeatureRequest = Components.Schemas
+      .PublicApiService_RemoveOrganizationFeatureRequest()
+
+    let input = Operations.PublicApiService_RemoveOrganizationFeature.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(publicApiService_RemoveOrganizationFeatureRequest)
+    )
+    return try await underlyingClient.PublicApiService_RemoveOrganizationFeature(input)
+  }
+  public func publicApiService_SetOrganizationFeature() async throws
+    -> Operations.PublicApiService_SetOrganizationFeature.Output
+  {
+
+    // Create the PublicApiService_SetOrganizationFeatureRequest
+    let publicApiService_SetOrganizationFeatureRequest = Components.Schemas
+      .PublicApiService_SetOrganizationFeatureRequest()
+
+    let input = Operations.PublicApiService_SetOrganizationFeature.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(publicApiService_SetOrganizationFeatureRequest)
+    )
+    return try await underlyingClient.PublicApiService_SetOrganizationFeature(input)
+  }
+  public func publicApiService_SignRawPayload() async throws
+    -> Operations.PublicApiService_SignRawPayload.Output
+  {
+
+    // Create the PublicApiService_SignRawPayloadRequest
+    let publicApiService_SignRawPayloadRequest = Components.Schemas
+      .PublicApiService_SignRawPayloadRequest()
+
+    let input = Operations.PublicApiService_SignRawPayload.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(publicApiService_SignRawPayloadRequest)
+    )
+    return try await underlyingClient.PublicApiService_SignRawPayload(input)
+  }
+  public func publicApiService_SignRawPayloads() async throws
+    -> Operations.PublicApiService_SignRawPayloads.Output
+  {
+
+    // Create the PublicApiService_SignRawPayloadsRequest
+    let publicApiService_SignRawPayloadsRequest = Components.Schemas
+      .PublicApiService_SignRawPayloadsRequest()
+
+    let input = Operations.PublicApiService_SignRawPayloads.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(publicApiService_SignRawPayloadsRequest)
+    )
+    return try await underlyingClient.PublicApiService_SignRawPayloads(input)
+  }
+  public func publicApiService_SignTransaction() async throws
+    -> Operations.PublicApiService_SignTransaction.Output
+  {
+
+    // Create the PublicApiService_SignTransactionRequest
+    let publicApiService_SignTransactionRequest = Components.Schemas
+      .PublicApiService_SignTransactionRequest()
+
+    let input = Operations.PublicApiService_SignTransaction.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(publicApiService_SignTransactionRequest)
+    )
+    return try await underlyingClient.PublicApiService_SignTransaction(input)
+  }
+  public func publicApiService_UpdatePolicy() async throws
+    -> Operations.PublicApiService_UpdatePolicy.Output
+  {
+
+    // Create the PublicApiService_UpdatePolicyRequest
+    let publicApiService_UpdatePolicyRequest = Components.Schemas
+      .PublicApiService_UpdatePolicyRequest()
+
+    let input = Operations.PublicApiService_UpdatePolicy.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(publicApiService_UpdatePolicyRequest)
+    )
+    return try await underlyingClient.PublicApiService_UpdatePolicy(input)
+  }
+  public func publicApiService_UpdatePrivateKeyTag() async throws
+    -> Operations.PublicApiService_UpdatePrivateKeyTag.Output
+  {
+
+    // Create the PublicApiService_UpdatePrivateKeyTagRequest
+    let publicApiService_UpdatePrivateKeyTagRequest = Components.Schemas
+      .PublicApiService_UpdatePrivateKeyTagRequest()
+
+    let input = Operations.PublicApiService_UpdatePrivateKeyTag.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(publicApiService_UpdatePrivateKeyTagRequest)
+    )
+    return try await underlyingClient.PublicApiService_UpdatePrivateKeyTag(input)
+  }
+  public func publicApiService_UpdateRootQuorum() async throws
+    -> Operations.PublicApiService_UpdateRootQuorum.Output
+  {
+
+    // Create the PublicApiService_UpdateRootQuorumRequest
+    let publicApiService_UpdateRootQuorumRequest = Components.Schemas
+      .PublicApiService_UpdateRootQuorumRequest()
+
+    let input = Operations.PublicApiService_UpdateRootQuorum.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(publicApiService_UpdateRootQuorumRequest)
+    )
+    return try await underlyingClient.PublicApiService_UpdateRootQuorum(input)
+  }
+  public func publicApiService_UpdateUser() async throws
+    -> Operations.PublicApiService_UpdateUser.Output
+  {
+
+    // Create the PublicApiService_UpdateUserRequest
+    let publicApiService_UpdateUserRequest = Components.Schemas.PublicApiService_UpdateUserRequest()
+
+    let input = Operations.PublicApiService_UpdateUser.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(publicApiService_UpdateUserRequest)
+    )
+    return try await underlyingClient.PublicApiService_UpdateUser(input)
+  }
+  public func publicApiService_UpdateUserTag() async throws
+    -> Operations.PublicApiService_UpdateUserTag.Output
+  {
+
+    // Create the PublicApiService_UpdateUserTagRequest
+    let publicApiService_UpdateUserTagRequest = Components.Schemas
+      .PublicApiService_UpdateUserTagRequest()
+
+    let input = Operations.PublicApiService_UpdateUserTag.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(publicApiService_UpdateUserTagRequest)
+    )
+    return try await underlyingClient.PublicApiService_UpdateUserTag(input)
+  }
+  public func publicApiService_NOOPCodegenAnchor() async throws
+    -> Operations.PublicApiService_NOOPCodegenAnchor.Output
+  {
+
+    // Create the PublicApiService_NOOPCodegenAnchorRequest
+    let publicApiService_NOOPCodegenAnchorRequest = Components.Schemas
+      .PublicApiService_NOOPCodegenAnchorRequest()
+
+    let input = Operations.PublicApiService_NOOPCodegenAnchor.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(publicApiService_NOOPCodegenAnchorRequest)
+    )
+    return try await underlyingClient.PublicApiService_NOOPCodegenAnchor(input)
   }
 }
