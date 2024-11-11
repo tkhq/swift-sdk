@@ -118,6 +118,7 @@ public struct TurnkeyClient {
   ///   - apiKeyName: Optional. The name of the API key used in the authentication process.
   ///   - expirationSeconds: Optional. The duration in seconds before the authentication request expires.
   ///   - emailCustomization: Optional. Customization parameters for the authentication email.
+  ///   - invalidateExisting: Optional. Invalidates all existing email auth API keys.
   ///
   /// - Returns: A tuple containing the `Operations.EmailAuth.Output` and a closure `(String) async throws -> Void` that accepts an encrypted bundle for verification.
   ///
@@ -127,7 +128,7 @@ public struct TurnkeyClient {
   public func emailAuth(
     organizationId: String,
     email: String, apiKeyName: String?, expirationSeconds: String?,
-    emailCustomization: Components.Schemas.EmailCustomizationParams?
+    emailCustomization: Components.Schemas.EmailCustomizationParams?, invalidateExisting: Bool?
   ) async throws -> (Operations.EmailAuth.Output, (String) async throws -> AuthResult) {
     let ephemeralPrivateKey = P256.KeyAgreement.PrivateKey()
     let targetPublicKey = try ephemeralPrivateKey.publicKey.toString(representation: .x963)
@@ -135,7 +136,7 @@ public struct TurnkeyClient {
     let response = try await emailAuth(
       organizationId: organizationId, email: email, targetPublicKey: targetPublicKey,
       apiKeyName: apiKeyName, expirationSeconds: expirationSeconds,
-      emailCustomization: emailCustomization)
+      emailCustomization: emailCustomization, invalidateExisting: invalidateExisting)
     let authResponseOrganizationId = try response.ok.body.json.activity.organizationId
 
     let verify: (String) async throws -> AuthResult = { encryptedBundle in
@@ -715,7 +716,7 @@ public struct TurnkeyClient {
   }
 
   public func createReadOnlySession(
-    organizationId: String,
+    organizationId: String
   ) async throws -> Operations.CreateReadOnlySession.Output {
 
     // Create the CreateReadOnlySessionIntent
