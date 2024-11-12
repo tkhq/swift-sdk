@@ -1690,10 +1690,14 @@ components:
           "$ref": "#/components/schemas/Result"
         votes:
           type: array
+          nullable: true
           description: A list of objects representing a particular User's approval
             or rejection of a Consensus request, including all relevant metadata.
           items:
-            "$ref": "#/components/schemas/Vote"
+            oneOf:
+              - $ref: '#/components/schemas/Vote'
+              - type: null
+                nullable: true
         fingerprint:
           type: string
           description: An artifact verifying a User's action.
