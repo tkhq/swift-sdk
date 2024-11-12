@@ -1,4 +1,4 @@
-// Generated using Sourcery 2.2.2 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.2.5 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
 import AuthenticationServices
@@ -118,6 +118,7 @@ public struct TurnkeyClient {
   ///   - apiKeyName: Optional. The name of the API key used in the authentication process.
   ///   - expirationSeconds: Optional. The duration in seconds before the authentication request expires.
   ///   - emailCustomization: Optional. Customization parameters for the authentication email.
+  ///   - invalidateExisting: Optional. Invalidates all existing email auth API keys.
   ///
   /// - Returns: A tuple containing the `Operations.EmailAuth.Output` and a closure `(String) async throws -> Void` that accepts an encrypted bundle for verification.
   ///
@@ -127,7 +128,7 @@ public struct TurnkeyClient {
   public func emailAuth(
     organizationId: String,
     email: String, apiKeyName: String?, expirationSeconds: String?,
-    emailCustomization: Components.Schemas.EmailCustomizationParams?
+    emailCustomization: Components.Schemas.EmailCustomizationParams?, invalidateExisting: Bool?
   ) async throws -> (Operations.EmailAuth.Output, (String) async throws -> AuthResult) {
     let ephemeralPrivateKey = P256.KeyAgreement.PrivateKey()
     let targetPublicKey = try ephemeralPrivateKey.publicKey.toString(representation: .x963)
@@ -135,7 +136,7 @@ public struct TurnkeyClient {
     let response = try await emailAuth(
       organizationId: organizationId, email: email, targetPublicKey: targetPublicKey,
       apiKeyName: apiKeyName, expirationSeconds: expirationSeconds,
-      emailCustomization: emailCustomization)
+      emailCustomization: emailCustomization, invalidateExisting: invalidateExisting)
     let authResponseOrganizationId = try response.ok.body.json.activity.organizationId
 
     let verify: (String) async throws -> AuthResult = { encryptedBundle in
@@ -232,6 +233,36 @@ public struct TurnkeyClient {
       body: .json(getAuthenticatorsRequest)
     )
     return try await underlyingClient.GetAuthenticators(input)
+  }
+  public func getOauthProviders(organizationId: String, userId: String?) async throws
+    -> Operations.GetOauthProviders.Output
+  {
+
+    // Create the GetOauthProvidersRequest
+    let getOauthProvidersRequest = Components.Schemas.GetOauthProvidersRequest(
+      organizationId: organizationId, userId: userId
+    )
+
+    let input = Operations.GetOauthProviders.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(getOauthProvidersRequest)
+    )
+    return try await underlyingClient.GetOauthProviders(input)
+  }
+  public func getOrganizationConfigs(organizationId: String) async throws
+    -> Operations.GetOrganizationConfigs.Output
+  {
+
+    // Create the GetOrganizationConfigsRequest
+    let getOrganizationConfigsRequest = Components.Schemas.GetOrganizationConfigsRequest(
+      organizationId: organizationId
+    )
+
+    let input = Operations.GetOrganizationConfigs.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(getOrganizationConfigsRequest)
+    )
+    return try await underlyingClient.GetOrganizationConfigs(input)
   }
   public func getPolicy(organizationId: String, policyId: String) async throws
     -> Operations.GetPolicy.Output
@@ -468,16 +499,16 @@ public struct TurnkeyClient {
 
   public func createApiKeys(
     organizationId: String,
-    apiKeys: [Components.Schemas.ApiKeyParams], userId: String
+    apiKeys: [Components.Schemas.ApiKeyParamsV2], userId: String
   ) async throws -> Operations.CreateApiKeys.Output {
 
-    // Create the CreateApiKeysIntent
-    let createApiKeysIntent = Components.Schemas.CreateApiKeysIntent(
+    // Create the CreateApiKeysIntentV2
+    let createApiKeysIntent = Components.Schemas.CreateApiKeysIntentV2(
       apiKeys: apiKeys, userId: userId)
 
     // Create the CreateApiKeysRequest
     let createApiKeysRequest = Components.Schemas.CreateApiKeysRequest(
-      _type: .ACTIVITY_TYPE_CREATE_API_KEYS,
+      _type: .ACTIVITY_TYPE_CREATE_API_KEYS_V2,
       timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
       organizationId: organizationId,
       parameters: createApiKeysIntent
@@ -545,6 +576,33 @@ public struct TurnkeyClient {
 
     // Call the CreateInvitations method using the underlyingClient
     return try await underlyingClient.CreateInvitations(input)
+  }
+
+  public func createOauthProviders(
+    organizationId: String,
+    userId: String, oauthProviders: [Components.Schemas.OauthProviderParams]
+  ) async throws -> Operations.CreateOauthProviders.Output {
+
+    // Create the CreateOauthProvidersIntent
+    let createOauthProvidersIntent = Components.Schemas.CreateOauthProvidersIntent(
+      userId: userId, oauthProviders: oauthProviders)
+
+    // Create the CreateOauthProvidersRequest
+    let createOauthProvidersRequest = Components.Schemas.CreateOauthProvidersRequest(
+      _type: .ACTIVITY_TYPE_CREATE_OAUTH_PROVIDERS,
+      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
+      organizationId: organizationId,
+      parameters: createOauthProvidersIntent
+    )
+
+    // Create the input for the CreateOauthProviders method
+    let input = Operations.CreateOauthProviders.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(createOauthProvidersRequest)
+    )
+
+    // Call the CreateOauthProviders method using the underlyingClient
+    return try await underlyingClient.CreateOauthProviders(input)
   }
 
   public func createPolicies(
@@ -657,22 +715,77 @@ public struct TurnkeyClient {
     return try await underlyingClient.CreatePrivateKeys(input)
   }
 
+  public func createReadOnlySession(
+    organizationId: String
+  ) async throws -> Operations.CreateReadOnlySession.Output {
+
+    // Create the CreateReadOnlySessionIntent
+    let createReadOnlySessionIntent = Components.Schemas.CreateReadOnlySessionIntent()
+
+    // Create the CreateReadOnlySessionRequest
+    let createReadOnlySessionRequest = Components.Schemas.CreateReadOnlySessionRequest(
+      _type: .ACTIVITY_TYPE_CREATE_READ_ONLY_SESSION,
+      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
+      organizationId: organizationId,
+      parameters: createReadOnlySessionIntent
+    )
+
+    // Create the input for the CreateReadOnlySession method
+    let input = Operations.CreateReadOnlySession.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(createReadOnlySessionRequest)
+    )
+
+    // Call the CreateReadOnlySession method using the underlyingClient
+    return try await underlyingClient.CreateReadOnlySession(input)
+  }
+
+  public func createReadWriteSession(
+    organizationId: String,
+    targetPublicKey: String, userId: String?, apiKeyName: String?, expirationSeconds: String?
+  ) async throws -> Operations.CreateReadWriteSession.Output {
+
+    // Create the CreateReadWriteSessionIntentV2
+    let createReadWriteSessionIntent = Components.Schemas.CreateReadWriteSessionIntentV2(
+      targetPublicKey: targetPublicKey, userId: userId, apiKeyName: apiKeyName,
+      expirationSeconds: expirationSeconds)
+
+    // Create the CreateReadWriteSessionRequest
+    let createReadWriteSessionRequest = Components.Schemas.CreateReadWriteSessionRequest(
+      _type: .ACTIVITY_TYPE_CREATE_READ_WRITE_SESSION_V2,
+      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
+      organizationId: organizationId,
+      parameters: createReadWriteSessionIntent
+    )
+
+    // Create the input for the CreateReadWriteSession method
+    let input = Operations.CreateReadWriteSession.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(createReadWriteSessionRequest)
+    )
+
+    // Call the CreateReadWriteSession method using the underlyingClient
+    return try await underlyingClient.CreateReadWriteSession(input)
+  }
+
   public func createSubOrganization(
     organizationId: String,
-    subOrganizationName: String, rootUsers: [Components.Schemas.RootUserParams],
+    subOrganizationName: String, rootUsers: [Components.Schemas.RootUserParamsV4],
     rootQuorumThreshold: Int32, wallet: Components.Schemas.WalletParams?,
-    disableEmailRecovery: Bool?, disableEmailAuth: Bool?
+    disableEmailRecovery: Bool?, disableEmailAuth: Bool?, disableSmsAuth: Bool?,
+    disableOtpEmailAuth: Bool?
   ) async throws -> Operations.CreateSubOrganization.Output {
 
-    // Create the CreateSubOrganizationIntentV4
-    let createSubOrganizationIntent = Components.Schemas.CreateSubOrganizationIntentV4(
+    // Create the CreateSubOrganizationIntentV7
+    let createSubOrganizationIntent = Components.Schemas.CreateSubOrganizationIntentV7(
       subOrganizationName: subOrganizationName, rootUsers: rootUsers,
       rootQuorumThreshold: rootQuorumThreshold, wallet: wallet,
-      disableEmailRecovery: disableEmailRecovery, disableEmailAuth: disableEmailAuth)
+      disableEmailRecovery: disableEmailRecovery, disableEmailAuth: disableEmailAuth,
+      disableSmsAuth: disableSmsAuth, disableOtpEmailAuth: disableOtpEmailAuth)
 
     // Create the CreateSubOrganizationRequest
     let createSubOrganizationRequest = Components.Schemas.CreateSubOrganizationRequest(
-      _type: .ACTIVITY_TYPE_CREATE_SUB_ORGANIZATION_V4,
+      _type: .ACTIVITY_TYPE_CREATE_SUB_ORGANIZATION_V7,
       timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
       organizationId: organizationId,
       parameters: createSubOrganizationIntent
@@ -877,6 +990,33 @@ public struct TurnkeyClient {
     return try await underlyingClient.DeleteInvitation(input)
   }
 
+  public func deleteOauthProviders(
+    organizationId: String,
+    userId: String, providerIds: [String]
+  ) async throws -> Operations.DeleteOauthProviders.Output {
+
+    // Create the DeleteOauthProvidersIntent
+    let deleteOauthProvidersIntent = Components.Schemas.DeleteOauthProvidersIntent(
+      userId: userId, providerIds: providerIds)
+
+    // Create the DeleteOauthProvidersRequest
+    let deleteOauthProvidersRequest = Components.Schemas.DeleteOauthProvidersRequest(
+      _type: .ACTIVITY_TYPE_DELETE_OAUTH_PROVIDERS,
+      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
+      organizationId: organizationId,
+      parameters: deleteOauthProvidersIntent
+    )
+
+    // Create the input for the DeleteOauthProviders method
+    let input = Operations.DeleteOauthProviders.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(deleteOauthProvidersRequest)
+    )
+
+    // Call the DeleteOauthProviders method using the underlyingClient
+    return try await underlyingClient.DeleteOauthProviders(input)
+  }
+
   public func deletePolicy(
     organizationId: String,
     policyId: String
@@ -929,6 +1069,60 @@ public struct TurnkeyClient {
 
     // Call the DeletePrivateKeyTags method using the underlyingClient
     return try await underlyingClient.DeletePrivateKeyTags(input)
+  }
+
+  public func deletePrivateKeys(
+    organizationId: String,
+    privateKeyIds: [String], deleteWithoutExport: Bool?
+  ) async throws -> Operations.DeletePrivateKeys.Output {
+
+    // Create the DeletePrivateKeysIntent
+    let deletePrivateKeysIntent = Components.Schemas.DeletePrivateKeysIntent(
+      privateKeyIds: privateKeyIds, deleteWithoutExport: deleteWithoutExport)
+
+    // Create the DeletePrivateKeysRequest
+    let deletePrivateKeysRequest = Components.Schemas.DeletePrivateKeysRequest(
+      _type: .ACTIVITY_TYPE_DELETE_PRIVATE_KEYS,
+      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
+      organizationId: organizationId,
+      parameters: deletePrivateKeysIntent
+    )
+
+    // Create the input for the DeletePrivateKeys method
+    let input = Operations.DeletePrivateKeys.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(deletePrivateKeysRequest)
+    )
+
+    // Call the DeletePrivateKeys method using the underlyingClient
+    return try await underlyingClient.DeletePrivateKeys(input)
+  }
+
+  public func deleteSubOrganization(
+    organizationId: String,
+    deleteWithoutExport: Bool?
+  ) async throws -> Operations.DeleteSubOrganization.Output {
+
+    // Create the DeleteSubOrganizationIntent
+    let deleteSubOrganizationIntent = Components.Schemas.DeleteSubOrganizationIntent(
+      deleteWithoutExport: deleteWithoutExport)
+
+    // Create the DeleteSubOrganizationRequest
+    let deleteSubOrganizationRequest = Components.Schemas.DeleteSubOrganizationRequest(
+      _type: .ACTIVITY_TYPE_DELETE_SUB_ORGANIZATION,
+      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
+      organizationId: organizationId,
+      parameters: deleteSubOrganizationIntent
+    )
+
+    // Create the input for the DeleteSubOrganization method
+    let input = Operations.DeleteSubOrganization.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(deleteSubOrganizationRequest)
+    )
+
+    // Call the DeleteSubOrganization method using the underlyingClient
+    return try await underlyingClient.DeleteSubOrganization(input)
   }
 
   public func deleteUserTags(
@@ -985,20 +1179,48 @@ public struct TurnkeyClient {
     return try await underlyingClient.DeleteUsers(input)
   }
 
+  public func deleteWallets(
+    organizationId: String,
+    walletIds: [String], deleteWithoutExport: Bool?
+  ) async throws -> Operations.DeleteWallets.Output {
+
+    // Create the DeleteWalletsIntent
+    let deleteWalletsIntent = Components.Schemas.DeleteWalletsIntent(
+      walletIds: walletIds, deleteWithoutExport: deleteWithoutExport)
+
+    // Create the DeleteWalletsRequest
+    let deleteWalletsRequest = Components.Schemas.DeleteWalletsRequest(
+      _type: .ACTIVITY_TYPE_DELETE_WALLETS,
+      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
+      organizationId: organizationId,
+      parameters: deleteWalletsIntent
+    )
+
+    // Create the input for the DeleteWallets method
+    let input = Operations.DeleteWallets.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(deleteWalletsRequest)
+    )
+
+    // Call the DeleteWallets method using the underlyingClient
+    return try await underlyingClient.DeleteWallets(input)
+  }
+
   public func emailAuth(
     organizationId: String,
     email: String, targetPublicKey: String, apiKeyName: String?, expirationSeconds: String?,
-    emailCustomization: Components.Schemas.EmailCustomizationParams?
+    emailCustomization: Components.Schemas.EmailCustomizationParams?, invalidateExisting: Bool?
   ) async throws -> Operations.EmailAuth.Output {
 
-    // Create the EmailAuthIntent
-    let emailAuthIntent = Components.Schemas.EmailAuthIntent(
+    // Create the EmailAuthIntentV2
+    let emailAuthIntent = Components.Schemas.EmailAuthIntentV2(
       email: email, targetPublicKey: targetPublicKey, apiKeyName: apiKeyName,
-      expirationSeconds: expirationSeconds, emailCustomization: emailCustomization)
+      expirationSeconds: expirationSeconds, emailCustomization: emailCustomization,
+      invalidateExisting: invalidateExisting)
 
     // Create the EmailAuthRequest
     let emailAuthRequest = Components.Schemas.EmailAuthRequest(
-      _type: .ACTIVITY_TYPE_EMAIL_AUTH,
+      _type: .ACTIVITY_TYPE_EMAIL_AUTH_V2,
       timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
       organizationId: organizationId,
       parameters: emailAuthIntent
@@ -1206,6 +1428,34 @@ public struct TurnkeyClient {
     return try await underlyingClient.InitImportWallet(input)
   }
 
+  public func initOtpAuth(
+    organizationId: String,
+    otpType: String, contact: String,
+    emailCustomization: Components.Schemas.EmailCustomizationParams?
+  ) async throws -> Operations.InitOtpAuth.Output {
+
+    // Create the InitOtpAuthIntent
+    let initOtpAuthIntent = Components.Schemas.InitOtpAuthIntent(
+      otpType: otpType, contact: contact, emailCustomization: emailCustomization)
+
+    // Create the InitOtpAuthRequest
+    let initOtpAuthRequest = Components.Schemas.InitOtpAuthRequest(
+      _type: .ACTIVITY_TYPE_INIT_OTP_AUTH,
+      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
+      organizationId: organizationId,
+      parameters: initOtpAuthIntent
+    )
+
+    // Create the input for the InitOtpAuth method
+    let input = Operations.InitOtpAuth.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(initOtpAuthRequest)
+    )
+
+    // Call the InitOtpAuth method using the underlyingClient
+    return try await underlyingClient.InitOtpAuth(input)
+  }
+
   public func initUserEmailRecovery(
     organizationId: String,
     email: String, targetPublicKey: String, expirationSeconds: String?,
@@ -1233,6 +1483,63 @@ public struct TurnkeyClient {
 
     // Call the InitUserEmailRecovery method using the underlyingClient
     return try await underlyingClient.InitUserEmailRecovery(input)
+  }
+
+  public func oauth(
+    organizationId: String,
+    oidcToken: String, targetPublicKey: String, apiKeyName: String?, expirationSeconds: String?
+  ) async throws -> Operations.Oauth.Output {
+
+    // Create the OauthIntent
+    let oauthIntent = Components.Schemas.OauthIntent(
+      oidcToken: oidcToken, targetPublicKey: targetPublicKey, apiKeyName: apiKeyName,
+      expirationSeconds: expirationSeconds)
+
+    // Create the OauthRequest
+    let oauthRequest = Components.Schemas.OauthRequest(
+      _type: .ACTIVITY_TYPE_OAUTH,
+      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
+      organizationId: organizationId,
+      parameters: oauthIntent
+    )
+
+    // Create the input for the Oauth method
+    let input = Operations.Oauth.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(oauthRequest)
+    )
+
+    // Call the Oauth method using the underlyingClient
+    return try await underlyingClient.Oauth(input)
+  }
+
+  public func otpAuth(
+    organizationId: String,
+    otpId: String, otpCode: String, targetPublicKey: String?, apiKeyName: String?,
+    expirationSeconds: String?, invalidateExisting: Bool?
+  ) async throws -> Operations.OtpAuth.Output {
+
+    // Create the OtpAuthIntent
+    let otpAuthIntent = Components.Schemas.OtpAuthIntent(
+      otpId: otpId, otpCode: otpCode, targetPublicKey: targetPublicKey, apiKeyName: apiKeyName,
+      expirationSeconds: expirationSeconds, invalidateExisting: invalidateExisting)
+
+    // Create the OtpAuthRequest
+    let otpAuthRequest = Components.Schemas.OtpAuthRequest(
+      _type: .ACTIVITY_TYPE_OTP_AUTH,
+      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
+      organizationId: organizationId,
+      parameters: otpAuthIntent
+    )
+
+    // Create the input for the OtpAuth method
+    let input = Operations.OtpAuth.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(otpAuthRequest)
+    )
+
+    // Call the OtpAuth method using the underlyingClient
+    return try await underlyingClient.OtpAuth(input)
   }
 
   public func recoverUser(
@@ -1513,12 +1820,14 @@ public struct TurnkeyClient {
 
   public func updateUser(
     organizationId: String,
-    userId: String, userName: String?, userEmail: String?, userTagIds: [String]?
+    userId: String, userName: String?, userEmail: String?, userTagIds: [String]?,
+    userPhoneNumber: String?
   ) async throws -> Operations.UpdateUser.Output {
 
     // Create the UpdateUserIntent
     let updateUserIntent = Components.Schemas.UpdateUserIntent(
-      userId: userId, userName: userName, userEmail: userEmail, userTagIds: userTagIds)
+      userId: userId, userName: userName, userEmail: userEmail, userTagIds: userTagIds,
+      userPhoneNumber: userPhoneNumber)
 
     // Create the UpdateUserRequest
     let updateUserRequest = Components.Schemas.UpdateUserRequest(

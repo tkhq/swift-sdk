@@ -64,12 +64,5 @@ let package = Package(
          .product(name: "Web3PromiseKit", package: "Web3.swift"),
       ]
     ),
-    // Empty target that builds the DocC catalog at /SwiftDocCPluginDocumentation/SwiftDocCPlugin.docc.
-    // The SwiftDocCPlugin catalog includes high-level, user-facing documentation about using
-    // the Swift-DocC plugin from the command-line.
-    .target(
-        name: "TurnkeySDKDocumentation",
-        path: "Sources/TurnkeySDKDocumentation"
-    )
   ]
 )

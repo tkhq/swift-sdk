@@ -23,12 +23,16 @@
 {% macro addActivityMethodParams methodName -%}
     {% for struct in types.structs where struct.localName|split:"Request"|join == methodName -%}
         {% for method in struct.methods -%}
-            {% for param in method.parameters where param.name != "_type" and param.name != "timestampMs" -%}
-                {% if param.name != "parameters" -%}
-                    {{ param.name }}: {{ param.typeName|replace:"Swift.","" }}{% if not forloop.last %}, {% endif %}
-                {% else -%}
-                    {% map param.type.variables into params %}{{ maploop.item.name }}: {{ maploop.item.typeName|replace:"Swift.","" }}{% endmap %}{{ params|join:", " }}
-                {%- endif %}
+            {# First handle non-parameters fields #}
+            {% for param in method.parameters where param.name != "_type" and param.name != "timestampMs" and param.name != "parameters" -%}
+                {{ param.name }}: {{ param.typeName|replace:"Swift.","" }}
+            {%- endfor %}
+            {# Then handle parameters fields if they exist #}
+            {% for param in method.parameters where param.name == "parameters" -%}
+                {% if param.type.variables.count > 0 %}, {% endif %}
+                {% for var in param.type.variables -%}
+                    {{ var.name }}: {{ var.typeName|replace:"Swift.","" }}{% if not forloop.last %}, {% endif %}
+                {%- endfor %}
             {%- endfor %}
         {%- endfor %}
     {%- endfor %}

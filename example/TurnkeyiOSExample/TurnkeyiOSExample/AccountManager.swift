@@ -30,14 +30,12 @@ class AccountManager: NSObject, ASAuthorizationControllerPresentationContextProv
     var authenticationAnchor: ASPresentationAnchor?
     var isPerformingModalRequest = false
     private var passkeyRegistration: PasskeyManager?
-    private let authKeyManager: AuthKeyManager
     private var currentEmail: String?
     private var modelContext: ModelContext {
         return AppDelegate.userModelContext
     }
 
     override init() {
-        authKeyManager = AuthKeyManager(domain: domain)
         super.init()
         // Add observers for passkey registration notifications
         NotificationCenter.default.addObserver(
@@ -105,6 +103,12 @@ class AccountManager: NSObject, ASAuthorizationControllerPresentationContextProv
         isPerformingModalRequest = true
     }
 
+    /// A closure that verifies an encrypted bundle.
+    /// This closure is set when the `emailAuth` method is called and is used to verify
+    /// the encrypted bundle received during the email authentication process.
+    /// It takes a `String` representing the encrypted bundle and returns an `AuthResult` asynchronously.
+    private var verifyClosure: ((String) async throws -> AuthResult)?
+
     func signInEmailAuth(email: String, anchor: ASPresentationAnchor) async {
         // For email auth we need to proxy the request to a backend that can stamp it
         let proxyURL = "http://localhost:3000/api/email-auth"
@@ -112,20 +116,17 @@ class AccountManager: NSObject, ASAuthorizationControllerPresentationContextProv
         let turnkeyClient = TurnkeyClient(proxyURL: proxyURL)
 
         do {
-            let publicKey = try authKeyManager.createKeyPair()
 
-            var targetPublicKey = Data([0x04])
-            let rawRepresentation = publicKey.rawRepresentation
-            targetPublicKey.append(rawRepresentation)
-
-            let output = try await turnkeyClient.emailAuth(
+        let (output, verify) = try await turnkeyClient.emailAuth(
                 organizationId: parentOrgId,
                 email: email,
-                targetPublicKey: targetPublicKey.map { String(format: "%02x", $0) }.joined(),
                 apiKeyName: "test-api-key-swift-sdk",
                 expirationSeconds: "3600",
                 emailCustomization: Components.Schemas.EmailCustomizationParams()
             )
+
+            // Store the verify closure for later use
+            self.verifyClosure = verify
 
             // Assert the response
             switch output {
