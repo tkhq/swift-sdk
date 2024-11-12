@@ -1690,7 +1690,6 @@ components:
           "$ref": "#/components/schemas/Result"
         votes:
           type: array
-          nullable: true
           description: A list of objects representing a particular User's approval
             or rejection of a Consensus request, including all relevant metadata.
           items:
