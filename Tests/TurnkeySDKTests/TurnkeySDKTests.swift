@@ -61,9 +61,9 @@ final class TurnkeySDKTests: XCTestCase {
       case let .json(whoamiResponse):
         // Assert the expected properties in the whoamiResponse
         XCTAssertNotNil(whoamiResponse.organizationId)
-        XCTAssertEqual(whoamiResponse.organizationName, "andrew")
+        XCTAssertEqual(whoamiResponse.organizationName, "SDK E2E")
         XCTAssertEqual(whoamiResponse.userId, expectedUserId!)
-        XCTAssertEqual(whoamiResponse.username, "root user")
+        XCTAssertEqual(whoamiResponse.username, "Root user")
       // Add more assertions based on the expected response
       }
     case let .undocumented(statusCode, undocumentedPayload):
@@ -211,7 +211,7 @@ final class TurnkeySDKTests: XCTestCase {
     let expectation = XCTestExpectation(description: "Sign transaction and handle response")
 
     // Setup the Ethereum private key and web3 instance
-    let web3 = Web3(rpcURL: "https://sepolia.infura.io/v3/\(infuraAPIKey ?? "")")  // Replace with actual URL and project ID
+    let web3 = Web3(rpcURL: "https://holesky.infura.io/v3/\(infuraAPIKey ?? "")")  // Replace with actual URL and project ID
     let from = try! EthereumAddress(hex: walletFromAddress ?? "", eip55: true)
 
     firstly {
@@ -320,7 +320,6 @@ final class TurnkeySDKTests: XCTestCase {
         web3.provider.send(request: request) { (response: Web3Response<EthereumData>) in
           switch response.status {
           case let .success(result):
-            // print("Transaction hash: \(result.hex())")
             seal.fulfill(result.hex())
           case let .failure(error):
             seal.reject(error)
