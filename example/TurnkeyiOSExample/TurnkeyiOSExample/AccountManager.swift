@@ -153,33 +153,15 @@ class AccountManager: NSObject, ASAuthorizationControllerPresentationContextProv
 
     func verifyEncryptedBundle(bundle: String) async {
         do {
-            let (privateKey, publicKey) = try authKeyManager.decryptBundle(bundle)
-            
-            let apiPublicKey = try publicKey.toString(representation: .compressed)
-            let apiPrivateKey = try privateKey.toString(representation: .raw)
-
-            print("apiPrivateKey: \(apiPrivateKey) - apiPublicKey:\(apiPublicKey)")
-            // Initialize a new TurnkeyClient instance with the provided privateKey and publicKey
-            let turnkeyClient = TurnkeyClient(apiPrivateKey: apiPrivateKey, apiPublicKey: apiPublicKey)
-            let response = try await turnkeyClient.getWhoami(organizationId: parentOrgId)
-
-            // Assert the response
-            switch response {
-            case let .ok(response):
-                switch response.body {
-                case let .json(emailAuthResponse):
-                    print(emailAuthResponse)
-                }
-            case let .undocumented(statusCode, undocumentedPayload):
-                // Handle the undocumented response
-                if let body = undocumentedPayload.body {
-                    let bodyString = try await String(collecting: body, upTo: .max)
-                    print("Undocumented response body: \(bodyString)")
-                }
-                print("Undocumented response: \(statusCode)")
+            // Use the stored verify closure
+            if let verify = verifyClosure {
+                let authResult = try await verify(bundle)
+                print("Verification successful: \(authResult)")
+            } else {
+                print("Verify closure is not set.")
             }
         } catch {
-            print("Error occurred: \(error)")
+            print("Error occurred during verification: \(error)")
         }
     }
 

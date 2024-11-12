@@ -1,6 +1,6 @@
 # Email Authentication
 
-This guide provides a walkthrough for implementing email authentication in a Swift application using the [TurnkeyClient](../Sources/TurnkeySDK/TurnkeyClient.generated.swift). This process involves generating key pairs, handling encrypted bundles, and verifying user identity.
+This guide provides a walkthrough for implementing email authentication in a Swift application using the [TurnkeyClient](../Sources/TurnkeySDK/TurnkeyClient.generated.swift). This process involves handling encrypted bundles and verifying user identity.
 
 For a more detailed explanation of the email authentication process, please refer to the [Turnkey API documentation](https://docs.turnkey.com/features/email-auth).
 
@@ -24,104 +24,140 @@ let client = TurnkeyClient(proxyURL: proxyURL)
 
 You may also forgo the use of the provided proxy middleware and make the request yourself.
 
-## Step 2: Generate Ephemeral Key Pair
-
-Next we'll generate an ephemeral key pair, which is will be used to decrypt the encrypted bundle sent
-that the user will receive in their email.
-
-```swift
-// Create a new ephemeral private key using P-256 curve for key agreement.
-let ephemeralPrivateKey = P256.KeyAgreement.PrivateKey()
-
-// Extract the public key from the private key and convert it to a string using the x963 representation.
-let targetPublicKey = try ephemeralPrivateKey.publicKey.toString(representation: .x963)
-```
-
-## Step 3: Define Authentication Parameters
+## Step 2: Define Authentication Parameters
 
 ```swift
 let organizationId = "your_organization_id"
 let email = "user@example.com"
-let targetPublicKey = publicKey.toString(representation: .raw)
 let expirationSeconds = "3600"
 let emailCustomization = Components.Schemas.EmailCustomizationParams() // Customize as needed
 ```
 
-## Step 4: Send Email Authentication Request
+## Step 3: Send Email Authentication Request
 
-With the TurnkeyClient initialized and the ephemeral key pair generated, you can now send an email authentication request. This involves using the `emailAuth` method of the TurnkeyClient, passing in the necessary parameters.
+With the TurnkeyClient initialized, you can now send an email authentication request. This involves using the `emailAuth` method of the TurnkeyClient, passing in the necessary parameters.
+
+### Detailed Explanation
+
+- **Ephemeral Key Generation**: The `emailAuth` method generates an ephemeral private key, which is used to create a public key for the authentication process. This ephemeral key is stored in memory and is used to decrypt the encrypted bundle sent to the user's email.
+
+- **Tuple Response**: The `emailAuth` method returns a tuple containing two elements:
+  1. `Operations.EmailAuth.Output`: This is the output of the email authentication operation, which includes the response from the Turnkey API.
+  2. `verify`: A closure function that takes an encrypted bundle as input and returns an `AuthResult`. This closure uses the ephemeral private key to decrypt the bundle and verify the authentication.
 
 ```swift
-let emailAuthResult = try await client.emailAuth(
+let (output, verify) = try await client.emailAuth(
     organizationId: organizationId,
     email: email,
-    targetPublicKey: targetPublicKey,
     apiKeyName: "your_api_key_name",
     expirationSeconds: expirationSeconds,
     emailCustomization: emailCustomization
 )
-```
 
-After sending the email authentication request, it's important to handle the response appropriately. If the authentication is successful, you should save the user's sub-organizationId from the response for future use. You'll need this organizationId later to verify the user's keys.
-
-```swift
-switch emailAuthResult {
-case .ok(let response):
-    // The user's sub-organizationId:
-    let organizationId = response.activity.organizationId
-    // Proceed with user session creation
-case .undocumented(let statusCode, let undocumentedPayload):
-    // Handle error, possibly retry or log
+// Assert the response
+switch output {
+case let .ok(response):
+    switch response.body {
+    case let .json(emailAuthResponse):
+        print(emailAuthResponse.activity.organizationId)
+        // We successfully initiated the email authentication request
+        // We'll use the verify function to verify the encrypted bundle in the next step
+    }
+case let .undocumented(statusCode, undocumentedPayload):
+    // Handle the undocumented response
+    if let body = undocumentedPayload.body {
+        let bodyString = try await String(collecting: body, upTo: .max)
+        print("Undocumented response body: \(bodyString)")
+    }
+    print("Undocumented response: \(statusCode)")
 }
 ```
 
-## Step 6: Verify Encrypted Bundle
+## Step 4: Verify Encrypted Bundle
 
-After your user receives the encrypted bundle from Turnkey, via email, you need to decrypt this bundle to retrieve the necessary keys for further authentication steps. Use the [`decryptBundle`](../Sources/Shared/AuthManager.swift) method from the `AuthManager` to handle this.
+After your user receives the encrypted bundle from Turnkey, via email, you need to verify this bundle to retrieve the necessary keys for further authentication steps. We'll use the `verify` function returned from the previous step.
+
+### Detailed Explanation
+
+- **AuthResult**: The `verify` function returns an `AuthResult` object, which contains:
+
+  - `whoamiResponse`: The result of calling `getWhoami`, which verifies the authentication and retrieves user details.
+  - `apiPublicKey` and `apiPrivateKey`: The keys obtained from the decrypted bundle, used for further authenticated requests.
+
+- **getWhoami Call**: The `verify` function internally calls the `getWhoami` method to ensure the credentials are valid and to fetch user details from the Turnkey API.
 
 ```swift
-let (privateKey, publicKey) = try AuthManager.decryptBundle(encryptedBundle)
+do {
+    let authResult = try await verify(bundle)
+    print("Verification successful: \(authResult)")
+} catch {
+    print("Error occurred during verification: \(error)")
+}
 ```
 
-This method will decrypt the encrypted bundle and provide you with the private and public keys needed for the session.
-At this point in the authentication process, you have two options:
+This method will verify the encrypted bundle and provide you with the necessary authentication result.
 
-1. Prompt the user for passkey authentication (using the `PasskeyManager`) and add a passkey as an authenticator.
-2. Save the API private key in the keychain and use that for subsequent authentication requests.
+## Step 5: Initialize the TurnkeyClient with API Keys
 
-Note: Since the decrypted API key is similar to a session key, it should be handled with the same level of security as authentication tokens.
-
-## Step 7: Initialize the TurnkeyClient and Verify the user
-
-After successfully decrypting the encrypted bundle and retrieving the private and public API keys, you can initialize a TurnkeyClient instance using these keys for further authenticated requests:
+After successfully verifying the encrypted bundle and retrieving the private and public API keys, you can initialize a TurnkeyClient instance using these keys for further authenticated requests:
 
 ```swift
-// ...
-
-let apiPublicKey = try publicKey.toString(representation: .compressed)
-let apiPrivateKey = try privateKey.toString(representation: .raw)
+// Use the apiPublicKey and apiPrivateKey from the authResult
+let apiPublicKey = authResult.apiPublicKey
+let apiPrivateKey = authResult.apiPrivateKey
 
 // Initialize a new TurnkeyClient instance with the provided privateKey and publicKey
 let turnkeyClient = TurnkeyClient(apiPrivateKey: apiPrivateKey, apiPublicKey: apiPublicKey)
 ```
 
-### Verifying User Credentials with getWhoami
+## Step 6: Create Read Only Session
 
-After initializing the TurnkeyClient with the decrypted API keys, it is recommended to verify the validity of these credentials. This can be done using the `getWhoami` method, which checks the active status of the credentials against the Turnkey API.
+### Extract API Keys and Sub-Organization ID
 
-Note: We're using the `organizationId` from the email authentication result as the `organizationId` for the `getWhoami` request.
+First, get the `apiPublicKey` and `apiPrivateKey` from the `authResult`, and retrieve the `organizationId` from the `whoamiResponse`. Then, instantiate the `TurnkeyClient`.
+
+```swift
+// Use the apiPublicKey and apiPrivateKey from the authResult
+let apiPublicKey = authResult.apiPublicKey
+let apiPrivateKey = authResult.apiPrivateKey
+
+// Get the organizationId from the whoamiResponse
+let whoamiResponse = authResult.whoamiResponse
+var subOrganizationId: String?
+
+switch whoamiResponse {
+case let .ok(response):
+    switch response.body {
+    case let .json(whoamiResponse):
+        subOrganizationId = whoamiResponse.organizationId
+        print("Sub-Organization ID: \(subOrganizationId ?? "N/A")")
+    }
+case let .undocumented(statusCode, undocumentedPayload):
+    if let body = undocumentedPayload.body {
+        let bodyString = try await String(collecting: body, upTo: .max)
+        print("Undocumented response body: \(bodyString)")
+    }
+    print("Undocumented response: \(statusCode)")
+}
+
+// Initialize a new TurnkeyClient instance with the provided privateKey and publicKey
+let turnkeyClient = TurnkeyClient(apiPrivateKey: apiPrivateKey, apiPublicKey: apiPublicKey)
+```
+
+### Create Read Only Session
+
+Next, use the `subOrganizationId` to call the `createReadOnlySession` method on the `TurnkeyClient`.
 
 ```swift
 do {
-    let whoamiResponse = try await turnkeyClient.getWhoami(organizationId: organizationId)
-
-    switch whoamiResponse {
-    case .ok(let response):
-        print("Credential verification successful: \(whoamiResponse)")
-    case .undocumented(let statusCode, let undocumentedPayload):
-        print("Error during credential verification: \(error)")
+    // Use the user's sub-organization ID to create a read-only session
+    if let orgId = subOrganizationId {
+        let readOnlySessionOutput = try await turnkeyClient.createReadOnlySession(organizationId: orgId)
+        print("Read-only session created successfully: \(readOnlySessionOutput)")
+    } else {
+        print("Failed to extract organization ID.")
     }
 } catch {
-    print("Error during credential verification: \(error)")
+    print("Error occurred while creating read-only session: \(error)")
 }
 ```
