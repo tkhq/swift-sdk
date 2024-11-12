@@ -171,16 +171,16 @@ final class TurnkeySDKTests: XCTestCase {
         // Simplified validation that focuses on the essential fields
         XCTAssertNotNil(activityResponse.activity)
         XCTAssertEqual(activityResponse.activity.organizationId, organizationId)
-        
+
         // Validate the result if present
         if let result = activityResponse.activity.result.createSubOrganizationResultV7 {
-            XCTAssertNotNil(result.subOrganizationId)
-            print("Created sub-organization: \(result.subOrganizationId)")
-            
-            if let rootUserIds = result.rootUserIds {
-                XCTAssertEqual(rootUserIds.count, rootUsers.count)
-                print("Created root users: \(rootUserIds)")
-            }
+          XCTAssertNotNil(result.subOrganizationId)
+          print("Created sub-organization: \(result.subOrganizationId)")
+
+          if let rootUserIds = result.rootUserIds {
+            XCTAssertEqual(rootUserIds.count, rootUsers.count)
+            print("Created root users: \(rootUserIds)")
+          }
         }
       }
     case let .undocumented(statusCode, undocumentedPayload):
