@@ -21,11 +21,11 @@ extension ProxyMiddleware: ClientMiddleware {
     // Save the current full path of the request (baseUrl + request.path)
     let originalURL = baseURL.appendingPathComponent(request.path ?? "")
 
-    // Set the X-Forwarded-For header with the saved original request URL
+    // Set the X-Turnkey-Request-Url header with the saved original request URL
     var request = request
-    let xForwardedForHeader = HTTPField(
-      name: HTTPField.Name("X-Forwarded-For")!, value: originalURL.absoluteString)
-    request.headerFields.append(xForwardedForHeader)
+    let xTurnkeyRequestUrl = HTTPField(
+      name: HTTPField.Name("X-Turnkey-Request-Url")!, value: originalURL.absoluteString)
+    request.headerFields.append(xTurnkeyRequestUrl)
 
     // Remove the request path and just forward to the proxyBaseURL
     request.path = ""
