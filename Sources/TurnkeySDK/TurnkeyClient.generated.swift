@@ -48,10 +48,6 @@ public struct TurnkeyClient {
   ///   - apiPublicKey: The public key obtained from Turnkey, used to identify the client.
   ///   - baseUrl: The base URL of the Turnkey API. Defaults to "https://api.turnkey.com".
   ///
-  /// - Note: For client-side usage where all authenticated requests need secure key management,
-  ///   it is recommended to use the `AuthKeyManager` for creating, storing, and securely using key pairs.
-  ///   For more details, refer to the [AuthKeyManager](#AuthKeyManager).
-  ///
   /// - Example:
   ///   ```
   ///   let client = TurnkeyClient(apiPrivateKey: "your_api_private_key", apiPublicKey: "your_api_public_key")
