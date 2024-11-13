@@ -69,4 +69,4 @@ It is crucial that the response from the developer's backend matches exactly wit
 
 ## Conclusion
 
-WhWhile `ProxyMiddleware` is not required, it provides a convenient way to send requests on behalf of unauthenticated users looking to perform operations such as email authentication/recovery, wallet import/export, and sub-organization creation.
+While `ProxyMiddleware` is not required, it provides a convenient way to send requests on behalf of unauthenticated users looking to perform operations such as email authentication/recovery, wallet import/export, and sub-organization creation.
