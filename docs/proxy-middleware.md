@@ -19,11 +19,9 @@ This setup is especially useful for operations like:
 - Wallet import/export
 - Sub-organization creation
 
-## Important Notes
+#### Request Header
 
-#### X-Forwarded-For Header
-
-The middleware adds an `X-Forwarded-For` header to each request, which contains the original request URL. This is used to forward the request to Turnkey's backend.
+The middleware adds an `X-Turnkey-Request-Url` header to each request, which contains the original request URL. This is used to forward the request to Turnkey's backend.
 
 Example implementation of a proxy server:
 
@@ -35,10 +33,10 @@ app.use(express.json());
 
 app.post('/api/turnkey-proxy', async (req, res) => {
   // The original request URL e.g. https://api.turnkey.com/public/v1/submit/email_auth
-  const turnkeyApiRequestURL = req.headers['x-forwarded-for'];
+  const turnkeyApiRequestURL = req.headers['X-Turnkey-Request-Url'];
 
-  // Remove the 'x-forwarded-for' header
-  delete req.headers['x-forwarded-for'];
+  // Remove the 'X-Turnkey-Request-Url' header
+  delete req.headers['X-Turnkey-Request-Url'];
 
   try {
     // Forward the request to the original URL
@@ -71,4 +69,4 @@ It is crucial that the response from the developer's backend matches exactly wit
 
 ## Conclusion
 
-While `ProxyMiddleware` is not required, it provides a convenient way to send requests on behalf of unauthenticated users looking to perform
+While `ProxyMiddleware` is not required, it provides a convenient way to send requests on behalf of unauthenticated users looking to perform operations such as email authentication/recovery, wallet import/export, and sub-organization creation.
