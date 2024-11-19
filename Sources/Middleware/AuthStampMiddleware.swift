@@ -12,7 +12,7 @@ package struct AuthStampMiddleware {
   }
 }
 
-enum AuthStampError: Error {
+public enum AuthStampError: Error {
   case failedToStampAndSendRequest(String, Error)
 }
 
