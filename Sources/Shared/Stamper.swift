@@ -117,10 +117,14 @@ public class Stamper {
         }
       }
 
-      guard let challenge = payload.compactMap { String(format: "%02x", $0) }.joined().data(using: .utf8) else {
+      guard
+        let challenge = payload.compactMap({ String(format: "%02x", $0) }).joined().data(
+          using: .utf8)
+      else {
         continuation.resume(throwing: StampError.assertionFailed)
+        return
       }
-        
+
       self.passkeyManager?.assertPasskey(challenge: challenge)
     }
   }
