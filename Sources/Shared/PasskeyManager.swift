@@ -78,7 +78,7 @@ public class PasskeyManager: NSObject, ASAuthorizationControllerDelegate,
     ])
     authorizationController.delegate = self
     authorizationController.presentationContextProvider = self
-    authorizationController.performRequests()
+    authorizationController.performRequests(options: options)
 
     isPerformingModalRequest = true
   }
@@ -96,7 +96,7 @@ public class PasskeyManager: NSObject, ASAuthorizationControllerDelegate,
     let authController = ASAuthorizationController(authorizationRequests: [assertionRequest])
     authController.delegate = self
     authController.presentationContextProvider = self
-    authController.performRequests()
+    authController.performRequests(options: options)
 
     isPerformingModalRequest = true
   }
