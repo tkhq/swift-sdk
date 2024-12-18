@@ -58,7 +58,7 @@ public class PasskeyManager: NSObject, ASAuthorizationControllerDelegate,
 
   /// Initiates the registration of a new passkey.
   /// - Parameter email: The email address associated with the new passkey.
-  public func registerPasskey(email: String) {
+  public func registerPasskey(email: String, options: ASAuthorizationController.RequestOptions = []) {
 
     let challenge = generateRandomBuffer()
     let userID = Data(UUID().uuidString.utf8)
@@ -84,7 +84,7 @@ public class PasskeyManager: NSObject, ASAuthorizationControllerDelegate,
 
   /// Initiates the assertion of a passkey using the specified challenge.
   /// - Parameter challenge: The challenge data used for passkey assertion.
-  public func assertPasskey(challenge: Data) {
+  public func assertPasskey(challenge: Data, options: ASAuthorizationController.RequestOptions = []) {
     let publicKeyCredentialProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(
       relyingPartyIdentifier: rpId)
 
