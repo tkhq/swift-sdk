@@ -12,6 +12,8 @@ import Shared
 import SwiftData
 import TurnkeySDK
 
+typealias AuthResult = TurnkeyClient.AuthResult
+
 extension NSNotification.Name {
     static let UserSignedIn = Notification.Name("UserSignedInNotification")
     static let ModalSignInSheetCanceled = Notification.Name("ModalSignInSheetCanceledNotification")
@@ -122,7 +124,8 @@ class AccountManager: NSObject, ASAuthorizationControllerPresentationContextProv
                 email: email,
                 apiKeyName: "test-api-key-swift-sdk",
                 expirationSeconds: "3600",
-                emailCustomization: Components.Schemas.EmailCustomizationParams()
+                emailCustomization: Components.Schemas.EmailCustomizationParams(),
+                invalidateExisting: false
             )
 
             // Store the verify closure for later use
@@ -208,14 +211,14 @@ class AccountManager: NSObject, ASAuthorizationControllerPresentationContextProv
 
         // Define the test input
         let subOrganizationName = "Test Sub Organization"
-        let rootUsers: [Components.Schemas.RootUserParams] = [
+        let rootUsers: [Components.Schemas.RootUserParamsV4] = [
             .init(
                 userName: "user1",
                 userEmail: email,
                 apiKeys: [],
                 authenticators: [
                     .init(authenticatorName: "Tuide - Simulator", challenge: passkeyRegistrationResult.challenge, attestation: attestation),
-                ]
+                ], oauthProviders: []
             ),
         ]
         let rootQuorumThreshold: Int32 = 1
@@ -241,7 +244,9 @@ class AccountManager: NSObject, ASAuthorizationControllerPresentationContextProv
             rootQuorumThreshold: rootQuorumThreshold,
             wallet: wallet,
             disableEmailRecovery: disableEmailRecovery,
-            disableEmailAuth: disableEmailAuth
+            disableEmailAuth: disableEmailAuth,
+            disableSmsAuth: false,
+            disableOtpEmailAuth: false
         )
 
         // Assert the response
