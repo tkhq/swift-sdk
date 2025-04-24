@@ -1,4 +1,5 @@
 {
+  "originHash" : "3b2a2cb7d1ed7dd4769b4b0cc7c4800fd5059d9cf43902c97ae8e7fed31dcb39",
   "pins" : [
     {
       "identity" : "base58",
@@ -140,8 +141,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/web3swift-team/web3swift.git",
       "state" : {
-        "revision" : "60a56e3b9c4cd0568d84acde27af2f25d2a8ff4d",
-        "version" : "3.2.1"
+        "revision" : "8a026108ae5ff730ac83e9b574c8cf1c14413c94",
+        "version" : "3.2.2"
       }
     },
     {
@@ -154,5 +155,5 @@
       }
     }
   ],
-  "version" : 2
+  "version" : 3
 }

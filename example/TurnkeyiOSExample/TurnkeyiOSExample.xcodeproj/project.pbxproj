@@ -12,6 +12,7 @@
 		1E2780322BCA349400AE790C /* TurnkeyiOSExampleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E2780312BCA349400AE790C /* TurnkeyiOSExampleTests.swift */; };
 		1E27803C2BCA349400AE790C /* TurnkeyiOSExampleUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E27803B2BCA349400AE790C /* TurnkeyiOSExampleUITests.swift */; };
 		1E27803E2BCA349400AE790C /* TurnkeyiOSExampleUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E27803D2BCA349400AE790C /* TurnkeyiOSExampleUITestsLaunchTests.swift */; };
+		1E2E1DF82DBAB4A400035E88 /* TurnkeySDK in Frameworks */ = {isa = PBXBuildFile; productRef = 1E2E1DF72DBAB4A400035E88 /* TurnkeySDK */; };
 		1E37D5932BD2D77C00962F0D /* AccountManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E37D5922BD2D77C00962F0D /* AccountManager.swift */; };
 		1E37D59A2BD2FFDD00962F0D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1E37D5992BD2FFDD00962F0D /* LaunchScreen.storyboard */; };
 		1E37D59E2BD3004D00962F0D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1E37D59D2BD3004D00962F0D /* Main.storyboard */; };
@@ -77,6 +78,7 @@
 			files = (
 				1E4CD78B2BE2CF180097E2CB /* TurnkeySDK in Frameworks */,
 				1EABCB2A2BE468B00037DD52 /* web3swift in Frameworks */,
+				1E2E1DF82DBAB4A400035E88 /* TurnkeySDK in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -192,6 +194,7 @@
 			packageProductDependencies = (
 				1E4CD78A2BE2CF180097E2CB /* TurnkeySDK */,
 				1EABCB292BE468B00037DD52 /* web3swift */,
+				1E2E1DF72DBAB4A400035E88 /* TurnkeySDK */,
 			);
 			productName = TurnkeyiOSExample;
 			productReference = 1E27801D2BCA349300AE790C /* TurnkeyiOSExample.app */;
@@ -266,8 +269,8 @@
 			);
 			mainGroup = 1E2780142BCA349300AE790C;
 			packageReferences = (
-				1E4351F82BCDDBAD00BF67F2 /* XCLocalSwiftPackageReference "../.." */,
 				1EABCB282BE468B00037DD52 /* XCRemoteSwiftPackageReference "web3swift" */,
+				1E2E1DF92DBAB4F500035E88 /* XCLocalSwiftPackageReference "../../../swift-sdk" */,
 			);
 			productRefGroup = 1E27801E2BCA349300AE790C /* Products */;
 			projectDirPath = "";
@@ -654,9 +657,9 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		1E4351F82BCDDBAD00BF67F2 /* XCLocalSwiftPackageReference "../.." */ = {
+		1E2E1DF92DBAB4F500035E88 /* XCLocalSwiftPackageReference "../../../swift-sdk" */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = ../..;
+			relativePath = "../../../swift-sdk";
 		};
 /* End XCLocalSwiftPackageReference section */
 
@@ -672,6 +675,10 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		1E2E1DF72DBAB4A400035E88 /* TurnkeySDK */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = TurnkeySDK;
+		};
 		1E4CD78A2BE2CF180097E2CB /* TurnkeySDK */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TurnkeySDK;
