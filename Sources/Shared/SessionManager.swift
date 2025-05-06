@@ -12,10 +12,14 @@ import Security
 public struct Session: Codable, Equatable {
   public let keyTag: String
   public let expiresAt: Date
+  public let userId: String?
+  public let organizationId: String?
 
-  public init(keyTag: String, expiresAt: Date) {
+  public init(keyTag: String, expiresAt: Date, userId: String? = nil, organizationId: String? = nil) {
     self.keyTag = keyTag
     self.expiresAt = expiresAt
+    self.userId = userId
+    self.organizationId = organizationId
   }
 }
 
@@ -79,12 +83,28 @@ public final class SessionManager {
       if session.expiresAt > Date() {
         return session
       } else {
-        // Session expired, delete and return nil
-        _ = try? deleteSession()
+        // Session expired – keep it so we can reuse IDs later.
         return nil
       }
     }
     return nil
+  }
+
+  /// Loads the session without checking expiration (used to retrieve stored user/org IDs).
+  public func loadSessionIgnoringExpiration() -> Session? {
+    let query: [String: Any] = [
+      kSecClass as String: kSecClassGenericPassword,
+      kSecAttrAccount as String: sessionKey,
+      kSecReturnData as String: true,
+      kSecMatchLimit as String: kSecMatchLimitOne,
+    ]
+    var item: CFTypeRef?
+    let status = SecItemCopyMatching(query as CFDictionary, &item)
+    guard status == errSecSuccess, let data = item as? Data else {
+      return nil
+    }
+    let decoder = JSONDecoder()
+    return try? decoder.decode(Session.self, from: data)
   }
 
   /// Deletes the session from the Keychain.

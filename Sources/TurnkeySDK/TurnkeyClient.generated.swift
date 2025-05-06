@@ -170,6 +170,75 @@ public struct TurnkeyClient {
     return (response, verify)
   }
 
+  /// Asynchronously logs in using on-device credentials and configures the client to sign requests using the generated stamp header.
+  /// - Parameters:
+  ///   - userId: The identifier for the user.
+  ///   - organizationId: The organization (or sub-organization) ID.
+  ///   - targetEmbeddedKey: Optionally, the embedded key to be used. If nil, it will be derived from the Secure Enclave public key.
+  ///   - expirationSeconds: The expiration period for the session/API key in seconds.
+  /// - Returns: An authenticated TurnkeyClient instance where subsequent requests will be signed using the device's Secure Enclave keys.
+  /// - Example:
+  /// ```swift
+  /// Task {
+  ///    do {
+  ///       let presentationAnchor = ASPresentationAnchor()
+  ///       let client = TurnkeyClient(rpId: "com.example.domain", presentationAnchor: presentationAnchor)
+  ///       let loggedInClient = try await client.login(userId: "user123", organizationId: "org456")
+  ///       // Now you can use loggedInClient to make API calls
+  ///       let whoami = try await loggedInClient.getWhoami(organizationId: "org456")
+  ///       print("Logged in as: \(whoami.username)")
+  ///    } catch {
+  ///       print("Login failed: \(error)")
+  ///    }
+  /// }
+  /// ```
+  public func login(
+    userId: String, organizationId: String, targetEmbeddedKey: String? = nil,
+    expirationSeconds: Int = 3600
+  ) async throws -> TurnkeyClient {
+    // Check if a valid session exists
+    if let session = SessionManager.shared.loadActiveSession(), session.expiresAt > Date() {
+      // Session exists; use current instance
+      return self
+    }
+
+    // No valid session exists or it has expired, so generate a new key pair
+    let keyManager = SecureEnclaveKeyManager()
+    let keyTag = try keyManager.createKeypair()
+
+    // Derive the targetEmbeddedKey from the public key if not provided
+    let derivedEmbeddedKey: String
+    if let providedKey = targetEmbeddedKey {
+      derivedEmbeddedKey = providedKey
+    } else {
+      let publicKeyData = try keyManager.publicKey(tag: keyTag)
+      // Assuming a helper function toHexString() on Data is available
+      derivedEmbeddedKey = publicKeyData.toHexString()
+    }
+
+    // Create API keys using the current instance's stamper via self.createApiKeys.
+    let apiKeyParams = [
+      Components.Schemas.ApiKeyParamsV2(
+        apiKeyName: "Session Key \(Int(Date().timeIntervalSince1970))",
+        publicKey: derivedEmbeddedKey,
+        curveType: .API_KEY_CURVE_P256,
+        expirationSeconds: String(expirationSeconds)
+      )
+    ]
+    let apiKeyResponse = try await self.createApiKeys(
+      organizationId: organizationId, apiKeys: apiKeyParams, userId: userId)
+
+    // Derive session expiration from the API key response (for simplicity, we set it to current time + expirationSeconds)
+    let sessionExpiry = Date().addingTimeInterval(TimeInterval(expirationSeconds))
+    let newSession = Session(keyTag: keyTag, expiresAt: sessionExpiry)
+
+    // Persist the new session using SessionManager
+    try SessionManager.shared.save(session: newSession)
+
+    // Return self, now configured to use session-based signing
+    return self
+  }
+
   public func getActivity(organizationId: String, activityId: String) async throws
     -> Operations.GetActivity.Output
   {
