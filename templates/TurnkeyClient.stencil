@@ -69,6 +69,21 @@ public struct TurnkeyClient {
     )
   }
 
+  /// Initializes a `TurnkeyClient` using on-device session credentials.
+  ///
+  /// This initializer creates a default Stamper that uses SessionManager.shared for on-device signing via the Secure Enclave,
+  /// and configures the client to sign requests using the generated stamp header.
+  public init() {
+    let stamper = Stamper()
+    self.init(
+      underlyingClient: Client(
+        serverURL: URL(string: TurnkeyClient.baseURLString)!,
+        transport: URLSessionTransport(),
+        middlewares: [AuthStampMiddleware(stamper: stamper)]
+      )
+    )
+  }
+
   /// Creates an instance of the TurnkeyClient that uses passkeys for authentication.
   ///
   /// This initializer sets up the TurnkeyClient with a specific `rpId` (Relying Party Identifier) and `presentationAnchor`.

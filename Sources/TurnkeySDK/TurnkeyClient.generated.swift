@@ -1,4 +1,4 @@
-// Generated using Sourcery 2.2.5 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.2.6 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
 import AuthenticationServices
@@ -59,6 +59,21 @@ public struct TurnkeyClient {
     self.init(
       underlyingClient: Client(
         serverURL: URL(string: baseUrl)!,
+        transport: URLSessionTransport(),
+        middlewares: [AuthStampMiddleware(stamper: stamper)]
+      )
+    )
+  }
+
+  /// Initializes a `TurnkeyClient` using on-device session credentials.
+  ///
+  /// This initializer creates a default Stamper that uses SessionManager.shared for on-device signing via the Secure Enclave,
+  /// and configures the client to sign requests using the generated stamp header.
+  public init() {
+    let stamper = Stamper()
+    self.init(
+      underlyingClient: Client(
+        serverURL: URL(string: TurnkeyClient.baseURLString)!,
         transport: URLSessionTransport(),
         middlewares: [AuthStampMiddleware(stamper: stamper)]
       )
