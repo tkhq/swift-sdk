@@ -193,16 +193,36 @@ public struct TurnkeyClient {
   /// }
   /// ```
   public func login(
-    userId: String, organizationId: String, targetEmbeddedKey: String? = nil,
+    userId: String? = nil, organizationId: String? = nil, targetEmbeddedKey: String? = nil,
     expirationSeconds: Int = 3600
   ) async throws -> TurnkeyClient {
     // Check if a valid session exists
     if let session = SessionManager.shared.loadActiveSession(), session.expiresAt > Date() {
-      // Session exists; use current instance
-      return self
+      // Session exists; return new TurnkeyClient instance with session-based stamper
+      return TurnkeyClient()
     }
 
-    // No valid session exists or it has expired, so generate a new key pair
+    // No valid unexpired session. Attempt to fetch stored (possibly expired) session
+    let storedSession = SessionManager.shared.loadSessionIgnoringExpiration()
+
+    // Determine user and org IDs either from parameters or stored session
+    let finalUserId: String
+    let finalOrgId: String
+    if let paramUserId = userId ?? storedSession?.userId,
+      let paramOrgId = organizationId ?? storedSession?.organizationId
+    {
+      finalUserId = paramUserId
+      finalOrgId = paramOrgId
+    } else {
+      throw NSError(
+        domain: "TurnkeyClient", code: 1,
+        userInfo: [
+          NSLocalizedDescriptionKey:
+            "userId and organizationId are required when no previous session exists"
+        ])
+    }
+
+    // Generate a new Secure Enclave key pair for this session
     let keyManager = SecureEnclaveKeyManager()
     let keyTag = try keyManager.createKeypair()
 
@@ -225,18 +245,19 @@ public struct TurnkeyClient {
         expirationSeconds: String(expirationSeconds)
       )
     ]
-    let apiKeyResponse = try await self.createApiKeys(
-      organizationId: organizationId, apiKeys: apiKeyParams, userId: userId)
+    let _ = try await self.createApiKeys(
+      organizationId: finalOrgId, apiKeys: apiKeyParams, userId: finalUserId)
 
     // Derive session expiration from the API key response (for simplicity, we set it to current time + expirationSeconds)
     let sessionExpiry = Date().addingTimeInterval(TimeInterval(expirationSeconds))
-    let newSession = Session(keyTag: keyTag, expiresAt: sessionExpiry)
+    let newSession = Session(
+      keyTag: keyTag, expiresAt: sessionExpiry, userId: finalUserId, organizationId: finalOrgId)
 
     // Persist the new session using SessionManager
     try SessionManager.shared.save(session: newSession)
 
-    // Return self, now configured to use session-based signing
-    return self
+    // Return new TurnkeyClient instance with session-based stamper
+    return TurnkeyClient()
   }
 
   public func getActivity(organizationId: String, activityId: String) async throws

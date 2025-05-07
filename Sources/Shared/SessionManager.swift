@@ -15,7 +15,8 @@ public struct Session: Codable, Equatable {
   public let userId: String?
   public let organizationId: String?
 
-  public init(keyTag: String, expiresAt: Date, userId: String? = nil, organizationId: String? = nil) {
+  public init(keyTag: String, expiresAt: Date, userId: String? = nil, organizationId: String? = nil)
+  {
     self.keyTag = keyTag
     self.expiresAt = expiresAt
     self.userId = userId

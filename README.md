@@ -11,7 +11,7 @@ The TurnkeySDK is built to support macOS, iOS, tvOS, watchOS, and visionOS, maki
 To integrate the TurnkeySDK into your Swift project, you need to add it as a dependency in your Package.swift file:
 
 ```swift
-.package(url: "https://github.com/tkhq/swift-sdk", from: "1.2.1")
+.package(url: "https://github.com/tkhq/swift-sdk", from: "1.3.0")
 ```
 
 ## Usage
@@ -74,14 +74,6 @@ case let .undocumented(statusCode, undocumentedPayload):
 ```
 
 While we are actively working on providing more comprehensive usage guides and detailed examples for the TurnkeySDK, you can currently find additional information on how to use the SDK by exploring the tests and the codebase. These resources can offer practical insights and demonstrate the SDK's capabilities in action. Additionally, you can refer to the example iOS app included in the repository, which serves as a practical reference for implementing features using the Swift SDK.
-
-## Secure Sessions on iOS
-
-The Swift SDK now supports on-device signing using hardware-backed keys stored in the Secure Enclave. When neither API keys nor passkeys are provided, the SDK seamlessly falls back to a session-based signing flow:
-
-- A new P-256 key pair is generated in the Secure Enclave using `SecureEnclaveKeyManager.createKeypair()`, and its key tag is stored in a session (persisted securely via the Keychain).
-- The `SessionManager` exposes a helper method `signRequest(_:)` that computes a SHA256 hash of the request, signs it using the active session's key, and retrieves the corresponding public key.
-- The generated signature and public key are formatted and attached as part of the HTTP request, ensuring that requests are authenticated using on-device, hardware-backed cryptography.
 
 ## Contributing
 
