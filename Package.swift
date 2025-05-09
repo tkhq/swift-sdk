@@ -58,10 +58,12 @@ let package = Package(
     ),
     .testTarget(
       name: "TurnkeySDKTests",
-      dependencies: ["TurnkeySDK",
-         .product(name: "SwiftDotenv", package: "swift-dotenv"),
-         .product(name: "Web3", package: "Web3.swift"),
-         .product(name: "Web3PromiseKit", package: "Web3.swift"),
+      dependencies: [
+        "TurnkeySDK",
+        "Shared",
+        .product(name: "SwiftDotenv", package: "swift-dotenv"),
+        .product(name: "Web3", package: "Web3.swift"),
+        .product(name: "Web3PromiseKit", package: "Web3.swift"),
       ]
     ),
   ]

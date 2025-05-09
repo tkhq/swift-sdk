@@ -1,12 +1,14 @@
 import AuthenticationServices
 import CryptoKit
 import Foundation
+import LocalAuthentication
 
 public class Stamper {
   private let apiPublicKey: String?
   private let apiPrivateKey: String?
   private let presentationAnchor: ASPresentationAnchor?
   private let passkeyManager: PasskeyManager?
+  private let sessionManager: SessionManager?
   private var observer: NSObjectProtocol?
 
   // TODO: We will want to in the future create a Stamper super class
@@ -24,6 +26,7 @@ public class Stamper {
     self.apiPrivateKey = apiPrivateKey
     self.presentationAnchor = nil
     self.passkeyManager = nil
+    self.sessionManager = nil
   }
 
   /// Initializes a Stamper instance for Passkey-based stamping.
@@ -35,6 +38,16 @@ public class Stamper {
     self.apiPrivateKey = nil
     self.presentationAnchor = presentationAnchor
     self.passkeyManager = PasskeyManager(rpId: rpId, presentationAnchor: presentationAnchor)
+    self.sessionManager = nil
+  }
+
+  /// Initializes a Stamper instance for Session-based stamping.
+  public init() {
+    self.apiPublicKey = nil
+    self.apiPrivateKey = nil
+    self.presentationAnchor = nil
+    self.passkeyManager = nil
+    self.sessionManager = SessionManager.shared
   }
 
   public enum StampError: Error {
@@ -69,6 +82,21 @@ public class Stamper {
     } else if passkeyManager != nil {
       let stamp = try await passkeyStamp(payload: payloadHash)
       return ("X-Stamp-WebAuthn", stamp)
+    } else if let sessionManager = self.sessionManager {
+      let (signature, publicKey) = try sessionManager.signRequest(payloadData)
+      // Convert signature and public key to hexadecimal strings
+      let signatureHex = signature.toHexString()
+      let publicKeyHex = publicKey.toHexString()
+
+      let stampDict: [String: Any] = [
+        "publicKey": publicKeyHex,
+        "scheme": "SIGNATURE_SCHEME_TK_API_P256",
+        "signature": signatureHex,
+      ]
+
+      let jsonData = try JSONSerialization.data(withJSONObject: stampDict, options: [])
+      let base64Stamp = jsonData.base64URLEncodedString()
+      return ("X-Stamp-Session", base64Stamp)
     } else {
       throw StampError.unknownError("Unable to stamp request")
     }
@@ -195,3 +223,5 @@ public class Stamper {
   }
 
 }
+
+extension Stamper: @unchecked Sendable {}
