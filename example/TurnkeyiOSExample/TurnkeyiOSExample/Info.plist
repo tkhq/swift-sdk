@@ -16,9 +16,7 @@
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
-	<!-- Removed UIKit lifecycle configuration to use SwiftUI lifecycle -->
-	<!-- To revert to UIKit, restore the UIApplicationSceneManifest key with original values -->
-	<!-- <key>UIApplicationSceneManifest</key>
+	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<false/>
@@ -36,7 +34,7 @@
 				</dict>
 			</array>
 		</dict>
-	</dict> -->
+	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UIRequiredDeviceCapabilities</key>

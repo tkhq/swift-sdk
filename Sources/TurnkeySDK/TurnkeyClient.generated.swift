@@ -141,8 +141,7 @@ public struct TurnkeyClient {
     email: String, apiKeyName: String?, expirationSeconds: String?,
     emailCustomization: Components.Schemas.EmailCustomizationParams?, invalidateExisting: Bool?
   ) async throws -> (Operations.EmailAuth.Output, (String) async throws -> AuthResult) {
-    let ephemeralPrivateKey = P256.KeyAgreement.PrivateKey()
-    let targetPublicKey = try ephemeralPrivateKey.publicKey.toString(representation: .x963)
+    let (ephemeralPrivateKey, targetPublicKey) = try AuthHelpers.generateEphemeralKeyAgreement()
 
     let response = try await emailAuth(
       organizationId: organizationId, email: email, targetPublicKey: targetPublicKey,
@@ -154,8 +153,8 @@ public struct TurnkeyClient {
       let (privateKey:privateKey, publicKey:publicKey) = try AuthManager.decryptBundle(
         encryptedBundle: encryptedBundle, ephemeralPrivateKey: ephemeralPrivateKey)
 
-      let apiPublicKey = try publicKey.toString(representation: .compressed)
-      let apiPrivateKey = try privateKey.toString(representation: .raw)
+      let apiPublicKey = try publicKey.toString(representation: PublicKeyRepresentation.compressed)
+      let apiPrivateKey = try privateKey.toString(representation: PrivateKeyRepresentation.raw)
 
       let turnkeyClient = TurnkeyClient(apiPrivateKey: apiPrivateKey, apiPublicKey: apiPublicKey)
 
@@ -193,8 +192,7 @@ public struct TurnkeyClient {
   /// }
   /// ```
   public func login(
-    userId: String? = nil, organizationId: String? = nil, targetEmbeddedKey: String? = nil,
-    expirationSeconds: Int = 3600
+    userId: String? = nil, organizationId: String? = nil, expirationSeconds: Int = 3600
   ) async throws -> TurnkeyClient {
     // Check if a valid session exists
     if let session = SessionManager.shared.loadActiveSession(), session.expiresAt > Date() {
@@ -205,55 +203,72 @@ public struct TurnkeyClient {
     // No valid unexpired session. Attempt to fetch stored (possibly expired) session
     let storedSession = SessionManager.shared.loadSessionIgnoringExpiration()
 
-    // Determine user and org IDs either from parameters or stored session
-    let finalUserId: String
-    let finalOrgId: String
-    if let paramUserId = userId ?? storedSession?.userId,
-      let paramOrgId = organizationId ?? storedSession?.organizationId
-    {
-      finalUserId = paramUserId
-      finalOrgId = paramOrgId
-    } else {
+    // Determine organizationId for session creation from parameters or stored session
+    guard let orgIdForSession = organizationId ?? storedSession?.organizationId else {
       throw NSError(
         domain: "TurnkeyClient", code: 1,
         userInfo: [
-          NSLocalizedDescriptionKey:
-            "userId and organizationId are required when no previous session exists"
+          NSLocalizedDescriptionKey: "organizationId is required when no previous session exists"
         ])
     }
 
-    // Generate a new Secure Enclave key pair for this session
-    let keyManager = SecureEnclaveKeyManager()
-    let keyTag = try keyManager.createKeypair()
-
-    // Derive the targetEmbeddedKey from the public key if not provided
-    let derivedEmbeddedKey: String
-    if let providedKey = targetEmbeddedKey {
-      derivedEmbeddedKey = providedKey
-    } else {
-      let publicKeyData = try keyManager.publicKey(tag: keyTag)
-      // Assuming a helper function toHexString() on Data is available
-      derivedEmbeddedKey = publicKeyData.toHexString()
+    // Generate ephemeral keypair and call createReadWriteSession
+    let (ephemeralPrivateKey, targetPublicKey) = try AuthHelpers.generateEphemeralKeyAgreement()
+    let sessionResponse = try await self.createReadWriteSession(
+      organizationId: orgIdForSession,
+      targetPublicKey: targetPublicKey,
+      userId: userId,
+      apiKeyName: "session-key",
+      expirationSeconds: String(expirationSeconds)
+    )
+    let responseBody = try sessionResponse.ok.body.json
+    guard let result = responseBody.activity.result.createReadWriteSessionResultV2 else {
+      throw NSError(
+        domain: "TurnkeyClient",
+        code: 1,
+        userInfo: [NSLocalizedDescriptionKey: "Missing createReadWriteSessionResultV2"]
+      )
     }
+    let organizationId = result.organizationId
+    let userId = result.userId
 
-    // Create API keys using the current instance's stamper via self.createApiKeys.
+    let (decryptedPrivateKey, decryptedPublicKey) = try AuthManager.decryptBundle(
+      encryptedBundle: result.credentialBundle,
+      ephemeralPrivateKey: ephemeralPrivateKey
+    )
+    let tempApiPublicKey = try decryptedPublicKey.toString(
+      representation: PublicKeyRepresentation.compressed)
+    let tempApiPrivateKey = try decryptedPrivateKey.toString(
+      representation: PrivateKeyRepresentation.raw)
+
+    // Instantiate temporary TurnkeyClient using decrypted keys
+    let tempClient = TurnkeyClient(apiPrivateKey: tempApiPrivateKey, apiPublicKey: tempApiPublicKey)
+
+    // Generate Secure Enclave key pair (new session key)
+    let enclaveKeyManager = SecureEnclaveKeyManager()
+    let keyTag = try enclaveKeyManager.createKeypair()
+    let enclavePublicKeyData = try enclaveKeyManager.publicKey(tag: keyTag)
+    let enclavePublicKeyHex = enclavePublicKeyData.toHexString()
+
+    // Create permanent API key via temporary client
     let apiKeyParams = [
       Components.Schemas.ApiKeyParamsV2(
         apiKeyName: "Session Key \(Int(Date().timeIntervalSince1970))",
-        publicKey: derivedEmbeddedKey,
+        publicKey: enclavePublicKeyHex,
         curveType: .API_KEY_CURVE_P256,
         expirationSeconds: String(expirationSeconds)
       )
     ]
-    let _ = try await self.createApiKeys(
-      organizationId: finalOrgId, apiKeys: apiKeyParams, userId: finalUserId)
+    let _ = try await tempClient.createApiKeys(
+      organizationId: organizationId,
+      apiKeys: apiKeyParams,
+      userId: userId
+    )
 
-    // Derive session expiration from the API key response (for simplicity, we set it to current time + expirationSeconds)
+    // Derive session expiration and persist session
     let sessionExpiry = Date().addingTimeInterval(TimeInterval(expirationSeconds))
     let newSession = Session(
-      keyTag: keyTag, expiresAt: sessionExpiry, userId: finalUserId, organizationId: finalOrgId)
-
-    // Persist the new session using SessionManager
+      keyTag: keyTag, expiresAt: sessionExpiry, userId: userId, organizationId: organizationId)
     try SessionManager.shared.save(session: newSession)
 
     // Return new TurnkeyClient instance with session-based stamper

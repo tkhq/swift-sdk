@@ -9,7 +9,7 @@ import SwiftData
 import TurnkeySDK
 import UIKit
 
-// @main attribute removed to allow SwiftUI lifecycle
+@main
 class AppDelegate: UIResponder, UIApplicationDelegate {
     let accountManager = AccountManager()
     var modelContainer: ModelContainer?
