@@ -13,7 +13,8 @@ import web3swift
 import TurnkeySDK
 
 class SendTransactionViewController: UIViewController {
-    let domain = "turnkey-nextjs-demo-weld.vercel.app"
+    // Domain constant no longer needed here; use authenticated client from AccountManager
+    // let domain = "turnkey-nextjs-demo-weld.vercel.app"
     
     @IBOutlet var value: UILabel!
     @IBOutlet var to: UITextField!
@@ -70,12 +71,13 @@ class SendTransactionViewController: UIViewController {
             return
         }
         
-        guard let window = view.window else {
-            fatalError("The view was not in the app's view hierarchy!")
+        // Retrieve the authenticated client that was stored after login
+        guard let turnkeyClient = (UIApplication.shared.delegate as? AppDelegate)?
+            .accountManager.loggedInClient else {
+            print("No authenticated Turnkey client found – user must log in first")
+            return
         }
         
-        let turnkeyClient = TurnkeyClient(rpId: domain, presentationAnchor: window)
-//        turnkeyClient.signTransaction(organizationId: self.user?.subOrgId ?? "", signWith: user?.walletAddress ?? "", unsignedTransaction: String, _type: <#T##Components.Schemas.TransactionType#>)
         let web3 = try await Web3.new(url, network: Networks.Custom(networkID: 11155111))
         let address = EthereumAddress(walletAddress)!
 //        var transaction: CodableTransaction = .emptyTransaction

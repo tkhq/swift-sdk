@@ -36,6 +36,8 @@ class AccountManager: NSObject, ASAuthorizationControllerPresentationContextProv
     private var modelContext: ModelContext {
         return AppDelegate.userModelContext
     }
+    // Stores the authenticated TurnkeyClient instance after a successful passkey login
+    var loggedInClient: TurnkeyClient?
 
     override init() {
         super.init()
@@ -68,38 +70,46 @@ class AccountManager: NSObject, ASAuthorizationControllerPresentationContextProv
     // func signIn(anchor: ASPresentationAnchor, preferImmediatelyAvailableCredentials: Bool) {
     func signIn(email: String, anchor: ASPresentationAnchor) async {
         let turnkeyClient = TurnkeyClient(rpId: domain, presentationAnchor: anchor)
-        guard let user = getUser(email: email) else {
-        
-            return
-        }
 
-        guard let organizationId = user.subOrgId else {
-            print("no suborg id found on device")
-            return
-        }
+        // Retrieve the stored user and organization information
+//        guard let user = getUser(email: email) else { return }
+//        guard let organizationId = user.subOrgId else {
+//            print("no suborg id found on device")
+//            return
+//        }
 
         do {
-            // Call the GetWhoami method on the TurnkeyClient instance
-            let output = try await turnkeyClient.getWhoami(organizationId: organizationId)
+             print("Calling login")
+            // Perform passkey-based login which creates / resumes a session and returns an authenticated client
+            let loggedInClient = try await turnkeyClient.login(
+                organizationId: parentOrgId
+            )
+            print("After calling login")
 
-            // Assert the response
-            switch output {
-            case let .ok(response):
-                switch response.body {
-                case let .json(whoamiResponse):
-                    print(whoamiResponse)
+            // Persist the authenticated client for future API calls
+            self.loggedInClient = loggedInClient
+
+            // Optional sanity-check: call whoami to confirm identity
+            do {
+                let whoamiResponse = try await loggedInClient.getWhoami(organizationId: parentOrgId)
+                switch whoamiResponse {
+                case let .ok(resp):
+                    if case let .json(body) = resp.body {
+                        print("Logged in as: \(body.username)")
+                    }
+                case let .undocumented(status, _):
+                    print("Whoami returned undocumented status code: \(status)")
                 }
-            case let .undocumented(statusCode, undocumentedPayload):
-                // Handle the undocumented response
-                if let body = undocumentedPayload.body {
-                    // Convert the HTTPBody to a string
-                    let bodyString = try await String(collecting: body, upTo: .max)
-                    print("Undocumented response body: \(bodyString)")
-                }
-                print("Undocumented response: \(statusCode)")
+            } catch {
+                print("Whoami request failed: \(error)")
+            }
+
+            // Notify listeners that sign-in completed
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .UserSignedIn, object: nil)
             }
         } catch {
-            print("Error occurred: \(error)")
+            print("Passkey login failed: \(error)")
         }
 
         isPerformingModalRequest = true

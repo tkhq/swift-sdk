@@ -35,9 +35,14 @@ class UserHomeViewController: UIViewController {
                     return
                 }
 
+                // Validate wallet address before proceeding to avoid runtime crash
+                guard !walletAddress.isEmpty, let ethAddress = EthereumAddress(walletAddress) else {
+                    print("Invalid or missing wallet address; skipping balance fetch")
+                    return
+                }
+
                 let web3 = try await Web3.new(url, network: Networks.Custom(networkID: 11155111))
-                let address = EthereumAddress(walletAddress)!
-                let balance = try await web3.eth.getBalance(for: address)
+                let balance = try await web3.eth.getBalance(for: ethAddress)
                 let balString = Utilities.formatToPrecision(balance, units: .ether, formattingDecimals: 3)
                 print(balString)
                 DispatchQueue.main.async {

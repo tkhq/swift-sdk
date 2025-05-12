@@ -37,6 +37,7 @@ extension AuthStampMiddleware: ClientMiddleware {
         let (stampHeaderName, stampHeaderValue) = try await stamper.stamp(payload: bodyString)
 
         let stampHeader = HTTPField(name: HTTPField.Name(stampHeaderName)!, value: stampHeaderValue)
+        print("[AuthStampMiddleware] Adding stamp header: \(stampHeader)")
         request.headerFields.append(stampHeader)
       }
 

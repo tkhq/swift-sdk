@@ -6,8 +6,15 @@ struct LoginView: View {
     @StateObject private var viewModel: LoginViewModel
     @EnvironmentObject private var sessionManager: SessionManager
     
-    init(proxyClient: TurnkeyClient, passkeyClient: TurnkeyClient) {
-        // Create the view model with required dependencies
+    init() {
+        // Fetch shared accountManager clients for preview / runtime use
+        let accountManager = (UIApplication.shared.delegate as? AppDelegate)?.accountManager
+        let proxyClient = TurnkeyClient(proxyURL: "http://localhost:3000/proxy")
+        let passkeyClient = accountManager?.loggedInClient ?? TurnkeyClient(
+            rpId: "com.example.domain",
+            presentationAnchor: ASPresentationAnchor()
+        )
+        
         let vm = LoginViewModel(
             proxyClient: proxyClient,
             passkeyClient: passkeyClient,
@@ -98,11 +105,6 @@ struct LoginView: View {
 }
 
 #Preview {
-    // Create mock clients for preview
-    let proxyClient = TurnkeyClient(proxyURL: "http://localhost:3000/proxy")
-    let presentationAnchor = ASPresentationAnchor()
-    let passkeyClient = TurnkeyClient(rpId: "com.example.domain", presentationAnchor: presentationAnchor)
-    
-    return LoginView(proxyClient: proxyClient, passkeyClient: passkeyClient)
+    return LoginView()
         .environmentObject(SessionManager())
 }

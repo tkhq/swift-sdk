@@ -83,9 +83,21 @@ public class Stamper {
       let stamp = try await passkeyStamp(payload: payloadHash)
       return ("X-Stamp-WebAuthn", stamp)
     } else if let sessionManager = self.sessionManager {
-      let (signature, publicKey) = try sessionManager.signRequest(payloadData)
-      // Convert signature and public key to hexadecimal strings
-      let signatureHex = signature.toHexString()
+      let (sigData, publicKey) = try sessionManager.signRequest(payloadData)
+
+      // Ensure DER representation – if the raw 64-byte form is returned, wrap & convert.
+      let derData: Data
+      if let rawSig = try? P256.Signing.ECDSASignature(rawRepresentation: sigData) {
+
+        print("[Stamper] rawSig detected – raw hex: \(rawSig.rawRepresentation.toHexString())")
+  
+        derData = rawSig.derRepresentation
+      } else {
+          print("[Stamper] assume already DER")
+        derData = sigData // assume already DER
+      }
+
+      let signatureHex = derData.toHexString()
       let publicKeyHex = publicKey.toHexString()
 
       let stampDict: [String: Any] = [
@@ -94,9 +106,11 @@ public class Stamper {
         "signature": signatureHex,
       ]
 
+      print("[Stamper] X-Stamp- payload: \(stampDict)")
+
       let jsonData = try JSONSerialization.data(withJSONObject: stampDict, options: [])
       let base64Stamp = jsonData.base64URLEncodedString()
-      return ("X-Stamp-Session", base64Stamp)
+      return ("X-Stamp", base64Stamp)
     } else {
       throw StampError.unknownError("Unable to stamp request")
     }
@@ -212,7 +226,7 @@ public class Stamper {
       "scheme": "SIGNATURE_SCHEME_TK_API_P256",
       "signature": signatureHex,
     ]
-
+    print("[Stamper] X-Stamp signatureHex: \(signatureHex)")
     do {
       let jsonData = try JSONSerialization.data(withJSONObject: stamp, options: [])
       let base64Stamp = jsonData.base64URLEncodedString()
