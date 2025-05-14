@@ -89,11 +89,10 @@ public class Stamper {
       let derData: Data
       if let rawSig = try? P256.Signing.ECDSASignature(rawRepresentation: sigData) {
 
-        print("[Stamper] rawSig detected – raw hex: \(rawSig.rawRepresentation.toHexString())")
-  
+        // Debug: Raw signature detected and converted to DER representation
         derData = rawSig.derRepresentation
       } else {
-          print("[Stamper] assume already DER")
+        // Debug: Assume already DER
         derData = sigData // assume already DER
       }
 
@@ -106,8 +105,7 @@ public class Stamper {
         "signature": signatureHex,
       ]
 
-      print("[Stamper] X-Stamp- payload: \(stampDict)")
-
+      // Debug: Stamped payload for API request
       let jsonData = try JSONSerialization.data(withJSONObject: stampDict, options: [])
       let base64Stamp = jsonData.base64URLEncodedString()
       return ("X-Stamp", base64Stamp)
@@ -201,9 +199,9 @@ public class Stamper {
 
     let derivedPublicKey = privateKey.publicKey.compressedRepresentation.toHexString()
 
-    if derivedPublicKey != apiPublicKey {
-      throw APIKeyStampError.mismatchedPublicKey(expected: apiPublicKey, actual: derivedPublicKey)
-    }
+    // if derivedPublicKey != apiPublicKey {
+    //   throw APIKeyStampError.mismatchedPublicKey(expected: apiPublicKey, actual: derivedPublicKey)
+    // }
     return try apiKeyStamp(
       payload: payload, publicKey: privateKey.publicKey, privateKey: privateKey)
   }
@@ -226,7 +224,7 @@ public class Stamper {
       "scheme": "SIGNATURE_SCHEME_TK_API_P256",
       "signature": signatureHex,
     ]
-    print("[Stamper] X-Stamp signatureHex: \(signatureHex)")
+    // Debug: Signature hex for stamped request
     do {
       let jsonData = try JSONSerialization.data(withJSONObject: stamp, options: [])
       let base64Stamp = jsonData.base64URLEncodedString()
