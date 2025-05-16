@@ -67,16 +67,9 @@ class AccountManager: NSObject, ASAuthorizationControllerPresentationContextProv
         NotificationCenter.default.removeObserver(self)
     }
 
-    // func signIn(anchor: ASPresentationAnchor, preferImmediatelyAvailableCredentials: Bool) {
     func signIn(email: String, anchor: ASPresentationAnchor) async {
         let turnkeyClient = TurnkeyClient(rpId: domain, presentationAnchor: anchor)
 
-        // Retrieve the stored user and organization information
-//        guard let user = getUser(email: email) else { return }
-//        guard let organizationId = user.subOrgId else {
-//            print("no suborg id found on device")
-//            return
-//        }
 
         do {
              print("Calling login")
@@ -91,7 +84,7 @@ class AccountManager: NSObject, ASAuthorizationControllerPresentationContextProv
 
             // Optional sanity-check: call whoami to confirm identity
             do {
-                let whoamiResponse = try await loggedInClient.getWhoami(organizationId: parentOrgId)
+                let whoamiResponse = try await loggedInClient.getWhoami(organizationId: "d1643ea9-e787-4301-875c-5514bd386a7b")
                 switch whoamiResponse {
                 case let .ok(resp):
                     if case let .json(body) = resp.body {

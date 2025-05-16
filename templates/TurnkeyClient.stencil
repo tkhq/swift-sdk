@@ -270,26 +270,15 @@ public struct TurnkeyClient {
   {% for class in types.implementing.APIProtocol %}
       {% for method in class.instanceMethods %}
           {% set bodyInput method.parameters.0.typeName %}
-          {% set returnType method.returnType.name %}
-          {# Generates the name of the request struct by concating the method name with "Request"
-              Example:
-                  method.callName = "ApproveActivity"
-                  requestStructName = "ApproveActivityRequest"
-           #}   
           {% set requestStructName %}{{method.callName}}Request{% endset %}
-          {% set output %}Operations.{{method.callName}}.Output.Ok.Body{% endset %}
-          {# Determines if this is activityRequest vs a read request by looking at the output body type 
-             If the enum contains "ActivityResponse" then we know it is an ActivityRequest
-          #}
           {% set isActivityRequest %}
           {% for struct in types.structs where struct.name|hasSuffix:requestStructName and struct.methods.0.parameters.0.name == "_type" -%}true{%- endfor %}
           {% endset %}
-          
-          {% if isActivityRequest|contains:"true" -%} 
+          {% if isActivityRequest|contains:"true" -%}
               {% call generateActivityMethod method.callName -%}
           {% else -%}
-
-      public func {{ method.callName|lowerFirstLetter }}({% call addMethodParams method.callName %}) async throws -> {{ returnType }} {
+          {% set okStructType %}Operations.{{method.callName}}.Output.Ok{% endset %}
+          public func {{ method.callName|lowerFirstLetter }}({% call addMethodParams method.callName %}) async throws -> {{ okStructType }} {
 
           // Create the {{ requestStructName }}
           let {{ method.callName|lowerFirstLetter }}Request = Components.Schemas.{{ requestStructName }}(
@@ -304,9 +293,24 @@ public struct TurnkeyClient {
               headers: .init(accept: [.init(contentType: .json)]),
               body: .json({{ requestStructName|lowerFirstLetter }})
           )
-          return try await underlyingClient.{{method.callName}}(input)
+          let output = try await underlyingClient.{{method.callName}}(input)
+
+          switch output {
+          case .ok(let ok):
+              return ok
+          case let .undocumented(statusCode, payload):
+              let bodyData: Data?
+              if let body = payload.body {
+                  bodyData = try? await Data(collecting: body, upTo: .max)
+              } else {
+                  bodyData = nil
+              }
+              throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
+          @unknown default:
+              throw TurnkeyError.invalidResponse
+          }
       }
-          {% endif -%}
+      {% endif -%}
       {% endfor %}
   {% endfor %}
       

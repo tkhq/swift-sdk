@@ -276,7 +276,7 @@ public struct TurnkeyClient {
   }
 
   public func getActivity(organizationId: String, activityId: String) async throws
-    -> Operations.GetActivity.Output
+    -> Operations.GetActivity.Output.Ok
   {
 
     // Create the GetActivityRequest
@@ -288,10 +288,25 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getActivityRequest)
     )
-    return try await underlyingClient.GetActivity(input)
+    let output = try await underlyingClient.GetActivity(input)
+
+    switch output {
+    case .ok(let ok):
+      return ok
+    case let .undocumented(statusCode, payload):
+      let bodyData: Data?
+      if let body = payload.body {
+        bodyData = try? await Data(collecting: body, upTo: .max)
+      } else {
+        bodyData = nil
+      }
+      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
+    @unknown default:
+      throw TurnkeyError.invalidResponse
+    }
   }
   public func getApiKey(organizationId: String, apiKeyId: String) async throws
-    -> Operations.GetApiKey.Output
+    -> Operations.GetApiKey.Output.Ok
   {
 
     // Create the GetApiKeyRequest
@@ -303,10 +318,25 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getApiKeyRequest)
     )
-    return try await underlyingClient.GetApiKey(input)
+    let output = try await underlyingClient.GetApiKey(input)
+
+    switch output {
+    case .ok(let ok):
+      return ok
+    case let .undocumented(statusCode, payload):
+      let bodyData: Data?
+      if let body = payload.body {
+        bodyData = try? await Data(collecting: body, upTo: .max)
+      } else {
+        bodyData = nil
+      }
+      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
+    @unknown default:
+      throw TurnkeyError.invalidResponse
+    }
   }
   public func getApiKeys(organizationId: String, userId: String?) async throws
-    -> Operations.GetApiKeys.Output
+    -> Operations.GetApiKeys.Output.Ok
   {
 
     // Create the GetApiKeysRequest
@@ -318,10 +348,25 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getApiKeysRequest)
     )
-    return try await underlyingClient.GetApiKeys(input)
+    let output = try await underlyingClient.GetApiKeys(input)
+
+    switch output {
+    case .ok(let ok):
+      return ok
+    case let .undocumented(statusCode, payload):
+      let bodyData: Data?
+      if let body = payload.body {
+        bodyData = try? await Data(collecting: body, upTo: .max)
+      } else {
+        bodyData = nil
+      }
+      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
+    @unknown default:
+      throw TurnkeyError.invalidResponse
+    }
   }
   public func getAuthenticator(organizationId: String, authenticatorId: String) async throws
-    -> Operations.GetAuthenticator.Output
+    -> Operations.GetAuthenticator.Output.Ok
   {
 
     // Create the GetAuthenticatorRequest
@@ -333,10 +378,25 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getAuthenticatorRequest)
     )
-    return try await underlyingClient.GetAuthenticator(input)
+    let output = try await underlyingClient.GetAuthenticator(input)
+
+    switch output {
+    case .ok(let ok):
+      return ok
+    case let .undocumented(statusCode, payload):
+      let bodyData: Data?
+      if let body = payload.body {
+        bodyData = try? await Data(collecting: body, upTo: .max)
+      } else {
+        bodyData = nil
+      }
+      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
+    @unknown default:
+      throw TurnkeyError.invalidResponse
+    }
   }
   public func getAuthenticators(organizationId: String, userId: String) async throws
-    -> Operations.GetAuthenticators.Output
+    -> Operations.GetAuthenticators.Output.Ok
   {
 
     // Create the GetAuthenticatorsRequest
@@ -348,10 +408,25 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getAuthenticatorsRequest)
     )
-    return try await underlyingClient.GetAuthenticators(input)
+    let output = try await underlyingClient.GetAuthenticators(input)
+
+    switch output {
+    case .ok(let ok):
+      return ok
+    case let .undocumented(statusCode, payload):
+      let bodyData: Data?
+      if let body = payload.body {
+        bodyData = try? await Data(collecting: body, upTo: .max)
+      } else {
+        bodyData = nil
+      }
+      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
+    @unknown default:
+      throw TurnkeyError.invalidResponse
+    }
   }
   public func getOauthProviders(organizationId: String, userId: String?) async throws
-    -> Operations.GetOauthProviders.Output
+    -> Operations.GetOauthProviders.Output.Ok
   {
 
     // Create the GetOauthProvidersRequest
@@ -363,10 +438,25 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getOauthProvidersRequest)
     )
-    return try await underlyingClient.GetOauthProviders(input)
+    let output = try await underlyingClient.GetOauthProviders(input)
+
+    switch output {
+    case .ok(let ok):
+      return ok
+    case let .undocumented(statusCode, payload):
+      let bodyData: Data?
+      if let body = payload.body {
+        bodyData = try? await Data(collecting: body, upTo: .max)
+      } else {
+        bodyData = nil
+      }
+      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
+    @unknown default:
+      throw TurnkeyError.invalidResponse
+    }
   }
   public func getOrganizationConfigs(organizationId: String) async throws
-    -> Operations.GetOrganizationConfigs.Output
+    -> Operations.GetOrganizationConfigs.Output.Ok
   {
 
     // Create the GetOrganizationConfigsRequest
@@ -378,10 +468,25 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getOrganizationConfigsRequest)
     )
-    return try await underlyingClient.GetOrganizationConfigs(input)
+    let output = try await underlyingClient.GetOrganizationConfigs(input)
+
+    switch output {
+    case .ok(let ok):
+      return ok
+    case let .undocumented(statusCode, payload):
+      let bodyData: Data?
+      if let body = payload.body {
+        bodyData = try? await Data(collecting: body, upTo: .max)
+      } else {
+        bodyData = nil
+      }
+      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
+    @unknown default:
+      throw TurnkeyError.invalidResponse
+    }
   }
   public func getPolicy(organizationId: String, policyId: String) async throws
-    -> Operations.GetPolicy.Output
+    -> Operations.GetPolicy.Output.Ok
   {
 
     // Create the GetPolicyRequest
@@ -393,10 +498,25 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getPolicyRequest)
     )
-    return try await underlyingClient.GetPolicy(input)
+    let output = try await underlyingClient.GetPolicy(input)
+
+    switch output {
+    case .ok(let ok):
+      return ok
+    case let .undocumented(statusCode, payload):
+      let bodyData: Data?
+      if let body = payload.body {
+        bodyData = try? await Data(collecting: body, upTo: .max)
+      } else {
+        bodyData = nil
+      }
+      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
+    @unknown default:
+      throw TurnkeyError.invalidResponse
+    }
   }
   public func getPrivateKey(organizationId: String, privateKeyId: String) async throws
-    -> Operations.GetPrivateKey.Output
+    -> Operations.GetPrivateKey.Output.Ok
   {
 
     // Create the GetPrivateKeyRequest
@@ -408,10 +528,25 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getPrivateKeyRequest)
     )
-    return try await underlyingClient.GetPrivateKey(input)
+    let output = try await underlyingClient.GetPrivateKey(input)
+
+    switch output {
+    case .ok(let ok):
+      return ok
+    case let .undocumented(statusCode, payload):
+      let bodyData: Data?
+      if let body = payload.body {
+        bodyData = try? await Data(collecting: body, upTo: .max)
+      } else {
+        bodyData = nil
+      }
+      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
+    @unknown default:
+      throw TurnkeyError.invalidResponse
+    }
   }
   public func getUser(organizationId: String, userId: String) async throws
-    -> Operations.GetUser.Output
+    -> Operations.GetUser.Output.Ok
   {
 
     // Create the GetUserRequest
@@ -423,10 +558,25 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getUserRequest)
     )
-    return try await underlyingClient.GetUser(input)
+    let output = try await underlyingClient.GetUser(input)
+
+    switch output {
+    case .ok(let ok):
+      return ok
+    case let .undocumented(statusCode, payload):
+      let bodyData: Data?
+      if let body = payload.body {
+        bodyData = try? await Data(collecting: body, upTo: .max)
+      } else {
+        bodyData = nil
+      }
+      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
+    @unknown default:
+      throw TurnkeyError.invalidResponse
+    }
   }
   public func getWallet(organizationId: String, walletId: String) async throws
-    -> Operations.GetWallet.Output
+    -> Operations.GetWallet.Output.Ok
   {
 
     // Create the GetWalletRequest
@@ -438,13 +588,28 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getWalletRequest)
     )
-    return try await underlyingClient.GetWallet(input)
+    let output = try await underlyingClient.GetWallet(input)
+
+    switch output {
+    case .ok(let ok):
+      return ok
+    case let .undocumented(statusCode, payload):
+      let bodyData: Data?
+      if let body = payload.body {
+        bodyData = try? await Data(collecting: body, upTo: .max)
+      } else {
+        bodyData = nil
+      }
+      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
+    @unknown default:
+      throw TurnkeyError.invalidResponse
+    }
   }
   public func getActivities(
     organizationId: String, filterByStatus: [Components.Schemas.ActivityStatus]?,
     paginationOptions: Components.Schemas.Pagination?,
     filterByType: [Components.Schemas.ActivityType]?
-  ) async throws -> Operations.GetActivities.Output {
+  ) async throws -> Operations.GetActivities.Output.Ok {
 
     // Create the GetActivitiesRequest
     let getActivitiesRequest = Components.Schemas.GetActivitiesRequest(
@@ -456,9 +621,24 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getActivitiesRequest)
     )
-    return try await underlyingClient.GetActivities(input)
+    let output = try await underlyingClient.GetActivities(input)
+
+    switch output {
+    case .ok(let ok):
+      return ok
+    case let .undocumented(statusCode, payload):
+      let bodyData: Data?
+      if let body = payload.body {
+        bodyData = try? await Data(collecting: body, upTo: .max)
+      } else {
+        bodyData = nil
+      }
+      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
+    @unknown default:
+      throw TurnkeyError.invalidResponse
+    }
   }
-  public func getPolicies(organizationId: String) async throws -> Operations.GetPolicies.Output {
+  public func getPolicies(organizationId: String) async throws -> Operations.GetPolicies.Output.Ok {
 
     // Create the GetPoliciesRequest
     let getPoliciesRequest = Components.Schemas.GetPoliciesRequest(
@@ -469,10 +649,25 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getPoliciesRequest)
     )
-    return try await underlyingClient.GetPolicies(input)
+    let output = try await underlyingClient.GetPolicies(input)
+
+    switch output {
+    case .ok(let ok):
+      return ok
+    case let .undocumented(statusCode, payload):
+      let bodyData: Data?
+      if let body = payload.body {
+        bodyData = try? await Data(collecting: body, upTo: .max)
+      } else {
+        bodyData = nil
+      }
+      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
+    @unknown default:
+      throw TurnkeyError.invalidResponse
+    }
   }
   public func listPrivateKeyTags(organizationId: String) async throws
-    -> Operations.ListPrivateKeyTags.Output
+    -> Operations.ListPrivateKeyTags.Output.Ok
   {
 
     // Create the ListPrivateKeyTagsRequest
@@ -484,10 +679,25 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(listPrivateKeyTagsRequest)
     )
-    return try await underlyingClient.ListPrivateKeyTags(input)
+    let output = try await underlyingClient.ListPrivateKeyTags(input)
+
+    switch output {
+    case .ok(let ok):
+      return ok
+    case let .undocumented(statusCode, payload):
+      let bodyData: Data?
+      if let body = payload.body {
+        bodyData = try? await Data(collecting: body, upTo: .max)
+      } else {
+        bodyData = nil
+      }
+      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
+    @unknown default:
+      throw TurnkeyError.invalidResponse
+    }
   }
   public func getPrivateKeys(organizationId: String) async throws
-    -> Operations.GetPrivateKeys.Output
+    -> Operations.GetPrivateKeys.Output.Ok
   {
 
     // Create the GetPrivateKeysRequest
@@ -499,12 +709,27 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getPrivateKeysRequest)
     )
-    return try await underlyingClient.GetPrivateKeys(input)
+    let output = try await underlyingClient.GetPrivateKeys(input)
+
+    switch output {
+    case .ok(let ok):
+      return ok
+    case let .undocumented(statusCode, payload):
+      let bodyData: Data?
+      if let body = payload.body {
+        bodyData = try? await Data(collecting: body, upTo: .max)
+      } else {
+        bodyData = nil
+      }
+      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
+    @unknown default:
+      throw TurnkeyError.invalidResponse
+    }
   }
   public func getSubOrgIds(
     organizationId: String, filterType: String?, filterValue: String?,
     paginationOptions: Components.Schemas.Pagination?
-  ) async throws -> Operations.GetSubOrgIds.Output {
+  ) async throws -> Operations.GetSubOrgIds.Output.Ok {
 
     // Create the GetSubOrgIdsRequest
     let getSubOrgIdsRequest = Components.Schemas.GetSubOrgIdsRequest(
@@ -516,9 +741,25 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getSubOrgIdsRequest)
     )
-    return try await underlyingClient.GetSubOrgIds(input)
+    let output = try await underlyingClient.GetSubOrgIds(input)
+
+    switch output {
+    case .ok(let ok):
+      return ok
+    case let .undocumented(statusCode, payload):
+      let bodyData: Data?
+      if let body = payload.body {
+        bodyData = try? await Data(collecting: body, upTo: .max)
+      } else {
+        bodyData = nil
+      }
+      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
+    @unknown default:
+      throw TurnkeyError.invalidResponse
+    }
   }
-  public func listUserTags(organizationId: String) async throws -> Operations.ListUserTags.Output {
+  public func listUserTags(organizationId: String) async throws -> Operations.ListUserTags.Output.Ok
+  {
 
     // Create the ListUserTagsRequest
     let listUserTagsRequest = Components.Schemas.ListUserTagsRequest(
@@ -529,9 +770,24 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(listUserTagsRequest)
     )
-    return try await underlyingClient.ListUserTags(input)
+    let output = try await underlyingClient.ListUserTags(input)
+
+    switch output {
+    case .ok(let ok):
+      return ok
+    case let .undocumented(statusCode, payload):
+      let bodyData: Data?
+      if let body = payload.body {
+        bodyData = try? await Data(collecting: body, upTo: .max)
+      } else {
+        bodyData = nil
+      }
+      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
+    @unknown default:
+      throw TurnkeyError.invalidResponse
+    }
   }
-  public func getUsers(organizationId: String) async throws -> Operations.GetUsers.Output {
+  public func getUsers(organizationId: String) async throws -> Operations.GetUsers.Output.Ok {
 
     // Create the GetUsersRequest
     let getUsersRequest = Components.Schemas.GetUsersRequest(
@@ -542,11 +798,26 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getUsersRequest)
     )
-    return try await underlyingClient.GetUsers(input)
+    let output = try await underlyingClient.GetUsers(input)
+
+    switch output {
+    case .ok(let ok):
+      return ok
+    case let .undocumented(statusCode, payload):
+      let bodyData: Data?
+      if let body = payload.body {
+        bodyData = try? await Data(collecting: body, upTo: .max)
+      } else {
+        bodyData = nil
+      }
+      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
+    @unknown default:
+      throw TurnkeyError.invalidResponse
+    }
   }
   public func getWalletAccounts(
     organizationId: String, walletId: String, paginationOptions: Components.Schemas.Pagination?
-  ) async throws -> Operations.GetWalletAccounts.Output {
+  ) async throws -> Operations.GetWalletAccounts.Output.Ok {
 
     // Create the GetWalletAccountsRequest
     let getWalletAccountsRequest = Components.Schemas.GetWalletAccountsRequest(
@@ -557,9 +828,24 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getWalletAccountsRequest)
     )
-    return try await underlyingClient.GetWalletAccounts(input)
+    let output = try await underlyingClient.GetWalletAccounts(input)
+
+    switch output {
+    case .ok(let ok):
+      return ok
+    case let .undocumented(statusCode, payload):
+      let bodyData: Data?
+      if let body = payload.body {
+        bodyData = try? await Data(collecting: body, upTo: .max)
+      } else {
+        bodyData = nil
+      }
+      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
+    @unknown default:
+      throw TurnkeyError.invalidResponse
+    }
   }
-  public func getWallets(organizationId: String) async throws -> Operations.GetWallets.Output {
+  public func getWallets(organizationId: String) async throws -> Operations.GetWallets.Output.Ok {
 
     // Create the GetWalletsRequest
     let getWalletsRequest = Components.Schemas.GetWalletsRequest(
@@ -570,9 +856,24 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getWalletsRequest)
     )
-    return try await underlyingClient.GetWallets(input)
+    let output = try await underlyingClient.GetWallets(input)
+
+    switch output {
+    case .ok(let ok):
+      return ok
+    case let .undocumented(statusCode, payload):
+      let bodyData: Data?
+      if let body = payload.body {
+        bodyData = try? await Data(collecting: body, upTo: .max)
+      } else {
+        bodyData = nil
+      }
+      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
+    @unknown default:
+      throw TurnkeyError.invalidResponse
+    }
   }
-  public func getWhoami(organizationId: String) async throws -> Operations.GetWhoami.Output {
+  public func getWhoami(organizationId: String) async throws -> Operations.GetWhoami.Output.Ok {
 
     // Create the GetWhoamiRequest
     let getWhoamiRequest = Components.Schemas.GetWhoamiRequest(
@@ -583,7 +884,22 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getWhoamiRequest)
     )
-    return try await underlyingClient.GetWhoami(input)
+    let output = try await underlyingClient.GetWhoami(input)
+
+    switch output {
+    case .ok(let ok):
+      return ok
+    case let .undocumented(statusCode, payload):
+      let bodyData: Data?
+      if let body = payload.body {
+        bodyData = try? await Data(collecting: body, upTo: .max)
+      } else {
+        bodyData = nil
+      }
+      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
+    @unknown default:
+      throw TurnkeyError.invalidResponse
+    }
   }
 
   public func approveActivity(
