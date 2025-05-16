@@ -227,7 +227,7 @@ public struct TurnkeyClient {
     let organizationId = result.organizationId
     let userId = result.userId
 
-    let (decryptedPrivateKey, decryptedPublicKey) = try AuthManager.decryptBundle(
+    let (decryptedPrivateKey, decryptedPublicKey) = try TurnkeyCrypto.decryptCredentialBundle(
       encryptedBundle: result.credentialBundle,
       ephemeralPrivateKey: ephemeralPrivateKey
     )
