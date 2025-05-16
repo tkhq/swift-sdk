@@ -1,4 +1,4 @@
-// Generated using Sourcery 2.2.5 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 2.2.6 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
 import AuthenticationServices
@@ -59,6 +59,21 @@ public struct TurnkeyClient {
     self.init(
       underlyingClient: Client(
         serverURL: URL(string: baseUrl)!,
+        transport: URLSessionTransport(),
+        middlewares: [AuthStampMiddleware(stamper: stamper)]
+      )
+    )
+  }
+
+  /// Initializes a `TurnkeyClient` using on-device session credentials.
+  ///
+  /// This initializer creates a default Stamper that uses SessionManager.shared for on-device signing via the Secure Enclave,
+  /// and configures the client to sign requests using the generated stamp header.
+  public init() {
+    let stamper = Stamper()
+    self.init(
+      underlyingClient: Client(
+        serverURL: URL(string: TurnkeyClient.baseURLString)!,
         transport: URLSessionTransport(),
         middlewares: [AuthStampMiddleware(stamper: stamper)]
       )
@@ -126,8 +141,7 @@ public struct TurnkeyClient {
     email: String, apiKeyName: String?, expirationSeconds: String?,
     emailCustomization: Components.Schemas.EmailCustomizationParams?, invalidateExisting: Bool?
   ) async throws -> (Operations.EmailAuth.Output, (String) async throws -> AuthResult) {
-    let ephemeralPrivateKey = P256.KeyAgreement.PrivateKey()
-    let targetPublicKey = try ephemeralPrivateKey.publicKey.toString(representation: .x963)
+    let (ephemeralPrivateKey, targetPublicKey) = try AuthHelpers.generateEphemeralKeyAgreement()
 
     let response = try await emailAuth(
       organizationId: organizationId, email: email, targetPublicKey: targetPublicKey,
@@ -139,8 +153,8 @@ public struct TurnkeyClient {
       let (privateKey:privateKey, publicKey:publicKey) = try AuthManager.decryptBundle(
         encryptedBundle: encryptedBundle, ephemeralPrivateKey: ephemeralPrivateKey)
 
-      let apiPublicKey = try publicKey.toString(representation: .compressed)
-      let apiPrivateKey = try privateKey.toString(representation: .raw)
+      let apiPublicKey = try publicKey.toString(representation: PublicKeyRepresentation.compressed)
+      let apiPrivateKey = try privateKey.toString(representation: PrivateKeyRepresentation.raw)
 
       let turnkeyClient = TurnkeyClient(apiPrivateKey: apiPrivateKey, apiPublicKey: apiPublicKey)
 
@@ -153,6 +167,112 @@ public struct TurnkeyClient {
     }
 
     return (response, verify)
+  }
+
+  /// Asynchronously logs in using on-device credentials and configures the client to sign requests using the generated stamp header.
+  /// - Parameters:
+  ///   - userId: The identifier for the user.
+  ///   - organizationId: The organization (or sub-organization) ID.
+  ///   - targetEmbeddedKey: Optionally, the embedded key to be used. If nil, it will be derived from the Secure Enclave public key.
+  ///   - expirationSeconds: The expiration period for the session/API key in seconds.
+  /// - Returns: An authenticated TurnkeyClient instance where subsequent requests will be signed using the device's Secure Enclave keys.
+  /// - Example:
+  /// ```swift
+  /// Task {
+  ///    do {
+  ///       let presentationAnchor = ASPresentationAnchor()
+  ///       let client = TurnkeyClient(rpId: "com.example.domain", presentationAnchor: presentationAnchor)
+  ///       let loggedInClient = try await client.login(userId: "user123", organizationId: "org456")
+  ///       // Now you can use loggedInClient to make API calls
+  ///       let whoami = try await loggedInClient.getWhoami(organizationId: "org456")
+  ///       print("Logged in as: \(whoami.username)")
+  ///    } catch {
+  ///       print("Login failed: \(error)")
+  ///    }
+  /// }
+  /// ```
+  public func login(
+    userId: String? = nil, organizationId: String? = nil, expirationSeconds: Int = 3600
+  ) async throws -> TurnkeyClient {
+    // Check if a valid session exists
+    if let session = SessionManager.shared.loadActiveSession(), session.expiresAt > Date() {
+      // Session exists; return new TurnkeyClient instance with session-based stamper
+      return TurnkeyClient()
+    }
+
+    // No valid unexpired session. Attempt to fetch stored (possibly expired) session
+    let storedSession = SessionManager.shared.loadSessionIgnoringExpiration()
+
+    // Determine organizationId for session creation from parameters or stored session
+    guard let orgIdForSession = organizationId ?? storedSession?.organizationId else {
+      throw NSError(
+        domain: "TurnkeyClient", code: 1,
+        userInfo: [
+          NSLocalizedDescriptionKey: "organizationId is required when no previous session exists"
+        ])
+    }
+
+    // Generate ephemeral keypair and call createReadWriteSession
+    let (ephemeralPrivateKey, targetPublicKey) = try AuthHelpers.generateEphemeralKeyAgreement()
+    let sessionResponse = try await self.createReadWriteSession(
+      organizationId: orgIdForSession,
+      targetPublicKey: targetPublicKey,
+      userId: userId,
+      apiKeyName: "session-key",
+      expirationSeconds: String(expirationSeconds)
+    )
+    let responseBody = try sessionResponse.ok.body.json
+    guard let result = responseBody.activity.result.createReadWriteSessionResultV2 else {
+      throw NSError(
+        domain: "TurnkeyClient",
+        code: 1,
+        userInfo: [NSLocalizedDescriptionKey: "Missing createReadWriteSessionResultV2"]
+      )
+    }
+    let organizationId = result.organizationId
+    let userId = result.userId
+
+    let (decryptedPrivateKey, decryptedPublicKey) = try AuthManager.decryptBundle(
+      encryptedBundle: result.credentialBundle,
+      ephemeralPrivateKey: ephemeralPrivateKey
+    )
+    let tempApiPublicKey = try decryptedPublicKey.toString(
+      representation: PublicKeyRepresentation.compressed)
+    let tempApiPrivateKey = try decryptedPrivateKey.toString(
+      representation: PrivateKeyRepresentation.raw)
+
+    // Instantiate temporary TurnkeyClient using decrypted keys
+    let tempClient = TurnkeyClient(apiPrivateKey: tempApiPrivateKey, apiPublicKey: tempApiPublicKey)
+
+    // Generate Secure Enclave key pair (new session key)
+    let enclaveKeyManager = SecureEnclaveKeyManager()
+    let keyTag = try enclaveKeyManager.createKeypair()
+    let enclavePublicKeyData = try enclaveKeyManager.publicKey(tag: keyTag)
+    let enclavePublicKeyHex = enclavePublicKeyData.toHexString()
+
+    // Create permanent API key via temporary client
+    let apiKeyParams = [
+      Components.Schemas.ApiKeyParamsV2(
+        apiKeyName: "Session Key \(Int(Date().timeIntervalSince1970))",
+        publicKey: enclavePublicKeyHex,
+        curveType: .API_KEY_CURVE_P256,
+        expirationSeconds: String(expirationSeconds)
+      )
+    ]
+    let _ = try await tempClient.createApiKeys(
+      organizationId: organizationId,
+      apiKeys: apiKeyParams,
+      userId: userId
+    )
+
+    // Derive session expiration and persist session
+    let sessionExpiry = Date().addingTimeInterval(TimeInterval(expirationSeconds))
+    let newSession = Session(
+      keyTag: keyTag, expiresAt: sessionExpiry, userId: userId, organizationId: organizationId)
+    try SessionManager.shared.save(session: newSession)
+
+    // Return new TurnkeyClient instance with session-based stamper
+    return TurnkeyClient()
   }
 
   public func getActivity(organizationId: String, activityId: String) async throws
