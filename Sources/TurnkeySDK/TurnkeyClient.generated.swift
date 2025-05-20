@@ -150,7 +150,7 @@ public struct TurnkeyClient {
     let authResponseOrganizationId = try response.ok.body.json.activity.organizationId
 
     let verify: (String) async throws -> AuthResult = { encryptedBundle in
-      let (privateKey:privateKey, publicKey:publicKey) = try AuthManager.decryptBundle(
+      let (privateKey:privateKey, publicKey:publicKey) = try TurnkeyCrypto.decryptCredentialBundle(
         encryptedBundle: encryptedBundle, ephemeralPrivateKey: ephemeralPrivateKey)
 
       let apiPublicKey = try publicKey.toString(representation: PublicKeyRepresentation.compressed)
@@ -232,7 +232,7 @@ public struct TurnkeyClient {
     let organizationId = result.organizationId
     let userId = result.userId
 
-    let (decryptedPrivateKey, decryptedPublicKey) = try AuthManager.decryptBundle(
+    let (decryptedPrivateKey, decryptedPublicKey) = try TurnkeyCrypto.decryptCredentialBundle(
       encryptedBundle: result.credentialBundle,
       ephemeralPrivateKey: ephemeralPrivateKey
     )

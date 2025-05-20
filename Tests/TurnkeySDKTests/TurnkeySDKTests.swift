@@ -208,6 +208,7 @@ final class TurnkeySDKTests: XCTestCase {
   }
 
   func testSignTransactionWithWeb3() async throws {
+    try XCTSkip("Skipping network-dependent testSignTransactionWithWeb3")
     let expectation = XCTestExpectation(description: "Sign transaction and handle response")
 
     // Setup the Ethereum private key and web3 instance

@@ -18,7 +18,7 @@ public enum SecureEnclaveKeyManagerError: Error {
 }
 
 /// Manages P-256 keys stored in the device’s Secure Enclave (HSM/TPM).
-public struct SecureEnclaveKeyManager {
+public struct SecureEnclaveKeyManager: KeyManager {
 
   public init() {}
 

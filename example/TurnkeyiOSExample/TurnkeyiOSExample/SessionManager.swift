@@ -1,15 +1,27 @@
-import Foundation
-import TurnkeySDK
-import SwiftUI
-import Combine
+//
+//  SessionManager.swift
+//  TurnkeyiOSExample
+//
+//  Created by Taylor Dawson on 5/2/24.
+//
 
-/// Manages the authenticated TurnkeyClient session across the app
-final class SessionManager: ObservableObject {
-    /// The currently authenticated TurnkeyClient instance
-    @Published var client: TurnkeyClient?
+import Foundation
+
+class SessionManager {
+    static let shared = SessionManager()
+    var currentUser: User?
+
+    private init() {}
+
+    func setCurrentUser(user: User) {
+        currentUser = user
+    }
+
+    func getCurrentUser() -> User? {
+        return currentUser
+    }
     
-    /// Clears the current session
-    func logout() {
-        client = nil
+    func clearUser() {
+        currentUser = nil
     }
 }

@@ -28,7 +28,12 @@ public struct Session: Codable, Equatable {
 public final class SessionManager {
   public static let shared = SessionManager()
 
-  private init() {}
+  private let keyManager: KeyManager
+
+  // Default to software-backed Keychain manager; callers can inject enclave manager.
+  public init(keyManager: KeyManager = KeychainKeyManager()) {
+    self.keyManager = keyManager
+  }
 
   /// Key under which session data is stored in the Keychain
   private let sessionKey = "com.turnkey.sdk.session"
@@ -136,8 +141,7 @@ public final class SessionManager {
     if let session = loadActiveSession() {
       return session
     } else {
-      // Create a new session by generating a key using SecureEnclaveKeyManager
-      let keyManager = SecureEnclaveKeyManager()
+      // Create a new session by generating a key via injected keyManager
       let tag = try keyManager.createKeypair()
       // Create a new session with a 7-day expiration (604800 seconds)
       let newSession = Session(keyTag: tag, expiresAt: Date().addingTimeInterval(604800))
@@ -157,9 +161,6 @@ public final class SessionManager {
 
     // Ensure there is an active session, creating one if necessary
     let session = try ensureActiveSession()
-
-    // Initialize the secure enclave key manager
-    let keyManager = SecureEnclaveKeyManager()
 
     // Sign the hash using the key associated with the current session
     let signature = try keyManager.sign(tag: session.keyTag, data: hashData)
