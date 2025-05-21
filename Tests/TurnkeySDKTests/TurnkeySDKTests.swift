@@ -51,29 +51,23 @@ final class TurnkeySDKTests: XCTestCase {
     // Create an instance of TurnkeyClient
     let client = TurnkeyClient(apiPrivateKey: apiPrivateKey!, apiPublicKey: apiPublicKey!)
 
-    // Call the GetWhoami method on the TurnkeyClient instance
-    let output = try await client.getWhoami(organizationId: organizationId!)
-
-    // Assert the response
-    switch output {
-    case let .ok(response):
-      switch response.body {
+    do {
+      let ok = try await client.getWhoami(organizationId: organizationId!)
+      switch ok.body {
       case let .json(whoamiResponse):
-        // Assert the expected properties in the whoamiResponse
         XCTAssertNotNil(whoamiResponse.organizationId)
         XCTAssertEqual(whoamiResponse.organizationName, "SDK E2E")
         XCTAssertEqual(whoamiResponse.userId, expectedUserId!)
         XCTAssertEqual(whoamiResponse.username, "Root user")
-      // Add more assertions based on the expected response
       }
-    case let .undocumented(statusCode, undocumentedPayload):
-      // Handle the undocumented response
-      if let body = undocumentedPayload.body {
-        // Convert the HTTPBody to a string
-        let bodyString = try await String(collecting: body, upTo: .max)
-        XCTFail("Undocumented response body: \(bodyString)")
+    } catch let error as TurnkeyError {
+      switch error {
+      case let .apiError(code, payload):
+        let msg = payload.flatMap { String(data: $0, encoding: .utf8) } ?? ""
+        XCTFail("API error \(code ?? -1): \(msg)")
+      default:
+        throw error
       }
-      XCTFail("Undocumented response: \(statusCode)")
     }
   }
 
@@ -85,29 +79,20 @@ final class TurnkeySDKTests: XCTestCase {
     let featureName = Components.Schemas.FeatureName.FEATURE_NAME_WEBHOOK
     let featureValue = "https://example.com"
 
-    // Call the setOrganizationFeature method on the TurnkeyClient instance
-    let output = try await client.setOrganizationFeature(
-      organizationId: organizationId!,
-      name: featureName,
-      value: featureValue
-    )
-
-    // Assert the response
-    switch output {
-    case let .ok(response):
-      switch response.body {
-      case let .json(activityResponse):
-        // Assert the expected properties in the activityResponse
-        XCTAssertEqual(activityResponse.activity.organizationId, organizationId)
+    do {
+      let output = try await client.setOrganizationFeature(
+        organizationId: organizationId!,
+        name: featureName,
+        value: featureValue)
+      let activityResponse = try output.ok.body.json
+      XCTAssertEqual(activityResponse.activity.organizationId, organizationId)
+    } catch let error as TurnkeyError {
+      if case let .apiError(code, payload) = error {
+        let msg = payload.flatMap { String(data: $0, encoding: .utf8) } ?? ""
+        XCTFail("API error \(code ?? -1): \(msg)")
+      } else {
+        throw error
       }
-    case let .undocumented(statusCode, undocumentedPayload):
-      // Handle the undocumented response
-      if let body = undocumentedPayload.body {
-        // Convert the HTTPBody to a string
-        let bodyString = try await String(collecting: body, upTo: .max)
-        XCTFail("Undocumented response body: \(bodyString)")
-      }
-      XCTFail("Undocumented response: \(statusCode)")
     }
   }
 
@@ -150,47 +135,34 @@ final class TurnkeySDKTests: XCTestCase {
     let disableSmsAuth = false
     let disableOtpEmailAuth = false
 
-    // Call the createSubOrganization method on the TurnkeyClient instance
-    let output = try await client.createSubOrganization(
-      organizationId: organizationId!,
-      subOrganizationName: subOrganizationName,
-      rootUsers: rootUsers,
-      rootQuorumThreshold: rootQuorumThreshold,
-      wallet: wallet,
-      disableEmailRecovery: disableEmailRecovery,
-      disableEmailAuth: disableEmailAuth,
-      disableSmsAuth: disableSmsAuth,
-      disableOtpEmailAuth: disableOtpEmailAuth
-    )
-
-    // Assert the response
-    switch output {
-    case let .ok(response):
-      switch response.body {
-      case let .json(activityResponse):
-        // Simplified validation that focuses on the essential fields
-        XCTAssertNotNil(activityResponse.activity)
-        XCTAssertEqual(activityResponse.activity.organizationId, organizationId)
-
-        // Validate the result if present
-        if let result = activityResponse.activity.result.createSubOrganizationResultV7 {
-          XCTAssertNotNil(result.subOrganizationId)
-          print("Created sub-organization: \(result.subOrganizationId)")
-
-          if let rootUserIds = result.rootUserIds {
-            XCTAssertEqual(rootUserIds.count, rootUsers.count)
-            print("Created root users: \(rootUserIds)")
-          }
+    do {
+      let output = try await client.createSubOrganization(
+        organizationId: organizationId!,
+        subOrganizationName: subOrganizationName,
+        rootUsers: rootUsers,
+        rootQuorumThreshold: rootQuorumThreshold,
+        wallet: wallet,
+        disableEmailRecovery: disableEmailRecovery,
+        disableEmailAuth: disableEmailAuth,
+        disableSmsAuth: disableSmsAuth,
+        disableOtpEmailAuth: disableOtpEmailAuth
+      )
+      let activityResponse = try output.ok.body.json
+      XCTAssertNotNil(activityResponse.activity)
+      XCTAssertEqual(activityResponse.activity.organizationId, organizationId)
+      if let result = activityResponse.activity.result.createSubOrganizationResultV7 {
+        XCTAssertNotNil(result.subOrganizationId)
+        if let rootUserIds = result.rootUserIds {
+          XCTAssertEqual(rootUserIds.count, rootUsers.count)
         }
       }
-    case let .undocumented(statusCode, undocumentedPayload):
-      // Handle the undocumented response
-      if let body = undocumentedPayload.body {
-        // Convert the HTTPBody to a string
-        let bodyString = try await String(collecting: body, upTo: .max)
-        XCTFail("Undocumented response body: \(bodyString)")
+    } catch let error as TurnkeyError {
+      if case let .apiError(code, payload) = error {
+        let msg = payload.flatMap { String(data: $0, encoding: .utf8) } ?? ""
+        XCTFail("API error \(code ?? -1): \(msg)")
+      } else {
+        throw error
       }
-      XCTFail("Undocumented response: \(statusCode)")
     }
   }
 
@@ -207,7 +179,10 @@ final class TurnkeySDKTests: XCTestCase {
     }
   }
 
+  /*  holesky is no more 😢
+   TODO: Add testSignTransactionWithWeb3 with new testnet
   func testSignTransactionWithWeb3() async throws {
+    try XCTSkip("Skipping network-dependent testSignTransactionWithWeb3")
     let expectation = XCTestExpectation(description: "Sign transaction and handle response")
 
     // Setup the Ethereum private key and web3 instance
@@ -338,5 +313,21 @@ final class TurnkeySDKTests: XCTestCase {
 
     // Wait for the expectation to be fulfilled, or timeout after 10 seconds
     await fulfillment(of: [expectation], timeout: 10.0)
+  }
+  */
+
+  func testGetWhoamiInvalidOrgThrowsApiError() async throws {
+    let client = TurnkeyClient(apiPrivateKey: apiPrivateKey!, apiPublicKey: apiPublicKey!)
+
+    do {
+      _ = try await client.getWhoami(organizationId: "invalid-org-id")
+      XCTFail("Expected TurnkeyError.apiError to be thrown for bad org id")
+    } catch let error as TurnkeyError {
+      guard case let .apiError(status, _) = error else {
+        XCTFail("Unexpected error type: \(error)")
+        return
+      }
+      XCTAssertNotEqual(status, 200, "Status should indicate failure")
+    }
   }
 }

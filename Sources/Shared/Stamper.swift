@@ -93,7 +93,7 @@ public class Stamper {
         derData = rawSig.derRepresentation
       } else {
         // Debug: Assume already DER
-        derData = sigData // assume already DER
+        derData = sigData  // assume already DER
       }
 
       let signatureHex = derData.toHexString()
