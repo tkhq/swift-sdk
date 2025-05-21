@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8D35BF472DDE178800D9A6C3 /* TurnkeySDK in Frameworks */ = {isa = PBXBuildFile; productRef = 8D35BF462DDE178800D9A6C3 /* TurnkeySDK */; };
 		8DB100752DD7ED0800885C8F /* PhoneNumberKit in Frameworks */ = {isa = PBXBuildFile; productRef = 8DB100742DD7ED0800885C8F /* PhoneNumberKit */; };
 /* End PBXBuildFile section */
 
@@ -56,6 +57,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8D35BF472DDE178800D9A6C3 /* TurnkeySDK in Frameworks */,
 				8DB100752DD7ED0800885C8F /* PhoneNumberKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -77,12 +79,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		8D1943172DDD175F00FA9BC1 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		8DB100312DD7E3D400885C8F = {
 			isa = PBXGroup;
 			children = (
 				8DB1003C2DD7E3D400885C8F /* swift-sdk-demo-wallet */,
 				8DB1004D2DD7E3D500885C8F /* swift-sdk-demo-walletTests */,
 				8DB100572DD7E3D500885C8F /* swift-sdk-demo-walletUITests */,
+				8D1943172DDD175F00FA9BC1 /* Frameworks */,
 				8DB1003B2DD7E3D400885C8F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -118,6 +128,7 @@
 			name = "swift-sdk-demo-wallet";
 			packageProductDependencies = (
 				8DB100742DD7ED0800885C8F /* PhoneNumberKit */,
+				8D35BF462DDE178800D9A6C3 /* TurnkeySDK */,
 			);
 			productName = "swift-sdk-demo-wallet";
 			productReference = 8DB1003A2DD7E3D400885C8F /* swift-sdk-demo-wallet.app */;
@@ -203,6 +214,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				8DB100732DD7ED0800885C8F /* XCRemoteSwiftPackageReference "PhoneNumberKit" */,
+				8D35BF452DDE178800D9A6C3 /* XCLocalSwiftPackageReference "../../../swift-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 8DB1003B2DD7E3D400885C8F /* Products */;
@@ -402,12 +414,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "swift-sdk-demo-wallet/swift-sdk-demo-wallet.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"swift-sdk-demo-wallet/Preview Content\"";
-				DEVELOPMENT_TEAM = 5PG59FVKX2;
+				DEVELOPMENT_TEAM = 74V7N6MW3W;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "React Native Demo Wallet";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -417,9 +433,10 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.turnkey.swift-sdk-demo-wallet";
+				MARKETING_VERSION = 1.1;
+				PRODUCT_BUNDLE_IDENTIFIER = xyz.tkhqlabs.passkeyapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -431,12 +448,16 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "swift-sdk-demo-wallet/swift-sdk-demo-wallet.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"swift-sdk-demo-wallet/Preview Content\"";
-				DEVELOPMENT_TEAM = 5PG59FVKX2;
+				DEVELOPMENT_TEAM = 74V7N6MW3W;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "React Native Demo Wallet";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -446,9 +467,10 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "com.turnkey.swift-sdk-demo-wallet";
+				MARKETING_VERSION = 1.1;
+				PRODUCT_BUNDLE_IDENTIFIER = xyz.tkhqlabs.passkeyapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -568,6 +590,13 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		8D35BF452DDE178800D9A6C3 /* XCLocalSwiftPackageReference "../../../swift-sdk" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../../../swift-sdk";
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCRemoteSwiftPackageReference section */
 		8DB100732DD7ED0800885C8F /* XCRemoteSwiftPackageReference "PhoneNumberKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
@@ -580,6 +609,10 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		8D35BF462DDE178800D9A6C3 /* TurnkeySDK */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = TurnkeySDK;
+		};
 		8DB100742DD7ED0800885C8F /* PhoneNumberKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 8DB100732DD7ED0800885C8F /* XCRemoteSwiftPackageReference "PhoneNumberKit" */;

@@ -1,5 +1,7 @@
 import SwiftUI
+import AuthenticationServices
 import PhoneNumberKit
+import Shared
 
 struct AuthView: View {
     @EnvironmentObject private var session: SessionStore
@@ -70,63 +72,109 @@ struct AuthView: View {
     }
     
     private func handleLoginWithPasskey() {
-        session.isAuthenticated = true
+        Task {
+            do {
+                guard let anchor = defaultAnchor() else {
+                    print("No valid window available for presentation")
+                    return
+                }
+                
+                let result = PasskeyStamper(
+                    rpId: "passkeyapp.tkhqlabs.xyz",
+                    presentationAnchor: anchor
+                )
+                
+                
+                print("Passkey created successfully! ", result)
+                
+            }
+        }
     }
     
     private func handleSignUpWithPasskey() {
-        session.isAuthenticated = true
-    }
-}
-
-
-private struct OrSeparator: View {
-    var body: some View {
-        HStack {
-            Rectangle().frame(height: 1).foregroundColor(.gray.opacity(0.3))
-            Text("OR")
-                .font(.caption)
-                .foregroundColor(.gray)
-                .padding(.horizontal, 4)
-            Rectangle().frame(height: 1).foregroundColor(.gray.opacity(0.3))
+        Task {
+            do {
+                guard let anchor = defaultAnchor() else {
+                    print("No valid window available for presentation")
+                    return
+                }
+                
+                let result = try await createPasskey(
+                    user: PasskeyUser(id: "123", name: "Anonymous User", displayName: "Anonymous User"),
+                    rp: RelyingParty(id: "passkeyapp.tkhqlabs.xyz", name: "My App"),
+                    presentationAnchor: anchor
+                )
+                
+                print("Passkey created successfully!")
+                print("Credential ID:", result.attestation.credentialId)
+                
+                
+            } catch {
+                print("Failed to create passkey:", error)
+            }
         }
     }
-}
-
-struct LightGrayButton: View {
-    let title: String
-    let action: () -> Void
-    let isDisabled: Bool
     
-    var body: some View {
-        Button(action: action) {
-            Text(title)
+    
+    
+    private struct OrSeparator: View {
+        var body: some View {
+            HStack {
+                Rectangle().frame(height: 1).foregroundColor(.gray.opacity(0.3))
+                Text("OR")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+                    .padding(.horizontal, 4)
+                Rectangle().frame(height: 1).foregroundColor(.gray.opacity(0.3))
+            }
+        }
+    }
+    
+    private struct LightGrayButton: View {
+        let title: String
+        let action: () -> Void
+        let isDisabled: Bool
+        
+        var body: some View {
+            Button(action: action) {
+                Text(title)
+                    .font(.system(size: 14, weight: .medium))
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.gray.opacity(0.15))
+                    .foregroundColor(.black)
+                    .cornerRadius(10)
+            }
+            .disabled(isDisabled)
+            .opacity(isDisabled ? 0.5 : 1.0)
+        }
+    }
+    
+    
+    private struct BlackBorderButton: ButtonStyle {
+        func makeBody(configuration: Configuration) -> some View {
+            configuration.label
                 .font(.system(size: 14, weight: .medium))
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color.gray.opacity(0.15))
+                .background(Color.white)
                 .foregroundColor(.black)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.black, lineWidth: 1)
+                )
                 .cornerRadius(10)
+                .opacity(configuration.isPressed ? 0.8 : 1.0)
         }
-        .disabled(isDisabled)
-        .opacity(isDisabled ? 0.5 : 1.0)
     }
-}
-
-
-private struct BlackBorderButton: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.system(size: 14, weight: .medium))
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Color.white)
-            .foregroundColor(.black)
-            .overlay(
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(Color.black, lineWidth: 1)
-            )
-            .cornerRadius(10)
-            .opacity(configuration.isPressed ? 0.8 : 1.0)
+    
+    private func defaultAnchor() -> ASPresentationAnchor? {
+        UIApplication.shared
+            .connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first(where: { $0.activationState == .foregroundActive })?
+            .windows
+            .first(where: { $0.isKeyWindow })
     }
 }
 
