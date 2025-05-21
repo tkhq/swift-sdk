@@ -113,7 +113,7 @@ public struct TurnkeyClient {
   }
 
   public struct AuthResult {
-    var whoamiResponse: Operations.GetWhoami.Output
+    var whoamiResponse: Components.Schemas.GetWhoamiResponse
     var apiPublicKey: String
     var apiPrivateKey: String
   }
@@ -162,7 +162,8 @@ public struct TurnkeyClient {
         organizationId: authResponseOrganizationId)
 
       let result = AuthResult(
-        whoamiResponse: whoamiResponse, apiPublicKey: apiPublicKey, apiPrivateKey: apiPrivateKey)
+        whoamiResponse: try whoamiResponse.body.json, apiPublicKey: apiPublicKey,
+        apiPrivateKey: apiPrivateKey)
       return result
     }
 
