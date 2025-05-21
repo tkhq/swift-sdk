@@ -7,7 +7,7 @@ public class Stamper {
   private let apiPublicKey: String?
   private let apiPrivateKey: String?
   private let presentationAnchor: ASPresentationAnchor?
-  private let passkeyManager: PasskeyManager?
+  private let passkeyManager: PasskeyStamper?
   private let sessionManager: SessionManager?
   private var observer: NSObjectProtocol?
 
@@ -37,7 +37,7 @@ public class Stamper {
     self.apiPublicKey = nil
     self.apiPrivateKey = nil
     self.presentationAnchor = presentationAnchor
-    self.passkeyManager = PasskeyManager(rpId: rpId, presentationAnchor: presentationAnchor)
+    self.passkeyManager = PasskeyStamper(rpId: rpId, presentationAnchor: presentationAnchor)
     self.sessionManager = nil
   }
 
@@ -118,56 +118,33 @@ public class Stamper {
     case assertionFailed
   }
 
-  /// Asynchronously performs a Passkey stamp operation using the given SHA256 digest of the payload.
-  /// - Parameter payload: The SHA256 digest of the payload to stamp.
-  /// - Returns: A JSON string representing the stamp.
-  /// - Throws: `PasskeyStampError` on failure.
+
   public func passkeyStamp(payload: SHA256Digest) async throws -> String {
-    return try await withCheckedThrowingContinuation { continuation in
-      self.observer = NotificationCenter.default.addObserver(
-        forName: .PasskeyAssertionCompleted, object: nil, queue: nil
-      ) { [weak self] notification in
-        guard let self = self else { return }
-        NotificationCenter.default.removeObserver(self.observer!)
-        self.observer = nil
-
-        if let assertionResult = notification.userInfo?["result"]
-          as? ASAuthorizationPlatformPublicKeyCredentialAssertion
-        {
-          // Construct the result from the assertion
-          let assertionInfo = [
-            "authenticatorData": assertionResult.rawAuthenticatorData.base64URLEncodedString(),
-            "clientDataJson": assertionResult.rawClientDataJSON.base64URLEncodedString(),
-            "credentialId": assertionResult.credentialID.base64URLEncodedString(),
-            "signature": assertionResult.signature.base64URLEncodedString(),
-          ]
-
-          do {
-            let jsonData = try JSONSerialization.data(withJSONObject: assertionInfo, options: [])
-            if let jsonString = String(data: jsonData, encoding: .utf8) {
-              continuation.resume(returning: jsonString)
-            }
-          } catch {
-            continuation.resume(throwing: error)
-          }
-        } else if let error = notification.userInfo?["error"] as? Error {
-          continuation.resume(throwing: error)
-        } else {
-          continuation.resume(throwing: StampError.assertionFailed)
-        }
-      }
-
-      guard
-        let challenge = payload.compactMap({ String(format: "%02x", $0) }).joined().data(
-          using: .utf8)
-      else {
-        continuation.resume(throwing: StampError.assertionFailed)
-        return
-      }
-
-      self.passkeyManager?.assertPasskey(challenge: challenge)
+    guard let challengeData = payload.hexEncoded.data(using: .utf8) else {
+        throw StampError.assertionFailed
     }
-  }
+
+    guard let passkeyManager = self.passkeyManager else {
+        throw StampError.passkeyManagerNotSet
+    }
+
+    let assertion = try await passkeyManager.assert(challenge: challengeData)
+
+    let assertionInfo = [
+        "authenticatorData": assertion.authenticatorData.base64URLEncodedString(),
+        "clientDataJson": assertion.clientDataJSON,
+        "credentialId": assertion.credentialId,
+        "signature": assertion.signature.base64URLEncodedString(),
+    ]
+
+    let jsonData = try JSONSerialization.data(withJSONObject: assertionInfo, options: [])
+    guard let jsonString = String(data: jsonData, encoding: .utf8) else {
+        throw StampError.assertionFailed
+    }
+
+    return jsonString
+}
+
 
   public enum APIKeyStampError: Error {
     case invalidPrivateKey
@@ -237,3 +214,9 @@ public class Stamper {
 }
 
 extension Stamper: @unchecked Sendable {}
+
+extension SHA256Digest {
+    var hexEncoded: String {
+        self.map { String(format: "%02x", $0) }.joined()
+    }
+}
