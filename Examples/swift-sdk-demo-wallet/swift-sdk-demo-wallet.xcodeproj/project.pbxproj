@@ -8,12 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		8D6F180C2DE65C73006FEDA2 /* CryptoSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 8D6F180B2DE65C73006FEDA2 /* CryptoSwift */; };
-		8D6F18D72DE78C23006FEDA2 /* TurnkeyCrypto in Frameworks */ = {isa = PBXBuildFile; productRef = 8D6F18D62DE78C23006FEDA2 /* TurnkeyCrypto */; };
-		8D6F18D92DE78C23006FEDA2 /* TurnkeyEncoding in Frameworks */ = {isa = PBXBuildFile; productRef = 8D6F18D82DE78C23006FEDA2 /* TurnkeyEncoding */; };
-		8D6F18DB2DE78C23006FEDA2 /* TurnkeyHttp in Frameworks */ = {isa = PBXBuildFile; productRef = 8D6F18DA2DE78C23006FEDA2 /* TurnkeyHttp */; };
-		8D6F18DD2DE78C23006FEDA2 /* TurnkeyPasskeys in Frameworks */ = {isa = PBXBuildFile; productRef = 8D6F18DC2DE78C23006FEDA2 /* TurnkeyPasskeys */; };
-		8D6F18DF2DE78C23006FEDA2 /* TurnkeyStamper in Frameworks */ = {isa = PBXBuildFile; productRef = 8D6F18DE2DE78C23006FEDA2 /* TurnkeyStamper */; };
-		8D6F18E12DE78C23006FEDA2 /* TurnkeySwift in Frameworks */ = {isa = PBXBuildFile; productRef = 8D6F18E02DE78C23006FEDA2 /* TurnkeySwift */; };
+		8D6F19872DE7A3B9006FEDA2 /* TurnkeyCrypto in Frameworks */ = {isa = PBXBuildFile; productRef = 8D6F19862DE7A3B9006FEDA2 /* TurnkeyCrypto */; };
+		8D6F19892DE7A3B9006FEDA2 /* TurnkeyEncoding in Frameworks */ = {isa = PBXBuildFile; productRef = 8D6F19882DE7A3B9006FEDA2 /* TurnkeyEncoding */; };
+		8D6F198B2DE7A3B9006FEDA2 /* TurnkeyHttp in Frameworks */ = {isa = PBXBuildFile; productRef = 8D6F198A2DE7A3B9006FEDA2 /* TurnkeyHttp */; };
+		8D6F198D2DE7A3B9006FEDA2 /* TurnkeyPasskeys in Frameworks */ = {isa = PBXBuildFile; productRef = 8D6F198C2DE7A3B9006FEDA2 /* TurnkeyPasskeys */; };
+		8D6F198F2DE7A3B9006FEDA2 /* TurnkeyStamper in Frameworks */ = {isa = PBXBuildFile; productRef = 8D6F198E2DE7A3B9006FEDA2 /* TurnkeyStamper */; };
+		8D6F19912DE7A3B9006FEDA2 /* TurnkeySwift in Frameworks */ = {isa = PBXBuildFile; productRef = 8D6F19902DE7A3B9006FEDA2 /* TurnkeySwift */; };
 		8DEC224B2DE0EC3100758E77 /* PhoneNumberKit in Frameworks */ = {isa = PBXBuildFile; productRef = 8DEC224A2DE0EC3100758E77 /* PhoneNumberKit */; };
 /* End PBXBuildFile section */
 
@@ -63,14 +63,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8D6F18D92DE78C23006FEDA2 /* TurnkeyEncoding in Frameworks */,
-				8D6F18DB2DE78C23006FEDA2 /* TurnkeyHttp in Frameworks */,
-				8D6F18DD2DE78C23006FEDA2 /* TurnkeyPasskeys in Frameworks */,
-				8D6F18E12DE78C23006FEDA2 /* TurnkeySwift in Frameworks */,
+				8D6F19892DE7A3B9006FEDA2 /* TurnkeyEncoding in Frameworks */,
+				8D6F198B2DE7A3B9006FEDA2 /* TurnkeyHttp in Frameworks */,
+				8D6F198D2DE7A3B9006FEDA2 /* TurnkeyPasskeys in Frameworks */,
+				8D6F19912DE7A3B9006FEDA2 /* TurnkeySwift in Frameworks */,
 				8D6F180C2DE65C73006FEDA2 /* CryptoSwift in Frameworks */,
-				8D6F18DF2DE78C23006FEDA2 /* TurnkeyStamper in Frameworks */,
+				8D6F198F2DE7A3B9006FEDA2 /* TurnkeyStamper in Frameworks */,
 				8DEC224B2DE0EC3100758E77 /* PhoneNumberKit in Frameworks */,
-				8D6F18D72DE78C23006FEDA2 /* TurnkeyCrypto in Frameworks */,
+				8D6F19872DE7A3B9006FEDA2 /* TurnkeyCrypto in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -141,12 +141,12 @@
 			packageProductDependencies = (
 				8DEC224A2DE0EC3100758E77 /* PhoneNumberKit */,
 				8D6F180B2DE65C73006FEDA2 /* CryptoSwift */,
-				8D6F18D62DE78C23006FEDA2 /* TurnkeyCrypto */,
-				8D6F18D82DE78C23006FEDA2 /* TurnkeyEncoding */,
-				8D6F18DA2DE78C23006FEDA2 /* TurnkeyHttp */,
-				8D6F18DC2DE78C23006FEDA2 /* TurnkeyPasskeys */,
-				8D6F18DE2DE78C23006FEDA2 /* TurnkeyStamper */,
-				8D6F18E02DE78C23006FEDA2 /* TurnkeySwift */,
+				8D6F19862DE7A3B9006FEDA2 /* TurnkeyCrypto */,
+				8D6F19882DE7A3B9006FEDA2 /* TurnkeyEncoding */,
+				8D6F198A2DE7A3B9006FEDA2 /* TurnkeyHttp */,
+				8D6F198C2DE7A3B9006FEDA2 /* TurnkeyPasskeys */,
+				8D6F198E2DE7A3B9006FEDA2 /* TurnkeyStamper */,
+				8D6F19902DE7A3B9006FEDA2 /* TurnkeySwift */,
 			);
 			productName = "swift-sdk-demo-wallet";
 			productReference = 8DB1003A2DD7E3D400885C8F /* swift-sdk-demo-wallet.app */;
@@ -233,7 +233,7 @@
 			packageReferences = (
 				8DB100732DD7ED0800885C8F /* XCRemoteSwiftPackageReference "PhoneNumberKit" */,
 				8D6F180A2DE65C73006FEDA2 /* XCRemoteSwiftPackageReference "CryptoSwift" */,
-				8D6F18D52DE78C23006FEDA2 /* XCLocalSwiftPackageReference "../../../swift-sdk" */,
+				8D6F19852DE7A3B9006FEDA2 /* XCLocalSwiftPackageReference "../../../swift-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 8DB1003B2DD7E3D400885C8F /* Products */;
@@ -610,7 +610,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		8D6F18D52DE78C23006FEDA2 /* XCLocalSwiftPackageReference "../../../swift-sdk" */ = {
+		8D6F19852DE7A3B9006FEDA2 /* XCLocalSwiftPackageReference "../../../swift-sdk" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = "../../../swift-sdk";
 		};
@@ -641,27 +641,27 @@
 			package = 8D6F180A2DE65C73006FEDA2 /* XCRemoteSwiftPackageReference "CryptoSwift" */;
 			productName = CryptoSwift;
 		};
-		8D6F18D62DE78C23006FEDA2 /* TurnkeyCrypto */ = {
+		8D6F19862DE7A3B9006FEDA2 /* TurnkeyCrypto */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TurnkeyCrypto;
 		};
-		8D6F18D82DE78C23006FEDA2 /* TurnkeyEncoding */ = {
+		8D6F19882DE7A3B9006FEDA2 /* TurnkeyEncoding */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TurnkeyEncoding;
 		};
-		8D6F18DA2DE78C23006FEDA2 /* TurnkeyHttp */ = {
+		8D6F198A2DE7A3B9006FEDA2 /* TurnkeyHttp */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TurnkeyHttp;
 		};
-		8D6F18DC2DE78C23006FEDA2 /* TurnkeyPasskeys */ = {
+		8D6F198C2DE7A3B9006FEDA2 /* TurnkeyPasskeys */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TurnkeyPasskeys;
 		};
-		8D6F18DE2DE78C23006FEDA2 /* TurnkeyStamper */ = {
+		8D6F198E2DE7A3B9006FEDA2 /* TurnkeyStamper */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TurnkeyStamper;
 		};
-		8D6F18E02DE78C23006FEDA2 /* TurnkeySwift */ = {
+		8D6F19902DE7A3B9006FEDA2 /* TurnkeySwift */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TurnkeySwift;
 		};

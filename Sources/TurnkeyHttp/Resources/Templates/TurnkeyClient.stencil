@@ -1,10 +1,8 @@
-import Middleware
 import AuthenticationServices
 import CryptoKit
 import Foundation
 import OpenAPIRuntime
 import OpenAPIURLSession
-import Shared
 
 public struct TurnkeyClient {
   public static let baseURLString = "https://api.turnkey.com"

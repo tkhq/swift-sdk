@@ -13,21 +13,22 @@ let package = Package(
         .library(name: "TurnkeySwift", targets: ["TurnkeySwift"]),
     ],
     dependencies: [
+        .package(url: "https://github.com/apple/swift-openapi-generator", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-openapi-runtime", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-openapi-urlsession", from: "1.0.0"),
         .package(url: "https://github.com/anquii/Base58Check.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-http-types", from: "1.0.2"),
-        .package(url: "https://github.com/apple/swift-openapi-runtime", from: "1.0.0"),
-        .package(url: "https://github.com/apple/swift-openapi-urlsession", from: "1.0.0")
-        
     ],
     targets: [
         .target(name: "TurnkeyEncoding", dependencies: []),
-        .target(name: "TurnkeyHttp", dependencies: [
-            "TurnkeyStamper",
-            .product(name: "HTTPTypes", package: "swift-http-types"),
-            .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
-            .product(name: "OpenAPIURLSession", package: "swift-openapi-urlsession"),
-            
-        ]),
+        .target(
+            name: "TurnkeyHttp",
+            dependencies: [
+                "TurnkeyStamper",
+                .product(name: "HTTPTypes", package: "swift-http-types"),
+                .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
+                .product(name: "OpenAPIURLSession", package: "swift-openapi-urlsession"),
+            ]),
         .target(
             name: "TurnkeyCrypto",
             dependencies: [
@@ -36,13 +37,15 @@ let package = Package(
         ),
         .target(name: "TurnkeyPasskeys", dependencies: ["TurnkeyEncoding", "TurnkeyCrypto"]),
         .target(name: "TurnkeyStamper", dependencies: ["TurnkeyPasskeys"]),
-        .target(name: "TurnkeySwift",  dependencies: [
-            "TurnkeyHttp",
-            "TurnkeyStamper",
-            "TurnkeyCrypto",
-            "TurnkeyPasskeys",
-            "TurnkeyEncoding"
-        ]),
-        
+        .target(
+            name: "TurnkeySwift",
+            dependencies: [
+                "TurnkeyHttp",
+                "TurnkeyStamper",
+                "TurnkeyCrypto",
+                "TurnkeyPasskeys",
+                "TurnkeyEncoding",
+            ]),
+
     ]
 )
