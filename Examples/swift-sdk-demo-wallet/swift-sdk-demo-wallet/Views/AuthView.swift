@@ -1,21 +1,15 @@
 import SwiftUI
 import AuthenticationServices
 import PhoneNumberKit
-import TurnkeySwift
 
 struct AuthView: View {
-    
     @EnvironmentObject private var coordinator: NavigationCoordinator
-    @EnvironmentObject private var sessions: SessionManager
-    @EnvironmentObject private var auth: AuthViewModel
-    
+    @EnvironmentObject private var auth: AuthContext
+    @EnvironmentObject private var toast: ToastManager
     
     @State private var email = ""
     @State private var phone = ""
-    
-    // we default to the US
     @State private var selectedCountry = "US"
-    
     
     var body: some View {
         VStack {
@@ -30,7 +24,11 @@ struct AuthView: View {
                     
                     EmailInputView(email: $email)
                     
-                    LightGrayButton(title: "Continue", action: handleContinueWithEmail, isDisabled: !isValidEmail(email))
+                    LightGrayButton(
+                        title: "Continue",
+                        action: handleContinueWithEmail,
+                        isDisabled: !isValidEmail(email)
+                    )
                     
                     OrSeparator()
                     
@@ -39,7 +37,11 @@ struct AuthView: View {
                         phoneNumber: $phone
                     )
                     
-                    LightGrayButton(title: "Continue", action: handleContinueWithPhone, isDisabled: !isValidPhone(phone, region: selectedCountry))
+                    LightGrayButton(
+                        title: "Continue",
+                        action: handleContinueWithPhone,
+                        isDisabled: !isValidPhone(phone, region: selectedCountry)
+                    )
                     
                     OrSeparator()
                     
@@ -60,58 +62,76 @@ struct AuthView: View {
             Spacer()
         }
         .background(Color.gray.opacity(0.05).ignoresSafeArea())
+        .onChange(of: auth.error) {
+            if let error = auth.error {
+                toast.show(message: error, type: .error)
+                auth.error = nil // clear after showing
+            }
+        }
     }
     
     private func handleContinueWithEmail() {
         Task {
-            guard let (otpId, publicKey) = await auth.sendOtp(contact: email, type: .email) else {
-                self.auth.error = "Failed to send OTP"
-                return
+            do {
+                let (otpId, publicKey) = try await auth.sendOtp(contact: email, type: .email)
+                coordinator.push(AuthRoute.otp(otpId: otpId, contact: email, publicKey: publicKey))
+            } catch {
+                auth.error = "Failed to send OTP"
             }
-            
-            coordinator.push(AuthRoute.otp(otpId: otpId, contact: email, publicKey: publicKey))
         }
     }
+    
     
     private func handleContinueWithPhone() {
         Task {
-            guard let (otpId, publicKey) = await auth.sendOtp(contact: phone, type: .sms) else {
-                self.auth.error = "Failed to send OTP"
-                return
+            do {
+                let (otpId, publicKey) = try await auth.sendOtp(contact: phone, type: .sms)
+                coordinator.push(AuthRoute.otp(otpId: otpId, contact: phone, publicKey: publicKey))
+            } catch {
+                auth.error = "Failed to send OTP"
             }
-            
-            coordinator.push(AuthRoute.otp(otpId: otpId, contact: phone, publicKey: publicKey))
         }
     }
-    
     
     private func handleLoginWithPasskey() {
         Task {
             guard let anchor = defaultAnchor() else {
-                print("No valid window available for presentation")
+                toast.show(message: "No window available", type: .error)
                 return
             }
             
-            await auth.loginWithPasskey(anchor: anchor)
-            
-            
-            
+            do {
+                try await auth.loginWithPasskey(anchor: anchor)
+            } catch {
+                auth.error = "Failed to log in with passkey"
+            }
         }
     }
     
     private func handleSignUpWithPasskey() {
         Task {
             guard let anchor = defaultAnchor() else {
-                print("No valid window available for presentation")
+                toast.show(message: "No window available", type: .error)
                 return
             }
             
-            await auth.signUpWithPasskey(anchor: anchor)
+            do {
+                try await auth.signUpWithPasskey(anchor: anchor)
+            } catch {
+                auth.error = "Failed to sign up with passkey"
+            }
         }
     }
     
     
-    
+    private func defaultAnchor() -> ASPresentationAnchor? {
+        UIApplication.shared
+            .connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first(where: { $0.activationState == .foregroundActive })?
+            .windows
+            .first(where: { $0.isKeyWindow })
+    }
     
     private struct OrSeparator: View {
         var body: some View {
@@ -146,7 +166,6 @@ struct AuthView: View {
         }
     }
     
-    
     private struct BlackBorderButton: ButtonStyle {
         func makeBody(configuration: Configuration) -> some View {
             configuration.label
@@ -163,18 +182,4 @@ struct AuthView: View {
                 .opacity(configuration.isPressed ? 0.8 : 1.0)
         }
     }
-    
-    private func defaultAnchor() -> ASPresentationAnchor? {
-        UIApplication.shared
-            .connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-            .first(where: { $0.activationState == .foregroundActive })?
-            .windows
-            .first(where: { $0.isKeyWindow })
-    }
-}
-
-#Preview {
-    AuthView()
-        .environmentObject(NavigationCoordinator())
 }

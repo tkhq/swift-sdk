@@ -2,7 +2,7 @@ import SwiftUI
 import TurnkeySwift
 
 struct SettingsView: View {
-    @EnvironmentObject private var sessions: SessionManager
+    @EnvironmentObject private var turnkey: TurnkeyContext
     @Environment(\.presentationMode) var presentationMode
     
     @State private var email = ""
@@ -50,9 +50,9 @@ struct SettingsView: View {
         .padding()
         .onAppear {
             if !didInitialize {
-                email = sessions.user?.email ?? ""
+                email = turnkey.user?.email ?? ""
                 
-                if let fullNumber = sessions.user?.phoneNumber,
+                if let fullNumber = turnkey.user?.phoneNumber,
                    let parsed = parsePhone(fullNumber) {
                     phone = parsed.nationalNumber
                     selectedCountry = parsed.regionCode
@@ -73,17 +73,11 @@ struct SettingsView: View {
                 // combines the country code and number
                 let formattedPhone = formatToE164(phone, region: selectedCountry)
                 
-                try await sessions.updateUser(email: email, phone: formattedPhone)
+                try await turnkey.updateUser(email: email, phone: formattedPhone)
             } catch {
                 print("Failed to update user:", error)
             }
         }
     }
     
-}
-
-#Preview {
-    SettingsView()
-        .environmentObject(SessionManager.shared)
-        .environmentObject(NavigationCoordinator())
 }

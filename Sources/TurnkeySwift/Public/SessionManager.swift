@@ -12,10 +12,10 @@ import TurnkeyHttp
   import AppKit
 #endif
 
-public final class SessionManager: ObservableObject {
+public final class TurnkeyContext: ObservableObject {
 
   // ────────────────── singleton ──────────────────
-  public static let shared = SessionManager()
+  public static let shared = TurnkeyContext()
   private init() {
     PendingKeysStore.purge(ttlHours: 24, secureAccount: secureAccount)
     SessionRegistry.purgeExpiredSessions(secureAccount: secureAccount)

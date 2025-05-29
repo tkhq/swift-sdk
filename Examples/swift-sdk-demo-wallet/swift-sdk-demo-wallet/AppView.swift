@@ -51,11 +51,12 @@ struct MainFlow: View {
 }
 
 struct AppView: View {
-    @EnvironmentObject private var sessions: SessionManager
-    
+    @EnvironmentObject private var turnkey: TurnkeyContext
+    @EnvironmentObject private var toast: ToastManager
+
     var body: some View {
-        ZStack {
-            if sessions.client != nil {
+        ZStack(alignment: .top) {
+            if turnkey.client != nil {
                 MainFlow()
                     .transition(
                         .asymmetric(
@@ -72,11 +73,19 @@ struct AppView: View {
                         )
                     )
             }
+
+            // add toast overlay
+            if toast.isVisible {
+                ToastView(message: toast.message, type: toast.type)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
         }
-        .animation(.easeInOut, value: sessions.client == nil)
+        .animation(.easeInOut, value: turnkey.client == nil)
     }
 }
 
 #Preview {
     AppView()
+        .environmentObject(TurnkeyContext.shared)
+        .environmentObject(ToastManager())
 }

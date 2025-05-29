@@ -3,21 +3,22 @@ import TurnkeySwift
 
 @main
 struct DemoWalletApp: App {
-    @StateObject private var sessions: SessionManager
-    @StateObject private var authVM: AuthViewModel
+    @StateObject private var turnkey: TurnkeyContext
+    @StateObject private var auth: AuthContext
+    @StateObject private var toast = ToastManager()
 
     init() {
-        let sessions = SessionManager.shared
-        _sessions = StateObject(wrappedValue: sessions)
-        _authVM = StateObject(wrappedValue: AuthViewModel(authService: AuthService(sessions: sessions)))
+        let turnkey = TurnkeyContext.shared
+        _turnkey = StateObject(wrappedValue: turnkey)
+        _auth = StateObject(wrappedValue: AuthContext(turnkey: turnkey))
     }
 
     var body: some Scene {
         WindowGroup {
             AppView()
-                .environmentObject(authVM)
-                .environmentObject(sessions)
+                .environmentObject(auth)
+                .environmentObject(turnkey)
+                .environmentObject(toast)
         }
     }
 }
-

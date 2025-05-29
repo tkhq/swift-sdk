@@ -4,7 +4,7 @@ import TurnkeySwift
 
 struct ImportWalletView: View {
     @EnvironmentObject private var coordinator: NavigationCoordinator
-    @EnvironmentObject private var sessions: SessionManager
+    @EnvironmentObject private var turnkey: TurnkeyContext
 
     @State private var walletName = ""
     @State private var seedPhrase = ""
@@ -80,7 +80,7 @@ struct ImportWalletView: View {
         
         Task {
             do {
-                try await sessions.importWallet(
+                try await turnkey.importWallet(
                     walletName: walletName,
                     mnemonic: seedPhrase,
                     accounts: defaultEthereumAccounts

@@ -2,7 +2,8 @@ import SwiftUI
 
 struct OtpView: View {
     @EnvironmentObject private var coordinator: NavigationCoordinator
-    @EnvironmentObject private var auth: AuthViewModel
+    @EnvironmentObject private var auth: AuthContext
+    @EnvironmentObject private var toast: ToastManager
     @Environment(\.dismiss) private var dismiss
     
     @State private var otpDigits: [String] = Array(repeating: "", count: 6)
@@ -78,16 +79,18 @@ struct OtpView: View {
     
     private func handleContinue() {
         Task {
-            let filterType: AuthService.OtpType = isEmail ? .email : .sms
-            
-            await auth.verifyOtp(
-                otpId: otpId,
-                otpCode: otpCode,
-                filterType: filterType,
-                contact: contact,
-                publicKey: publicKey
-            )
-            
+            do {
+                let filterType: AuthContext.OtpType = isEmail ? .email : .sms
+                try await auth.verifyOtp(
+                    otpId: otpId,
+                    otpCode: otpCode,
+                    filterType: filterType,
+                    contact: contact,
+                    publicKey: publicKey
+                )
+            } catch {
+                toast.show(message: "Invalid code. Please try again.", type: .error)
+            }
         }
     }
 }

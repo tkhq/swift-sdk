@@ -4,7 +4,7 @@ import TurnkeyHttp
 
 struct DashboardView: View {
     @EnvironmentObject private var coordinator: NavigationCoordinator
-    @EnvironmentObject private var sessions: SessionManager
+    @EnvironmentObject private var turnkey: TurnkeyContext
     
     @State private var balances: [String: Double] = [:]
     @State private var ethPriceUSD: Double = 0
@@ -29,7 +29,7 @@ struct DashboardView: View {
                 
                 ScrollView {
                     VStack(spacing: 0) {
-                        if let wallets = sessions.user?.wallets {
+                        if let wallets = turnkey.user?.wallets {
                             ForEach(wallets, id: \.id) { wallet in
                                 let address = wallet.accounts.first?.address ?? ""
                                 let balance = balances[address] ?? 0
@@ -125,14 +125,14 @@ struct DashboardView: View {
     
     private func handleLogoutPressed() {
         runAfterClosingMenus {
-            sessions.clearSession()
+            turnkey.clearSession()
         }
     }
     
     private func handleExportPressed(walletId: String) {
         Task {
             do {
-                let seedPhrase = try await sessions.exportWallet(walletId: walletId)
+                let seedPhrase = try await turnkey.exportWallet(walletId: walletId)
                 runAfterClosingMenus {
                     withAnimation {
                         exportedSeedPhrase = seedPhrase
@@ -177,7 +177,7 @@ struct DashboardView: View {
         
         Task {
             do {
-                try await sessions.createWallet(
+                try await turnkey.createWallet(
                     walletName: name,
                     accounts: defaultEthereumAccounts
                 )
@@ -441,9 +441,4 @@ struct ExportWalletSheet: View {
         .cornerRadius(16)
         .shadow(radius: 25)
     }
-}
-
-#Preview {
-    DashboardView()
-        .environmentObject(NavigationCoordinator())
 }

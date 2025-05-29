@@ -7,7 +7,7 @@ struct SignMessageView: View {
     let walletAddress: String
 
     @EnvironmentObject private var coordinator: NavigationCoordinator
-    @EnvironmentObject private var sessions: SessionManager
+    @EnvironmentObject private var turnkey: TurnkeyContext
 
     @State private var message = "I love Turnkey"
     @State private var signatureR: String?
@@ -86,7 +86,7 @@ struct SignMessageView: View {
                 let digest = Ethereum.keccak256Digest(of: message)
                 let digestHex = digest.toHexString()
 
-                let result = try await sessions.signRawPayload(
+                let result = try await turnkey.signRawPayload(
                     signWith: walletAddress,
                     payload: digestHex,
                     encoding: .PAYLOAD_ENCODING_HEXADECIMAL,
