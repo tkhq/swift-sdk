@@ -5,7 +5,8 @@ import TurnkeyHttp
 struct DashboardView: View {
     @EnvironmentObject private var coordinator: NavigationCoordinator
     @EnvironmentObject private var turnkey: TurnkeyContext
-    
+    @EnvironmentObject private var toast: ToastContext
+
     @State private var balances: [String: Double] = [:]
     @State private var ethPriceUSD: Double = 0
     @State private var exportedSeedPhrase: String? = nil
@@ -57,13 +58,14 @@ struct DashboardView: View {
                                             await MainActor.run {
                                                 balances[address] = 0
                                             }
-                                            // we fail silently and default to 0
+                                            // we are using a free api, so rate limits are very common
+                                            // so we fail silently and default to 0
                                         }
                                     }
                                 }
                             }
                         }
-                    
+                        
                         Color.clear.frame(height: 44)
                         
                     }
@@ -75,7 +77,8 @@ struct DashboardView: View {
                 do {
                     ethPriceUSD = try await Ethereum.getETHPriceUSD()
                 } catch {
-                    // we fail silently and default to 0
+                    // we are using a free api, so rate limits are very common
+                    // so we fail silently and default to 0
                 }
             }
             
@@ -140,7 +143,7 @@ struct DashboardView: View {
                     }
                 }
             } catch {
-                print("Failed to export wallet:", error.localizedDescription)
+                toast.show(message: "Failed to export wallet.", type: .error)
             }
         }
     }
@@ -166,29 +169,17 @@ struct DashboardView: View {
     }
     
     private func handleCreateWallet(name: String) {
-        let defaultEthereumAccounts: [Components.Schemas.WalletAccountParams] = [
-            Components.Schemas.WalletAccountParams(
-                curve: Components.Schemas.Curve.CURVE_SECP256K1,
-                pathFormat: Components.Schemas.PathFormat.PATH_FORMAT_BIP32,
-                path: "m/44'/60'/0'/0/0",
-                addressFormat: Components.Schemas.AddressFormat.ADDRESS_FORMAT_ETHEREUM
-            )
-        ]
-        
         Task {
             do {
                 try await turnkey.createWallet(
                     walletName: name,
-                    accounts: defaultEthereumAccounts
+                    accounts: Constants.Turnkey.defaultEthereumAccounts
                 )
             } catch {
-                print("Failed to create wallet:", error)
+                toast.show(message: "Failed to create wallet.", type: .error)
             }
         }
-        
-        
     }
-    
     
 }
 

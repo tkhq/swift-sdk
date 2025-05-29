@@ -23,7 +23,7 @@ final class AuthContext: ObservableObject {
     
     // private refs
     private let turnkey: TurnkeyContext
-    private let backendURL = URL(string: "http://localhost:3000")!
+    private let backendURL = URL(string: Constants.App.backendBaseUrl)!
     
     init(turnkey: TurnkeyContext = .shared) {
         self.turnkey = turnkey
@@ -105,7 +105,7 @@ final class AuthContext: ObservableObject {
             otpType: filterType,
             contact: contact,
             publicKey: publicKey,
-            expirationSeconds: "120"
+            expirationSeconds: Constants.Turnkey.sessionDuration
         )
         
         var request = URLRequest(url: backendURL.appendingPathComponent("/auth/verifyOtp"))
@@ -131,7 +131,7 @@ final class AuthContext: ObservableObject {
             user: PasskeyUser(id: UUID().uuidString,
                               name: "Anonymous User",
                               displayName: "Anonymous User"),
-            rp: RelyingParty(id: "passkeyapp.tkhqlabs.xyz", name: "Your App"),
+            rp: RelyingParty(id: Constants.App.rpId, name: Constants.App.appName),
             presentationAnchor: anchor
         )
         
@@ -140,7 +140,7 @@ final class AuthContext: ObservableObject {
         try await stampLoginAndCreateSession(
             anchor: anchor,
             organizationId: subOrgId,
-            expiresInSeconds: "15"
+            expiresInSeconds: Constants.Turnkey.sessionDuration
         )
     }
     
@@ -153,8 +153,8 @@ final class AuthContext: ObservableObject {
             anchor: anchor,
             
             // parent orgId
-            organizationId: "957f6bbe-2f29-4057-8fc6-c8db0070f608",
-            expiresInSeconds: "180"
+            organizationId: Constants.Turnkey.organizationId,
+            expiresInSeconds: Constants.Turnkey.sessionDuration
         )
     }
     
@@ -180,9 +180,9 @@ final class AuthContext: ObservableObject {
         expiresInSeconds: String
     ) async throws {
         let turnkeyClient = TurnkeyClient(
-            rpId: "passkeyapp.tkhqlabs.xyz",
+            rpId: Constants.App.rpId,
             presentationAnchor: anchor,
-            baseUrl: "http://localhost:8081"
+            baseUrl: Constants.Turnkey.apiUrl
         )
         
         let publicKey = try turnkey.createKeyPair()

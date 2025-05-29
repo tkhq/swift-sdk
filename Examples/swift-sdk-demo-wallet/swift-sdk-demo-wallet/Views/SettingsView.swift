@@ -3,6 +3,8 @@ import TurnkeySwift
 
 struct SettingsView: View {
     @EnvironmentObject private var turnkey: TurnkeyContext
+    @EnvironmentObject private var toast: ToastContext
+
     @Environment(\.presentationMode) var presentationMode
     
     @State private var email = ""
@@ -75,7 +77,7 @@ struct SettingsView: View {
                 
                 try await turnkey.updateUser(email: email, phone: formattedPhone)
             } catch {
-                print("Failed to update user:", error)
+                toast.show(message: "Failed to update user", type: .error)
             }
         }
     }

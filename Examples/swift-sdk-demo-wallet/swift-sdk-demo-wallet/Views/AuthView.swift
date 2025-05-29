@@ -5,7 +5,7 @@ import PhoneNumberKit
 struct AuthView: View {
     @EnvironmentObject private var coordinator: NavigationCoordinator
     @EnvironmentObject private var auth: AuthContext
-    @EnvironmentObject private var toast: ToastManager
+    @EnvironmentObject private var toast: ToastContext
     
     @State private var email = ""
     @State private var phone = ""
@@ -65,7 +65,7 @@ struct AuthView: View {
         .onChange(of: auth.error) {
             if let error = auth.error {
                 toast.show(message: error, type: .error)
-                auth.error = nil // clear after showing
+                auth.error = nil
             }
         }
     }

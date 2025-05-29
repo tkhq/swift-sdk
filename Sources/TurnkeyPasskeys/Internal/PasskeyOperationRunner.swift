@@ -1,4 +1,5 @@
 import AuthenticationServices
+import TurnkeyEncoding
 
 final class PasskeyOperationRunner: NSObject {
   private let service: PasskeyRequestBuilder

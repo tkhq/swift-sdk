@@ -4,8 +4,8 @@ import BigInt
 
 
 struct Ethereum {
-    static let rpcURL = URL(string: "https://rpc.sepolia.org")!
-    static let coingeckoURL = URL(string: "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd")!
+    static let rpcURL = URL(string: Constants.Ethereum.rpcURL)!
+    static let coingeckoURL = URL(string: Constants.Ethereum.coingeckoURL)!
     
     static func getBalance(for address: String) async throws -> Double {
         var request = URLRequest(url: rpcURL)
@@ -65,9 +65,6 @@ struct Ethereum {
     static func keccak256Digest(of message: String) -> Data {
         Data(message.utf8).sha3(.keccak256)
     }
-    
-    
-    
 }
 
 private extension String {

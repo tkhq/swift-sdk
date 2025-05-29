@@ -11,7 +11,6 @@ struct WalletCardView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Wallet name & address
             VStack(alignment: .leading, spacing: 4) {
                 Text(walletName)
                     .font(.system(size: 20, weight: .semibold))
@@ -26,7 +25,6 @@ struct WalletCardView: View {
                 }
             }
             
-            // Balances
             VStack(alignment: .leading, spacing: 2) {
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text(String(format: "%.2f ETH", balanceUSD))
@@ -41,7 +39,6 @@ struct WalletCardView: View {
                     .foregroundColor(.gray)
             }
             
-            // Actions
             HStack(spacing: 8) {
                 ActionButton(title: "Sign", action: { onSign(address) })
                 ActionButton(title: "Export", action: {onExport(walletId)})

@@ -5,7 +5,7 @@ import TurnkeySwift
 struct DemoWalletApp: App {
     @StateObject private var turnkey: TurnkeyContext
     @StateObject private var auth: AuthContext
-    @StateObject private var toast = ToastManager()
+    @StateObject private var toast = ToastContext()
 
     init() {
         let turnkey = TurnkeyContext.shared

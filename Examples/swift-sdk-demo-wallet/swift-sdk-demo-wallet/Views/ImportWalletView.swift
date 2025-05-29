@@ -4,7 +4,9 @@ import TurnkeySwift
 
 struct ImportWalletView: View {
     @EnvironmentObject private var coordinator: NavigationCoordinator
-    @EnvironmentObject private var turnkey: TurnkeyContext
+    @EnvironmentObject private var turnkey: TurnkeyContext    
+    @EnvironmentObject private var toast: ToastContext
+
 
     @State private var walletName = ""
     @State private var seedPhrase = ""
@@ -68,33 +70,17 @@ struct ImportWalletView: View {
     }
 
     private func handleImportWallet() {
-        
-        let defaultEthereumAccounts: [Components.Schemas.WalletAccountParams] = [
-            Components.Schemas.WalletAccountParams(
-                curve: Components.Schemas.Curve.CURVE_SECP256K1,
-                pathFormat: Components.Schemas.PathFormat.PATH_FORMAT_BIP32,
-                path: "m/44'/60'/0'/0/0",
-                addressFormat: Components.Schemas.AddressFormat.ADDRESS_FORMAT_ETHEREUM
-            )
-        ]
-        
         Task {
             do {
                 try await turnkey.importWallet(
                     walletName: walletName,
                     mnemonic: seedPhrase,
-                    accounts: defaultEthereumAccounts
+                    accounts: Constants.Turnkey.defaultEthereumAccounts
                 )
             } catch {
-                print("Failed to create wallet:", error)
+                toast.show(message: "Failed to import wallet.", type: .error)
             }
         }
-        
         coordinator.pop()
     }
-}
-
-#Preview {
-    ImportWalletView()
-        .environmentObject(NavigationCoordinator())
 }

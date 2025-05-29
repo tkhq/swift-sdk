@@ -3,7 +3,8 @@ import SwiftUI
 struct OtpView: View {
     @EnvironmentObject private var coordinator: NavigationCoordinator
     @EnvironmentObject private var auth: AuthContext
-    @EnvironmentObject private var toast: ToastManager
+    @EnvironmentObject private var toast: ToastContext
+    
     @Environment(\.dismiss) private var dismiss
     
     @State private var otpDigits: [String] = Array(repeating: "", count: 6)

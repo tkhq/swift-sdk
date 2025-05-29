@@ -2,35 +2,69 @@ import Foundation
 import HTTPTypes
 import OpenAPIRuntime
 
-package struct ProxyMiddleware {
-  private let proxyURL: URL
+enum ProxyMiddlewareError: Error {
+    case invalidHeaderName(String)
+}
 
-  package init(proxyURL: URL) {
-    self.proxyURL = proxyURL
-  }
+extension ProxyMiddlewareError: LocalizedError {
+    public var errorDescription: String? {
+        switch self {
+        case .invalidHeaderName(let name):
+            return "Failed to construct HTTP header name: \"\(name)\""
+        }
+    }
+}
+
+package struct ProxyMiddleware {
+    private let proxyURL: URL
+    
+    /// Initializes the middleware with a proxy base URL.
+    ///
+    /// - Parameter proxyURL: The base URL to forward all requests to.
+    package init(proxyURL: URL) {
+        self.proxyURL = proxyURL
+    }
 }
 
 extension ProxyMiddleware: ClientMiddleware {
-  package func intercept(
-    _ request: HTTPRequest,
-    body: HTTPBody?,
-    baseURL: URL,
-    operationID: String,
-    next: (HTTPRequest, HTTPBody?, URL) async throws -> (HTTPResponse, HTTPBody?)
-  ) async throws -> (HTTPResponse, HTTPBody?) {
-    // Save the current full path of the request (baseUrl + request.path)
-    let originalURL = baseURL.appendingPathComponent(request.path ?? "")
-
-    // Set the X-Turnkey-Request-Url header with the saved original request URL
-    var request = request
-    let xTurnkeyRequestUrl = HTTPField(
-      name: HTTPField.Name("X-Turnkey-Request-Url")!, value: originalURL.absoluteString)
-    request.headerFields.append(xTurnkeyRequestUrl)
-
-    // Remove the request path and just forward to the proxyBaseURL
-    request.path = ""
-
-    // Call and return the next middleware with the modified request and proxy base URL
-    return try await next(request, body, proxyURL)
-  }
+    
+    /// Intercepts an outgoing HTTP request, appends a proxy header, and rewrites the base URL.
+    ///
+    /// - Parameters:
+    ///   - request: The original HTTP request.
+    ///   - body: The request body, if present.
+    ///   - baseURL: The original base URL.
+    ///   - operationID: The OpenAPI operation ID (unused here).
+    ///   - next: The next middleware or transport to call.
+    /// - Returns: A tuple of HTTP response and optional body.
+    /// - Throws: Any error thrown by downstream middleware or transport.
+    package func intercept(
+        _ request: HTTPRequest,
+        body: HTTPBody?,
+        baseURL: URL,
+        operationID: String,
+        next: (HTTPRequest, HTTPBody?, URL) async throws -> (HTTPResponse, HTTPBody?)
+    ) async throws -> (HTTPResponse, HTTPBody?) {
+        // we save the original full URL: baseURL + request.path
+        let originalURL = baseURL.appendingPathComponent(request.path ?? "")
+        
+        // we add the X-Turnkey-Request-Url header to the request
+        var request = request
+        let headerName = "X-Turnkey-Request-Url"
+        guard let headerFieldName = HTTPField.Name(headerName) else {
+            throw ProxyMiddlewareError.invalidHeaderName(headerName)
+        }
+        
+        let xTurnkeyRequestUrl = HTTPField(
+            name: headerFieldName,
+            value: originalURL.absoluteString
+        )
+        request.headerFields.append(xTurnkeyRequestUrl)
+        
+        // we clear the path since the proxy handles routing
+        request.path = ""
+        
+        // we forward the modified request to the proxy URL
+        return try await next(request, body, proxyURL)
+    }
 }

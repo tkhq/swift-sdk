@@ -8,6 +8,7 @@ struct SignMessageView: View {
 
     @EnvironmentObject private var coordinator: NavigationCoordinator
     @EnvironmentObject private var turnkey: TurnkeyContext
+    @EnvironmentObject private var toast: ToastContext
 
     @State private var message = "I love Turnkey"
     @State private var signatureR: String?
@@ -16,7 +17,6 @@ struct SignMessageView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
-            // Input field
             VStack(alignment: .leading, spacing: 8) {
                 Text("Message to Sign")
                     .font(.system(size: 14))
@@ -33,7 +33,6 @@ struct SignMessageView: View {
                     .disableAutocorrection(true)
             }
 
-            // Sign button
             if signatureR == nil {
                 Button("Sign", action: handleSignPressed)
                     .font(.system(size: 14, weight: .semibold))
@@ -44,7 +43,6 @@ struct SignMessageView: View {
                     .cornerRadius(10)
             }
 
-            // Signature display
             if let r = signatureR, let s = signatureS, let v = signatureV {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Signature (r, s, v)")
@@ -63,7 +61,6 @@ struct SignMessageView: View {
                     .cornerRadius(8)
                 }
 
-                // Done button
                 Button("Done", action: handleDonePressed)
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(.white)
@@ -99,7 +96,7 @@ struct SignMessageView: View {
                     signatureV = result.v
                 }
             } catch {
-                print("Failed to sign message:", error)
+                toast.show(message: "Failed to sign message", type: .error)
             }
         }
     }
@@ -107,9 +104,4 @@ struct SignMessageView: View {
     private func handleDonePressed() {
         coordinator.pop()
     }
-}
-
-#Preview {
-    SignMessageView(walletAddress: "0x123")
-        .environmentObject(NavigationCoordinator())
 }

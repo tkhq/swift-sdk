@@ -52,7 +52,7 @@ struct MainFlow: View {
 
 struct AppView: View {
     @EnvironmentObject private var turnkey: TurnkeyContext
-    @EnvironmentObject private var toast: ToastManager
+    @EnvironmentObject private var toast: ToastContext
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -84,8 +84,3 @@ struct AppView: View {
     }
 }
 
-#Preview {
-    AppView()
-        .environmentObject(TurnkeyContext.shared)
-        .environmentObject(ToastManager())
-}

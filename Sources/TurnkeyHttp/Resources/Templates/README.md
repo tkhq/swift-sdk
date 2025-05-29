@@ -1,87 +1,119 @@
-## Sourcery Stencil Templates Overview
+# Stencil Templates
 
-### Templates in the Project
+This document explains how we use [Sourcery](https://github.com/krzysztofzablocki/Sourcery) and [Stencil](https://stencil.fuller.li) templates to generate Swift code in the Turnkey SDK.
 
-The project uses [Sourcery](https://krzysztofzablocki.github.io/Sourcery/) with Stencil templates to automate code generation for the Turnkey SDK. The specific template used is `TurnkeyClient.stencil`, located in the `@templates` folder.
+---
 
-### How the Templates are Used
+## What is Stencil?
 
-Sourcery leverages the `TurnkeyClient.stencil` template to generate Swift code based on the types defined in the `Sources/TurnkeySDK/Generated` directory. The output of this process is a Swift file named `TurnkeyClient.generated.swift`, which is placed in the `Sources/TurnkeySDK` directory.
+ [Stencil](https://stencil.fuller.li/) is a Swift-based templating language inspired by Django and Jinja. It’s commonly used for generating code. When combined with [Sourcery](https://github.com/krzysztofzablocki/Sourcery), it can introspect your Swift types and auto-generate boilerplate code based on customizable templates.
 
-### Running the Templates with Sourcery
+## What We Use It For
 
-The process of running Sourcery with the Stencil templates is integrated into the project's `Makefile`. Here's how the templates are run:
+We use Stencil and Sourcery to generate our `TurnkeyClient.swift`, which provides typed methods for interacting with the Turnkey API. This prevents us from having to hand-write dozens of repetitive request wrappers.
 
-1. **Generate Command**: This is the main command that triggers the entire generation process, including running Sourcery.
+## Template Files
 
-   ```Makefile
-   generate: generate
-   ```
+The templates live in `Resources/Templates`. There are two main files:
 
-2. **Sourcery Command**: This specific command runs Sourcery using the `TurnkeyClient.stencil` template.
+* `TurnkeyClient.stencil`: The primary template that renders the full client file.
+* `macros.stencil`: A collection of reusable helper macros used by `TurnkeyClient.stencil`.
 
-   ```Makefile
-   turnkey_client:
-       sourcery --sources Sources/TurnkeySDK/Generated \
-       --output Sources/TurnkeySDK/TurnkeyClient.generated.swift \
-       --templates TurnkeyClient.stencil \
-       $(if $(WATCH),--watch,)
-   ```
+## How It Works
 
-   - `--sources`: Specifies the directory containing the source files that Sourcery will scan.
-   - `--output`: Specifies where the generated Swift file will be placed.
-   - `--templates`: Points to the Stencil template file.
-   - `--watch`: An optional flag that, if set, makes Sourcery watch the source and template directories for changes and regenerate the output automatically.
+1. `swift-openapi-generator` creates all the base request/response types under `Generated/`.
+2. Sourcery reads those types and passes them into the Stencil templates.
+3. `TurnkeyClient.stencil` uses logic and macros to emit Swift methods.
+4. The result is saved to `Public/TurnkeyClient.swift`.
 
-### Explanation of `macros.stencil`
+To trigger this process, run:
 
-The `macros.stencil` file defines several macros that are reusable pieces of template code used to generate Swift code dynamically based on the types and methods defined in the Sourcery scanned data. Here's a breakdown of each macro:
+```bash
+make turnkey_client
+```
 
-1. **[addMethodParams](/templates/macros.stencil#2%2C10-2%2C10)**:
+---
 
-   - Generates method parameters for a given method name by matching structs whose names, when "Request" is removed, match the method name.
-   - It iterates over the methods of these structs and outputs each parameter's name and type, formatting the type by removing the "Swift." prefix.
+## Macro Overview (`macros.stencil`)
 
-2. **[addRequestBody](/templates/macros.stencil#12%2C10-12%2C10)**:
+Each macro is a reusable logic block that simplifies the generation process.
 
-   - Similar to [addMethodParams](/templates/macros.stencil#2%2C10-2%2C10), but instead of just listing parameters, it constructs an instance of the struct with parameters passed to it.
+### `addMethodParams`
 
-3. **[addActivityMethodParams](/templates/macros.stencil#23%2C10-23%2C10)**:
+Generates Swift method parameters based on a `Request` struct.
 
-   - This macro is specialized for activity methods, excluding parameters named "\_type" and "timestampMs".
-   - If the parameter is named "parameters", it maps the variables of the parameter's type into a list of parameters.
+```stencil
+foo: String, bar: Int
+```
 
-4. **[getActivityType](/templates/macros.stencil#37%2C10-37%2C10)**:
+### `addRequestBody`
 
-   - Retrieves the type of activity from a method by finding the "\_type" parameter and returning its value.
+Constructs an instance of a `Request` struct from the method parameters.
 
-5. **[getIntentParams](/templates/macros.stencil#47%2C10-47%2C10)**:
+```swift
+MyRequest(foo: foo, bar: bar)
+```
 
-   - Generates a list of parameters for a given intent struct name by mapping the struct's variables into a format suitable for initializing an instance of the struct.
+### `addActivityMethodParams`
 
-6. **[generateActivityMethod](/templates/macros.stencil#54%2C10-54%2C10)**:
-   - This is a comprehensive macro that generates a complete method for activity handling.
-   - It sets up the request and intent structures, prepares the input for the method call, and finally makes the call using the underlying client.
+Special logic for activity requests. It flattens parameters inside a nested `parameters` object, and skips `_type` and `timestampMs`.
 
-### Usage in `TurnkeyClient.stencil`
+### `getActivityType`
 
-In the `TurnkeyClient.stencil` file, these macros are imported and used to generate methods within the [TurnkeyClient](/Makefile#12%2C30-12%2C30) struct. Here's how they are utilized:
+Looks up the first enum case value for `_type` inside the request struct.
 
-- **Importing Macros**: At the beginning of the `TurnkeyClient.stencil`, macros from `macros.stencil` are imported.
+```swift
+.typeName
+```
 
-  ```stencil
-  {% import "macros.stencil" %}
-  ```
+### `getIntentParams`
 
-- **Using Macros in Method Generation**:
-  - For each method in classes implementing `APIProtocol`, the template checks if it's an activity request (by checking if the method's parameters include "\_type").
-  - Depending on whether it's an activity request or a regular request, it either calls `generateActivityMethod` or uses `addMethodParams` to generate the method signature and body.
-  - For activity requests, `generateActivityMethod` is called, which internally uses other macros like `addActivityMethodParams`, `getActivityType`, and `getIntentParams` to generate a complete method.
-  - For regular requests, `addMethodParams` is used to generate the method parameters, and the method body is constructed inline in the `TurnkeyClient.stencil`.
+Generates Swift-style initializers for a Turnkey "intent" object (used inside activity requests).
 
-### StencilSwiftKit and Macro Usage
+### `generateActivityMethod`
 
-[`StencilSwiftKit`](https://github.com/SwiftGen/StencilSwiftKit) is an extension to Stencil that provides additional tags and filters useful for Swift code generation. In the context of these templates:
+Composes an entire method including:
 
-- Macros are defined using `{% macro macroName %}` and called using `{% call macroName %}`.
-- The use of macros helps in reusing template code and keeping the `TurnkeyClient.stencil` file cleaner and more maintainable by abstracting complex logic into the `macros.stencil` file.
+* Creating the intent struct
+* Creating the request struct
+* Constructing the operation input
+* Making the API call
+
+---
+
+## Template Flow
+
+In `TurnkeyClient.stencil`, we:
+
+1. Import `macros.stencil`:
+
+```stencil
+{% import "macros.stencil" %}
+```
+
+2. Loop through every API method:
+
+```stencil
+{% for method in class.instanceMethods %}
+```
+
+3. If it's an activity request (contains `_type`), we call:
+
+```stencil
+{% call generateActivityMethod method.callName %}
+```
+
+4. Otherwise, we:
+
+* Use `addMethodParams` to generate parameters
+* Construct a request struct
+* Call the endpoint
+* Handle responses
+
+---
+
+## Powered By StencilSwiftKit
+
+We use [StencilSwiftKit](https://github.com/SwiftGen/StencilSwiftKit), a powerful Stencil extension that adds filters and tags tailored for Swift code generation.
+
+---
