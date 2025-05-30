@@ -20,3 +20,5 @@ xcuserdata/
 .netrc
 .env
 .ai/
+
+node_modules/
