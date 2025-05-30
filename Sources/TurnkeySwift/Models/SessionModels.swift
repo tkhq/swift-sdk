@@ -1,5 +1,4 @@
 import Foundation
-import TurnkeyHttp
 
 public struct TurnkeySession: Codable, Equatable {
   public let exp: TimeInterval
@@ -32,13 +31,13 @@ public struct SessionUser: Identifiable, Codable {
 
     public struct WalletAccount: Codable {
       public let id: String
-      public let curve: Components.Schemas.Curve
-      public let pathFormat: Components.Schemas.PathFormat
+      public let curve: Curve
+      public let pathFormat: PathFormat
       public let path: String
-      public let addressFormat: Components.Schemas.AddressFormat
+      public let addressFormat: AddressFormat
       public let address: String
-      public let createdAt: Components.Schemas.external_period_data_period_v1_period_Timestamp
-      public let updatedAt: Components.Schemas.external_period_data_period_v1_period_Timestamp
+      public let createdAt: Timestamp
+      public let updatedAt: Timestamp
     }
   }
 }

@@ -11,7 +11,7 @@ enum Constants {
 
     enum Turnkey {
         static let organizationId = "957f6bbe-2f29-4057-8fc6-c8db0070f608"
-        static let sessionDuration = "120"
+        static let sessionDuration = "20"
         static let apiUrl = "http://localhost:8081"
         static let defaultEthereumAccounts: [Components.Schemas.WalletAccountParams] = [
             Components.Schemas.WalletAccountParams(
