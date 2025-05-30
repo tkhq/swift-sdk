@@ -4,15 +4,15 @@ import TurnkeyHttp
 enum Constants {
     
     enum App {
-        static let appName = "Passkey App"
-        static let rpId = "passkeyapp.tkhqlabs.xyz"
+        static let appName = "Swift Demo Wallet App"
+        static let rpId = "<your_rp_id>"
         static let backendBaseUrl = "http://localhost:3000"
     }
 
     enum Turnkey {
-        static let organizationId = "957f6bbe-2f29-4057-8fc6-c8db0070f608"
-        static let sessionDuration = "20"
-        static let apiUrl = "http://localhost:8081"
+        static let organizationId = "<your_organization_id>"
+        static let sessionDuration = "900"
+        static let apiUrl = "https://api.turnkey.com"
         static let defaultEthereumAccounts: [Components.Schemas.WalletAccountParams] = [
             Components.Schemas.WalletAccountParams(
                 curve: Components.Schemas.Curve.CURVE_SECP256K1,

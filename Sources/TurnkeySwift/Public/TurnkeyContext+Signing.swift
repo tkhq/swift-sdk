@@ -43,11 +43,12 @@ extension TurnkeyContext {
         hashFunction: hashFunction
       )
 
-      guard let result = try resp.ok.body.json.activity.result.signRawPayloadResult else {
+      guard let result = try resp.body.json.activity.result.signRawPayloadResult else {
         throw TurnkeySwiftError.invalidResponse
       }
 
       return result
+
     } catch {
       throw TurnkeySwiftError.failedToSignPayload(underlying: error)
     }

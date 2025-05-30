@@ -21,6 +21,6 @@ test:
 	swift test
 
 format:
-	swift-format Tests Sources -i -r
+	swift-format . -i -r
 
 WATCH ?=

@@ -28,22 +28,9 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getActivityRequest)
     )
-    let output = try await underlyingClient.GetActivity(input)
 
-    switch output {
-    case .ok(let ok):
-      return ok
-    case let .undocumented(statusCode, payload):
-      let bodyData: Data?
-      if let body = payload.body {
-        bodyData = try? await Data(collecting: body, upTo: .max)
-      } else {
-        bodyData = nil
-      }
-      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
-    @unknown default:
-      throw TurnkeyError.invalidResponse
-    }
+    return try await call { try await underlyingClient.GetActivity(input) }
+
   }
   public func getApiKey(organizationId: String, apiKeyId: String) async throws
     -> Operations.GetApiKey.Output.Ok
@@ -58,22 +45,9 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getApiKeyRequest)
     )
-    let output = try await underlyingClient.GetApiKey(input)
 
-    switch output {
-    case .ok(let ok):
-      return ok
-    case let .undocumented(statusCode, payload):
-      let bodyData: Data?
-      if let body = payload.body {
-        bodyData = try? await Data(collecting: body, upTo: .max)
-      } else {
-        bodyData = nil
-      }
-      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
-    @unknown default:
-      throw TurnkeyError.invalidResponse
-    }
+    return try await call { try await underlyingClient.GetApiKey(input) }
+
   }
   public func getApiKeys(organizationId: String, userId: String?) async throws
     -> Operations.GetApiKeys.Output.Ok
@@ -88,22 +62,9 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getApiKeysRequest)
     )
-    let output = try await underlyingClient.GetApiKeys(input)
 
-    switch output {
-    case .ok(let ok):
-      return ok
-    case let .undocumented(statusCode, payload):
-      let bodyData: Data?
-      if let body = payload.body {
-        bodyData = try? await Data(collecting: body, upTo: .max)
-      } else {
-        bodyData = nil
-      }
-      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
-    @unknown default:
-      throw TurnkeyError.invalidResponse
-    }
+    return try await call { try await underlyingClient.GetApiKeys(input) }
+
   }
   public func getAuthenticator(organizationId: String, authenticatorId: String) async throws
     -> Operations.GetAuthenticator.Output.Ok
@@ -118,22 +79,9 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getAuthenticatorRequest)
     )
-    let output = try await underlyingClient.GetAuthenticator(input)
 
-    switch output {
-    case .ok(let ok):
-      return ok
-    case let .undocumented(statusCode, payload):
-      let bodyData: Data?
-      if let body = payload.body {
-        bodyData = try? await Data(collecting: body, upTo: .max)
-      } else {
-        bodyData = nil
-      }
-      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
-    @unknown default:
-      throw TurnkeyError.invalidResponse
-    }
+    return try await call { try await underlyingClient.GetAuthenticator(input) }
+
   }
   public func getAuthenticators(organizationId: String, userId: String) async throws
     -> Operations.GetAuthenticators.Output.Ok
@@ -148,22 +96,9 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getAuthenticatorsRequest)
     )
-    let output = try await underlyingClient.GetAuthenticators(input)
 
-    switch output {
-    case .ok(let ok):
-      return ok
-    case let .undocumented(statusCode, payload):
-      let bodyData: Data?
-      if let body = payload.body {
-        bodyData = try? await Data(collecting: body, upTo: .max)
-      } else {
-        bodyData = nil
-      }
-      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
-    @unknown default:
-      throw TurnkeyError.invalidResponse
-    }
+    return try await call { try await underlyingClient.GetAuthenticators(input) }
+
   }
   public func getOauthProviders(organizationId: String, userId: String?) async throws
     -> Operations.GetOauthProviders.Output.Ok
@@ -178,22 +113,9 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getOauthProvidersRequest)
     )
-    let output = try await underlyingClient.GetOauthProviders(input)
 
-    switch output {
-    case .ok(let ok):
-      return ok
-    case let .undocumented(statusCode, payload):
-      let bodyData: Data?
-      if let body = payload.body {
-        bodyData = try? await Data(collecting: body, upTo: .max)
-      } else {
-        bodyData = nil
-      }
-      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
-    @unknown default:
-      throw TurnkeyError.invalidResponse
-    }
+    return try await call { try await underlyingClient.GetOauthProviders(input) }
+
   }
   public func getOrganizationConfigs(organizationId: String) async throws
     -> Operations.GetOrganizationConfigs.Output.Ok
@@ -208,22 +130,9 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getOrganizationConfigsRequest)
     )
-    let output = try await underlyingClient.GetOrganizationConfigs(input)
 
-    switch output {
-    case .ok(let ok):
-      return ok
-    case let .undocumented(statusCode, payload):
-      let bodyData: Data?
-      if let body = payload.body {
-        bodyData = try? await Data(collecting: body, upTo: .max)
-      } else {
-        bodyData = nil
-      }
-      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
-    @unknown default:
-      throw TurnkeyError.invalidResponse
-    }
+    return try await call { try await underlyingClient.GetOrganizationConfigs(input) }
+
   }
   public func getPolicy(organizationId: String, policyId: String) async throws
     -> Operations.GetPolicy.Output.Ok
@@ -238,22 +147,9 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getPolicyRequest)
     )
-    let output = try await underlyingClient.GetPolicy(input)
 
-    switch output {
-    case .ok(let ok):
-      return ok
-    case let .undocumented(statusCode, payload):
-      let bodyData: Data?
-      if let body = payload.body {
-        bodyData = try? await Data(collecting: body, upTo: .max)
-      } else {
-        bodyData = nil
-      }
-      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
-    @unknown default:
-      throw TurnkeyError.invalidResponse
-    }
+    return try await call { try await underlyingClient.GetPolicy(input) }
+
   }
   public func getPrivateKey(organizationId: String, privateKeyId: String) async throws
     -> Operations.GetPrivateKey.Output.Ok
@@ -268,22 +164,9 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getPrivateKeyRequest)
     )
-    let output = try await underlyingClient.GetPrivateKey(input)
 
-    switch output {
-    case .ok(let ok):
-      return ok
-    case let .undocumented(statusCode, payload):
-      let bodyData: Data?
-      if let body = payload.body {
-        bodyData = try? await Data(collecting: body, upTo: .max)
-      } else {
-        bodyData = nil
-      }
-      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
-    @unknown default:
-      throw TurnkeyError.invalidResponse
-    }
+    return try await call { try await underlyingClient.GetPrivateKey(input) }
+
   }
   public func getUser(organizationId: String, userId: String) async throws
     -> Operations.GetUser.Output.Ok
@@ -298,22 +181,9 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getUserRequest)
     )
-    let output = try await underlyingClient.GetUser(input)
 
-    switch output {
-    case .ok(let ok):
-      return ok
-    case let .undocumented(statusCode, payload):
-      let bodyData: Data?
-      if let body = payload.body {
-        bodyData = try? await Data(collecting: body, upTo: .max)
-      } else {
-        bodyData = nil
-      }
-      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
-    @unknown default:
-      throw TurnkeyError.invalidResponse
-    }
+    return try await call { try await underlyingClient.GetUser(input) }
+
   }
   public func getWallet(organizationId: String, walletId: String) async throws
     -> Operations.GetWallet.Output.Ok
@@ -328,22 +198,9 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getWalletRequest)
     )
-    let output = try await underlyingClient.GetWallet(input)
 
-    switch output {
-    case .ok(let ok):
-      return ok
-    case let .undocumented(statusCode, payload):
-      let bodyData: Data?
-      if let body = payload.body {
-        bodyData = try? await Data(collecting: body, upTo: .max)
-      } else {
-        bodyData = nil
-      }
-      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
-    @unknown default:
-      throw TurnkeyError.invalidResponse
-    }
+    return try await call { try await underlyingClient.GetWallet(input) }
+
   }
   public func getWalletAccount(
     organizationId: String, walletId: String, address: String?, path: String?
@@ -358,22 +215,9 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getWalletAccountRequest)
     )
-    let output = try await underlyingClient.GetWalletAccount(input)
 
-    switch output {
-    case .ok(let ok):
-      return ok
-    case let .undocumented(statusCode, payload):
-      let bodyData: Data?
-      if let body = payload.body {
-        bodyData = try? await Data(collecting: body, upTo: .max)
-      } else {
-        bodyData = nil
-      }
-      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
-    @unknown default:
-      throw TurnkeyError.invalidResponse
-    }
+    return try await call { try await underlyingClient.GetWalletAccount(input) }
+
   }
   public func getActivities(
     organizationId: String, filterByStatus: [Components.Schemas.ActivityStatus]?,
@@ -391,22 +235,9 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getActivitiesRequest)
     )
-    let output = try await underlyingClient.GetActivities(input)
 
-    switch output {
-    case .ok(let ok):
-      return ok
-    case let .undocumented(statusCode, payload):
-      let bodyData: Data?
-      if let body = payload.body {
-        bodyData = try? await Data(collecting: body, upTo: .max)
-      } else {
-        bodyData = nil
-      }
-      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
-    @unknown default:
-      throw TurnkeyError.invalidResponse
-    }
+    return try await call { try await underlyingClient.GetActivities(input) }
+
   }
   public func getPolicies(organizationId: String) async throws -> Operations.GetPolicies.Output.Ok {
 
@@ -419,22 +250,9 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getPoliciesRequest)
     )
-    let output = try await underlyingClient.GetPolicies(input)
 
-    switch output {
-    case .ok(let ok):
-      return ok
-    case let .undocumented(statusCode, payload):
-      let bodyData: Data?
-      if let body = payload.body {
-        bodyData = try? await Data(collecting: body, upTo: .max)
-      } else {
-        bodyData = nil
-      }
-      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
-    @unknown default:
-      throw TurnkeyError.invalidResponse
-    }
+    return try await call { try await underlyingClient.GetPolicies(input) }
+
   }
   public func listPrivateKeyTags(organizationId: String) async throws
     -> Operations.ListPrivateKeyTags.Output.Ok
@@ -449,22 +267,9 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(listPrivateKeyTagsRequest)
     )
-    let output = try await underlyingClient.ListPrivateKeyTags(input)
 
-    switch output {
-    case .ok(let ok):
-      return ok
-    case let .undocumented(statusCode, payload):
-      let bodyData: Data?
-      if let body = payload.body {
-        bodyData = try? await Data(collecting: body, upTo: .max)
-      } else {
-        bodyData = nil
-      }
-      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
-    @unknown default:
-      throw TurnkeyError.invalidResponse
-    }
+    return try await call { try await underlyingClient.ListPrivateKeyTags(input) }
+
   }
   public func getPrivateKeys(organizationId: String) async throws
     -> Operations.GetPrivateKeys.Output.Ok
@@ -479,22 +284,9 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getPrivateKeysRequest)
     )
-    let output = try await underlyingClient.GetPrivateKeys(input)
 
-    switch output {
-    case .ok(let ok):
-      return ok
-    case let .undocumented(statusCode, payload):
-      let bodyData: Data?
-      if let body = payload.body {
-        bodyData = try? await Data(collecting: body, upTo: .max)
-      } else {
-        bodyData = nil
-      }
-      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
-    @unknown default:
-      throw TurnkeyError.invalidResponse
-    }
+    return try await call { try await underlyingClient.GetPrivateKeys(input) }
+
   }
   public func getSubOrgIds(
     organizationId: String, filterType: String?, filterValue: String?,
@@ -511,22 +303,9 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getSubOrgIdsRequest)
     )
-    let output = try await underlyingClient.GetSubOrgIds(input)
 
-    switch output {
-    case .ok(let ok):
-      return ok
-    case let .undocumented(statusCode, payload):
-      let bodyData: Data?
-      if let body = payload.body {
-        bodyData = try? await Data(collecting: body, upTo: .max)
-      } else {
-        bodyData = nil
-      }
-      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
-    @unknown default:
-      throw TurnkeyError.invalidResponse
-    }
+    return try await call { try await underlyingClient.GetSubOrgIds(input) }
+
   }
   public func listUserTags(organizationId: String) async throws -> Operations.ListUserTags.Output.Ok
   {
@@ -540,22 +319,9 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(listUserTagsRequest)
     )
-    let output = try await underlyingClient.ListUserTags(input)
 
-    switch output {
-    case .ok(let ok):
-      return ok
-    case let .undocumented(statusCode, payload):
-      let bodyData: Data?
-      if let body = payload.body {
-        bodyData = try? await Data(collecting: body, upTo: .max)
-      } else {
-        bodyData = nil
-      }
-      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
-    @unknown default:
-      throw TurnkeyError.invalidResponse
-    }
+    return try await call { try await underlyingClient.ListUserTags(input) }
+
   }
   public func getUsers(organizationId: String) async throws -> Operations.GetUsers.Output.Ok {
 
@@ -568,22 +334,9 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getUsersRequest)
     )
-    let output = try await underlyingClient.GetUsers(input)
 
-    switch output {
-    case .ok(let ok):
-      return ok
-    case let .undocumented(statusCode, payload):
-      let bodyData: Data?
-      if let body = payload.body {
-        bodyData = try? await Data(collecting: body, upTo: .max)
-      } else {
-        bodyData = nil
-      }
-      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
-    @unknown default:
-      throw TurnkeyError.invalidResponse
-    }
+    return try await call { try await underlyingClient.GetUsers(input) }
+
   }
   public func getVerifiedSubOrgIds(
     organizationId: String, filterType: String?, filterValue: String?,
@@ -600,22 +353,9 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getVerifiedSubOrgIdsRequest)
     )
-    let output = try await underlyingClient.GetVerifiedSubOrgIds(input)
 
-    switch output {
-    case .ok(let ok):
-      return ok
-    case let .undocumented(statusCode, payload):
-      let bodyData: Data?
-      if let body = payload.body {
-        bodyData = try? await Data(collecting: body, upTo: .max)
-      } else {
-        bodyData = nil
-      }
-      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
-    @unknown default:
-      throw TurnkeyError.invalidResponse
-    }
+    return try await call { try await underlyingClient.GetVerifiedSubOrgIds(input) }
+
   }
   public func getWalletAccounts(
     organizationId: String, walletId: String, paginationOptions: Components.Schemas.Pagination?
@@ -630,22 +370,9 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getWalletAccountsRequest)
     )
-    let output = try await underlyingClient.GetWalletAccounts(input)
 
-    switch output {
-    case .ok(let ok):
-      return ok
-    case let .undocumented(statusCode, payload):
-      let bodyData: Data?
-      if let body = payload.body {
-        bodyData = try? await Data(collecting: body, upTo: .max)
-      } else {
-        bodyData = nil
-      }
-      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
-    @unknown default:
-      throw TurnkeyError.invalidResponse
-    }
+    return try await call { try await underlyingClient.GetWalletAccounts(input) }
+
   }
   public func getWallets(organizationId: String) async throws -> Operations.GetWallets.Output.Ok {
 
@@ -658,22 +385,9 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getWalletsRequest)
     )
-    let output = try await underlyingClient.GetWallets(input)
 
-    switch output {
-    case .ok(let ok):
-      return ok
-    case let .undocumented(statusCode, payload):
-      let bodyData: Data?
-      if let body = payload.body {
-        bodyData = try? await Data(collecting: body, upTo: .max)
-      } else {
-        bodyData = nil
-      }
-      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
-    @unknown default:
-      throw TurnkeyError.invalidResponse
-    }
+    return try await call { try await underlyingClient.GetWallets(input) }
+
   }
   public func getWhoami(organizationId: String) async throws -> Operations.GetWhoami.Output.Ok {
 
@@ -686,28 +400,15 @@ public struct TurnkeyClient {
       headers: .init(accept: [.init(contentType: .json)]),
       body: .json(getWhoamiRequest)
     )
-    let output = try await underlyingClient.GetWhoami(input)
 
-    switch output {
-    case .ok(let ok):
-      return ok
-    case let .undocumented(statusCode, payload):
-      let bodyData: Data?
-      if let body = payload.body {
-        bodyData = try? await Data(collecting: body, upTo: .max)
-      } else {
-        bodyData = nil
-      }
-      throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
-    @unknown default:
-      throw TurnkeyError.invalidResponse
-    }
+    return try await call { try await underlyingClient.GetWhoami(input) }
+
   }
 
   public func approveActivity(
     organizationId: String,
     fingerprint: String
-  ) async throws -> Operations.ApproveActivity.Output {
+  ) async throws -> Operations.ApproveActivity.Output.Ok {
 
     // Create the ApproveActivityIntent
     let approveActivityIntent = Components.Schemas.ApproveActivityIntent(
@@ -728,13 +429,13 @@ public struct TurnkeyClient {
     )
 
     // Call the ApproveActivity method using the underlyingClient
-    return try await underlyingClient.ApproveActivity(input)
+    return try await call { try await underlyingClient.ApproveActivity(input) }
   }
 
   public func createApiKeys(
     organizationId: String,
     apiKeys: [Components.Schemas.ApiKeyParamsV2], userId: String
-  ) async throws -> Operations.CreateApiKeys.Output {
+  ) async throws -> Operations.CreateApiKeys.Output.Ok {
 
     // Create the CreateApiKeysIntentV2
     let createApiKeysIntent = Components.Schemas.CreateApiKeysIntentV2(
@@ -755,13 +456,13 @@ public struct TurnkeyClient {
     )
 
     // Call the CreateApiKeys method using the underlyingClient
-    return try await underlyingClient.CreateApiKeys(input)
+    return try await call { try await underlyingClient.CreateApiKeys(input) }
   }
 
   public func createAuthenticators(
     organizationId: String,
     authenticators: [Components.Schemas.AuthenticatorParamsV2], userId: String
-  ) async throws -> Operations.CreateAuthenticators.Output {
+  ) async throws -> Operations.CreateAuthenticators.Output.Ok {
 
     // Create the CreateAuthenticatorsIntentV2
     let createAuthenticatorsIntent = Components.Schemas.CreateAuthenticatorsIntentV2(
@@ -782,13 +483,13 @@ public struct TurnkeyClient {
     )
 
     // Call the CreateAuthenticators method using the underlyingClient
-    return try await underlyingClient.CreateAuthenticators(input)
+    return try await call { try await underlyingClient.CreateAuthenticators(input) }
   }
 
   public func createInvitations(
     organizationId: String,
     invitations: [Components.Schemas.InvitationParams]
-  ) async throws -> Operations.CreateInvitations.Output {
+  ) async throws -> Operations.CreateInvitations.Output.Ok {
 
     // Create the CreateInvitationsIntent
     let createInvitationsIntent = Components.Schemas.CreateInvitationsIntent(
@@ -809,13 +510,13 @@ public struct TurnkeyClient {
     )
 
     // Call the CreateInvitations method using the underlyingClient
-    return try await underlyingClient.CreateInvitations(input)
+    return try await call { try await underlyingClient.CreateInvitations(input) }
   }
 
   public func createOauthProviders(
     organizationId: String,
     userId: String, oauthProviders: [Components.Schemas.OauthProviderParams]
-  ) async throws -> Operations.CreateOauthProviders.Output {
+  ) async throws -> Operations.CreateOauthProviders.Output.Ok {
 
     // Create the CreateOauthProvidersIntent
     let createOauthProvidersIntent = Components.Schemas.CreateOauthProvidersIntent(
@@ -836,13 +537,13 @@ public struct TurnkeyClient {
     )
 
     // Call the CreateOauthProviders method using the underlyingClient
-    return try await underlyingClient.CreateOauthProviders(input)
+    return try await call { try await underlyingClient.CreateOauthProviders(input) }
   }
 
   public func createPolicies(
     organizationId: String,
     policies: [Components.Schemas.CreatePolicyIntentV3]
-  ) async throws -> Operations.CreatePolicies.Output {
+  ) async throws -> Operations.CreatePolicies.Output.Ok {
 
     // Create the CreatePoliciesIntent
     let createPoliciesIntent = Components.Schemas.CreatePoliciesIntent(
@@ -863,14 +564,14 @@ public struct TurnkeyClient {
     )
 
     // Call the CreatePolicies method using the underlyingClient
-    return try await underlyingClient.CreatePolicies(input)
+    return try await call { try await underlyingClient.CreatePolicies(input) }
   }
 
   public func createPolicy(
     organizationId: String,
     policyName: String, effect: Components.Schemas.Effect, condition: String?, consensus: String?,
     notes: String?
-  ) async throws -> Operations.CreatePolicy.Output {
+  ) async throws -> Operations.CreatePolicy.Output.Ok {
 
     // Create the CreatePolicyIntentV3
     let createPolicyIntent = Components.Schemas.CreatePolicyIntentV3(
@@ -892,13 +593,13 @@ public struct TurnkeyClient {
     )
 
     // Call the CreatePolicy method using the underlyingClient
-    return try await underlyingClient.CreatePolicy(input)
+    return try await call { try await underlyingClient.CreatePolicy(input) }
   }
 
   public func createPrivateKeyTag(
     organizationId: String,
     privateKeyTagName: String, privateKeyIds: [String]
-  ) async throws -> Operations.CreatePrivateKeyTag.Output {
+  ) async throws -> Operations.CreatePrivateKeyTag.Output.Ok {
 
     // Create the CreatePrivateKeyTagIntent
     let createPrivateKeyTagIntent = Components.Schemas.CreatePrivateKeyTagIntent(
@@ -919,13 +620,13 @@ public struct TurnkeyClient {
     )
 
     // Call the CreatePrivateKeyTag method using the underlyingClient
-    return try await underlyingClient.CreatePrivateKeyTag(input)
+    return try await call { try await underlyingClient.CreatePrivateKeyTag(input) }
   }
 
   public func createPrivateKeys(
     organizationId: String,
     privateKeys: [Components.Schemas.PrivateKeyParams]
-  ) async throws -> Operations.CreatePrivateKeys.Output {
+  ) async throws -> Operations.CreatePrivateKeys.Output.Ok {
 
     // Create the CreatePrivateKeysIntentV2
     let createPrivateKeysIntent = Components.Schemas.CreatePrivateKeysIntentV2(
@@ -946,12 +647,12 @@ public struct TurnkeyClient {
     )
 
     // Call the CreatePrivateKeys method using the underlyingClient
-    return try await underlyingClient.CreatePrivateKeys(input)
+    return try await call { try await underlyingClient.CreatePrivateKeys(input) }
   }
 
   public func createReadOnlySession(
     organizationId: String
-  ) async throws -> Operations.CreateReadOnlySession.Output {
+  ) async throws -> Operations.CreateReadOnlySession.Output.Ok {
 
     // Create the CreateReadOnlySessionIntent
     let createReadOnlySessionIntent = Components.Schemas.CreateReadOnlySessionIntent()
@@ -971,14 +672,14 @@ public struct TurnkeyClient {
     )
 
     // Call the CreateReadOnlySession method using the underlyingClient
-    return try await underlyingClient.CreateReadOnlySession(input)
+    return try await call { try await underlyingClient.CreateReadOnlySession(input) }
   }
 
   public func createReadWriteSession(
     organizationId: String,
     targetPublicKey: String, userId: String?, apiKeyName: String?, expirationSeconds: String?,
     invalidateExisting: Bool?
-  ) async throws -> Operations.CreateReadWriteSession.Output {
+  ) async throws -> Operations.CreateReadWriteSession.Output.Ok {
 
     // Create the CreateReadWriteSessionIntentV2
     let createReadWriteSessionIntent = Components.Schemas.CreateReadWriteSessionIntentV2(
@@ -1000,7 +701,7 @@ public struct TurnkeyClient {
     )
 
     // Call the CreateReadWriteSession method using the underlyingClient
-    return try await underlyingClient.CreateReadWriteSession(input)
+    return try await call { try await underlyingClient.CreateReadWriteSession(input) }
   }
 
   public func createSubOrganization(
@@ -1009,7 +710,7 @@ public struct TurnkeyClient {
     rootQuorumThreshold: Int32, wallet: Components.Schemas.WalletParams?,
     disableEmailRecovery: Bool?, disableEmailAuth: Bool?, disableSmsAuth: Bool?,
     disableOtpEmailAuth: Bool?
-  ) async throws -> Operations.CreateSubOrganization.Output {
+  ) async throws -> Operations.CreateSubOrganization.Output.Ok {
 
     // Create the CreateSubOrganizationIntentV7
     let createSubOrganizationIntent = Components.Schemas.CreateSubOrganizationIntentV7(
@@ -1033,13 +734,13 @@ public struct TurnkeyClient {
     )
 
     // Call the CreateSubOrganization method using the underlyingClient
-    return try await underlyingClient.CreateSubOrganization(input)
+    return try await call { try await underlyingClient.CreateSubOrganization(input) }
   }
 
   public func createUserTag(
     organizationId: String,
     userTagName: String, userIds: [String]
-  ) async throws -> Operations.CreateUserTag.Output {
+  ) async throws -> Operations.CreateUserTag.Output.Ok {
 
     // Create the CreateUserTagIntent
     let createUserTagIntent = Components.Schemas.CreateUserTagIntent(
@@ -1060,13 +761,13 @@ public struct TurnkeyClient {
     )
 
     // Call the CreateUserTag method using the underlyingClient
-    return try await underlyingClient.CreateUserTag(input)
+    return try await call { try await underlyingClient.CreateUserTag(input) }
   }
 
   public func createUsers(
     organizationId: String,
     users: [Components.Schemas.UserParamsV3]
-  ) async throws -> Operations.CreateUsers.Output {
+  ) async throws -> Operations.CreateUsers.Output.Ok {
 
     // Create the CreateUsersIntentV3
     let createUsersIntent = Components.Schemas.CreateUsersIntentV3(
@@ -1087,13 +788,13 @@ public struct TurnkeyClient {
     )
 
     // Call the CreateUsers method using the underlyingClient
-    return try await underlyingClient.CreateUsers(input)
+    return try await call { try await underlyingClient.CreateUsers(input) }
   }
 
   public func createWallet(
     organizationId: String,
     walletName: String, accounts: [Components.Schemas.WalletAccountParams], mnemonicLength: Int32?
-  ) async throws -> Operations.CreateWallet.Output {
+  ) async throws -> Operations.CreateWallet.Output.Ok {
 
     // Create the CreateWalletIntent
     let createWalletIntent = Components.Schemas.CreateWalletIntent(
@@ -1114,13 +815,13 @@ public struct TurnkeyClient {
     )
 
     // Call the CreateWallet method using the underlyingClient
-    return try await underlyingClient.CreateWallet(input)
+    return try await call { try await underlyingClient.CreateWallet(input) }
   }
 
   public func createWalletAccounts(
     organizationId: String,
     walletId: String, accounts: [Components.Schemas.WalletAccountParams]
-  ) async throws -> Operations.CreateWalletAccounts.Output {
+  ) async throws -> Operations.CreateWalletAccounts.Output.Ok {
 
     // Create the CreateWalletAccountsIntent
     let createWalletAccountsIntent = Components.Schemas.CreateWalletAccountsIntent(
@@ -1141,13 +842,13 @@ public struct TurnkeyClient {
     )
 
     // Call the CreateWalletAccounts method using the underlyingClient
-    return try await underlyingClient.CreateWalletAccounts(input)
+    return try await call { try await underlyingClient.CreateWalletAccounts(input) }
   }
 
   public func deleteApiKeys(
     organizationId: String,
     userId: String, apiKeyIds: [String]
-  ) async throws -> Operations.DeleteApiKeys.Output {
+  ) async throws -> Operations.DeleteApiKeys.Output.Ok {
 
     // Create the DeleteApiKeysIntent
     let deleteApiKeysIntent = Components.Schemas.DeleteApiKeysIntent(
@@ -1168,13 +869,13 @@ public struct TurnkeyClient {
     )
 
     // Call the DeleteApiKeys method using the underlyingClient
-    return try await underlyingClient.DeleteApiKeys(input)
+    return try await call { try await underlyingClient.DeleteApiKeys(input) }
   }
 
   public func deleteAuthenticators(
     organizationId: String,
     userId: String, authenticatorIds: [String]
-  ) async throws -> Operations.DeleteAuthenticators.Output {
+  ) async throws -> Operations.DeleteAuthenticators.Output.Ok {
 
     // Create the DeleteAuthenticatorsIntent
     let deleteAuthenticatorsIntent = Components.Schemas.DeleteAuthenticatorsIntent(
@@ -1195,13 +896,13 @@ public struct TurnkeyClient {
     )
 
     // Call the DeleteAuthenticators method using the underlyingClient
-    return try await underlyingClient.DeleteAuthenticators(input)
+    return try await call { try await underlyingClient.DeleteAuthenticators(input) }
   }
 
   public func deleteInvitation(
     organizationId: String,
     invitationId: String
-  ) async throws -> Operations.DeleteInvitation.Output {
+  ) async throws -> Operations.DeleteInvitation.Output.Ok {
 
     // Create the DeleteInvitationIntent
     let deleteInvitationIntent = Components.Schemas.DeleteInvitationIntent(
@@ -1222,13 +923,13 @@ public struct TurnkeyClient {
     )
 
     // Call the DeleteInvitation method using the underlyingClient
-    return try await underlyingClient.DeleteInvitation(input)
+    return try await call { try await underlyingClient.DeleteInvitation(input) }
   }
 
   public func deleteOauthProviders(
     organizationId: String,
     userId: String, providerIds: [String]
-  ) async throws -> Operations.DeleteOauthProviders.Output {
+  ) async throws -> Operations.DeleteOauthProviders.Output.Ok {
 
     // Create the DeleteOauthProvidersIntent
     let deleteOauthProvidersIntent = Components.Schemas.DeleteOauthProvidersIntent(
@@ -1249,13 +950,13 @@ public struct TurnkeyClient {
     )
 
     // Call the DeleteOauthProviders method using the underlyingClient
-    return try await underlyingClient.DeleteOauthProviders(input)
+    return try await call { try await underlyingClient.DeleteOauthProviders(input) }
   }
 
   public func deletePolicy(
     organizationId: String,
     policyId: String
-  ) async throws -> Operations.DeletePolicy.Output {
+  ) async throws -> Operations.DeletePolicy.Output.Ok {
 
     // Create the DeletePolicyIntent
     let deletePolicyIntent = Components.Schemas.DeletePolicyIntent(
@@ -1276,13 +977,13 @@ public struct TurnkeyClient {
     )
 
     // Call the DeletePolicy method using the underlyingClient
-    return try await underlyingClient.DeletePolicy(input)
+    return try await call { try await underlyingClient.DeletePolicy(input) }
   }
 
   public func deletePrivateKeyTags(
     organizationId: String,
     privateKeyTagIds: [String]
-  ) async throws -> Operations.DeletePrivateKeyTags.Output {
+  ) async throws -> Operations.DeletePrivateKeyTags.Output.Ok {
 
     // Create the DeletePrivateKeyTagsIntent
     let deletePrivateKeyTagsIntent = Components.Schemas.DeletePrivateKeyTagsIntent(
@@ -1303,13 +1004,13 @@ public struct TurnkeyClient {
     )
 
     // Call the DeletePrivateKeyTags method using the underlyingClient
-    return try await underlyingClient.DeletePrivateKeyTags(input)
+    return try await call { try await underlyingClient.DeletePrivateKeyTags(input) }
   }
 
   public func deletePrivateKeys(
     organizationId: String,
     privateKeyIds: [String], deleteWithoutExport: Bool?
-  ) async throws -> Operations.DeletePrivateKeys.Output {
+  ) async throws -> Operations.DeletePrivateKeys.Output.Ok {
 
     // Create the DeletePrivateKeysIntent
     let deletePrivateKeysIntent = Components.Schemas.DeletePrivateKeysIntent(
@@ -1330,13 +1031,13 @@ public struct TurnkeyClient {
     )
 
     // Call the DeletePrivateKeys method using the underlyingClient
-    return try await underlyingClient.DeletePrivateKeys(input)
+    return try await call { try await underlyingClient.DeletePrivateKeys(input) }
   }
 
   public func deleteSubOrganization(
     organizationId: String,
     deleteWithoutExport: Bool?
-  ) async throws -> Operations.DeleteSubOrganization.Output {
+  ) async throws -> Operations.DeleteSubOrganization.Output.Ok {
 
     // Create the DeleteSubOrganizationIntent
     let deleteSubOrganizationIntent = Components.Schemas.DeleteSubOrganizationIntent(
@@ -1357,13 +1058,13 @@ public struct TurnkeyClient {
     )
 
     // Call the DeleteSubOrganization method using the underlyingClient
-    return try await underlyingClient.DeleteSubOrganization(input)
+    return try await call { try await underlyingClient.DeleteSubOrganization(input) }
   }
 
   public func deleteUserTags(
     organizationId: String,
     userTagIds: [String]
-  ) async throws -> Operations.DeleteUserTags.Output {
+  ) async throws -> Operations.DeleteUserTags.Output.Ok {
 
     // Create the DeleteUserTagsIntent
     let deleteUserTagsIntent = Components.Schemas.DeleteUserTagsIntent(
@@ -1384,13 +1085,13 @@ public struct TurnkeyClient {
     )
 
     // Call the DeleteUserTags method using the underlyingClient
-    return try await underlyingClient.DeleteUserTags(input)
+    return try await call { try await underlyingClient.DeleteUserTags(input) }
   }
 
   public func deleteUsers(
     organizationId: String,
     userIds: [String]
-  ) async throws -> Operations.DeleteUsers.Output {
+  ) async throws -> Operations.DeleteUsers.Output.Ok {
 
     // Create the DeleteUsersIntent
     let deleteUsersIntent = Components.Schemas.DeleteUsersIntent(
@@ -1411,13 +1112,13 @@ public struct TurnkeyClient {
     )
 
     // Call the DeleteUsers method using the underlyingClient
-    return try await underlyingClient.DeleteUsers(input)
+    return try await call { try await underlyingClient.DeleteUsers(input) }
   }
 
   public func deleteWallets(
     organizationId: String,
     walletIds: [String], deleteWithoutExport: Bool?
-  ) async throws -> Operations.DeleteWallets.Output {
+  ) async throws -> Operations.DeleteWallets.Output.Ok {
 
     // Create the DeleteWalletsIntent
     let deleteWalletsIntent = Components.Schemas.DeleteWalletsIntent(
@@ -1438,7 +1139,7 @@ public struct TurnkeyClient {
     )
 
     // Call the DeleteWallets method using the underlyingClient
-    return try await underlyingClient.DeleteWallets(input)
+    return try await call { try await underlyingClient.DeleteWallets(input) }
   }
 
   public func emailAuth(
@@ -1446,7 +1147,7 @@ public struct TurnkeyClient {
     email: String, targetPublicKey: String, apiKeyName: String?, expirationSeconds: String?,
     emailCustomization: Components.Schemas.EmailCustomizationParams?, invalidateExisting: Bool?,
     sendFromEmailAddress: String?, sendFromEmailSenderName: String?, replyToEmailAddress: String?
-  ) async throws -> Operations.EmailAuth.Output {
+  ) async throws -> Operations.EmailAuth.Output.Ok {
 
     // Create the EmailAuthIntentV2
     let emailAuthIntent = Components.Schemas.EmailAuthIntentV2(
@@ -1470,13 +1171,13 @@ public struct TurnkeyClient {
     )
 
     // Call the EmailAuth method using the underlyingClient
-    return try await underlyingClient.EmailAuth(input)
+    return try await call { try await underlyingClient.EmailAuth(input) }
   }
 
   public func exportPrivateKey(
     organizationId: String,
     privateKeyId: String, targetPublicKey: String
-  ) async throws -> Operations.ExportPrivateKey.Output {
+  ) async throws -> Operations.ExportPrivateKey.Output.Ok {
 
     // Create the ExportPrivateKeyIntent
     let exportPrivateKeyIntent = Components.Schemas.ExportPrivateKeyIntent(
@@ -1497,13 +1198,13 @@ public struct TurnkeyClient {
     )
 
     // Call the ExportPrivateKey method using the underlyingClient
-    return try await underlyingClient.ExportPrivateKey(input)
+    return try await call { try await underlyingClient.ExportPrivateKey(input) }
   }
 
   public func exportWallet(
     organizationId: String,
     walletId: String, targetPublicKey: String, language: Components.Schemas.MnemonicLanguage?
-  ) async throws -> Operations.ExportWallet.Output {
+  ) async throws -> Operations.ExportWallet.Output.Ok {
 
     // Create the ExportWalletIntent
     let exportWalletIntent = Components.Schemas.ExportWalletIntent(
@@ -1524,13 +1225,13 @@ public struct TurnkeyClient {
     )
 
     // Call the ExportWallet method using the underlyingClient
-    return try await underlyingClient.ExportWallet(input)
+    return try await call { try await underlyingClient.ExportWallet(input) }
   }
 
   public func exportWalletAccount(
     organizationId: String,
     address: String, targetPublicKey: String
-  ) async throws -> Operations.ExportWalletAccount.Output {
+  ) async throws -> Operations.ExportWalletAccount.Output.Ok {
 
     // Create the ExportWalletAccountIntent
     let exportWalletAccountIntent = Components.Schemas.ExportWalletAccountIntent(
@@ -1551,14 +1252,14 @@ public struct TurnkeyClient {
     )
 
     // Call the ExportWalletAccount method using the underlyingClient
-    return try await underlyingClient.ExportWalletAccount(input)
+    return try await call { try await underlyingClient.ExportWalletAccount(input) }
   }
 
   public func importPrivateKey(
     organizationId: String,
     userId: String, privateKeyName: String, encryptedBundle: String,
     curve: Components.Schemas.Curve, addressFormats: [Components.Schemas.AddressFormat]
-  ) async throws -> Operations.ImportPrivateKey.Output {
+  ) async throws -> Operations.ImportPrivateKey.Output.Ok {
 
     // Create the ImportPrivateKeyIntent
     let importPrivateKeyIntent = Components.Schemas.ImportPrivateKeyIntent(
@@ -1580,14 +1281,14 @@ public struct TurnkeyClient {
     )
 
     // Call the ImportPrivateKey method using the underlyingClient
-    return try await underlyingClient.ImportPrivateKey(input)
+    return try await call { try await underlyingClient.ImportPrivateKey(input) }
   }
 
   public func importWallet(
     organizationId: String,
     userId: String, walletName: String, encryptedBundle: String,
     accounts: [Components.Schemas.WalletAccountParams]
-  ) async throws -> Operations.ImportWallet.Output {
+  ) async throws -> Operations.ImportWallet.Output.Ok {
 
     // Create the ImportWalletIntent
     let importWalletIntent = Components.Schemas.ImportWalletIntent(
@@ -1608,13 +1309,13 @@ public struct TurnkeyClient {
     )
 
     // Call the ImportWallet method using the underlyingClient
-    return try await underlyingClient.ImportWallet(input)
+    return try await call { try await underlyingClient.ImportWallet(input) }
   }
 
   public func initImportPrivateKey(
     organizationId: String,
     userId: String
-  ) async throws -> Operations.InitImportPrivateKey.Output {
+  ) async throws -> Operations.InitImportPrivateKey.Output.Ok {
 
     // Create the InitImportPrivateKeyIntent
     let initImportPrivateKeyIntent = Components.Schemas.InitImportPrivateKeyIntent(
@@ -1635,13 +1336,13 @@ public struct TurnkeyClient {
     )
 
     // Call the InitImportPrivateKey method using the underlyingClient
-    return try await underlyingClient.InitImportPrivateKey(input)
+    return try await call { try await underlyingClient.InitImportPrivateKey(input) }
   }
 
   public func initImportWallet(
     organizationId: String,
     userId: String
-  ) async throws -> Operations.InitImportWallet.Output {
+  ) async throws -> Operations.InitImportWallet.Output.Ok {
 
     // Create the InitImportWalletIntent
     let initImportWalletIntent = Components.Schemas.InitImportWalletIntent(
@@ -1662,7 +1363,7 @@ public struct TurnkeyClient {
     )
 
     // Call the InitImportWallet method using the underlyingClient
-    return try await underlyingClient.InitImportWallet(input)
+    return try await call { try await underlyingClient.InitImportWallet(input) }
   }
 
   public func initOtp(
@@ -1672,7 +1373,7 @@ public struct TurnkeyClient {
     smsCustomization: Components.Schemas.SmsCustomizationParams?, userIdentifier: String?,
     sendFromEmailAddress: String?, alphanumeric: Bool?, sendFromEmailSenderName: String?,
     expirationSeconds: String?, replyToEmailAddress: String?
-  ) async throws -> Operations.InitOtp.Output {
+  ) async throws -> Operations.InitOtp.Output.Ok {
 
     // Create the InitOtpIntent
     let initOtpIntent = Components.Schemas.InitOtpIntent(
@@ -1697,7 +1398,7 @@ public struct TurnkeyClient {
     )
 
     // Call the InitOtp method using the underlyingClient
-    return try await underlyingClient.InitOtp(input)
+    return try await call { try await underlyingClient.InitOtp(input) }
   }
 
   public func initOtpAuth(
@@ -1707,7 +1408,7 @@ public struct TurnkeyClient {
     smsCustomization: Components.Schemas.SmsCustomizationParams?, userIdentifier: String?,
     sendFromEmailAddress: String?, alphanumeric: Bool?, sendFromEmailSenderName: String?,
     replyToEmailAddress: String?
-  ) async throws -> Operations.InitOtpAuth.Output {
+  ) async throws -> Operations.InitOtpAuth.Output.Ok {
 
     // Create the InitOtpAuthIntentV2
     let initOtpAuthIntent = Components.Schemas.InitOtpAuthIntentV2(
@@ -1732,14 +1433,14 @@ public struct TurnkeyClient {
     )
 
     // Call the InitOtpAuth method using the underlyingClient
-    return try await underlyingClient.InitOtpAuth(input)
+    return try await call { try await underlyingClient.InitOtpAuth(input) }
   }
 
   public func initUserEmailRecovery(
     organizationId: String,
     email: String, targetPublicKey: String, expirationSeconds: String?,
     emailCustomization: Components.Schemas.EmailCustomizationParams?
-  ) async throws -> Operations.InitUserEmailRecovery.Output {
+  ) async throws -> Operations.InitUserEmailRecovery.Output.Ok {
 
     // Create the InitUserEmailRecoveryIntent
     let initUserEmailRecoveryIntent = Components.Schemas.InitUserEmailRecoveryIntent(
@@ -1761,14 +1462,14 @@ public struct TurnkeyClient {
     )
 
     // Call the InitUserEmailRecovery method using the underlyingClient
-    return try await underlyingClient.InitUserEmailRecovery(input)
+    return try await call { try await underlyingClient.InitUserEmailRecovery(input) }
   }
 
   public func oauth(
     organizationId: String,
     oidcToken: String, targetPublicKey: String, apiKeyName: String?, expirationSeconds: String?,
     invalidateExisting: Bool?
-  ) async throws -> Operations.Oauth.Output {
+  ) async throws -> Operations.Oauth.Output.Ok {
 
     // Create the OauthIntent
     let oauthIntent = Components.Schemas.OauthIntent(
@@ -1790,13 +1491,13 @@ public struct TurnkeyClient {
     )
 
     // Call the Oauth method using the underlyingClient
-    return try await underlyingClient.Oauth(input)
+    return try await call { try await underlyingClient.Oauth(input) }
   }
 
   public func oauthLogin(
     organizationId: String,
     oidcToken: String, publicKey: String, expirationSeconds: String?, invalidateExisting: Bool?
-  ) async throws -> Operations.OauthLogin.Output {
+  ) async throws -> Operations.OauthLogin.Output.Ok {
 
     // Create the OauthLoginIntent
     let oauthLoginIntent = Components.Schemas.OauthLoginIntent(
@@ -1818,14 +1519,14 @@ public struct TurnkeyClient {
     )
 
     // Call the OauthLogin method using the underlyingClient
-    return try await underlyingClient.OauthLogin(input)
+    return try await call { try await underlyingClient.OauthLogin(input) }
   }
 
   public func otpAuth(
     organizationId: String,
     otpId: String, otpCode: String, targetPublicKey: String, apiKeyName: String?,
     expirationSeconds: String?, invalidateExisting: Bool?
-  ) async throws -> Operations.OtpAuth.Output {
+  ) async throws -> Operations.OtpAuth.Output.Ok {
 
     // Create the OtpAuthIntent
     let otpAuthIntent = Components.Schemas.OtpAuthIntent(
@@ -1847,14 +1548,14 @@ public struct TurnkeyClient {
     )
 
     // Call the OtpAuth method using the underlyingClient
-    return try await underlyingClient.OtpAuth(input)
+    return try await call { try await underlyingClient.OtpAuth(input) }
   }
 
   public func otpLogin(
     organizationId: String,
     verificationToken: String, publicKey: String, expirationSeconds: String?,
     invalidateExisting: Bool?
-  ) async throws -> Operations.OtpLogin.Output {
+  ) async throws -> Operations.OtpLogin.Output.Ok {
 
     // Create the OtpLoginIntent
     let otpLoginIntent = Components.Schemas.OtpLoginIntent(
@@ -1876,13 +1577,13 @@ public struct TurnkeyClient {
     )
 
     // Call the OtpLogin method using the underlyingClient
-    return try await underlyingClient.OtpLogin(input)
+    return try await call { try await underlyingClient.OtpLogin(input) }
   }
 
   public func recoverUser(
     organizationId: String,
     authenticator: Components.Schemas.AuthenticatorParamsV2, userId: String
-  ) async throws -> Operations.RecoverUser.Output {
+  ) async throws -> Operations.RecoverUser.Output.Ok {
 
     // Create the RecoverUserIntent
     let recoverUserIntent = Components.Schemas.RecoverUserIntent(
@@ -1903,13 +1604,13 @@ public struct TurnkeyClient {
     )
 
     // Call the RecoverUser method using the underlyingClient
-    return try await underlyingClient.RecoverUser(input)
+    return try await call { try await underlyingClient.RecoverUser(input) }
   }
 
   public func rejectActivity(
     organizationId: String,
     fingerprint: String
-  ) async throws -> Operations.RejectActivity.Output {
+  ) async throws -> Operations.RejectActivity.Output.Ok {
 
     // Create the RejectActivityIntent
     let rejectActivityIntent = Components.Schemas.RejectActivityIntent(
@@ -1930,13 +1631,13 @@ public struct TurnkeyClient {
     )
 
     // Call the RejectActivity method using the underlyingClient
-    return try await underlyingClient.RejectActivity(input)
+    return try await call { try await underlyingClient.RejectActivity(input) }
   }
 
   public func removeOrganizationFeature(
     organizationId: String,
     name: Components.Schemas.FeatureName
-  ) async throws -> Operations.RemoveOrganizationFeature.Output {
+  ) async throws -> Operations.RemoveOrganizationFeature.Output.Ok {
 
     // Create the RemoveOrganizationFeatureIntent
     let removeOrganizationFeatureIntent = Components.Schemas.RemoveOrganizationFeatureIntent(
@@ -1957,13 +1658,13 @@ public struct TurnkeyClient {
     )
 
     // Call the RemoveOrganizationFeature method using the underlyingClient
-    return try await underlyingClient.RemoveOrganizationFeature(input)
+    return try await call { try await underlyingClient.RemoveOrganizationFeature(input) }
   }
 
   public func setOrganizationFeature(
     organizationId: String,
     name: Components.Schemas.FeatureName, value: String
-  ) async throws -> Operations.SetOrganizationFeature.Output {
+  ) async throws -> Operations.SetOrganizationFeature.Output.Ok {
 
     // Create the SetOrganizationFeatureIntent
     let setOrganizationFeatureIntent = Components.Schemas.SetOrganizationFeatureIntent(
@@ -1984,14 +1685,14 @@ public struct TurnkeyClient {
     )
 
     // Call the SetOrganizationFeature method using the underlyingClient
-    return try await underlyingClient.SetOrganizationFeature(input)
+    return try await call { try await underlyingClient.SetOrganizationFeature(input) }
   }
 
   public func signRawPayload(
     organizationId: String,
     signWith: String, payload: String, encoding: Components.Schemas.PayloadEncoding,
     hashFunction: Components.Schemas.HashFunction
-  ) async throws -> Operations.SignRawPayload.Output {
+  ) async throws -> Operations.SignRawPayload.Output.Ok {
 
     // Create the SignRawPayloadIntentV2
     let signRawPayloadIntent = Components.Schemas.SignRawPayloadIntentV2(
@@ -2012,14 +1713,14 @@ public struct TurnkeyClient {
     )
 
     // Call the SignRawPayload method using the underlyingClient
-    return try await underlyingClient.SignRawPayload(input)
+    return try await call { try await underlyingClient.SignRawPayload(input) }
   }
 
   public func signRawPayloads(
     organizationId: String,
     signWith: String, payloads: [String], encoding: Components.Schemas.PayloadEncoding,
     hashFunction: Components.Schemas.HashFunction
-  ) async throws -> Operations.SignRawPayloads.Output {
+  ) async throws -> Operations.SignRawPayloads.Output.Ok {
 
     // Create the SignRawPayloadsIntent
     let signRawPayloadsIntent = Components.Schemas.SignRawPayloadsIntent(
@@ -2040,13 +1741,13 @@ public struct TurnkeyClient {
     )
 
     // Call the SignRawPayloads method using the underlyingClient
-    return try await underlyingClient.SignRawPayloads(input)
+    return try await call { try await underlyingClient.SignRawPayloads(input) }
   }
 
   public func signTransaction(
     organizationId: String,
     signWith: String, unsignedTransaction: String, _type: Components.Schemas.TransactionType
-  ) async throws -> Operations.SignTransaction.Output {
+  ) async throws -> Operations.SignTransaction.Output.Ok {
 
     // Create the SignTransactionIntentV2
     let signTransactionIntent = Components.Schemas.SignTransactionIntentV2(
@@ -2067,13 +1768,13 @@ public struct TurnkeyClient {
     )
 
     // Call the SignTransaction method using the underlyingClient
-    return try await underlyingClient.SignTransaction(input)
+    return try await call { try await underlyingClient.SignTransaction(input) }
   }
 
   public func stampLogin(
     organizationId: String,
     publicKey: String, expirationSeconds: String?, invalidateExisting: Bool?
-  ) async throws -> Operations.StampLogin.Output {
+  ) async throws -> Operations.StampLogin.Output.Ok {
 
     // Create the StampLoginIntent
     let stampLoginIntent = Components.Schemas.StampLoginIntent(
@@ -2095,14 +1796,14 @@ public struct TurnkeyClient {
     )
 
     // Call the StampLogin method using the underlyingClient
-    return try await underlyingClient.StampLogin(input)
+    return try await call { try await underlyingClient.StampLogin(input) }
   }
 
   public func updatePolicy(
     organizationId: String,
     policyId: String, policyName: String?, policyEffect: Components.Schemas.Effect?,
     policyCondition: String?, policyConsensus: String?, policyNotes: String?
-  ) async throws -> Operations.UpdatePolicy.Output {
+  ) async throws -> Operations.UpdatePolicy.Output.Ok {
 
     // Create the UpdatePolicyIntentV2
     let updatePolicyIntent = Components.Schemas.UpdatePolicyIntentV2(
@@ -2124,14 +1825,14 @@ public struct TurnkeyClient {
     )
 
     // Call the UpdatePolicy method using the underlyingClient
-    return try await underlyingClient.UpdatePolicy(input)
+    return try await call { try await underlyingClient.UpdatePolicy(input) }
   }
 
   public func updatePrivateKeyTag(
     organizationId: String,
     privateKeyTagId: String, newPrivateKeyTagName: String?, addPrivateKeyIds: [String],
     removePrivateKeyIds: [String]
-  ) async throws -> Operations.UpdatePrivateKeyTag.Output {
+  ) async throws -> Operations.UpdatePrivateKeyTag.Output.Ok {
 
     // Create the UpdatePrivateKeyTagIntent
     let updatePrivateKeyTagIntent = Components.Schemas.UpdatePrivateKeyTagIntent(
@@ -2153,13 +1854,13 @@ public struct TurnkeyClient {
     )
 
     // Call the UpdatePrivateKeyTag method using the underlyingClient
-    return try await underlyingClient.UpdatePrivateKeyTag(input)
+    return try await call { try await underlyingClient.UpdatePrivateKeyTag(input) }
   }
 
   public func updateRootQuorum(
     organizationId: String,
     threshold: Int32, userIds: [String]
-  ) async throws -> Operations.UpdateRootQuorum.Output {
+  ) async throws -> Operations.UpdateRootQuorum.Output.Ok {
 
     // Create the UpdateRootQuorumIntent
     let updateRootQuorumIntent = Components.Schemas.UpdateRootQuorumIntent(
@@ -2180,14 +1881,14 @@ public struct TurnkeyClient {
     )
 
     // Call the UpdateRootQuorum method using the underlyingClient
-    return try await underlyingClient.UpdateRootQuorum(input)
+    return try await call { try await underlyingClient.UpdateRootQuorum(input) }
   }
 
   public func updateUser(
     organizationId: String,
     userId: String, userName: String?, userEmail: String?, userTagIds: [String]?,
     userPhoneNumber: String?
-  ) async throws -> Operations.UpdateUser.Output {
+  ) async throws -> Operations.UpdateUser.Output.Ok {
 
     // Create the UpdateUserIntent
     let updateUserIntent = Components.Schemas.UpdateUserIntent(
@@ -2209,13 +1910,13 @@ public struct TurnkeyClient {
     )
 
     // Call the UpdateUser method using the underlyingClient
-    return try await underlyingClient.UpdateUser(input)
+    return try await call { try await underlyingClient.UpdateUser(input) }
   }
 
   public func updateUserTag(
     organizationId: String,
     userTagId: String, newUserTagName: String?, addUserIds: [String], removeUserIds: [String]
-  ) async throws -> Operations.UpdateUserTag.Output {
+  ) async throws -> Operations.UpdateUserTag.Output.Ok {
 
     // Create the UpdateUserTagIntent
     let updateUserTagIntent = Components.Schemas.UpdateUserTagIntent(
@@ -2237,13 +1938,13 @@ public struct TurnkeyClient {
     )
 
     // Call the UpdateUserTag method using the underlyingClient
-    return try await underlyingClient.UpdateUserTag(input)
+    return try await call { try await underlyingClient.UpdateUserTag(input) }
   }
 
   public func updateWallet(
     organizationId: String,
     walletId: String, walletName: String?
-  ) async throws -> Operations.UpdateWallet.Output {
+  ) async throws -> Operations.UpdateWallet.Output.Ok {
 
     // Create the UpdateWalletIntent
     let updateWalletIntent = Components.Schemas.UpdateWalletIntent(
@@ -2264,13 +1965,13 @@ public struct TurnkeyClient {
     )
 
     // Call the UpdateWallet method using the underlyingClient
-    return try await underlyingClient.UpdateWallet(input)
+    return try await call { try await underlyingClient.UpdateWallet(input) }
   }
 
   public func verifyOtp(
     organizationId: String,
     otpId: String, otpCode: String, expirationSeconds: String?
-  ) async throws -> Operations.VerifyOtp.Output {
+  ) async throws -> Operations.VerifyOtp.Output.Ok {
 
     // Create the VerifyOtpIntent
     let verifyOtpIntent = Components.Schemas.VerifyOtpIntent(
@@ -2291,6 +1992,6 @@ public struct TurnkeyClient {
     )
 
     // Call the VerifyOtp method using the underlyingClient
-    return try await underlyingClient.VerifyOtp(input)
+    return try await call { try await underlyingClient.VerifyOtp(input) }
   }
 }

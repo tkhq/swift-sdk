@@ -29,7 +29,7 @@ extension TurnkeyContext {
         mnemonicLength: mnemonicLength
       )
 
-      if try resp.ok.body.json.activity.result.createWalletResult?.walletId != nil {
+      if try resp.body.json.activity.result.createWalletResult?.walletId != nil {
         await refreshUser()
       }
     } catch {
@@ -60,7 +60,7 @@ extension TurnkeyContext {
         language: nil
       )
 
-      guard let bundle = try resp.ok.body.json.activity.result.exportWalletResult?.exportBundle
+      guard let bundle = try resp.body.json.activity.result.exportWalletResult?.exportBundle
       else {
         throw TurnkeySwiftError.invalidResponse
       }
@@ -105,7 +105,7 @@ extension TurnkeyContext {
       )
 
       guard
-        let importBundle = try initResp.ok.body.json
+        let importBundle = try initResp.body.json
           .activity.result.initImportWalletResult?.importBundle
       else {
         throw TurnkeySwiftError.invalidResponse
@@ -126,7 +126,7 @@ extension TurnkeyContext {
         accounts: accounts
       )
 
-      let activity = try resp.ok.body.json.activity
+      let activity = try resp.body.json.activity
 
       if activity.result.importWalletResult?.walletId != nil {
         await refreshUser()

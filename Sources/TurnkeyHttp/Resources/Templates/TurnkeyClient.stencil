@@ -40,22 +40,9 @@ public struct TurnkeyClient {
               headers: .init(accept: [.init(contentType: .json)]),
               body: .json({{ requestStructName|lowerFirstLetter }})
           )
-          let output = try await underlyingClient.{{method.callName}}(input)
 
-          switch output {
-          case .ok(let ok):
-              return ok
-          case let .undocumented(statusCode, payload):
-              let bodyData: Data?
-              if let body = payload.body {
-                  bodyData = try? await Data(collecting: body, upTo: .max)
-              } else {
-                  bodyData = nil
-              }
-              throw TurnkeyError.apiError(statusCode: statusCode, payload: bodyData)
-          @unknown default:
-              throw TurnkeyError.invalidResponse
-          }
+          return try await call { try await underlyingClient.{{ method.callName }}(input) }
+
       }
       {% endif -%}
       {% endfor %}

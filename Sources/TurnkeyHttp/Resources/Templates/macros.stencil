@@ -68,7 +68,7 @@
             {%- endfor %}
         {%- endset %}
 
-    public func {{ method.callName|lowerFirstLetter }}({% call addActivityMethodParams method.callName %}) async throws -> Operations.{{method.callName}}.Output {
+    public func {{ method.callName|lowerFirstLetter }}({% call addActivityMethodParams method.callName %}) async throws -> Operations.{{method.callName}}.Output.Ok {
 
         // Create the {{ intentStructName }}
         let {{ method.callName|lowerFirstLetter }}Intent = Components.Schemas.{{ intentStructName }}({% call getIntentParams intentStructName %})
@@ -97,6 +97,6 @@
         
 
         // Call the {{ method.callName }} method using the underlyingClient
-        return try await underlyingClient.{{ method.callName }}(input)
+        return try await call { try await underlyingClient.{{ methodName }}(input) }
     }
 {%- endmacro %}

@@ -2,11 +2,11 @@ import Foundation
 import TurnkeyHttp
 
 #if canImport(UIKit)
-  import UIKit
+import UIKit
 #endif
 
 #if canImport(AppKit)
-  import AppKit
+import AppKit
 #endif
 
 extension TurnkeyContext {
@@ -16,11 +16,11 @@ extension TurnkeyContext {
   /// - Returns: The notification name for foreground entry on supported platforms.
   static var foregroundNotification: Notification.Name? {
     #if os(iOS) || os(tvOS) || os(visionOS)
-      UIApplication.willEnterForegroundNotification
+    UIApplication.willEnterForegroundNotification
     #elseif os(macOS)
-      NSApplication.didBecomeActiveNotification
+    NSApplication.didBecomeActiveNotification
     #else
-      nil
+    nil
     #endif
   }
 
@@ -30,7 +30,7 @@ extension TurnkeyContext {
   func restoreSelectedSession() async {
     do {
       guard let sessionKey = try SelectedSessionStore.load(),
-        (try? JwtSessionStore.load(key: sessionKey)) != nil
+            (try? JwtSessionStore.load(key: sessionKey)) != nil
       else { return }
 
       _ = try? await setSelectedSession(sessionKey: sessionKey)
@@ -61,7 +61,8 @@ extension TurnkeyContext {
   func scheduleExpiryTimer(for sessionKey: String, expTimestamp: TimeInterval) {
     expiryTasks[sessionKey]?.cancel()
 
-    let delay = expTimestamp - Date().timeIntervalSince1970 - 5  // Add a 5s buffer
+    // we add a 5s buffer
+    let delay = expTimestamp - Date().timeIntervalSince1970 - 5
     guard delay > 0 else {
       clearSession(for: sessionKey)
       return
@@ -90,14 +91,14 @@ extension TurnkeyContext {
     }
 
     do {
-      // Run user and wallets requests in parallel
+      // run user and wallets requests in parallel
       async let userResp = client.getUser(organizationId: organizationId, userId: userId)
       async let walletsResp = client.getWallets(organizationId: organizationId)
 
       let user = try await userResp.body.json.user
       let wallets = try await walletsResp.body.json.wallets
 
-      // Fetch wallet accounts concurrently
+      // fetch wallet accounts concurrently
       let detailed = try await withThrowingTaskGroup(of: SessionUser.UserWallet.self) { group in
         for w in wallets {
           group.addTask {
@@ -135,14 +136,8 @@ extension TurnkeyContext {
         wallets: detailed
       )
 
-    } catch let err as TurnkeyError {
-      if case let .apiError(_, payload) = err,
-        let data = payload,
-        let json = String(data: data, encoding: .utf8)
-      {
-        print("Server error payload:\n\(json)")
-      }
-      throw err
+    } catch {
+      throw error
     }
   }
 }
