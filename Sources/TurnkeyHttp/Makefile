@@ -13,9 +13,6 @@ turnkey_client:
 	--templates Resources/Templates/TurnkeyClient.stencil \
 	$(if $(WATCH),--watch,)
 
-clean:
-	rm -rf Generated
-
 test:
 	make clean
 	swift test

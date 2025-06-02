@@ -141,7 +141,7 @@ A sample SwiftUI demo app is included in the repository to showcase usage.
 
 ## Requirements
 
-* iOS 13+ / macOS 10.15+
-* Swift 5.7+
+* iOS 17+ / macOS 14.0+
+* Swift 5.9+
 
 ---

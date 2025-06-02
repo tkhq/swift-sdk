@@ -27,15 +27,27 @@ enum PendingKeysStore {
     q.sync { (try? LocalStore.get(storeKey) as [String: Date]?) ?? [:] }
   }
 
-  static func purge(ttlHours: Double = 24) {
-    let cutoff = Date().addingTimeInterval(-ttlHours * 3600)
-    for (pub, createdAt) in all() where createdAt < cutoff {
+static func purgeExpiredSessions() {
+  do {
+    for sessionKey in try all() {
       do {
-        try SecureStore.delete(service: pub, account: secureAccount)
-        try remove(pub)
+        guard let sess = try JwtSessionStore.load(key: sessionKey) else {
+          try remove(sessionKey)           // dangling index
+          continue
+        }
+
+        if Date(timeIntervalSince1970: sess.exp) <= Date() {
+          JwtSessionStore.delete(key: sessionKey)
+          try KeyPairStore.delete(for: sess.publicKey)
+          try remove(sessionKey)
+        }
       } catch {
-        print("PendingKeysStore purge error for \(pub): \(error)")
+        print("SessionRegistry purge error for \(sessionKey): \(error)")
       }
     }
+  } catch {
+    print("SessionRegistry purge error (enumerating keys): \(error)")
   }
+}
+
 }
