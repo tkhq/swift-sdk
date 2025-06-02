@@ -37,18 +37,15 @@ export type SendOtpResponse = {
 };
 
 export type CreateSubOrgParams = {
-  email?: string;
-  phone?: string;
   passkey?: {
     name?: string;
     challenge: string;
     attestation: Attestation;
   };
-  oauth?: OAuthProviderParams;
   apiKeys?: {
     apiKeyName: string;
     publicKey: string;
-    curveType: CurveType;
+    curveType: ApiKeyCurveType;
     expirationSeconds?: string;
   }[];
 };
@@ -70,10 +67,5 @@ export type VerifyOtpResponse = {
   token?: string;
 };
 
-export type OAuthProviderParams = {
-  providerName: string;
-  oidcToken: string;
-};
-
 export type Attestation = TurnkeyApiTypes["v1Attestation"];
-export type CurveType = TurnkeyApiTypes["v1ApiKeyCurve"];
+export type ApiKeyCurveType = TurnkeyApiTypes["v1ApiKeyCurve"];
