@@ -217,22 +217,29 @@ final class AuthContext: ObservableObject {
         
         let publicKey = try turnkey.createKeyPair()
         
-        let resp = try await client.stampLogin(
-            organizationId: organizationId,
-            publicKey: publicKey,
-            expirationSeconds: expiresInSeconds,
-            invalidateExisting: true
-        )
-        
-        guard
-            case let .json(body) = resp.body,
-            let jwt = body.activity.result.stampLoginResult?.session
-        else {
-            throw AuthError.serverError
+        do {
+            let resp = try await client.stampLogin(
+                organizationId: organizationId,
+                publicKey: publicKey,
+                expirationSeconds: expiresInSeconds,
+                invalidateExisting: true
+            )
+            
+            guard
+                case let .json(body) = resp.body,
+                let jwt = body.activity.result.stampLoginResult?.session
+            else {
+                throw AuthError.serverError
+            }
+            
+            try await turnkey.createSession(jwt: jwt)
+            
+        } catch let error as TurnkeyRequestError {
+            print("Turnkey \(error.statusCode ?? 0): \(error.fullMessage)")
+            throw error
         }
-        
-        try await turnkey.createSession(jwt: jwt)
     }
+    
     
     private func startLoading() {
         isLoading = true
