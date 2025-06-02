@@ -31,13 +31,18 @@ final class AuthContext: ObservableObject {
     
     enum OtpType: String, Codable {
         case email = "OTP_TYPE_EMAIL"
-        case sms   = "OTP_TYPE_SMS"
+        case sms = "OTP_TYPE_SMS"
     }
     
     struct CreateSubOrgRequest: Codable {
-        let passkey: PasskeyRegistrationResult?
-        init(registration: PasskeyRegistrationResult) {
-            self.passkey = registration
+        var passkey: PasskeyRegistrationResult?
+        var apiKeys: [ApiKeyPayload]?
+        
+        struct ApiKeyPayload: Codable {
+            var apiKeyName: String
+            var publicKey: String
+            var curveType: Components.Schemas.ApiKeyCurve
+            var expirationSeconds: String?
         }
     }
     
@@ -74,7 +79,12 @@ final class AuthContext: ObservableObject {
         
         let publicKey = try turnkey.createKeyPair()
         
-        let body = SendOtpRequest(otpType: type, contact: contact, userIdentifier: publicKey)
+        let body = SendOtpRequest(
+            otpType: type,
+            contact: contact,
+            userIdentifier: publicKey
+        )
+        
         var request = URLRequest(url: backendURL.appendingPathComponent("/auth/sendOtp"))
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -128,19 +138,42 @@ final class AuthContext: ObservableObject {
         defer { stopLoading() }
         
         let registration = try await createPasskey(
-            user: PasskeyUser(id: UUID().uuidString,
-                              name: "Anonymous User",
-                              displayName: "Anonymous User"),
+            user: PasskeyUser(id: UUID().uuidString, name: "Anonymous User", displayName: "Anonymous User"),
             rp: RelyingParty(id: Constants.App.rpId, name: Constants.App.appName),
             presentationAnchor: anchor
         )
         
-        let subOrgId = try await createSubOrganization(registration: registration)
+        // for one-tap passkey sign-up, we generate a temporary API key pair
+        // which is added as an authentication method for the new sub-org user
+        // this allows us to stamp the session creation request immediately after
+        // without prompting the user
+        let (_, publicKeyCompressed, privateKey) = TurnkeyCrypto.generateP256KeyPair()
+        
+        let apiKey = CreateSubOrgRequest.ApiKeyPayload(
+            apiKeyName: "Tempoarary API Key",
+            publicKey: publicKeyCompressed,
+            curveType: Components.Schemas.ApiKeyCurve.API_KEY_CURVE_P256,
+            expirationSeconds: Constants.Turnkey.sessionDuration
+        )
+        
+        let requestBody = CreateSubOrgRequest(
+            passkey: registration,
+            apiKeys: [apiKey]
+        )
+        
+        let subOrgId = try await createSubOrganization(body: requestBody)
+        
+        let ephemeralClient = TurnkeyClient(
+            apiPrivateKey: privateKey,
+            apiPublicKey: publicKeyCompressed,
+            baseUrl: Constants.Turnkey.apiUrl
+        )
         
         try await stampLoginAndCreateSession(
             anchor: anchor,
             organizationId: subOrgId,
-            expiresInSeconds: Constants.Turnkey.sessionDuration
+            expiresInSeconds: Constants.Turnkey.sessionDuration,
+            client: ephemeralClient
         )
     }
     
@@ -151,16 +184,12 @@ final class AuthContext: ObservableObject {
         
         try await stampLoginAndCreateSession(
             anchor: anchor,
-            
-            // parent orgId
             organizationId: Constants.Turnkey.organizationId,
             expiresInSeconds: Constants.Turnkey.sessionDuration
         )
     }
     
-    private func createSubOrganization(registration: PasskeyRegistrationResult) async throws -> String {
-        let body = CreateSubOrgRequest(registration: registration)
-        
+    private func createSubOrganization(body: CreateSubOrgRequest) async throws -> String {
         var request = URLRequest(url: backendURL.appendingPathComponent("/auth/createSubOrg"))
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -177,38 +206,33 @@ final class AuthContext: ObservableObject {
     private func stampLoginAndCreateSession(
         anchor: ASPresentationAnchor,
         organizationId: String,
-        expiresInSeconds: String
+        expiresInSeconds: String,
+        client: TurnkeyClient? = nil
     ) async throws {
-        
-        let client = TurnkeyClient(
+        let client = client ?? TurnkeyClient(
             rpId: Constants.App.rpId,
             presentationAnchor: anchor,
             baseUrl: Constants.Turnkey.apiUrl
         )
         
-        do {
-            let publicKey = try turnkey.createKeyPair()
-            
-            let resp = try await client.stampLogin(
-                organizationId:      organizationId,
-                publicKey:           publicKey,
-                expirationSeconds:   expiresInSeconds,
-                invalidateExisting:  true
-            )
-            
-            guard
-                case let .json(body) = resp.body,
-                let jwt = body.activity.result.stampLoginResult?.session
-            else { throw AuthError.serverError }
-            
-            try await turnkey.createSession(jwt: jwt)
-            
-        } catch let error as TurnkeyRequestError {
-            print("Turnkey \(error.statusCode ?? 0): \(error.fullMessage)")
-            throw error
+        let publicKey = try turnkey.createKeyPair()
+        
+        let resp = try await client.stampLogin(
+            organizationId: organizationId,
+            publicKey: publicKey,
+            expirationSeconds: expiresInSeconds,
+            invalidateExisting: true
+        )
+        
+        guard
+            case let .json(body) = resp.body,
+            let jwt = body.activity.result.stampLoginResult?.session
+        else {
+            throw AuthError.serverError
         }
+        
+        try await turnkey.createSession(jwt: jwt)
     }
-    
     
     private func startLoading() {
         isLoading = true

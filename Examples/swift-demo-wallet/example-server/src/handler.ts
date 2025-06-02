@@ -103,7 +103,7 @@ export async function verifyOtp(
 export async function createSubOrg(
   req: Request<{}, {}, CreateSubOrgParams>
 ): Promise<CreateSubOrgResponse> {
-  const { email, phone, passkey, oauth, apiKeys } = req.body;
+  const { passkey, apiKeys } = req.body;
 
   const authenticators = passkey
     ? [
@@ -115,39 +115,17 @@ export async function createSubOrg(
       ]
     : [];
 
-  const oauthProviders = oauth
-    ? [
-        {
-          providerName: oauth.providerName,
-          oidcToken: oauth.oidcToken,
-        },
-      ]
-    : [];
-
-  let userEmail = email;
-
-  if (oauth) {
-    const decoded = decodeJwt(oauth.oidcToken);
-    if (decoded?.email) {
-      userEmail = decoded.email;
-    }
-  }
-
-  const userPhoneNumber = phone;
-  const subOrganizationName = `Sub Org - ${email || phone}`;
-  const userName = email ? email.split("@")[0] || email : "";
+  const subOrganizationName = `Sub Org - ${new Date().toISOString()}`;
 
   const result = await turnkey.createSubOrganization({
     organizationId: turnkeyConfig.defaultOrganizationId,
     subOrganizationName,
     rootUsers: [
       {
-        userName,
-        userEmail,
-        userPhoneNumber,
-        oauthProviders,
+        userName: "Passkey User",
         authenticators,
         apiKeys: apiKeys ?? [],
+        oauthProviders: [],
       },
     ],
     rootQuorumThreshold: 1,
