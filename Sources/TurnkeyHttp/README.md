@@ -2,7 +2,7 @@
 
 A lower-level, fully-typed HTTP client for interacting with the Turnkey API, written in Swift using `OpenAPIURLSession`.
 
-> For high-level abstractions like signing transactions or managing wallets, see the SDK entry point: `TurnkeyClient`.
+> For high-level abstractions like signing transactions or managing wallets, see [TurnkeySwift](../TurnkeySwift/).
 
 Official Turnkey API documentation: [https://docs.turnkey.com](https://docs.turnkey.com)
 
@@ -78,11 +78,6 @@ make format
 
 ```bash
 make clean
-```
-* Run tests:
-
-```bash
-make test
 ```
 
 > Curious how our Stencil templates work? Check out [`Resources/Templates/README.md`](Resources/Templates/README.md) for a deeper dive into how we generate the Swift client using macros and template composition.

@@ -143,7 +143,6 @@ struct DashboardView: View {
                     }
                 }
             } catch {
-                print("Failed to export wallet: \(error)")
                 toast.show(message: "Failed to export wallet.", type: .error)
             }
         }

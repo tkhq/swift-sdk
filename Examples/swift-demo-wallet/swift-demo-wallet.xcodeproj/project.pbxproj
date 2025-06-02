@@ -41,19 +41,19 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		8DB1003C2DD7E3D400885C8F /* swift-sdk-demo-wallet */ = {
+		8DB1003C2DD7E3D400885C8F /* swift-demo-wallet */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "swift-sdk-demo-wallet";
+			path = "swift-demo-wallet";
 			sourceTree = "<group>";
 		};
-		8DB1004D2DD7E3D500885C8F /* swift-sdk-demo-walletTests */ = {
+		8DB1004D2DD7E3D500885C8F /* swift-demo-walletTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "swift-sdk-demo-walletTests";
+			path = "swift-demo-walletTests";
 			sourceTree = "<group>";
 		};
-		8DB100572DD7E3D500885C8F /* swift-sdk-demo-walletUITests */ = {
+		8DB100572DD7E3D500885C8F /* swift-demo-walletUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "swift-sdk-demo-walletUITests";
+			path = "swift-demo-walletUITests";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -101,9 +101,9 @@
 		8DB100312DD7E3D400885C8F = {
 			isa = PBXGroup;
 			children = (
-				8DB1003C2DD7E3D400885C8F /* swift-sdk-demo-wallet */,
-				8DB1004D2DD7E3D500885C8F /* swift-sdk-demo-walletTests */,
-				8DB100572DD7E3D500885C8F /* swift-sdk-demo-walletUITests */,
+				8DB1003C2DD7E3D400885C8F /* swift-demo-wallet */,
+				8DB1004D2DD7E3D500885C8F /* swift-demo-walletTests */,
+				8DB100572DD7E3D500885C8F /* swift-demo-walletUITests */,
 				8D1943172DDD175F00FA9BC1 /* Frameworks */,
 				8DB1003B2DD7E3D400885C8F /* Products */,
 			);
@@ -135,7 +135,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				8DB1003C2DD7E3D400885C8F /* swift-sdk-demo-wallet */,
+				8DB1003C2DD7E3D400885C8F /* swift-demo-wallet */,
 			);
 			name = "swift-sdk-demo-wallet";
 			packageProductDependencies = (
@@ -166,7 +166,7 @@
 				8DB1004C2DD7E3D500885C8F /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				8DB1004D2DD7E3D500885C8F /* swift-sdk-demo-walletTests */,
+				8DB1004D2DD7E3D500885C8F /* swift-demo-walletTests */,
 			);
 			name = "swift-sdk-demo-walletTests";
 			packageProductDependencies = (
@@ -189,7 +189,7 @@
 				8DB100562DD7E3D500885C8F /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				8DB100572DD7E3D500885C8F /* swift-sdk-demo-walletUITests */,
+				8DB100572DD7E3D500885C8F /* swift-demo-walletUITests */,
 			);
 			name = "swift-sdk-demo-walletUITests";
 			packageProductDependencies = (
@@ -221,7 +221,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 8DB100352DD7E3D400885C8F /* Build configuration list for PBXProject "swift-sdk-demo-wallet" */;
+			buildConfigurationList = 8DB100352DD7E3D400885C8F /* Build configuration list for PBXProject "swift-demo-wallet" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -433,11 +433,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "swift-sdk-demo-wallet/swift-sdk-demo-wallet.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "swift-demo-wallet/swift-demo-wallet.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"swift-sdk-demo-wallet/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"swift-demo-wallet/Preview Content\"";
 				DEVELOPMENT_TEAM = 74V7N6MW3W;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -467,11 +467,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = "swift-sdk-demo-wallet/swift-sdk-demo-wallet.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "swift-demo-wallet/swift-demo-wallet.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"swift-sdk-demo-wallet/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"swift-demo-wallet/Preview Content\"";
 				DEVELOPMENT_TEAM = 74V7N6MW3W;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -571,7 +571,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		8DB100352DD7E3D400885C8F /* Build configuration list for PBXProject "swift-sdk-demo-wallet" */ = {
+		8DB100352DD7E3D400885C8F /* Build configuration list for PBXProject "swift-demo-wallet" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				8DB1005C2DD7E3D500885C8F /* Debug */,

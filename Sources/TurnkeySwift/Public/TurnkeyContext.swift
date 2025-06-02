@@ -28,7 +28,7 @@ public final class TurnkeyContext: ObservableObject {
 
     // clean up expired sessions and pending keys
     PendingKeysStore.purge(ttlHours: 2)
-    try? SessionRegistryStore.purgeExpiredSessions()
+    SessionRegistryStore.purgeExpiredSessions()
 
     // restore session and timers after launch
     Task { [weak self] in
@@ -41,7 +41,7 @@ public final class TurnkeyContext: ObservableObject {
       Task.detached {
         for await _ in NotificationCenter.default.notifications(named: note) {
           PendingKeysStore.purge(ttlHours: 1)
-          try? SessionRegistryStore.purgeExpiredSessions()
+          SessionRegistryStore.purgeExpiredSessions()
         }
       }
     }
