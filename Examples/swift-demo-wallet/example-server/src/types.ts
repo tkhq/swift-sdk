@@ -37,6 +37,8 @@ export type SendOtpResponse = {
 };
 
 export type CreateSubOrgParams = {
+  email: string;
+  phone?: string;
   passkey?: {
     name?: string;
     challenge: string;
