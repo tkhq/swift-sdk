@@ -3,10 +3,10 @@ import cors from "cors";
 import dotenv from "dotenv";
 import bodyParser from "body-parser";
 import {
-  getSubOrgId,
   sendOtp,
   verifyOtp,
   createSubOrg,
+  oAuth,
 } from "./src/handler.js";
 
 dotenv.config();
@@ -32,16 +32,16 @@ async function handleRequest<T>(
   }
 }
 
-app.post("/auth/getSubOrgId", (req, res) =>
-  handleRequest(req, res, getSubOrgId),
+app.post("/auth/createSubOrg", (req, res) =>
+  handleRequest(req, res, createSubOrg),
 );
+
 app.post("/auth/sendOtp", (req, res) =>
   handleRequest(req, res, sendOtp),
 );
 app.post("/auth/verifyOtp", (req, res) => handleRequest(req, res, verifyOtp));
-app.post("/auth/createSubOrg", (req, res) =>
-  handleRequest(req, res, createSubOrg),
-);
+
+app.post("/auth/oAuth", (req, res) => handleRequest(req, res, oAuth));
 
 app.listen(PORT, () =>
   console.log(`✅ Server running on http://localhost:${PORT}`),

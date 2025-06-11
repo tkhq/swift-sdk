@@ -10,22 +10,6 @@ export enum FilterType {
   PhoneNumber = "PHONE_NUMBER",
 }
 
-export type GetSubOrgIdParams = {
-  filterType:
-    | "NAME"
-    | "USERNAME"
-    | "EMAIL"
-    | "PHONE_NUMBER"
-    | "CREDENTIAL_ID"
-    | "PUBLIC_KEY"
-    | "OIDC_TOKEN";
-  filterValue: string;
-};
-
-export type GetSubOrgIdResponse = {
-  organizationId: string;
-};
-
 export type SendOtpParams = {
   otpType: "OTP_TYPE_EMAIL" | "OTP_TYPE_SMS";
   contact: string;
@@ -43,6 +27,10 @@ export type CreateSubOrgParams = {
     name?: string;
     challenge: string;
     attestation: Attestation;
+  };
+  oauth?: {
+    providerName: string;
+    oidcToken: string;
   };
   apiKeys?: {
     apiKeyName: string;
@@ -68,6 +56,17 @@ export type VerifyOtpParams = {
 export type VerifyOtpResponse = {
   token?: string;
 };
+
+export type OAuthParams = {
+  publicKey: string;
+  providerName: string;
+  oidcToken: string;
+  expirationSeconds: string;
+};
+
+export type OAuthResponse = {
+  token: string;
+}
 
 export type Attestation = TurnkeyApiTypes["v1Attestation"];
 export type ApiKeyCurveType = TurnkeyApiTypes["v1ApiKeyCurve"];
