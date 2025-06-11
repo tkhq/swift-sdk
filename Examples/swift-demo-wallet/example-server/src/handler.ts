@@ -3,8 +3,6 @@ import dotenv from "dotenv";
 import { DEFAULT_ETHEREUM_ACCOUNTS, Turnkey } from "@turnkey/sdk-server";
 import { decodeJwt } from "./util.js";
 import {
-  GetSubOrgIdParams,
-  GetSubOrgIdResponse,
   CreateSubOrgParams,
   CreateSubOrgResponse,
   SendOtpParams,
@@ -13,6 +11,8 @@ import {
   VerifyOtpResponse,
   VerifyOtpParams,
   SendOtpResponse,
+  OAuthParams,
+  OAuthResponse,
 } from "./types.js";
 
 dotenv.config();
@@ -25,20 +25,6 @@ export const turnkeyConfig = {
 };
 
 const turnkey = new Turnkey(turnkeyConfig).apiClient();
-
-export async function getSubOrgId(
-  req: Request<{}, {}, GetSubOrgIdParams>
-): Promise<GetSubOrgIdResponse> {
-  const { filterType, filterValue } = req.body;
-  const { organizationIds } = await turnkey.getSubOrgIds({
-    filterType,
-    filterValue,
-  });
-
-  return {
-    organizationId: organizationIds[0] || turnkeyConfig.defaultOrganizationId,
-  };
-}
 
 export async function sendOtp(
   req: Request<{}, {}, SendOtpParams>
@@ -103,7 +89,7 @@ export async function verifyOtp(
 export async function createSubOrg(
   req: Request<{}, {}, CreateSubOrgParams>
 ): Promise<CreateSubOrgResponse> {
-  const { email, phone, passkey, apiKeys } = req.body;
+  const { email, phone, passkey, oauth, apiKeys } = req.body;
 
   const authenticators = passkey
     ? [
@@ -115,8 +101,17 @@ export async function createSubOrg(
       ]
     : [];
 
-    let userEmail = email;
-    const userPhoneNumber = phone;
+  const oauthProviders = oauth
+    ? [
+        {
+          providerName: oauth.providerName,
+          oidcToken: oauth.oidcToken,
+        },
+      ]
+    : [];
+
+  let userEmail = email;
+  const userPhoneNumber = phone;
 
   const subOrganizationName = `Sub Org - ${new Date().toISOString()}`;
 
@@ -129,8 +124,8 @@ export async function createSubOrg(
         userEmail,
         userPhoneNumber,
         authenticators,
+        oauthProviders: oauthProviders,
         apiKeys: apiKeys ?? [],
-        oauthProviders: [],
       },
     ],
     rootQuorumThreshold: 1,
@@ -141,4 +136,42 @@ export async function createSubOrg(
   });
 
   return { subOrganizationId: result.subOrganizationId };
+}
+
+export async function oAuth(
+  req: Request<{}, {}, OAuthParams>
+): Promise<OAuthResponse> {
+  const { publicKey, providerName, oidcToken, expirationSeconds } = req.body;
+
+  let organizationId = turnkeyConfig.defaultOrganizationId;
+
+  const { organizationIds } = await turnkey.getSubOrgIds({
+    filterType: "OIDC_TOKEN",
+    filterValue: oidcToken,
+  });
+
+  if (organizationIds.length > 0) {
+    organizationId = organizationIds[0];
+  } else {
+    const createSubOrgParams = {
+      oauth: {
+        providerName,
+        oidcToken,
+      },
+    };
+
+    const subOrgResponse = await createSubOrg({
+      body: createSubOrgParams,
+    } as Request);
+    organizationId = subOrgResponse.subOrganizationId;
+  }
+
+  const sessionResponse = await turnkey.oauthLogin({
+    publicKey,
+    organizationId,
+    oidcToken,
+    expirationSeconds,
+  });
+
+  return { token: sessionResponse.session };
 }

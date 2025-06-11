@@ -2,10 +2,11 @@ import Foundation
 import TurnkeyHttp
 
 enum Constants {
-    
+
     enum App {
         static let appName = "Swift Demo Wallet App"
         static let rpId = "<your_rp_id>"
+        static let scheme = "swift-demo-wallet"
         static let backendBaseUrl = "http://localhost:3000"
     }
 
@@ -22,9 +23,13 @@ enum Constants {
             )
         ]
     }
-    
+
     enum Ethereum {
         static let rpcURL = "https://rpc.sepolia.org"
         static let coingeckoURL = "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"
+    }
+    
+    enum Google {
+        static let clientId = "<your_google_web_client_id>"
     }
 }

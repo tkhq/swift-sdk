@@ -104,6 +104,12 @@ Then in your views, access it via:
 
   * Signs a raw payload using the current session.
 
+### OAuth
+
+* `startGoogleOAuthFlow(clientId:nonce:scheme:anchor:originUri:redirectUri:) -> String`
+
+  * Launches the Google OAuth flow in a secure system browser window and returns an OIDC token.
+
 ---
 
 ## Supported Types
