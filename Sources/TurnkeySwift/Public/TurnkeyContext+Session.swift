@@ -40,6 +40,8 @@ extension TurnkeyContext {
                 throw TurnkeySwiftError.keyNotFound
             }
             
+            try PendingKeysStore.remove(dto.publicKey)
+            
             if selectedSessionKey == nil {
                 _ = try await setSelectedSession(sessionKey: sessionKey)
             }
