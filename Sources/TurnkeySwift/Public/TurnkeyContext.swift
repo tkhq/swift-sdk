@@ -40,7 +40,7 @@ public final class TurnkeyContext: NSObject, ObservableObject {
     
     private func postInitSetup() {
         // clean up expired sessions and pending keys
-        PendingKeysStore.purge(ttlHours: 2)
+        PendingKeysStore.purge()
         SessionRegistryStore.purgeExpiredSessions()
         
         // restore session and timers after launch
@@ -53,7 +53,7 @@ public final class TurnkeyContext: NSObject, ObservableObject {
         if let note = Self.foregroundNotification {
             Task.detached {
                 for await _ in NotificationCenter.default.notifications(named: note) {
-                    PendingKeysStore.purge(ttlHours: 1)
+                    PendingKeysStore.purge()
                     SessionRegistryStore.purgeExpiredSessions()
                 }
             }
