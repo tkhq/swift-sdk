@@ -60,6 +60,7 @@ extension TurnkeyContext {
                 _ = try await setSelectedSession(sessionKey: sessionKey)
             }
             
+            await MainActor.run { self.authState = .authenticated }
         } catch {
             throw TurnkeySwiftError.failedToCreateSession(underlying: error)
         }
@@ -116,10 +117,12 @@ extension TurnkeyContext {
         
         Task { @MainActor in
             if selectedSessionKey == sessionKey {
+                authState = .unAuthenticated
                 selectedSessionKey = nil
-                SelectedSessionStore.delete()
                 client = nil
                 user = nil
+                
+                SelectedSessionStore.delete()
             }
         }
     }

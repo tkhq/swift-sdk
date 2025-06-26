@@ -1,5 +1,11 @@
 import Foundation
 
+public enum AuthState{
+    case loading
+    case authenticated
+    case unAuthenticated
+}
+
 public struct TurnkeySession: Codable, Equatable {
   public let exp: TimeInterval
   public let publicKey: String

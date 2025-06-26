@@ -147,7 +147,7 @@ final class AuthContext: ObservableObject {
         }
 
         let result = try JSONDecoder().decode(VerifyOtpResponse.self, from: data)
-        try await turnkey.createSession(jwt: result.token, refreshedSessionTTLSeconds: Constants.Session.defaultExpirationSeconds)
+        try await turnkey.createSession(jwt: result.token, refreshedSessionTTLSeconds: Constants.Turnkey.sessionDuration)
     }
 
     func signUpWithPasskey(anchor: ASPresentationAnchor) async throws {
@@ -243,7 +243,7 @@ final class AuthContext: ObservableObject {
         }
 
         let result = try JSONDecoder().decode(OAuthLoginResponse.self, from: data)
-        try await turnkey.createSession(jwt: result.token, refreshedSessionTTLSeconds: Constants.Session.defaultExpirationSeconds)
+        try await turnkey.createSession(jwt: result.token, refreshedSessionTTLSeconds: Constants.Turnkey.sessionDuration)
     }
 
     
@@ -290,7 +290,7 @@ final class AuthContext: ObservableObject {
                 throw AuthError.serverError
             }
 
-            try await turnkey.createSession(jwt: jwt, refreshedSessionTTLSeconds: Constants.Session.defaultExpirationSeconds)
+            try await turnkey.createSession(jwt: jwt, refreshedSessionTTLSeconds: Constants.Turnkey.sessionDuration)
 
         } catch let error as TurnkeyRequestError {
             print("Turnkey \(error.statusCode ?? 0): \(error.fullMessage)")

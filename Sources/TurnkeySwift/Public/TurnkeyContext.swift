@@ -7,6 +7,7 @@ import TurnkeyHttp
 public final class TurnkeyContext: NSObject, ObservableObject {
     
     // public state
+    @Published public internal(set) var authState: AuthState = .loading
     @Published public internal(set) var client: TurnkeyClient?
     @Published public internal(set) var selectedSessionKey: String?
     @Published public internal(set) var user: SessionUser?

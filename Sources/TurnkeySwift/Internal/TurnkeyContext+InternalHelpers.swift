@@ -35,12 +35,14 @@ extension TurnkeyContext {
                 // if we fail that means the selected session expired
                 // so we delete it from the SelectedSessionStore
                 SelectedSessionStore.delete()
+                await MainActor.run { self.authState = .unAuthenticated }
                 return
             }
             
+            await MainActor.run { self.authState = .authenticated }
             _ = try? await setSelectedSession(sessionKey: sessionKey)
         } catch {
-            // Silently fail
+            await MainActor.run { self.authState = .unAuthenticated }
         }
     }
     
