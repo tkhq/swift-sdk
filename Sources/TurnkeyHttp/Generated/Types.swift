@@ -612,6 +612,30 @@ public protocol APIProtocol: Sendable {
   /// - Remark: HTTP `POST /public/v1/submit/update_user`.
   /// - Remark: Generated from `#/paths//public/v1/submit/update_user/post(UpdateUser)`.
   func UpdateUser(_ input: Operations.UpdateUser.Input) async throws -> Operations.UpdateUser.Output
+  /// Update User's Email
+  ///
+  /// Update a User's email in an existing Organization
+  ///
+  /// - Remark: HTTP `POST /public/v1/submit/update_user_email`.
+  /// - Remark: Generated from `#/paths//public/v1/submit/update_user_email/post(UpdateUserEmail)`.
+  func UpdateUserEmail(_ input: Operations.UpdateUserEmail.Input) async throws
+    -> Operations.UpdateUserEmail.Output
+  /// Update User's Name
+  ///
+  /// Update a User's name in an existing Organization
+  ///
+  /// - Remark: HTTP `POST /public/v1/submit/update_user_name`.
+  /// - Remark: Generated from `#/paths//public/v1/submit/update_user_name/post(UpdateUserName)`.
+  func UpdateUserName(_ input: Operations.UpdateUserName.Input) async throws
+    -> Operations.UpdateUserName.Output
+  /// Update User's Phone Number
+  ///
+  /// Update a User's phone number in an existing Organization
+  ///
+  /// - Remark: HTTP `POST /public/v1/submit/update_user_phone_number`.
+  /// - Remark: Generated from `#/paths//public/v1/submit/update_user_phone_number/post(UpdateUserPhoneNumber)`.
+  func UpdateUserPhoneNumber(_ input: Operations.UpdateUserPhoneNumber.Input) async throws
+    -> Operations.UpdateUserPhoneNumber.Output
   /// Update User Tag
   ///
   /// Update human-readable name or associated users. Note that this activity is atomic: all of the updates will succeed at once, or all of them will fail.
@@ -1871,6 +1895,54 @@ extension APIProtocol {
         body: body
       ))
   }
+  /// Update User's Email
+  ///
+  /// Update a User's email in an existing Organization
+  ///
+  /// - Remark: HTTP `POST /public/v1/submit/update_user_email`.
+  /// - Remark: Generated from `#/paths//public/v1/submit/update_user_email/post(UpdateUserEmail)`.
+  public func UpdateUserEmail(
+    headers: Operations.UpdateUserEmail.Input.Headers = .init(),
+    body: Operations.UpdateUserEmail.Input.Body
+  ) async throws -> Operations.UpdateUserEmail.Output {
+    try await UpdateUserEmail(
+      Operations.UpdateUserEmail.Input(
+        headers: headers,
+        body: body
+      ))
+  }
+  /// Update User's Name
+  ///
+  /// Update a User's name in an existing Organization
+  ///
+  /// - Remark: HTTP `POST /public/v1/submit/update_user_name`.
+  /// - Remark: Generated from `#/paths//public/v1/submit/update_user_name/post(UpdateUserName)`.
+  public func UpdateUserName(
+    headers: Operations.UpdateUserName.Input.Headers = .init(),
+    body: Operations.UpdateUserName.Input.Body
+  ) async throws -> Operations.UpdateUserName.Output {
+    try await UpdateUserName(
+      Operations.UpdateUserName.Input(
+        headers: headers,
+        body: body
+      ))
+  }
+  /// Update User's Phone Number
+  ///
+  /// Update a User's phone number in an existing Organization
+  ///
+  /// - Remark: HTTP `POST /public/v1/submit/update_user_phone_number`.
+  /// - Remark: Generated from `#/paths//public/v1/submit/update_user_phone_number/post(UpdateUserPhoneNumber)`.
+  public func UpdateUserPhoneNumber(
+    headers: Operations.UpdateUserPhoneNumber.Input.Headers = .init(),
+    body: Operations.UpdateUserPhoneNumber.Input.Body
+  ) async throws -> Operations.UpdateUserPhoneNumber.Output {
+    try await UpdateUserPhoneNumber(
+      Operations.UpdateUserPhoneNumber.Input(
+        headers: headers,
+        body: body
+      ))
+  }
   /// Update User Tag
   ///
   /// Update human-readable name or associated users. Note that this activity is atomic: all of the updates will succeed at once, or all of them will fail.
@@ -2288,6 +2360,9 @@ public enum Components {
       case ACTIVITY_TYPE_OTP_LOGIN = "ACTIVITY_TYPE_OTP_LOGIN"
       case ACTIVITY_TYPE_STAMP_LOGIN = "ACTIVITY_TYPE_STAMP_LOGIN"
       case ACTIVITY_TYPE_OAUTH_LOGIN = "ACTIVITY_TYPE_OAUTH_LOGIN"
+      case ACTIVITY_TYPE_UPDATE_USER_NAME = "ACTIVITY_TYPE_UPDATE_USER_NAME"
+      case ACTIVITY_TYPE_UPDATE_USER_EMAIL = "ACTIVITY_TYPE_UPDATE_USER_EMAIL"
+      case ACTIVITY_TYPE_UPDATE_USER_PHONE_NUMBER = "ACTIVITY_TYPE_UPDATE_USER_PHONE_NUMBER"
     }
     /// - Remark: Generated from `#/components/schemas/AddressFormat`.
     @frozen public enum AddressFormat: String, Codable, Hashable, Sendable, CaseIterable {
@@ -2325,6 +2400,7 @@ public enum Components {
       case ADDRESS_FORMAT_DOGE_TESTNET = "ADDRESS_FORMAT_DOGE_TESTNET"
       case ADDRESS_FORMAT_TON_V3R2 = "ADDRESS_FORMAT_TON_V3R2"
       case ADDRESS_FORMAT_TON_V4R2 = "ADDRESS_FORMAT_TON_V4R2"
+      case ADDRESS_FORMAT_TON_V5R1 = "ADDRESS_FORMAT_TON_V5R1"
       case ADDRESS_FORMAT_XRP = "ADDRESS_FORMAT_XRP"
     }
     /// - Remark: Generated from `#/components/schemas/Any`.
@@ -5606,12 +5682,12 @@ public enum Components {
       /// The payment method that the customer wants to remove.
       ///
       /// - Remark: Generated from `#/components/schemas/DeletePaymentMethodIntent/paymentMethodId`.
-      public var paymentMethodId: Swift.String
+      public var paymentMethodId: Swift.String?
       /// Creates a new `DeletePaymentMethodIntent`.
       ///
       /// - Parameters:
       ///   - paymentMethodId: The payment method that the customer wants to remove.
-      public init(paymentMethodId: Swift.String) {
+      public init(paymentMethodId: Swift.String? = nil) {
         self.paymentMethodId = paymentMethodId
       }
       public enum CodingKeys: String, CodingKey {
@@ -8850,6 +8926,12 @@ public enum Components {
       public var stampLoginIntent: Components.Schemas.StampLoginIntent?
       /// - Remark: Generated from `#/components/schemas/Intent/oauthLoginIntent`.
       public var oauthLoginIntent: Components.Schemas.OauthLoginIntent?
+      /// - Remark: Generated from `#/components/schemas/Intent/updateUserNameIntent`.
+      public var updateUserNameIntent: Components.Schemas.UpdateUserNameIntent?
+      /// - Remark: Generated from `#/components/schemas/Intent/updateUserEmailIntent`.
+      public var updateUserEmailIntent: Components.Schemas.UpdateUserEmailIntent?
+      /// - Remark: Generated from `#/components/schemas/Intent/updateUserPhoneNumberIntent`.
+      public var updateUserPhoneNumberIntent: Components.Schemas.UpdateUserPhoneNumberIntent?
       /// Creates a new `Intent`.
       ///
       /// - Parameters:
@@ -8941,6 +9023,9 @@ public enum Components {
       ///   - otpLoginIntent:
       ///   - stampLoginIntent:
       ///   - oauthLoginIntent:
+      ///   - updateUserNameIntent:
+      ///   - updateUserEmailIntent:
+      ///   - updateUserPhoneNumberIntent:
       public init(
         createOrganizationIntent: Components.Schemas.CreateOrganizationIntent? = nil,
         createAuthenticatorsIntent: Components.Schemas.CreateAuthenticatorsIntent? = nil,
@@ -9029,7 +9114,10 @@ public enum Components {
         verifyOtpIntent: Components.Schemas.VerifyOtpIntent? = nil,
         otpLoginIntent: Components.Schemas.OtpLoginIntent? = nil,
         stampLoginIntent: Components.Schemas.StampLoginIntent? = nil,
-        oauthLoginIntent: Components.Schemas.OauthLoginIntent? = nil
+        oauthLoginIntent: Components.Schemas.OauthLoginIntent? = nil,
+        updateUserNameIntent: Components.Schemas.UpdateUserNameIntent? = nil,
+        updateUserEmailIntent: Components.Schemas.UpdateUserEmailIntent? = nil,
+        updateUserPhoneNumberIntent: Components.Schemas.UpdateUserPhoneNumberIntent? = nil
       ) {
         self.createOrganizationIntent = createOrganizationIntent
         self.createAuthenticatorsIntent = createAuthenticatorsIntent
@@ -9119,6 +9207,9 @@ public enum Components {
         self.otpLoginIntent = otpLoginIntent
         self.stampLoginIntent = stampLoginIntent
         self.oauthLoginIntent = oauthLoginIntent
+        self.updateUserNameIntent = updateUserNameIntent
+        self.updateUserEmailIntent = updateUserEmailIntent
+        self.updateUserPhoneNumberIntent = updateUserPhoneNumberIntent
       }
       public enum CodingKeys: String, CodingKey {
         case createOrganizationIntent
@@ -9209,6 +9300,9 @@ public enum Components {
         case otpLoginIntent
         case stampLoginIntent
         case oauthLoginIntent
+        case updateUserNameIntent
+        case updateUserEmailIntent
+        case updateUserPhoneNumberIntent
       }
     }
     /// - Remark: Generated from `#/components/schemas/InvitationParams`.
@@ -9983,11 +10077,11 @@ public enum Components {
       /// A consensus expression that evalutes to true or false.
       ///
       /// - Remark: Generated from `#/components/schemas/Policy/consensus`.
-      public var consensus: Swift.String
+      public var consensus: Swift.String?
       /// A condition expression that evalutes to true or false.
       ///
       /// - Remark: Generated from `#/components/schemas/Policy/condition`.
-      public var condition: Swift.String
+      public var condition: Swift.String?
       /// Creates a new `Policy`.
       ///
       /// - Parameters:
@@ -10006,8 +10100,8 @@ public enum Components {
         createdAt: Components.Schemas.external_period_data_period_v1_period_Timestamp,
         updatedAt: Components.Schemas.external_period_data_period_v1_period_Timestamp,
         notes: Swift.String,
-        consensus: Swift.String,
-        condition: Swift.String
+        consensus: Swift.String? = nil,
+        condition: Swift.String? = nil
       ) {
         self.policyId = policyId
         self.policyName = policyName
@@ -10607,6 +10701,12 @@ public enum Components {
       public var stampLoginResult: Components.Schemas.StampLoginResult?
       /// - Remark: Generated from `#/components/schemas/Result/oauthLoginResult`.
       public var oauthLoginResult: Components.Schemas.OauthLoginResult?
+      /// - Remark: Generated from `#/components/schemas/Result/updateUserNameResult`.
+      public var updateUserNameResult: Components.Schemas.UpdateUserNameResult?
+      /// - Remark: Generated from `#/components/schemas/Result/updateUserEmailResult`.
+      public var updateUserEmailResult: Components.Schemas.UpdateUserEmailResult?
+      /// - Remark: Generated from `#/components/schemas/Result/updateUserPhoneNumberResult`.
+      public var updateUserPhoneNumberResult: Components.Schemas.UpdateUserPhoneNumberResult?
       /// Creates a new `Result`.
       ///
       /// - Parameters:
@@ -10683,6 +10783,9 @@ public enum Components {
       ///   - otpLoginResult:
       ///   - stampLoginResult:
       ///   - oauthLoginResult:
+      ///   - updateUserNameResult:
+      ///   - updateUserEmailResult:
+      ///   - updateUserPhoneNumberResult:
       public init(
         createOrganizationResult: Components.Schemas.CreateOrganizationResult? = nil,
         createAuthenticatorsResult: Components.Schemas.CreateAuthenticatorsResult? = nil,
@@ -10756,7 +10859,10 @@ public enum Components {
         verifyOtpResult: Components.Schemas.VerifyOtpResult? = nil,
         otpLoginResult: Components.Schemas.OtpLoginResult? = nil,
         stampLoginResult: Components.Schemas.StampLoginResult? = nil,
-        oauthLoginResult: Components.Schemas.OauthLoginResult? = nil
+        oauthLoginResult: Components.Schemas.OauthLoginResult? = nil,
+        updateUserNameResult: Components.Schemas.UpdateUserNameResult? = nil,
+        updateUserEmailResult: Components.Schemas.UpdateUserEmailResult? = nil,
+        updateUserPhoneNumberResult: Components.Schemas.UpdateUserPhoneNumberResult? = nil
       ) {
         self.createOrganizationResult = createOrganizationResult
         self.createAuthenticatorsResult = createAuthenticatorsResult
@@ -10831,6 +10937,9 @@ public enum Components {
         self.otpLoginResult = otpLoginResult
         self.stampLoginResult = stampLoginResult
         self.oauthLoginResult = oauthLoginResult
+        self.updateUserNameResult = updateUserNameResult
+        self.updateUserEmailResult = updateUserEmailResult
+        self.updateUserPhoneNumberResult = updateUserPhoneNumberResult
       }
       public enum CodingKeys: String, CodingKey {
         case createOrganizationResult
@@ -10906,6 +11015,9 @@ public enum Components {
         case otpLoginResult
         case stampLoginResult
         case oauthLoginResult
+        case updateUserNameResult
+        case updateUserEmailResult
+        case updateUserPhoneNumberResult
       }
     }
     /// - Remark: Generated from `#/components/schemas/RootUserParams`.
@@ -11177,7 +11289,7 @@ public enum Components {
       /// Optional value for the feature. Will override existing values if feature is already set.
       ///
       /// - Remark: Generated from `#/components/schemas/SetOrganizationFeatureIntent/value`.
-      public var value: Swift.String
+      public var value: Swift.String?
       /// Creates a new `SetOrganizationFeatureIntent`.
       ///
       /// - Parameters:
@@ -11185,7 +11297,7 @@ public enum Components {
       ///   - value: Optional value for the feature. Will override existing values if feature is already set.
       public init(
         name: Components.Schemas.FeatureName,
-        value: Swift.String
+        value: Swift.String? = nil
       ) {
         self.name = name
         self.value = value
@@ -12327,6 +12439,101 @@ public enum Components {
     }
     /// - Remark: Generated from `#/components/schemas/UpdateRootQuorumResult`.
     public typealias UpdateRootQuorumResult = OpenAPIRuntime.OpenAPIObjectContainer
+    /// - Remark: Generated from `#/components/schemas/UpdateUserEmailIntent`.
+    public struct UpdateUserEmailIntent: Codable, Hashable, Sendable {
+      /// Unique identifier for a given User.
+      ///
+      /// - Remark: Generated from `#/components/schemas/UpdateUserEmailIntent/userId`.
+      public var userId: Swift.String
+      /// The user's email address. Setting this to an empty string will remove the user's email.
+      ///
+      /// - Remark: Generated from `#/components/schemas/UpdateUserEmailIntent/userEmail`.
+      public var userEmail: Swift.String
+      /// Signed JWT containing a unique id, expiry, verification type, contact
+      ///
+      /// - Remark: Generated from `#/components/schemas/UpdateUserEmailIntent/verificationToken`.
+      public var verificationToken: Swift.String?
+      /// Creates a new `UpdateUserEmailIntent`.
+      ///
+      /// - Parameters:
+      ///   - userId: Unique identifier for a given User.
+      ///   - userEmail: The user's email address. Setting this to an empty string will remove the user's email.
+      ///   - verificationToken: Signed JWT containing a unique id, expiry, verification type, contact
+      public init(
+        userId: Swift.String,
+        userEmail: Swift.String,
+        verificationToken: Swift.String? = nil
+      ) {
+        self.userId = userId
+        self.userEmail = userEmail
+        self.verificationToken = verificationToken
+      }
+      public enum CodingKeys: String, CodingKey {
+        case userId
+        case userEmail
+        case verificationToken
+      }
+    }
+    /// - Remark: Generated from `#/components/schemas/UpdateUserEmailRequest`.
+    public struct UpdateUserEmailRequest: Codable, Hashable, Sendable {
+      /// - Remark: Generated from `#/components/schemas/UpdateUserEmailRequest/type`.
+      @frozen public enum _typePayload: String, Codable, Hashable, Sendable, CaseIterable {
+        case ACTIVITY_TYPE_UPDATE_USER_EMAIL = "ACTIVITY_TYPE_UPDATE_USER_EMAIL"
+      }
+      /// - Remark: Generated from `#/components/schemas/UpdateUserEmailRequest/type`.
+      public var _type: Components.Schemas.UpdateUserEmailRequest._typePayload
+      /// Timestamp (in milliseconds) of the request, used to verify liveness of user requests.
+      ///
+      /// - Remark: Generated from `#/components/schemas/UpdateUserEmailRequest/timestampMs`.
+      public var timestampMs: Swift.String
+      /// Unique identifier for a given Organization.
+      ///
+      /// - Remark: Generated from `#/components/schemas/UpdateUserEmailRequest/organizationId`.
+      public var organizationId: Swift.String
+      /// - Remark: Generated from `#/components/schemas/UpdateUserEmailRequest/parameters`.
+      public var parameters: Components.Schemas.UpdateUserEmailIntent
+      /// Creates a new `UpdateUserEmailRequest`.
+      ///
+      /// - Parameters:
+      ///   - _type:
+      ///   - timestampMs: Timestamp (in milliseconds) of the request, used to verify liveness of user requests.
+      ///   - organizationId: Unique identifier for a given Organization.
+      ///   - parameters:
+      public init(
+        _type: Components.Schemas.UpdateUserEmailRequest._typePayload,
+        timestampMs: Swift.String,
+        organizationId: Swift.String,
+        parameters: Components.Schemas.UpdateUserEmailIntent
+      ) {
+        self._type = _type
+        self.timestampMs = timestampMs
+        self.organizationId = organizationId
+        self.parameters = parameters
+      }
+      public enum CodingKeys: String, CodingKey {
+        case _type = "type"
+        case timestampMs
+        case organizationId
+        case parameters
+      }
+    }
+    /// - Remark: Generated from `#/components/schemas/UpdateUserEmailResult`.
+    public struct UpdateUserEmailResult: Codable, Hashable, Sendable {
+      /// Unique identifier of the User whose email was updated.
+      ///
+      /// - Remark: Generated from `#/components/schemas/UpdateUserEmailResult/userId`.
+      public var userId: Swift.String
+      /// Creates a new `UpdateUserEmailResult`.
+      ///
+      /// - Parameters:
+      ///   - userId: Unique identifier of the User whose email was updated.
+      public init(userId: Swift.String) {
+        self.userId = userId
+      }
+      public enum CodingKeys: String, CodingKey {
+        case userId
+      }
+    }
     /// - Remark: Generated from `#/components/schemas/UpdateUserIntent`.
     public struct UpdateUserIntent: Codable, Hashable, Sendable {
       /// Unique identifier for a given User.
@@ -12376,6 +12583,188 @@ public enum Components {
         case userEmail
         case userTagIds
         case userPhoneNumber
+      }
+    }
+    /// - Remark: Generated from `#/components/schemas/UpdateUserNameIntent`.
+    public struct UpdateUserNameIntent: Codable, Hashable, Sendable {
+      /// Unique identifier for a given User.
+      ///
+      /// - Remark: Generated from `#/components/schemas/UpdateUserNameIntent/userId`.
+      public var userId: Swift.String
+      /// Human-readable name for a User.
+      ///
+      /// - Remark: Generated from `#/components/schemas/UpdateUserNameIntent/userName`.
+      public var userName: Swift.String
+      /// Creates a new `UpdateUserNameIntent`.
+      ///
+      /// - Parameters:
+      ///   - userId: Unique identifier for a given User.
+      ///   - userName: Human-readable name for a User.
+      public init(
+        userId: Swift.String,
+        userName: Swift.String
+      ) {
+        self.userId = userId
+        self.userName = userName
+      }
+      public enum CodingKeys: String, CodingKey {
+        case userId
+        case userName
+      }
+    }
+    /// - Remark: Generated from `#/components/schemas/UpdateUserNameRequest`.
+    public struct UpdateUserNameRequest: Codable, Hashable, Sendable {
+      /// - Remark: Generated from `#/components/schemas/UpdateUserNameRequest/type`.
+      @frozen public enum _typePayload: String, Codable, Hashable, Sendable, CaseIterable {
+        case ACTIVITY_TYPE_UPDATE_USER_NAME = "ACTIVITY_TYPE_UPDATE_USER_NAME"
+      }
+      /// - Remark: Generated from `#/components/schemas/UpdateUserNameRequest/type`.
+      public var _type: Components.Schemas.UpdateUserNameRequest._typePayload
+      /// Timestamp (in milliseconds) of the request, used to verify liveness of user requests.
+      ///
+      /// - Remark: Generated from `#/components/schemas/UpdateUserNameRequest/timestampMs`.
+      public var timestampMs: Swift.String
+      /// Unique identifier for a given Organization.
+      ///
+      /// - Remark: Generated from `#/components/schemas/UpdateUserNameRequest/organizationId`.
+      public var organizationId: Swift.String
+      /// - Remark: Generated from `#/components/schemas/UpdateUserNameRequest/parameters`.
+      public var parameters: Components.Schemas.UpdateUserNameIntent
+      /// Creates a new `UpdateUserNameRequest`.
+      ///
+      /// - Parameters:
+      ///   - _type:
+      ///   - timestampMs: Timestamp (in milliseconds) of the request, used to verify liveness of user requests.
+      ///   - organizationId: Unique identifier for a given Organization.
+      ///   - parameters:
+      public init(
+        _type: Components.Schemas.UpdateUserNameRequest._typePayload,
+        timestampMs: Swift.String,
+        organizationId: Swift.String,
+        parameters: Components.Schemas.UpdateUserNameIntent
+      ) {
+        self._type = _type
+        self.timestampMs = timestampMs
+        self.organizationId = organizationId
+        self.parameters = parameters
+      }
+      public enum CodingKeys: String, CodingKey {
+        case _type = "type"
+        case timestampMs
+        case organizationId
+        case parameters
+      }
+    }
+    /// - Remark: Generated from `#/components/schemas/UpdateUserNameResult`.
+    public struct UpdateUserNameResult: Codable, Hashable, Sendable {
+      /// Unique identifier of the User whose name was updated.
+      ///
+      /// - Remark: Generated from `#/components/schemas/UpdateUserNameResult/userId`.
+      public var userId: Swift.String
+      /// Creates a new `UpdateUserNameResult`.
+      ///
+      /// - Parameters:
+      ///   - userId: Unique identifier of the User whose name was updated.
+      public init(userId: Swift.String) {
+        self.userId = userId
+      }
+      public enum CodingKeys: String, CodingKey {
+        case userId
+      }
+    }
+    /// - Remark: Generated from `#/components/schemas/UpdateUserPhoneNumberIntent`.
+    public struct UpdateUserPhoneNumberIntent: Codable, Hashable, Sendable {
+      /// Unique identifier for a given User.
+      ///
+      /// - Remark: Generated from `#/components/schemas/UpdateUserPhoneNumberIntent/userId`.
+      public var userId: Swift.String
+      /// The user's phone number in E.164 format e.g. +13214567890. Setting this to an empty string will remove the user's phone number.
+      ///
+      /// - Remark: Generated from `#/components/schemas/UpdateUserPhoneNumberIntent/userPhoneNumber`.
+      public var userPhoneNumber: Swift.String
+      /// Signed JWT containing a unique id, expiry, verification type, contact
+      ///
+      /// - Remark: Generated from `#/components/schemas/UpdateUserPhoneNumberIntent/verificationToken`.
+      public var verificationToken: Swift.String?
+      /// Creates a new `UpdateUserPhoneNumberIntent`.
+      ///
+      /// - Parameters:
+      ///   - userId: Unique identifier for a given User.
+      ///   - userPhoneNumber: The user's phone number in E.164 format e.g. +13214567890. Setting this to an empty string will remove the user's phone number.
+      ///   - verificationToken: Signed JWT containing a unique id, expiry, verification type, contact
+      public init(
+        userId: Swift.String,
+        userPhoneNumber: Swift.String,
+        verificationToken: Swift.String? = nil
+      ) {
+        self.userId = userId
+        self.userPhoneNumber = userPhoneNumber
+        self.verificationToken = verificationToken
+      }
+      public enum CodingKeys: String, CodingKey {
+        case userId
+        case userPhoneNumber
+        case verificationToken
+      }
+    }
+    /// - Remark: Generated from `#/components/schemas/UpdateUserPhoneNumberRequest`.
+    public struct UpdateUserPhoneNumberRequest: Codable, Hashable, Sendable {
+      /// - Remark: Generated from `#/components/schemas/UpdateUserPhoneNumberRequest/type`.
+      @frozen public enum _typePayload: String, Codable, Hashable, Sendable, CaseIterable {
+        case ACTIVITY_TYPE_UPDATE_USER_PHONE_NUMBER = "ACTIVITY_TYPE_UPDATE_USER_PHONE_NUMBER"
+      }
+      /// - Remark: Generated from `#/components/schemas/UpdateUserPhoneNumberRequest/type`.
+      public var _type: Components.Schemas.UpdateUserPhoneNumberRequest._typePayload
+      /// Timestamp (in milliseconds) of the request, used to verify liveness of user requests.
+      ///
+      /// - Remark: Generated from `#/components/schemas/UpdateUserPhoneNumberRequest/timestampMs`.
+      public var timestampMs: Swift.String
+      /// Unique identifier for a given Organization.
+      ///
+      /// - Remark: Generated from `#/components/schemas/UpdateUserPhoneNumberRequest/organizationId`.
+      public var organizationId: Swift.String
+      /// - Remark: Generated from `#/components/schemas/UpdateUserPhoneNumberRequest/parameters`.
+      public var parameters: Components.Schemas.UpdateUserPhoneNumberIntent
+      /// Creates a new `UpdateUserPhoneNumberRequest`.
+      ///
+      /// - Parameters:
+      ///   - _type:
+      ///   - timestampMs: Timestamp (in milliseconds) of the request, used to verify liveness of user requests.
+      ///   - organizationId: Unique identifier for a given Organization.
+      ///   - parameters:
+      public init(
+        _type: Components.Schemas.UpdateUserPhoneNumberRequest._typePayload,
+        timestampMs: Swift.String,
+        organizationId: Swift.String,
+        parameters: Components.Schemas.UpdateUserPhoneNumberIntent
+      ) {
+        self._type = _type
+        self.timestampMs = timestampMs
+        self.organizationId = organizationId
+        self.parameters = parameters
+      }
+      public enum CodingKeys: String, CodingKey {
+        case _type = "type"
+        case timestampMs
+        case organizationId
+        case parameters
+      }
+    }
+    /// - Remark: Generated from `#/components/schemas/UpdateUserPhoneNumberResult`.
+    public struct UpdateUserPhoneNumberResult: Codable, Hashable, Sendable {
+      /// Unique identifier of the User whose phone number was updated.
+      ///
+      /// - Remark: Generated from `#/components/schemas/UpdateUserPhoneNumberResult/userId`.
+      public var userId: Swift.String
+      /// Creates a new `UpdateUserPhoneNumberResult`.
+      ///
+      /// - Parameters:
+      ///   - userId: Unique identifier of the User whose phone number was updated.
+      public init(userId: Swift.String) {
+        self.userId = userId
+      }
+      public enum CodingKeys: String, CodingKey {
+        case userId
       }
     }
     /// - Remark: Generated from `#/components/schemas/UpdateUserRequest`.
@@ -12970,14 +13359,14 @@ public enum Components {
     }
     /// - Remark: Generated from `#/components/schemas/VerifyOtpResult`.
     public struct VerifyOtpResult: Codable, Hashable, Sendable {
-      /// Signed JWT containing a unique id, expiry, verification type, contact
+      /// Signed JWT containing a unique id, expiry, verification type, contact. Verification status of a user is updated when the token is consumed (in OTP_LOGIN requests)
       ///
       /// - Remark: Generated from `#/components/schemas/VerifyOtpResult/verificationToken`.
       public var verificationToken: Swift.String
       /// Creates a new `VerifyOtpResult`.
       ///
       /// - Parameters:
-      ///   - verificationToken: Signed JWT containing a unique id, expiry, verification type, contact
+      ///   - verificationToken: Signed JWT containing a unique id, expiry, verification type, contact. Verification status of a user is updated when the token is consumed (in OTP_LOGIN requests)
       public init(verificationToken: Swift.String) {
         self.verificationToken = verificationToken
       }
@@ -23373,6 +23762,392 @@ public enum Operations {
       /// - Throws: An error if `self` is not `.ok`.
       /// - SeeAlso: `.ok`.
       public var ok: Operations.UpdateUser.Output.Ok {
+        get throws {
+          switch self {
+          case let .ok(response):
+            return response
+          default:
+            try throwUnexpectedResponseStatus(
+              expectedStatus: "ok",
+              response: self
+            )
+          }
+        }
+      }
+      /// Undocumented response.
+      ///
+      /// A response with a code that is not documented in the OpenAPI document.
+      case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+    }
+    @frozen public enum AcceptableContentType: AcceptableProtocol {
+      case json
+      case other(Swift.String)
+      public init?(rawValue: Swift.String) {
+        switch rawValue.lowercased() {
+        case "application/json":
+          self = .json
+        default:
+          self = .other(rawValue)
+        }
+      }
+      public var rawValue: Swift.String {
+        switch self {
+        case let .other(string):
+          return string
+        case .json:
+          return "application/json"
+        }
+      }
+      public static var allCases: [Self] {
+        [
+          .json
+        ]
+      }
+    }
+  }
+  /// Update User's Email
+  ///
+  /// Update a User's email in an existing Organization
+  ///
+  /// - Remark: HTTP `POST /public/v1/submit/update_user_email`.
+  /// - Remark: Generated from `#/paths//public/v1/submit/update_user_email/post(UpdateUserEmail)`.
+  public enum UpdateUserEmail {
+    public static let id: Swift.String = "UpdateUserEmail"
+    public struct Input: Sendable, Hashable {
+      /// - Remark: Generated from `#/paths/public/v1/submit/update_user_email/POST/header`.
+      public struct Headers: Sendable, Hashable {
+        public var accept:
+          [OpenAPIRuntime.AcceptHeaderContentType<Operations.UpdateUserEmail.AcceptableContentType>]
+        /// Creates a new `Headers`.
+        ///
+        /// - Parameters:
+        ///   - accept:
+        public init(
+          accept: [OpenAPIRuntime.AcceptHeaderContentType<
+            Operations.UpdateUserEmail.AcceptableContentType
+          >] = .defaultValues()
+        ) {
+          self.accept = accept
+        }
+      }
+      public var headers: Operations.UpdateUserEmail.Input.Headers
+      /// - Remark: Generated from `#/paths/public/v1/submit/update_user_email/POST/requestBody`.
+      @frozen public enum Body: Sendable, Hashable {
+        /// - Remark: Generated from `#/paths/public/v1/submit/update_user_email/POST/requestBody/content/application\/json`.
+        case json(Components.Schemas.UpdateUserEmailRequest)
+      }
+      public var body: Operations.UpdateUserEmail.Input.Body
+      /// Creates a new `Input`.
+      ///
+      /// - Parameters:
+      ///   - headers:
+      ///   - body:
+      public init(
+        headers: Operations.UpdateUserEmail.Input.Headers = .init(),
+        body: Operations.UpdateUserEmail.Input.Body
+      ) {
+        self.headers = headers
+        self.body = body
+      }
+    }
+    @frozen public enum Output: Sendable, Hashable {
+      public struct Ok: Sendable, Hashable {
+        /// - Remark: Generated from `#/paths/public/v1/submit/update_user_email/POST/responses/200/content`.
+        @frozen public enum Body: Sendable, Hashable {
+          /// - Remark: Generated from `#/paths/public/v1/submit/update_user_email/POST/responses/200/content/application\/json`.
+          case json(Components.Schemas.ActivityResponse)
+          /// The associated value of the enum case if `self` is `.json`.
+          ///
+          /// - Throws: An error if `self` is not `.json`.
+          /// - SeeAlso: `.json`.
+          public var json: Components.Schemas.ActivityResponse {
+            get throws {
+              switch self {
+              case let .json(body):
+                return body
+              }
+            }
+          }
+        }
+        /// Received HTTP response body
+        public var body: Operations.UpdateUserEmail.Output.Ok.Body
+        /// Creates a new `Ok`.
+        ///
+        /// - Parameters:
+        ///   - body: Received HTTP response body
+        public init(body: Operations.UpdateUserEmail.Output.Ok.Body) {
+          self.body = body
+        }
+      }
+      /// A successful response.
+      ///
+      /// - Remark: Generated from `#/paths//public/v1/submit/update_user_email/post(UpdateUserEmail)/responses/200`.
+      ///
+      /// HTTP response code: `200 ok`.
+      case ok(Operations.UpdateUserEmail.Output.Ok)
+      /// The associated value of the enum case if `self` is `.ok`.
+      ///
+      /// - Throws: An error if `self` is not `.ok`.
+      /// - SeeAlso: `.ok`.
+      public var ok: Operations.UpdateUserEmail.Output.Ok {
+        get throws {
+          switch self {
+          case let .ok(response):
+            return response
+          default:
+            try throwUnexpectedResponseStatus(
+              expectedStatus: "ok",
+              response: self
+            )
+          }
+        }
+      }
+      /// Undocumented response.
+      ///
+      /// A response with a code that is not documented in the OpenAPI document.
+      case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+    }
+    @frozen public enum AcceptableContentType: AcceptableProtocol {
+      case json
+      case other(Swift.String)
+      public init?(rawValue: Swift.String) {
+        switch rawValue.lowercased() {
+        case "application/json":
+          self = .json
+        default:
+          self = .other(rawValue)
+        }
+      }
+      public var rawValue: Swift.String {
+        switch self {
+        case let .other(string):
+          return string
+        case .json:
+          return "application/json"
+        }
+      }
+      public static var allCases: [Self] {
+        [
+          .json
+        ]
+      }
+    }
+  }
+  /// Update User's Name
+  ///
+  /// Update a User's name in an existing Organization
+  ///
+  /// - Remark: HTTP `POST /public/v1/submit/update_user_name`.
+  /// - Remark: Generated from `#/paths//public/v1/submit/update_user_name/post(UpdateUserName)`.
+  public enum UpdateUserName {
+    public static let id: Swift.String = "UpdateUserName"
+    public struct Input: Sendable, Hashable {
+      /// - Remark: Generated from `#/paths/public/v1/submit/update_user_name/POST/header`.
+      public struct Headers: Sendable, Hashable {
+        public var accept:
+          [OpenAPIRuntime.AcceptHeaderContentType<Operations.UpdateUserName.AcceptableContentType>]
+        /// Creates a new `Headers`.
+        ///
+        /// - Parameters:
+        ///   - accept:
+        public init(
+          accept: [OpenAPIRuntime.AcceptHeaderContentType<
+            Operations.UpdateUserName.AcceptableContentType
+          >] = .defaultValues()
+        ) {
+          self.accept = accept
+        }
+      }
+      public var headers: Operations.UpdateUserName.Input.Headers
+      /// - Remark: Generated from `#/paths/public/v1/submit/update_user_name/POST/requestBody`.
+      @frozen public enum Body: Sendable, Hashable {
+        /// - Remark: Generated from `#/paths/public/v1/submit/update_user_name/POST/requestBody/content/application\/json`.
+        case json(Components.Schemas.UpdateUserNameRequest)
+      }
+      public var body: Operations.UpdateUserName.Input.Body
+      /// Creates a new `Input`.
+      ///
+      /// - Parameters:
+      ///   - headers:
+      ///   - body:
+      public init(
+        headers: Operations.UpdateUserName.Input.Headers = .init(),
+        body: Operations.UpdateUserName.Input.Body
+      ) {
+        self.headers = headers
+        self.body = body
+      }
+    }
+    @frozen public enum Output: Sendable, Hashable {
+      public struct Ok: Sendable, Hashable {
+        /// - Remark: Generated from `#/paths/public/v1/submit/update_user_name/POST/responses/200/content`.
+        @frozen public enum Body: Sendable, Hashable {
+          /// - Remark: Generated from `#/paths/public/v1/submit/update_user_name/POST/responses/200/content/application\/json`.
+          case json(Components.Schemas.ActivityResponse)
+          /// The associated value of the enum case if `self` is `.json`.
+          ///
+          /// - Throws: An error if `self` is not `.json`.
+          /// - SeeAlso: `.json`.
+          public var json: Components.Schemas.ActivityResponse {
+            get throws {
+              switch self {
+              case let .json(body):
+                return body
+              }
+            }
+          }
+        }
+        /// Received HTTP response body
+        public var body: Operations.UpdateUserName.Output.Ok.Body
+        /// Creates a new `Ok`.
+        ///
+        /// - Parameters:
+        ///   - body: Received HTTP response body
+        public init(body: Operations.UpdateUserName.Output.Ok.Body) {
+          self.body = body
+        }
+      }
+      /// A successful response.
+      ///
+      /// - Remark: Generated from `#/paths//public/v1/submit/update_user_name/post(UpdateUserName)/responses/200`.
+      ///
+      /// HTTP response code: `200 ok`.
+      case ok(Operations.UpdateUserName.Output.Ok)
+      /// The associated value of the enum case if `self` is `.ok`.
+      ///
+      /// - Throws: An error if `self` is not `.ok`.
+      /// - SeeAlso: `.ok`.
+      public var ok: Operations.UpdateUserName.Output.Ok {
+        get throws {
+          switch self {
+          case let .ok(response):
+            return response
+          default:
+            try throwUnexpectedResponseStatus(
+              expectedStatus: "ok",
+              response: self
+            )
+          }
+        }
+      }
+      /// Undocumented response.
+      ///
+      /// A response with a code that is not documented in the OpenAPI document.
+      case undocumented(statusCode: Swift.Int, OpenAPIRuntime.UndocumentedPayload)
+    }
+    @frozen public enum AcceptableContentType: AcceptableProtocol {
+      case json
+      case other(Swift.String)
+      public init?(rawValue: Swift.String) {
+        switch rawValue.lowercased() {
+        case "application/json":
+          self = .json
+        default:
+          self = .other(rawValue)
+        }
+      }
+      public var rawValue: Swift.String {
+        switch self {
+        case let .other(string):
+          return string
+        case .json:
+          return "application/json"
+        }
+      }
+      public static var allCases: [Self] {
+        [
+          .json
+        ]
+      }
+    }
+  }
+  /// Update User's Phone Number
+  ///
+  /// Update a User's phone number in an existing Organization
+  ///
+  /// - Remark: HTTP `POST /public/v1/submit/update_user_phone_number`.
+  /// - Remark: Generated from `#/paths//public/v1/submit/update_user_phone_number/post(UpdateUserPhoneNumber)`.
+  public enum UpdateUserPhoneNumber {
+    public static let id: Swift.String = "UpdateUserPhoneNumber"
+    public struct Input: Sendable, Hashable {
+      /// - Remark: Generated from `#/paths/public/v1/submit/update_user_phone_number/POST/header`.
+      public struct Headers: Sendable, Hashable {
+        public var accept:
+          [OpenAPIRuntime.AcceptHeaderContentType<
+            Operations.UpdateUserPhoneNumber.AcceptableContentType
+          >]
+        /// Creates a new `Headers`.
+        ///
+        /// - Parameters:
+        ///   - accept:
+        public init(
+          accept: [OpenAPIRuntime.AcceptHeaderContentType<
+            Operations.UpdateUserPhoneNumber.AcceptableContentType
+          >] = .defaultValues()
+        ) {
+          self.accept = accept
+        }
+      }
+      public var headers: Operations.UpdateUserPhoneNumber.Input.Headers
+      /// - Remark: Generated from `#/paths/public/v1/submit/update_user_phone_number/POST/requestBody`.
+      @frozen public enum Body: Sendable, Hashable {
+        /// - Remark: Generated from `#/paths/public/v1/submit/update_user_phone_number/POST/requestBody/content/application\/json`.
+        case json(Components.Schemas.UpdateUserPhoneNumberRequest)
+      }
+      public var body: Operations.UpdateUserPhoneNumber.Input.Body
+      /// Creates a new `Input`.
+      ///
+      /// - Parameters:
+      ///   - headers:
+      ///   - body:
+      public init(
+        headers: Operations.UpdateUserPhoneNumber.Input.Headers = .init(),
+        body: Operations.UpdateUserPhoneNumber.Input.Body
+      ) {
+        self.headers = headers
+        self.body = body
+      }
+    }
+    @frozen public enum Output: Sendable, Hashable {
+      public struct Ok: Sendable, Hashable {
+        /// - Remark: Generated from `#/paths/public/v1/submit/update_user_phone_number/POST/responses/200/content`.
+        @frozen public enum Body: Sendable, Hashable {
+          /// - Remark: Generated from `#/paths/public/v1/submit/update_user_phone_number/POST/responses/200/content/application\/json`.
+          case json(Components.Schemas.ActivityResponse)
+          /// The associated value of the enum case if `self` is `.json`.
+          ///
+          /// - Throws: An error if `self` is not `.json`.
+          /// - SeeAlso: `.json`.
+          public var json: Components.Schemas.ActivityResponse {
+            get throws {
+              switch self {
+              case let .json(body):
+                return body
+              }
+            }
+          }
+        }
+        /// Received HTTP response body
+        public var body: Operations.UpdateUserPhoneNumber.Output.Ok.Body
+        /// Creates a new `Ok`.
+        ///
+        /// - Parameters:
+        ///   - body: Received HTTP response body
+        public init(body: Operations.UpdateUserPhoneNumber.Output.Ok.Body) {
+          self.body = body
+        }
+      }
+      /// A successful response.
+      ///
+      /// - Remark: Generated from `#/paths//public/v1/submit/update_user_phone_number/post(UpdateUserPhoneNumber)/responses/200`.
+      ///
+      /// HTTP response code: `200 ok`.
+      case ok(Operations.UpdateUserPhoneNumber.Output.Ok)
+      /// The associated value of the enum case if `self` is `.ok`.
+      ///
+      /// - Throws: An error if `self` is not `.ok`.
+      /// - SeeAlso: `.ok`.
+      public var ok: Operations.UpdateUserPhoneNumber.Output.Ok {
         get throws {
           switch self {
           case let .ok(response):

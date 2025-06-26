@@ -12,6 +12,7 @@ enum StorageError: Error {
 enum TurnkeySwiftError: Error {
     case keyGenerationFailed(Error)
     case keyIndexFailed(status: OSStatus)
+    case keyAlreadyExists
     case keyNotFound
     case keychainAddFailed(status: OSStatus)
     case publicKeyMissing
@@ -23,6 +24,7 @@ enum TurnkeySwiftError: Error {
     case failedToSignPayload(underlying: Error)
     case failedToCreateSession(underlying: Error)
     case failedToClearSession(underlying: Error)
+    case failedToRefreshSession(underlying: Error)
     case failedToRefreshUser(underlying: Error)
     case failedToSetSelectedSession(underlying: Error)
     case failedToCreateWallet(underlying: Error)

@@ -16,37 +16,41 @@ extension TurnkeyContext {
         return publicKey
     }
     
-    /// Creates and stores a new session from the provided JWT.
+    /// Creates a new session from the provided JWT, persists its metadata, and (optionally) schedules auto-refresh.
     ///
     /// - Parameters:
-    ///   - jwt: A JWT string returned from the Turnkey backend.
-    ///   - sessionKey: A key to label the session in storage. Defaults to a constant.
+    ///   - jwt: The JWT string returned by the Turnkey backend.
+    ///   - sessionKey: An identifier under which to store this session. Defaults to `Constants.Session.defaultSessionKey`.
+    ///   - refreshedSessionTTLSeconds: *Optional.* If non-nil, the SDK will automatically refresh this session
+    ///     using the given duration (in seconds) when it nears expiration.
     ///
-    /// - Throws: `TurnkeySwiftError` if session creation or decoding fails.
+    /// - Throws: `TurnkeySwiftError.failedToCreateSession` if decoding, persistence, or storage operations f
     public func createSession(
         jwt: String,
-        sessionKey: String = Constants.Session.defaultSessionKey
+        sessionKey: String = Constants.Session.defaultSessionKey,
+        refreshedSessionTTLSeconds: String? = nil
     ) async throws {
         do {
             // eventually we should verify that the jwt was signed by Turnkey
             // but for now we just assume it is
             
-            let dto = try JWTDecoder.decode(jwt, as: TurnkeySession.self)
-            try JwtSessionStore.save(dto, key: sessionKey)
-            try SessionRegistryStore.add(sessionKey)
-            
-            let priv = try KeyPairStore.getPrivateHex(for: dto.publicKey)
-            if priv.isEmpty {
-                throw TurnkeySwiftError.keyNotFound
+            // we check if there is already an active session under that sessionKey
+            // if so we throw an error
+            if let _ = try JwtSessionStore.load(key: sessionKey) {
+                throw TurnkeySwiftError.keyAlreadyExists
             }
             
-            try PendingKeysStore.remove(dto.publicKey)
+            let dto = try JWTDecoder.decode(jwt, as: TurnkeySession.self)
+            try persistSession(
+                dto: dto,
+                sessionKey: sessionKey,
+                refreshedSessionTTLSeconds: refreshedSessionTTLSeconds
+            )
             
             if selectedSessionKey == nil {
                 _ = try await setSelectedSession(sessionKey: sessionKey)
             }
             
-            scheduleExpiryTimer(for: sessionKey, expTimestamp: dto.exp)
         } catch {
             throw TurnkeySwiftError.failedToCreateSession(underlying: error)
         }
@@ -97,22 +101,9 @@ extension TurnkeyContext {
     public func clearSession(for sessionKey: String? = nil) {
         let sessionKey = sessionKey ?? selectedSessionKey
         
-        guard let sessionKey else {
-            return
-        }
+        guard let sessionKey else { return }
         
-        expiryTasks[sessionKey]?.cancel()
-        expiryTasks.removeValue(forKey: sessionKey)
-        
-        do {
-            if let dto = try? JwtSessionStore.load(key: sessionKey) {
-                try? KeyPairStore.delete(for: dto.publicKey)
-                try? PendingKeysStore.remove(dto.publicKey)
-            }
-            
-            JwtSessionStore.delete(key: sessionKey)
-            try? SessionRegistryStore.remove(sessionKey)
-        }
+        try? purgeStoredSession(for: sessionKey, keepAutoRefresh: false)
         
         Task { @MainActor in
             if selectedSessionKey == sessionKey {
@@ -123,4 +114,95 @@ extension TurnkeyContext {
             }
         }
     }
+    
+    /// Refreshes a session by generating a new key pair, stamping a login request, and updating stored metadata.
+    ///
+    /// - Parameters:
+    ///   - expirationSeconds: The requested lifetime for the new session in seconds. Defaults to `Constants.Session.defaultExpirationSeconds`.
+    ///   - sessionKey: The key of the session to refresh. If `nil`, the currently selected session is used.
+    ///   - invalidateExisting: Whether to invalidate the previous session on the server. Defaults to `false`.
+    /// - Throws:
+    ///   - `TurnkeySwiftError.keyNotFound` if no session exists under the given `sessionKey`.
+    ///   - `TurnkeySwiftError.invalidSession` if the selected session is not initialized.
+    ///   - `TurnkeySwiftError.failedToRefreshSession` if stamping or persistence fails..
+    public func refreshSession(
+        expirationSeconds: String = Constants.Session.defaultExpirationSeconds,
+        sessionKey: String? = nil,
+        invalidateExisting: Bool = false
+    ) async throws {
+        
+        // determine which sessionKey we’re targeting
+        let targetSessionKey = sessionKey ?? selectedSessionKey
+        guard let targetSessionKey else {
+            throw TurnkeySwiftError.keyNotFound
+        }
+        
+        // pick the right client and user/org
+        let clientToUse: TurnkeyClient
+        let orgId: String
+        
+        if targetSessionKey == selectedSessionKey {
+            // refreshing the selected session
+            guard let currentClient = self.client,
+                  let currentUser = self.user
+            else {
+                throw TurnkeySwiftError.invalidSession
+            }
+            clientToUse = currentClient
+            orgId = currentUser.organizationId
+        } else {
+            // refreshing a background session
+            
+            guard let dto = try JwtSessionStore.load(key: targetSessionKey) else {
+                throw TurnkeySwiftError.keyNotFound
+            }
+            
+            let privHex = try KeyPairStore.getPrivateHex(for: dto.publicKey)
+            clientToUse = TurnkeyClient(
+                apiPrivateKey: privHex,
+                apiPublicKey: dto.publicKey,
+                baseUrl: apiUrl
+            )
+            orgId = dto.organizationId
+        }
+        
+        let newPublicKey = try createKeyPair()
+        
+        do {
+            let resp = try await clientToUse.stampLogin(
+                organizationId: orgId,
+                publicKey: newPublicKey,
+                expirationSeconds: expirationSeconds,
+                invalidateExisting: invalidateExisting
+            )
+            guard
+                case let .json(body) = resp.body,
+                let jwt = body.activity.result.stampLoginResult?.session
+            else {
+                throw TurnkeySwiftError.invalidResponse
+            }
+            
+            try await updateSession(jwt: jwt, sessionKey: targetSessionKey)
+            
+            // if this was the selected session, swap in the new client
+            if targetSessionKey == selectedSessionKey {
+                let updatedDto = try JwtSessionStore.load(key: targetSessionKey)!
+                let privHex = try KeyPairStore.getPrivateHex(for: updatedDto.publicKey)
+                let newClient = TurnkeyClient(
+                    apiPrivateKey: privHex,
+                    apiPublicKey: updatedDto.publicKey,
+                    baseUrl: apiUrl
+                )
+                await MainActor.run {
+                    self.client = newClient
+                }
+            }
+            
+        } catch {
+            throw TurnkeySwiftError.failedToRefreshSession(underlying: error)
+        }
+    }
+    
 }
+
+
