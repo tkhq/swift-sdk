@@ -21,10 +21,13 @@ extension TurnkeyContext {
     /// - Parameters:
     ///   - jwt: The JWT string returned by the Turnkey backend.
     ///   - sessionKey: An identifier under which to store this session. Defaults to `Constants.Session.defaultSessionKey`.
-    ///   - refreshedSessionTTLSeconds: *Optional.* If non-nil, the SDK will automatically refresh this session
-    ///     using the given duration (in seconds) when it nears expiration.
+    ///   - refreshedSessionTTLSeconds: *Optional.* The duration (in seconds) that refreshed sessions will be valid for.
+    ///     If provided, the SDK will automatically refresh this session near expiry using this value. Must be at least 30 seconds.
     ///
-    /// - Throws: `TurnkeySwiftError.failedToCreateSession` if decoding, persistence, or storage operations f
+    /// - Throws:
+    ///   - `TurnkeySwiftError.invalidRefreshTTL` if `refreshedSessionTTLSeconds` is provided but less than 30 seconds.
+    ///   - `TurnkeySwiftError.keyAlreadyExists` if a session with the same `sessionKey` already exists.
+    ///   - `TurnkeySwiftError.failedToCreateSession` if decoding, persistence, or other internal operations fail.
     public func createSession(
         jwt: String,
         sessionKey: String = Constants.Session.defaultSessionKey,
@@ -33,6 +36,12 @@ extension TurnkeyContext {
         do {
             // eventually we should verify that the jwt was signed by Turnkey
             // but for now we just assume it is
+            
+            if let ttlString = refreshedSessionTTLSeconds,
+               let ttl = Int(ttlString),
+               ttl < 30 {
+                throw TurnkeySwiftError.invalidRefreshTTL("Minimum allowed TTL is 30 seconds.")
+            }
             
             // we check if there is already an active session under that sessionKey
             // if so we throw an error

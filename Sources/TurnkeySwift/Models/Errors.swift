@@ -20,6 +20,7 @@ enum TurnkeySwiftError: Error {
     case invalidJWT
     case invalidResponse
     case invalidSession
+    case invalidRefreshTTL(String)
     
     case failedToSignPayload(underlying: Error)
     case failedToCreateSession(underlying: Error)
