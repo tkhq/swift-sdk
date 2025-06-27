@@ -32,6 +32,9 @@ enum TurnkeySwiftError: Error {
     case failedToExportWallet(underlying: Error)
     case failedToImportWallet(underlying: Error)
     case failedToUpdateUser(underlying: Error)
+    case failedToUpdateUserEmail(underlying: Error)
+    case failedToUpdateUserPhoneNumber(underlying: Error)
+
     
     case oauthInvalidURL
     case oauthMissingIDToken
