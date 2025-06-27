@@ -293,7 +293,6 @@ final class AuthContext: ObservableObject {
             try await turnkey.createSession(jwt: jwt, refreshedSessionTTLSeconds: Constants.Turnkey.sessionDuration)
 
         } catch let error as TurnkeyRequestError {
-            print("Turnkey \(error.statusCode ?? 0): \(error.fullMessage)")
             throw error
         }
     }

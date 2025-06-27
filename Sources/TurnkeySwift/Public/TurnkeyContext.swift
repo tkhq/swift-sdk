@@ -41,8 +41,9 @@ public final class TurnkeyContext: NSObject, ObservableObject {
     
     private func postInitSetup() {
         // clean up expired sessions and pending keys
-        PendingKeysStore.purge()
         SessionRegistryStore.purgeExpiredSessions()
+        PendingKeysStore.purge()
+
                 
         // restore session and timers after launch
         Task { [weak self] in

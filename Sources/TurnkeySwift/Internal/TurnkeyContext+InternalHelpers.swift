@@ -71,17 +71,36 @@ extension TurnkeyContext {
         expTimestamp: TimeInterval,
         buffer: TimeInterval = 5
     ) {
+        // cancel any old timer
         expiryTasks[sessionKey]?.cancel()
-        
-        let now     = DispatchTime.now()
-        let interval = max(0, expTimestamp - Date().timeIntervalSince1970 - buffer)
-        let deadline = now + .milliseconds(Int(interval * 1_000))
-        
+
+        let timeLeft = expTimestamp - Date().timeIntervalSince1970
+
+        // if already within (or past) the buffer window, we just clear now
+        if timeLeft <= buffer {
+            clearSession(for: sessionKey)
+            return
+        }
+
+        let interval = timeLeft - buffer
+        let deadline = DispatchTime.now() + .milliseconds(Int(interval * 1_000))
         let timer = DispatchSource.makeTimerSource()
+
         timer.schedule(deadline: deadline, leeway: .milliseconds(100))
         timer.setEventHandler { [weak self] in
             guard let self = self else { return }
-            
+
+            // we calculate how much time is left when this handler actually runs
+            // this is needed because if the app was backgrounded past the expiry,
+            // the dispatch timer will still fire once the app returns to foreground
+            // this avoids making a call we know will fail
+            let currentLeft = expTimestamp - Date().timeIntervalSince1970
+            if currentLeft <= 0 {
+                self.clearSession(for: sessionKey)
+                timer.cancel()
+                return
+            }
+
             if let dur = AutoRefreshStore.durationSeconds(for: sessionKey) {
                 Task {
                     do {
@@ -90,19 +109,21 @@ extension TurnkeyContext {
                             sessionKey: sessionKey
                         )
                     } catch {
-                        // refreshSession failed so we resort to clearing the session
                         self.clearSession(for: sessionKey)
                     }
                 }
             } else {
                 self.clearSession(for: sessionKey)
             }
+
             timer.cancel()
         }
+
         timer.resume()
-        
         expiryTasks[sessionKey] = timer
     }
+
+
     
     /// Persists all storage-level artefacts for a session, schedules its expiry
     /// timer, and (optionally) registers the session for auto-refresh.
