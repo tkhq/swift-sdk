@@ -7,12 +7,13 @@ import TurnkeyHttp
 public final class TurnkeyContext: NSObject, ObservableObject {
     
     // public state
+    @Published public internal(set) var authState: AuthState = .loading
     @Published public internal(set) var client: TurnkeyClient?
     @Published public internal(set) var selectedSessionKey: String?
     @Published public internal(set) var user: SessionUser?
     
     // internal state
-    internal var expiryTasks: [String: Task<Void, Never>] = [:]
+    internal var expiryTasks: [String: DispatchSourceTimer] = [:]
     internal let apiUrl: String
     
     // configurable base URL
@@ -40,9 +41,10 @@ public final class TurnkeyContext: NSObject, ObservableObject {
     
     private func postInitSetup() {
         // clean up expired sessions and pending keys
-        PendingKeysStore.purge()
         SessionRegistryStore.purgeExpiredSessions()
-        
+        PendingKeysStore.purge()
+
+                
         // restore session and timers after launch
         Task { [weak self] in
             await self?.rescheduleAllSessionExpiries()

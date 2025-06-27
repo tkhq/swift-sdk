@@ -43,6 +43,7 @@ Then in your views, access it via:
 * `com.turnkey.sdk.sessionKeys`: Registry of stored sessions
 * `com.turnkey.sdk.pendingList`: Pending ephemeral key list
 * `com.turnkey.sdk.selectedSession`: Selected active session key
+* `com.turnkey.sdk.autoRefresh`: Tracks which sessions have auto-refresh enabled and the associated refresh duration
 
 ---
 
@@ -54,9 +55,10 @@ Then in your views, access it via:
 
   * Generates a new ephemeral key pair and saves the private key securely.
 
-* `createSession(jwt:sessionKey:)`
+* `createSession(jwt:sessionKey:refreshedSessionTTLSeconds:)`
 
   * Creates and stores a session from a JWT.
+  * Optionally sets up automatic refresh behavior if `refreshedSessionTTLSeconds` is provided. This value defines how long each refreshed session will last and must be at least 30 seconds.
 
 * `setSelectedSession(sessionKey:) -> TurnkeyClient`
 
@@ -66,13 +68,9 @@ Then in your views, access it via:
 
   * Clears the specified session and resets state.
 
-* `refreshUser()`
+* `refreshSession(expirationSeconds:sessionKey:invalidateExisting:)`
 
-  * Refreshes the user and wallet state for the selected session.
-
-* `updateUser(email:phone:)`
-
-  * Updates the session user's metadata.
+  * Manually refreshes the selected session. Useful when rotating credentials.
 
 ### User Management
 
@@ -83,6 +81,14 @@ Then in your views, access it via:
 * `updateUser(email:phone:)`
 
   * Updates the user contact details.
+
+* `updateUserEmail(email:verificationToken:)`
+
+  * Updates the user's email address. If a verification token is provided, the email is marked as verified. Passing an empty string will delete the user's email.
+
+* `updateUserPhoneNumber(phone:verificationToken:)`
+
+  * Updates the user's phone number. If a verification token is provided, the phone number is marked as verified. Passing an empty string will delete the user's phone number.
 
 ### Wallet Management
 
@@ -129,9 +135,12 @@ public typealias Timestamp = Components.Schemas.external_period_data_period_v1_p
 
 ## Session Expiry Handling
 
-Each session schedules a timer to automatically clear itself 5 seconds before JWT expiry. You can optionally observe session state via `@Published` properties on `TurnkeyContext`:
+Each session schedules a timer to automatically clear itself 5 seconds before JWT expiry. If `refreshedSessionTTLSeconds` was provided when creating the session, the SDK will automatically refresh the session before it expires, as long as the app is active.
+
+You can optionally observe session state via `@Published` properties on `TurnkeyContext`:
 
 ```swift
+@Published public internal(set) var authState: AuthState
 @Published public internal(set) var selectedSessionKey: String?
 @Published public internal(set) var user: SessionUser?
 @Published public internal(set) var client: TurnkeyClient?

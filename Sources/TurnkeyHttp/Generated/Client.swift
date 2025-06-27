@@ -5652,6 +5652,225 @@ public struct Client: APIProtocol {
       }
     )
   }
+  /// Update User's Email
+  ///
+  /// Update a User's email in an existing Organization
+  ///
+  /// - Remark: HTTP `POST /public/v1/submit/update_user_email`.
+  /// - Remark: Generated from `#/paths//public/v1/submit/update_user_email/post(UpdateUserEmail)`.
+  public func UpdateUserEmail(_ input: Operations.UpdateUserEmail.Input) async throws
+    -> Operations.UpdateUserEmail.Output
+  {
+    try await client.send(
+      input: input,
+      forOperation: Operations.UpdateUserEmail.id,
+      serializer: { input in
+        let path = try converter.renderedPath(
+          template: "/public/v1/submit/update_user_email",
+          parameters: []
+        )
+        var request: HTTPTypes.HTTPRequest = .init(
+          soar_path: path,
+          method: .post
+        )
+        suppressMutabilityWarning(&request)
+        converter.setAcceptHeader(
+          in: &request.headerFields,
+          contentTypes: input.headers.accept
+        )
+        let body: OpenAPIRuntime.HTTPBody?
+        switch input.body {
+        case let .json(value):
+          body = try converter.setRequiredRequestBodyAsJSON(
+            value,
+            headerFields: &request.headerFields,
+            contentType: "application/json; charset=utf-8"
+          )
+        }
+        return (request, body)
+      },
+      deserializer: { response, responseBody in
+        switch response.status.code {
+        case 200:
+          let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+          let body: Operations.UpdateUserEmail.Output.Ok.Body
+          let chosenContentType = try converter.bestContentType(
+            received: contentType,
+            options: [
+              "application/json"
+            ]
+          )
+          switch chosenContentType {
+          case "application/json":
+            body = try await converter.getResponseBodyAsJSON(
+              Components.Schemas.ActivityResponse.self,
+              from: responseBody,
+              transforming: { value in
+                .json(value)
+              }
+            )
+          default:
+            preconditionFailure("bestContentType chose an invalid content type.")
+          }
+          return .ok(.init(body: body))
+        default:
+          return .undocumented(
+            statusCode: response.status.code,
+            .init(
+              headerFields: response.headerFields,
+              body: responseBody
+            )
+          )
+        }
+      }
+    )
+  }
+  /// Update User's Name
+  ///
+  /// Update a User's name in an existing Organization
+  ///
+  /// - Remark: HTTP `POST /public/v1/submit/update_user_name`.
+  /// - Remark: Generated from `#/paths//public/v1/submit/update_user_name/post(UpdateUserName)`.
+  public func UpdateUserName(_ input: Operations.UpdateUserName.Input) async throws
+    -> Operations.UpdateUserName.Output
+  {
+    try await client.send(
+      input: input,
+      forOperation: Operations.UpdateUserName.id,
+      serializer: { input in
+        let path = try converter.renderedPath(
+          template: "/public/v1/submit/update_user_name",
+          parameters: []
+        )
+        var request: HTTPTypes.HTTPRequest = .init(
+          soar_path: path,
+          method: .post
+        )
+        suppressMutabilityWarning(&request)
+        converter.setAcceptHeader(
+          in: &request.headerFields,
+          contentTypes: input.headers.accept
+        )
+        let body: OpenAPIRuntime.HTTPBody?
+        switch input.body {
+        case let .json(value):
+          body = try converter.setRequiredRequestBodyAsJSON(
+            value,
+            headerFields: &request.headerFields,
+            contentType: "application/json; charset=utf-8"
+          )
+        }
+        return (request, body)
+      },
+      deserializer: { response, responseBody in
+        switch response.status.code {
+        case 200:
+          let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+          let body: Operations.UpdateUserName.Output.Ok.Body
+          let chosenContentType = try converter.bestContentType(
+            received: contentType,
+            options: [
+              "application/json"
+            ]
+          )
+          switch chosenContentType {
+          case "application/json":
+            body = try await converter.getResponseBodyAsJSON(
+              Components.Schemas.ActivityResponse.self,
+              from: responseBody,
+              transforming: { value in
+                .json(value)
+              }
+            )
+          default:
+            preconditionFailure("bestContentType chose an invalid content type.")
+          }
+          return .ok(.init(body: body))
+        default:
+          return .undocumented(
+            statusCode: response.status.code,
+            .init(
+              headerFields: response.headerFields,
+              body: responseBody
+            )
+          )
+        }
+      }
+    )
+  }
+  /// Update User's Phone Number
+  ///
+  /// Update a User's phone number in an existing Organization
+  ///
+  /// - Remark: HTTP `POST /public/v1/submit/update_user_phone_number`.
+  /// - Remark: Generated from `#/paths//public/v1/submit/update_user_phone_number/post(UpdateUserPhoneNumber)`.
+  public func UpdateUserPhoneNumber(_ input: Operations.UpdateUserPhoneNumber.Input) async throws
+    -> Operations.UpdateUserPhoneNumber.Output
+  {
+    try await client.send(
+      input: input,
+      forOperation: Operations.UpdateUserPhoneNumber.id,
+      serializer: { input in
+        let path = try converter.renderedPath(
+          template: "/public/v1/submit/update_user_phone_number",
+          parameters: []
+        )
+        var request: HTTPTypes.HTTPRequest = .init(
+          soar_path: path,
+          method: .post
+        )
+        suppressMutabilityWarning(&request)
+        converter.setAcceptHeader(
+          in: &request.headerFields,
+          contentTypes: input.headers.accept
+        )
+        let body: OpenAPIRuntime.HTTPBody?
+        switch input.body {
+        case let .json(value):
+          body = try converter.setRequiredRequestBodyAsJSON(
+            value,
+            headerFields: &request.headerFields,
+            contentType: "application/json; charset=utf-8"
+          )
+        }
+        return (request, body)
+      },
+      deserializer: { response, responseBody in
+        switch response.status.code {
+        case 200:
+          let contentType = converter.extractContentTypeIfPresent(in: response.headerFields)
+          let body: Operations.UpdateUserPhoneNumber.Output.Ok.Body
+          let chosenContentType = try converter.bestContentType(
+            received: contentType,
+            options: [
+              "application/json"
+            ]
+          )
+          switch chosenContentType {
+          case "application/json":
+            body = try await converter.getResponseBodyAsJSON(
+              Components.Schemas.ActivityResponse.self,
+              from: responseBody,
+              transforming: { value in
+                .json(value)
+              }
+            )
+          default:
+            preconditionFailure("bestContentType chose an invalid content type.")
+          }
+          return .ok(.init(body: body))
+        default:
+          return .undocumented(
+            statusCode: response.status.code,
+            .init(
+              headerFields: response.headerFields,
+              body: responseBody
+            )
+          )
+        }
+      }
+    )
+  }
   /// Update User Tag
   ///
   /// Update human-readable name or associated users. Note that this activity is atomic: all of the updates will succeed at once, or all of them will fail.

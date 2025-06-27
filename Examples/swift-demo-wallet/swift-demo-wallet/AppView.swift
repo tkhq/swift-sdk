@@ -52,35 +52,48 @@ struct MainFlow: View {
 
 struct AppView: View {
     @EnvironmentObject private var turnkey: TurnkeyContext
-    @EnvironmentObject private var toast: ToastContext
-
+    @EnvironmentObject private var toast:  ToastContext
+    
+    @State private var hasLoaded = false
+    
     var body: some View {
         ZStack(alignment: .top) {
-            if turnkey.client != nil {
-                MainFlow()
-                    .transition(
-                        .asymmetric(
-                            insertion: .move(edge: .trailing),
-                            removal:   .move(edge: .trailing)
-                        )
-                    )
-            } else {
-                AuthFlow()
-                    .transition(
-                        .asymmetric(
+            Group {
+                switch turnkey.authState {
+                case .loading:
+                    ProgressView()
+                        .scaleEffect(1.5)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(Color.red)
+                        .transition(.opacity)
+                    
+                case .unAuthenticated:
+                    AuthFlow()
+                        .transition(.asymmetric(
                             insertion: .move(edge: .leading),
                             removal:   .move(edge: .leading)
-                        )
-                    )
+                        ))
+                        .onAppear { hasLoaded = true }
+                    
+                case .authenticated:
+                    MainFlow()
+                        .transition(.asymmetric(
+                            insertion: .move(edge: .trailing),
+                            removal:   .move(edge: .trailing)
+                        ))
+                        .onAppear { hasLoaded = true }
+                }
             }
-
+            
             // add toast overlay
             if toast.isVisible {
                 ToastView(message: toast.message, type: toast.type)
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
-        .animation(.easeInOut, value: turnkey.client == nil)
+        // we only animate once we've left .loading at least once
+        // this is to avoid showing a transition when going from loading
+        // to another auth state
+        .animation(hasLoaded ? .easeInOut : nil, value: turnkey.authState)
     }
 }
-

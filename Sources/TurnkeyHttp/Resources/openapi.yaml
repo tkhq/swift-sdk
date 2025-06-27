@@ -1698,6 +1698,69 @@ paths:
               schema:
                 $ref: '#/components/schemas/ActivityResponse'
       x-codegen-request-body-name: body
+  /public/v1/submit/update_user_email:
+    post:
+      tags:
+      - Users
+      summary: Update User's Email
+      description: Update a User's email in an existing Organization
+      operationId: UpdateUserEmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserEmailRequest'
+        required: true
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityResponse'
+      x-codegen-request-body-name: body
+  /public/v1/submit/update_user_name:
+    post:
+      tags:
+      - Users
+      summary: Update User's Name
+      description: Update a User's name in an existing Organization
+      operationId: UpdateUserName
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserNameRequest'
+        required: true
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityResponse'
+      x-codegen-request-body-name: body
+  /public/v1/submit/update_user_phone_number:
+    post:
+      tags:
+      - Users
+      summary: Update User's Phone Number
+      description: Update a User's phone number in an existing Organization
+      operationId: UpdateUserPhoneNumber
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserPhoneNumberRequest'
+        required: true
+      responses:
+        "200":
+          description: A successful response.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityResponse'
+      x-codegen-request-body-name: body
   /public/v1/submit/update_user_tag:
     post:
       tags:
@@ -1985,6 +2048,9 @@ components:
       - ACTIVITY_TYPE_OTP_LOGIN
       - ACTIVITY_TYPE_STAMP_LOGIN
       - ACTIVITY_TYPE_OAUTH_LOGIN
+      - ACTIVITY_TYPE_UPDATE_USER_NAME
+      - ACTIVITY_TYPE_UPDATE_USER_EMAIL
+      - ACTIVITY_TYPE_UPDATE_USER_PHONE_NUMBER
     AddressFormat:
       type: string
       enum:
@@ -2022,6 +2088,7 @@ components:
       - ADDRESS_FORMAT_DOGE_TESTNET
       - ADDRESS_FORMAT_TON_V3R2
       - ADDRESS_FORMAT_TON_V4R2
+      - ADDRESS_FORMAT_TON_V5R1
       - ADDRESS_FORMAT_XRP
     Any:
       type: object
@@ -2056,6 +2123,7 @@ components:
           description: Optional window (in seconds) indicating how long the API Key
             should last.
           format: uint64
+          nullable: true
     ApiKeyCurve:
       type: string
       enum:
@@ -2079,6 +2147,7 @@ components:
           type: string
           description: Optional window (in seconds) indicating how long the API Key
             should last.
+          nullable: true
     ApiKeyParamsV2:
       required:
       - apiKeyName
@@ -2099,6 +2168,7 @@ components:
           type: string
           description: Optional window (in seconds) indicating how long the API Key
             should last.
+          nullable: true
     ApiOnlyUserParams:
       required:
       - apiKeys
@@ -2112,6 +2182,7 @@ components:
         userEmail:
           type: string
           description: The email address for this API-only User (optional).
+          nullable: true
         userTags:
           type: array
           description: "A list of tags assigned to the new API-only User. This field,\
@@ -2533,6 +2604,7 @@ components:
         rootUserId:
           type: string
           description: Unique identifier for the root user object.
+          nullable: true
     CreateOrganizationIntentV2:
       required:
       - organizationName
@@ -2551,6 +2623,7 @@ components:
         rootUserId:
           type: string
           description: Unique identifier for the root user object.
+          nullable: true
     CreateOrganizationResult:
       required:
       - organizationId
@@ -2654,9 +2727,11 @@ components:
         condition:
           type: string
           description: The condition expression that triggers the Effect
+          nullable: true
         consensus:
           type: string
           description: The consensus expression that triggers the Effect
+          nullable: true
         notes:
           type: string
     CreatePolicyRequest:
@@ -2871,10 +2946,12 @@ components:
           type: string
           description: "Optional human-readable name for an API Key. If none provided,\
             \ default to Read Write Session - <Timestamp>"
+          nullable: true
         expirationSeconds:
           type: string
           description: "Expiration window (in seconds) indicating how long the API\
             \ key is valid for. If not provided, a default of 15 minutes will be used."
+          nullable: true
     CreateReadWriteSessionIntentV2:
       required:
       - targetPublicKey
@@ -2887,18 +2964,22 @@ components:
         userId:
           type: string
           description: Unique identifier for a given User.
+          nullable: true
         apiKeyName:
           type: string
           description: "Optional human-readable name for an API Key. If none provided,\
             \ default to Read Write Session - <Timestamp>"
+          nullable: true
         expirationSeconds:
           type: string
           description: "Expiration window (in seconds) indicating how long the API\
             \ key is valid for. If not provided, a default of 15 minutes will be used."
+          nullable: true
         invalidateExisting:
           type: boolean
           description: Invalidate all other previously generated ReadWriteSession
             API keys
+          nullable: true
     CreateReadWriteSessionRequest:
       required:
       - organizationId
@@ -3064,9 +3145,11 @@ components:
         disableEmailRecovery:
           type: boolean
           description: Disable email recovery for the sub-organization
+          nullable: true
         disableEmailAuth:
           type: boolean
           description: Disable email auth for the sub-organization
+          nullable: true
     CreateSubOrganizationIntentV5:
       required:
       - rootQuorumThreshold
@@ -3092,9 +3175,11 @@ components:
         disableEmailRecovery:
           type: boolean
           description: Disable email recovery for the sub-organization
+          nullable: true
         disableEmailAuth:
           type: boolean
           description: Disable email auth for the sub-organization
+          nullable: true
     CreateSubOrganizationIntentV6:
       required:
       - rootQuorumThreshold
@@ -3120,9 +3205,11 @@ components:
         disableEmailRecovery:
           type: boolean
           description: Disable email recovery for the sub-organization
+          nullable: true
         disableEmailAuth:
           type: boolean
           description: Disable email auth for the sub-organization
+          nullable: true
     CreateSubOrganizationIntentV7:
       required:
       - rootQuorumThreshold
@@ -3148,15 +3235,19 @@ components:
         disableEmailRecovery:
           type: boolean
           description: Disable email recovery for the sub-organization
+          nullable: true
         disableEmailAuth:
           type: boolean
           description: Disable email auth for the sub-organization
+          nullable: true
         disableSmsAuth:
           type: boolean
           description: Disable OTP SMS auth for the sub-organization
+          nullable: true
         disableOtpEmailAuth:
           type: boolean
           description: Disable OTP email auth for the sub-organization
+          nullable: true
     CreateSubOrganizationRequest:
       required:
       - organizationId
@@ -3433,6 +3524,7 @@ components:
           description: "Length of mnemonic to generate the Wallet seed. Defaults to\
             \ 12. Accepted values: 12, 15, 18, 21, 24."
           format: int32
+          nullable: true
     CreateWalletRequest:
       required:
       - organizationId
@@ -3689,6 +3781,7 @@ components:
         paymentMethodId:
           type: string
           description: The payment method that the customer wants to remove.
+          nullable: true
     DeletePaymentMethodResult:
       required:
       - paymentMethodId
@@ -3796,6 +3889,7 @@ components:
           description: "Optional parameter for deleting the private keys, even if\
             \ any have not been previously exported. If they have been exported, this\
             \ field is ignored."
+          nullable: true
     DeletePrivateKeysRequest:
       required:
       - organizationId
@@ -3836,6 +3930,7 @@ components:
             \ wallets and private keys to be exported for security reasons. Set this\
             \ boolean to true to force sub-organization deletion even if some wallets\
             \ or private keys within it have not been exported yet. Default: false."
+          nullable: true
     DeleteSubOrganizationRequest:
       required:
       - organizationId
@@ -3968,6 +4063,7 @@ components:
           description: "Optional parameter for deleting the wallets, even if any have\
             \ not been previously exported. If they have been exported, this field\
             \ is ignored."
+          nullable: true
     DeleteWalletsRequest:
       required:
       - organizationId
@@ -4037,25 +4133,31 @@ components:
           type: string
           description: "Optional human-readable name for an API Key. If none provided,\
             \ default to Email Auth - <Timestamp>"
+          nullable: true
         expirationSeconds:
           type: string
           description: "Expiration window (in seconds) indicating how long the API\
             \ key is valid for. If not provided, a default of 15 minutes will be used."
+          nullable: true
         emailCustomization:
           $ref: '#/components/schemas/EmailCustomizationParams'
         invalidateExisting:
           type: boolean
           description: Invalidate all other previously generated Email Auth API keys
+          nullable: true
         sendFromEmailAddress:
           type: string
           description: Optional custom email address from which to send the email
+          nullable: true
         sendFromEmailSenderName:
           type: string
           description: "Optional custom sender name for use with sendFromEmailAddress;\
             \ if left empty, will default to 'Notifications'"
+          nullable: true
         replyToEmailAddress:
           type: string
           description: Optional custom email address to use as reply-to
+          nullable: true
     EmailAuthIntentV2:
       required:
       - email
@@ -4073,25 +4175,31 @@ components:
           type: string
           description: "Optional human-readable name for an API Key. If none provided,\
             \ default to Email Auth - <Timestamp>"
+          nullable: true
         expirationSeconds:
           type: string
           description: "Expiration window (in seconds) indicating how long the API\
             \ key is valid for. If not provided, a default of 15 minutes will be used."
+          nullable: true
         emailCustomization:
           $ref: '#/components/schemas/EmailCustomizationParams'
         invalidateExisting:
           type: boolean
           description: Invalidate all other previously generated Email Auth API keys
+          nullable: true
         sendFromEmailAddress:
           type: string
           description: Optional custom email address from which to send the email
+          nullable: true
         sendFromEmailSenderName:
           type: string
           description: "Optional custom sender name for use with sendFromEmailAddress;\
             \ if left empty, will default to 'Notifications'"
+          nullable: true
         replyToEmailAddress:
           type: string
           description: Optional custom email address to use as reply-to
+          nullable: true
     EmailAuthRequest:
       required:
       - organizationId
@@ -4131,23 +4239,28 @@ components:
         appName:
           type: string
           description: The name of the application.
+          nullable: true
         logoUrl:
           type: string
           description: A URL pointing to a logo in PNG format. Note this logo will
             be resized to fit into 340px x 124px.
+          nullable: true
         magicLinkTemplate:
           type: string
           description: "A template for the URL to be used in a magic link button,\
             \ e.g. `https://dapp.xyz/%s`. The auth bundle will be interpolated into\
             \ the `%s`."
+          nullable: true
         templateVariables:
           type: string
           description: JSON object containing key/value pairs to be used with custom
             templates.
+          nullable: true
         templateId:
           type: string
           description: "Unique identifier for a given Email Template. If not specified,\
             \ the default is the most recent Email Template."
+          nullable: true
     ExportPrivateKeyIntent:
       required:
       - privateKeyId
@@ -4298,6 +4411,7 @@ components:
           $ref: '#/components/schemas/FeatureName'
         value:
           type: string
+          nullable: true
     FeatureName:
       type: string
       enum:
@@ -4382,6 +4496,7 @@ components:
         userId:
           type: string
           description: Unique identifier for a given User.
+          nullable: true
     GetApiKeysResponse:
       required:
       - apiKeys
@@ -4444,6 +4559,7 @@ components:
         userId:
           type: string
           description: Unique identifier for a given User.
+          nullable: true
     GetOauthProvidersResponse:
       required:
       - oauthProviders
@@ -4652,9 +4768,11 @@ components:
         address:
           type: string
           description: Address corresponding to a Wallet Account.
+          nullable: true
         path:
           type: string
           description: Path corresponding to a Wallet Account.
+          nullable: true
     GetWalletAccountResponse:
       required:
       - account
@@ -4979,16 +5097,20 @@ components:
           description: Optional client-generated user identifier to enable per-user
             rate limiting for SMS auth. We recommend using a hash of the client-side
             IP address.
+          nullable: true
         sendFromEmailAddress:
           type: string
           description: Optional custom email address from which to send the OTP email
+          nullable: true
         sendFromEmailSenderName:
           type: string
           description: "Optional custom sender name for use with sendFromEmailAddress;\
             \ if left empty, will default to 'Notifications'"
+          nullable: true
         replyToEmailAddress:
           type: string
           description: Optional custom email address to use as reply-to
+          nullable: true
     InitOtpAuthIntentV2:
       required:
       - contact
@@ -5005,6 +5127,7 @@ components:
           type: integer
           description: Optional length of the OTP code. Default = 9
           format: int32
+          nullable: true
         emailCustomization:
           $ref: '#/components/schemas/EmailCustomizationParams'
         smsCustomization:
@@ -5014,20 +5137,25 @@ components:
           description: Optional client-generated user identifier to enable per-user
             rate limiting for SMS auth. We recommend using a hash of the client-side
             IP address.
+          nullable: true
         sendFromEmailAddress:
           type: string
           description: Optional custom email address from which to send the OTP email
+          nullable: true
         alphanumeric:
           type: boolean
           description: Optional flag to specify if the OTP code should be alphanumeric
             (Crockford’s Base32). Default = true
+          nullable: true
         sendFromEmailSenderName:
           type: string
           description: "Optional custom sender name for use with sendFromEmailAddress;\
             \ if left empty, will default to 'Notifications'"
+          nullable: true
         replyToEmailAddress:
           type: string
           description: Optional custom email address to use as reply-to
+          nullable: true
     InitOtpAuthRequest:
       required:
       - organizationId
@@ -5082,6 +5210,7 @@ components:
           type: integer
           description: Optional length of the OTP code. Default = 9
           format: int32
+          nullable: true
         emailCustomization:
           $ref: '#/components/schemas/EmailCustomizationParams'
         smsCustomization:
@@ -5091,25 +5220,31 @@ components:
           description: Optional client-generated user identifier to enable per-user
             rate limiting for SMS auth. We recommend using a hash of the client-side
             IP address.
+          nullable: true
         sendFromEmailAddress:
           type: string
           description: Optional custom email address from which to send the OTP email
+          nullable: true
         alphanumeric:
           type: boolean
           description: Optional flag to specify if the OTP code should be alphanumeric
             (Crockford’s Base32). Default = true
+          nullable: true
         sendFromEmailSenderName:
           type: string
           description: "Optional custom sender name for use with sendFromEmailAddress;\
             \ if left empty, will default to 'Notifications'"
+          nullable: true
         expirationSeconds:
           type: string
           description: "Expiration window (in seconds) indicating how long the OTP\
             \ is valid for. If not provided, a default of 5 minutes will be used.\
             \ Maximum value is 600 seconds (10 minutes)"
+          nullable: true
         replyToEmailAddress:
           type: string
           description: Optional custom email address to use as reply-to
+          nullable: true
     InitOtpRequest:
       required:
       - organizationId
@@ -5157,6 +5292,7 @@ components:
           description: "Expiration window (in seconds) indicating how long the recovery\
             \ credential is valid for. If not provided, a default of 15 minutes will\
             \ be used."
+          nullable: true
         emailCustomization:
           $ref: '#/components/schemas/EmailCustomizationParams'
     InitUserEmailRecoveryRequest:
@@ -5367,6 +5503,12 @@ components:
           $ref: '#/components/schemas/StampLoginIntent'
         oauthLoginIntent:
           $ref: '#/components/schemas/OauthLoginIntent'
+        updateUserNameIntent:
+          $ref: '#/components/schemas/UpdateUserNameIntent'
+        updateUserEmailIntent:
+          $ref: '#/components/schemas/UpdateUserEmailIntent'
+        updateUserPhoneNumberIntent:
+          $ref: '#/components/schemas/UpdateUserPhoneNumberIntent'
     InvitationParams:
       required:
       - accessType
@@ -5458,13 +5600,16 @@ components:
           type: string
           description: "Optional human-readable name for an API Key. If none provided,\
             \ default to Oauth - <Timestamp>"
+          nullable: true
         expirationSeconds:
           type: string
           description: "Expiration window (in seconds) indicating how long the API\
             \ key is valid for. If not provided, a default of 15 minutes will be used."
+          nullable: true
         invalidateExisting:
           type: boolean
           description: Invalidate all other previously generated Oauth API keys
+          nullable: true
     OauthLoginIntent:
       required:
       - oidcToken
@@ -5483,9 +5628,11 @@ components:
           type: string
           description: "Expiration window (in seconds) indicating how long the Session\
             \ is valid for. If not provided, a default of 15 minutes will be used."
+          nullable: true
         invalidateExisting:
           type: boolean
           description: Invalidate all other previously generated Login API keys
+          nullable: true
     OauthLoginRequest:
       required:
       - organizationId
@@ -5633,13 +5780,16 @@ components:
           type: string
           description: "Optional human-readable name for an API Key. If none provided,\
             \ default to OTP Auth - <Timestamp>"
+          nullable: true
         expirationSeconds:
           type: string
           description: "Expiration window (in seconds) indicating how long the API\
             \ key is valid for. If not provided, a default of 15 minutes will be used."
+          nullable: true
         invalidateExisting:
           type: boolean
           description: Invalidate all other previously generated OTP Auth API keys
+          nullable: true
     OtpAuthRequest:
       required:
       - organizationId
@@ -5694,9 +5844,11 @@ components:
           type: string
           description: "Expiration window (in seconds) indicating how long the Session\
             \ is valid for. If not provided, a default of 15 minutes will be used."
+          nullable: true
         invalidateExisting:
           type: boolean
           description: Invalidate all other previously generated Login API keys
+          nullable: true
     OtpLoginRequest:
       required:
       - organizationId
@@ -5782,9 +5934,11 @@ components:
         consensus:
           type: string
           description: A consensus expression that evalutes to true or false.
+          nullable: true
         condition:
           type: string
           description: A condition expression that evalutes to true or false.
+          nullable: true
     PrivateKey:
       required:
       - addresses
@@ -6150,6 +6304,12 @@ components:
           $ref: '#/components/schemas/StampLoginResult'
         oauthLoginResult:
           $ref: '#/components/schemas/OauthLoginResult'
+        updateUserNameResult:
+          $ref: '#/components/schemas/UpdateUserNameResult'
+        updateUserEmailResult:
+          $ref: '#/components/schemas/UpdateUserEmailResult'
+        updateUserPhoneNumberResult:
+          $ref: '#/components/schemas/UpdateUserPhoneNumberResult'
     RootUserParams:
       required:
       - apiKeys
@@ -6163,6 +6323,7 @@ components:
         userEmail:
           type: string
           description: The user's email address.
+          nullable: true
         apiKeys:
           type: array
           description: "A list of API Key parameters. This field, if not needed, should\
@@ -6189,6 +6350,7 @@ components:
         userEmail:
           type: string
           description: The user's email address.
+          nullable: true
         apiKeys:
           type: array
           description: "A list of API Key parameters. This field, if not needed, should\
@@ -6221,6 +6383,7 @@ components:
         userEmail:
           type: string
           description: The user's email address.
+          nullable: true
         apiKeys:
           type: array
           description: "A list of API Key parameters. This field, if not needed, should\
@@ -6253,9 +6416,11 @@ components:
         userEmail:
           type: string
           description: The user's email address.
+          nullable: true
         userPhoneNumber:
           type: string
           description: The user's phone number in E.164 format e.g. +13214567890
+          nullable: true
         apiKeys:
           type: array
           description: "A list of API Key parameters. This field, if not needed, should\
@@ -6306,6 +6471,7 @@ components:
           type: string
           description: Optional value for the feature. Will override existing values
             if feature is already set.
+          nullable: true
     SetOrganizationFeatureRequest:
       required:
       - organizationId
@@ -6585,8 +6751,10 @@ components:
       properties:
         appid:
           type: boolean
+          nullable: true
         appidExclude:
           type: boolean
+          nullable: true
         credProps:
           $ref: '#/components/schemas/CredPropsAuthenticationExtensionsClientOutputs'
     SmsCustomizationParams:
@@ -6596,6 +6764,7 @@ components:
           type: string
           description: "Template containing references to .OtpCode i.e Your OTP is\
             \ {{.OtpCode}}"
+          nullable: true
     StampLoginIntent:
       required:
       - publicKey
@@ -6610,9 +6779,11 @@ components:
           type: string
           description: "Expiration window (in seconds) indicating how long the Session\
             \ is valid for. If not provided, a default of 15 minutes will be used."
+          nullable: true
         invalidateExisting:
           type: boolean
           description: Invalidate all other previously generated Login API keys
+          nullable: true
     StampLoginRequest:
       required:
       - organizationId
@@ -6690,17 +6861,21 @@ components:
         policyName:
           type: string
           description: Human-readable name for a Policy.
+          nullable: true
         policyEffect:
           $ref: '#/components/schemas/Effect'
         policyCondition:
           type: string
           description: The condition expression that triggers the Effect (optional).
+          nullable: true
         policyConsensus:
           type: string
           description: The consensus expression that triggers the Effect (optional).
+          nullable: true
         policyNotes:
           type: string
           description: Accompanying notes for a Policy (optional).
+          nullable: true
     UpdatePolicyIntentV2:
       required:
       - policyId
@@ -6712,17 +6887,21 @@ components:
         policyName:
           type: string
           description: Human-readable name for a Policy.
+          nullable: true
         policyEffect:
           $ref: '#/components/schemas/Effect'
         policyCondition:
           type: string
           description: The condition expression that triggers the Effect (optional).
+          nullable: true
         policyConsensus:
           type: string
           description: The consensus expression that triggers the Effect (optional).
+          nullable: true
         policyNotes:
           type: string
           description: Accompanying notes for a Policy (optional).
+          nullable: true
     UpdatePolicyRequest:
       required:
       - organizationId
@@ -6773,6 +6952,7 @@ components:
         newPrivateKeyTagName:
           type: string
           description: "The new, human-readable name for the tag with the given ID."
+          nullable: true
         addPrivateKeyIds:
           type: array
           description: A list of Private Keys IDs to add this tag to.
@@ -6850,6 +7030,53 @@ components:
           $ref: '#/components/schemas/UpdateRootQuorumIntent'
     UpdateRootQuorumResult:
       type: object
+    UpdateUserEmailIntent:
+      required:
+      - userEmail
+      - userId
+      type: object
+      properties:
+        userId:
+          type: string
+          description: Unique identifier for a given User.
+        userEmail:
+          type: string
+          description: The user's email address. Setting this to an empty string will
+            remove the user's email.
+        verificationToken:
+          type: string
+          description: "Signed JWT containing a unique id, expiry, verification type,\
+            \ contact"
+          nullable: true
+    UpdateUserEmailRequest:
+      required:
+      - organizationId
+      - parameters
+      - timestampMs
+      - type
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - ACTIVITY_TYPE_UPDATE_USER_EMAIL
+        timestampMs:
+          type: string
+          description: "Timestamp (in milliseconds) of the request, used to verify\
+            \ liveness of user requests."
+        organizationId:
+          type: string
+          description: Unique identifier for a given Organization.
+        parameters:
+          $ref: '#/components/schemas/UpdateUserEmailIntent'
+    UpdateUserEmailResult:
+      required:
+      - userId
+      type: object
+      properties:
+        userId:
+          type: string
+          description: Unique identifier of the User whose email was updated.
     UpdateUserIntent:
       required:
       - userId
@@ -6861,9 +7088,11 @@ components:
         userName:
           type: string
           description: Human-readable name for a User.
+          nullable: true
         userEmail:
           type: string
           description: The user's email address.
+          nullable: true
         userTagIds:
           type: array
           description: "An updated list of User Tags to apply to this User. This field,\
@@ -6873,6 +7102,95 @@ components:
         userPhoneNumber:
           type: string
           description: The user's phone number in E.164 format e.g. +13214567890
+          nullable: true
+    UpdateUserNameIntent:
+      required:
+      - userId
+      - userName
+      type: object
+      properties:
+        userId:
+          type: string
+          description: Unique identifier for a given User.
+        userName:
+          type: string
+          description: Human-readable name for a User.
+    UpdateUserNameRequest:
+      required:
+      - organizationId
+      - parameters
+      - timestampMs
+      - type
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - ACTIVITY_TYPE_UPDATE_USER_NAME
+        timestampMs:
+          type: string
+          description: "Timestamp (in milliseconds) of the request, used to verify\
+            \ liveness of user requests."
+        organizationId:
+          type: string
+          description: Unique identifier for a given Organization.
+        parameters:
+          $ref: '#/components/schemas/UpdateUserNameIntent'
+    UpdateUserNameResult:
+      required:
+      - userId
+      type: object
+      properties:
+        userId:
+          type: string
+          description: Unique identifier of the User whose name was updated.
+    UpdateUserPhoneNumberIntent:
+      required:
+      - userId
+      - userPhoneNumber
+      type: object
+      properties:
+        userId:
+          type: string
+          description: Unique identifier for a given User.
+        userPhoneNumber:
+          type: string
+          description: The user's phone number in E.164 format e.g. +13214567890.
+            Setting this to an empty string will remove the user's phone number.
+        verificationToken:
+          type: string
+          description: "Signed JWT containing a unique id, expiry, verification type,\
+            \ contact"
+          nullable: true
+    UpdateUserPhoneNumberRequest:
+      required:
+      - organizationId
+      - parameters
+      - timestampMs
+      - type
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+          - ACTIVITY_TYPE_UPDATE_USER_PHONE_NUMBER
+        timestampMs:
+          type: string
+          description: "Timestamp (in milliseconds) of the request, used to verify\
+            \ liveness of user requests."
+        organizationId:
+          type: string
+          description: Unique identifier for a given Organization.
+        parameters:
+          $ref: '#/components/schemas/UpdateUserPhoneNumberIntent'
+    UpdateUserPhoneNumberResult:
+      required:
+      - userId
+      type: object
+      properties:
+        userId:
+          type: string
+          description: Unique identifier of the User whose phone number was updated.
     UpdateUserRequest:
       required:
       - organizationId
@@ -6915,6 +7233,7 @@ components:
         newUserTagName:
           type: string
           description: "The new, human-readable name for the tag with the given ID."
+          nullable: true
         addUserIds:
           type: array
           description: A list of User IDs to add this tag to.
@@ -7015,9 +7334,11 @@ components:
         userEmail:
           type: string
           description: The user's email address.
+          nullable: true
         userPhoneNumber:
           type: string
           description: The user's phone number in E.164 format e.g. +13214567890
+          nullable: true
         authenticators:
           type: array
           description: A list of Authenticator parameters.
@@ -7058,6 +7379,7 @@ components:
         userEmail:
           type: string
           description: The user's email address.
+          nullable: true
         accessType:
           $ref: '#/components/schemas/AccessType'
         apiKeys:
@@ -7092,6 +7414,7 @@ components:
         userEmail:
           type: string
           description: The user's email address.
+          nullable: true
         apiKeys:
           type: array
           description: "A list of API Key parameters. This field, if not needed, should\
@@ -7125,9 +7448,11 @@ components:
         userEmail:
           type: string
           description: The user's email address.
+          nullable: true
         userPhoneNumber:
           type: string
           description: The user's phone number in E.164 format e.g. +13214567890
+          nullable: true
         apiKeys:
           type: array
           description: "A list of API Key parameters. This field, if not needed, should\
@@ -7169,6 +7494,7 @@ components:
           description: "Expiration window (in seconds) indicating how long the verification\
             \ token is valid for. If not provided, a default of 1 hour will be used.\
             \ Maximum value is 86400 seconds (24 hours)"
+          nullable: true
     VerifyOtpRequest:
       required:
       - organizationId
@@ -7198,7 +7524,8 @@ components:
         verificationToken:
           type: string
           description: "Signed JWT containing a unique id, expiry, verification type,\
-            \ contact"
+            \ contact. Verification status of a user is updated when the token is\
+            \ consumed (in OTP_LOGIN requests)"
     Vote:
       required:
       - activityId
@@ -7313,6 +7640,7 @@ components:
           type: string
           description: The public component of this wallet account's underlying cryptographic
             key pair.
+          nullable: true
     WalletAccountParams:
       required:
       - addressFormat
@@ -7350,6 +7678,7 @@ components:
           description: "Length of mnemonic to generate the Wallet seed. Defaults to\
             \ 12. Accepted values: 12, 15, 18, 21, 24."
           format: int32
+          nullable: true
     WalletResult:
       required:
       - addresses

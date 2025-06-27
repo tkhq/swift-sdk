@@ -4,6 +4,7 @@ public enum Constants {
 
   public enum Session {
     public static let defaultSessionKey = "com.turnkey.sdk.session"
+    public static let defaultExpirationSeconds = "900"
   }
 
   public enum Storage {
@@ -11,6 +12,7 @@ public enum Constants {
     public static let selectedSessionKey = "com.turnkey.sdk.selectedSession"
     public static let sessionRegistryKey = "com.turnkey.sdk.sessionKeys"
     public static let pendingKeysStoreKey = "com.turnkey.sdk.pendingList"
+    public static let autoRefreshStoreKey = "com.turnkey.sdk.autoRefresh"
   }
 
   public enum Turnkey {

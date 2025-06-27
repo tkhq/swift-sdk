@@ -34,16 +34,28 @@ enum SessionRegistryStore: CollectionStore {
     static func purgeExpiredSessions() {
         do {
             let sessionKeys = try all()
+            let selectedSessionKey = try? SelectedSessionStore.load()
+
             for sessionKey in sessionKeys {
                 if let sess = try JwtSessionStore.load(key: sessionKey) {
                     if Date(timeIntervalSince1970: sess.exp) <= Date() {
                         JwtSessionStore.delete(key: sessionKey)
+                        try AutoRefreshStore.remove(for: sessionKey)
                         try KeyPairStore.delete(for: sess.publicKey)
                         try remove(sessionKey)
+                        
+                        // if we just removed the selected session we clear the SelectedSessionStore
+                        if sessionKey == selectedSessionKey {
+                            SelectedSessionStore.delete()
+                        }
                     }
+                    
+                    
                 } else {
                     try remove(sessionKey)
                 }
+                
+               
             }
         } catch {
             print("purgeExpiredSessions error: \(error)")

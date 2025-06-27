@@ -1663,7 +1663,7 @@ public struct TurnkeyClient {
 
   public func setOrganizationFeature(
     organizationId: String,
-    name: Components.Schemas.FeatureName, value: String
+    name: Components.Schemas.FeatureName, value: String?
   ) async throws -> Operations.SetOrganizationFeature.Output.Ok {
 
     // Create the SetOrganizationFeatureIntent
@@ -1911,6 +1911,87 @@ public struct TurnkeyClient {
 
     // Call the UpdateUser method using the underlyingClient
     return try await call { try await underlyingClient.UpdateUser(input) }
+  }
+
+  public func updateUserEmail(
+    organizationId: String,
+    userId: String, userEmail: String, verificationToken: String?
+  ) async throws -> Operations.UpdateUserEmail.Output.Ok {
+
+    // Create the UpdateUserEmailIntent
+    let updateUserEmailIntent = Components.Schemas.UpdateUserEmailIntent(
+      userId: userId, userEmail: userEmail, verificationToken: verificationToken)
+
+    // Create the UpdateUserEmailRequest
+    let updateUserEmailRequest = Components.Schemas.UpdateUserEmailRequest(
+      _type: .ACTIVITY_TYPE_UPDATE_USER_EMAIL,
+      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
+      organizationId: organizationId,
+      parameters: updateUserEmailIntent
+    )
+
+    // Create the input for the UpdateUserEmail method
+    let input = Operations.UpdateUserEmail.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(updateUserEmailRequest)
+    )
+
+    // Call the UpdateUserEmail method using the underlyingClient
+    return try await call { try await underlyingClient.UpdateUserEmail(input) }
+  }
+
+  public func updateUserName(
+    organizationId: String,
+    userId: String, userName: String
+  ) async throws -> Operations.UpdateUserName.Output.Ok {
+
+    // Create the UpdateUserNameIntent
+    let updateUserNameIntent = Components.Schemas.UpdateUserNameIntent(
+      userId: userId, userName: userName)
+
+    // Create the UpdateUserNameRequest
+    let updateUserNameRequest = Components.Schemas.UpdateUserNameRequest(
+      _type: .ACTIVITY_TYPE_UPDATE_USER_NAME,
+      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
+      organizationId: organizationId,
+      parameters: updateUserNameIntent
+    )
+
+    // Create the input for the UpdateUserName method
+    let input = Operations.UpdateUserName.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(updateUserNameRequest)
+    )
+
+    // Call the UpdateUserName method using the underlyingClient
+    return try await call { try await underlyingClient.UpdateUserName(input) }
+  }
+
+  public func updateUserPhoneNumber(
+    organizationId: String,
+    userId: String, userPhoneNumber: String, verificationToken: String?
+  ) async throws -> Operations.UpdateUserPhoneNumber.Output.Ok {
+
+    // Create the UpdateUserPhoneNumberIntent
+    let updateUserPhoneNumberIntent = Components.Schemas.UpdateUserPhoneNumberIntent(
+      userId: userId, userPhoneNumber: userPhoneNumber, verificationToken: verificationToken)
+
+    // Create the UpdateUserPhoneNumberRequest
+    let updateUserPhoneNumberRequest = Components.Schemas.UpdateUserPhoneNumberRequest(
+      _type: .ACTIVITY_TYPE_UPDATE_USER_PHONE_NUMBER,
+      timestampMs: String(Int(Date().timeIntervalSince1970 * 1000)),
+      organizationId: organizationId,
+      parameters: updateUserPhoneNumberIntent
+    )
+
+    // Create the input for the UpdateUserPhoneNumber method
+    let input = Operations.UpdateUserPhoneNumber.Input(
+      headers: .init(accept: [.init(contentType: .json)]),
+      body: .json(updateUserPhoneNumberRequest)
+    )
+
+    // Call the UpdateUserPhoneNumber method using the underlyingClient
+    return try await call { try await underlyingClient.UpdateUserPhoneNumber(input) }
   }
 
   public func updateUserTag(
