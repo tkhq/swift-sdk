@@ -8,6 +8,7 @@ let package = Package(
         .library(name: "TurnkeyEncoding", targets: ["TurnkeyEncoding"]),
         .library(name: "TurnkeyHttp", targets: ["TurnkeyHttp"]),
         .library(name: "TurnkeyCrypto", targets: ["TurnkeyCrypto"]),
+        .library(name: "TurnkeyAuthProxy", targets: ["TurnkeyAuthProxy"]),
         .library(name: "TurnkeyPasskeys", targets: ["TurnkeyPasskeys"]),
         .library(name: "TurnkeyStamper", targets: ["TurnkeyStamper"]),
         .library(name: "TurnkeySwift", targets: ["TurnkeySwift"]),
@@ -36,6 +37,13 @@ let package = Package(
             ]
         ),
         .target(name: "TurnkeyPasskeys", dependencies: ["TurnkeyEncoding", "TurnkeyCrypto"]),
+        .target(
+            name: "TurnkeyAuthProxy",
+            dependencies: [
+                .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
+                .product(name: "OpenAPIURLSession", package: "swift-openapi-urlsession")
+            ]
+        ),
         .target(name: "TurnkeyStamper", dependencies: ["TurnkeyPasskeys"]),
         .target(
             name: "TurnkeySwift",
@@ -45,6 +53,7 @@ let package = Package(
                 "TurnkeyCrypto",
                 "TurnkeyPasskeys",
                 "TurnkeyEncoding",
+                "TurnkeyAuthProxy",
             ]),
 
     ]
