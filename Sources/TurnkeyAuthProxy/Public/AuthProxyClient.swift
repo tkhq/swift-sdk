@@ -193,3 +193,140 @@ public struct AuthProxyClient {
 
   }
 }
+
+extension Operations.GetAccount.Output: AuthProxyResponseProtocol {
+  var okPayload: Any? {
+    if case .ok(let value) = self {
+      return value
+    }
+    return nil
+  }
+
+  var defaultCase: (statusCode: Int, rpcStatus: Components.Schemas.RpcStatus)? {
+    if case .default(let statusCode, let value) = self,
+      case .json(let status) = value.body
+    {
+      return (statusCode, status)
+    }
+    return nil
+  }
+}
+extension Operations.OAuth2Authenticate.Output: AuthProxyResponseProtocol {
+  var okPayload: Any? {
+    if case .ok(let value) = self {
+      return value
+    }
+    return nil
+  }
+
+  var defaultCase: (statusCode: Int, rpcStatus: Components.Schemas.RpcStatus)? {
+    if case .default(let statusCode, let value) = self,
+      case .json(let status) = value.body
+    {
+      return (statusCode, status)
+    }
+    return nil
+  }
+}
+extension Operations.OAuthLogin.Output: AuthProxyResponseProtocol {
+  var okPayload: Any? {
+    if case .ok(let value) = self {
+      return value
+    }
+    return nil
+  }
+
+  var defaultCase: (statusCode: Int, rpcStatus: Components.Schemas.RpcStatus)? {
+    if case .default(let statusCode, let value) = self,
+      case .json(let status) = value.body
+    {
+      return (statusCode, status)
+    }
+    return nil
+  }
+}
+extension Operations.InitOtp.Output: AuthProxyResponseProtocol {
+  var okPayload: Any? {
+    if case .ok(let value) = self {
+      return value
+    }
+    return nil
+  }
+
+  var defaultCase: (statusCode: Int, rpcStatus: Components.Schemas.RpcStatus)? {
+    if case .default(let statusCode, let value) = self,
+      case .json(let status) = value.body
+    {
+      return (statusCode, status)
+    }
+    return nil
+  }
+}
+extension Operations.OtpLogin.Output: AuthProxyResponseProtocol {
+  var okPayload: Any? {
+    if case .ok(let value) = self {
+      return value
+    }
+    return nil
+  }
+
+  var defaultCase: (statusCode: Int, rpcStatus: Components.Schemas.RpcStatus)? {
+    if case .default(let statusCode, let value) = self,
+      case .json(let status) = value.body
+    {
+      return (statusCode, status)
+    }
+    return nil
+  }
+}
+extension Operations.VerifyOtp.Output: AuthProxyResponseProtocol {
+  var okPayload: Any? {
+    if case .ok(let value) = self {
+      return value
+    }
+    return nil
+  }
+
+  var defaultCase: (statusCode: Int, rpcStatus: Components.Schemas.RpcStatus)? {
+    if case .default(let statusCode, let value) = self,
+      case .json(let status) = value.body
+    {
+      return (statusCode, status)
+    }
+    return nil
+  }
+}
+extension Operations.Signup.Output: AuthProxyResponseProtocol {
+  var okPayload: Any? {
+    if case .ok(let value) = self {
+      return value
+    }
+    return nil
+  }
+
+  var defaultCase: (statusCode: Int, rpcStatus: Components.Schemas.RpcStatus)? {
+    if case .default(let statusCode, let value) = self,
+      case .json(let status) = value.body
+    {
+      return (statusCode, status)
+    }
+    return nil
+  }
+}
+extension Operations.GetWalletKitConfig.Output: AuthProxyResponseProtocol {
+  var okPayload: Any? {
+    if case .ok(let value) = self {
+      return value
+    }
+    return nil
+  }
+
+  var defaultCase: (statusCode: Int, rpcStatus: Components.Schemas.RpcStatus)? {
+    if case .default(let statusCode, let value) = self,
+      case .json(let status) = value.body
+    {
+      return (statusCode, status)
+    }
+    return nil
+  }
+}

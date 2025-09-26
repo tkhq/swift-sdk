@@ -12,6 +12,7 @@ let package = Package(
         .library(name: "TurnkeyPasskeys", targets: ["TurnkeyPasskeys"]),
         .library(name: "TurnkeyStamper", targets: ["TurnkeyStamper"]),
         .library(name: "TurnkeySwift", targets: ["TurnkeySwift"]),
+        .executable(name: "AuthProxyCLI", targets: ["AuthProxyCLI"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-openapi-generator", from: "1.0.0"),
@@ -33,7 +34,8 @@ let package = Package(
         .target(
             name: "TurnkeyCrypto",
             dependencies: [
-                .product(name: "Base58Check", package: "Base58Check")
+                .product(name: "Base58Check", package: "Base58Check"),
+                "TurnkeyEncoding"
             ]
         ),
         .target(name: "TurnkeyPasskeys", dependencies: ["TurnkeyEncoding", "TurnkeyCrypto"]),
@@ -55,6 +57,13 @@ let package = Package(
                 "TurnkeyEncoding",
                 "TurnkeyAuthProxy",
             ]),
+
+        .executableTarget(
+            name: "AuthProxyCLI",
+            dependencies: [
+                "TurnkeyAuthProxy",
+            ]
+        ),
 
     ]
 )

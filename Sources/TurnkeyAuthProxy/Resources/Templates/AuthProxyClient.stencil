@@ -42,3 +42,24 @@ public struct AuthProxyClient {
   {% endfor %}
 }
 
+
+{% for class in types.implementing.APIProtocol %}
+{% for method in class.instanceMethods %}
+extension Operations.{{method.callName}}.Output: AuthProxyResponseProtocol {
+  var okPayload: Any? {
+    if case let .ok(value) = self {
+      return value
+    }
+    return nil
+  }
+
+  var defaultCase: (statusCode: Int, rpcStatus: Components.Schemas.RpcStatus)? {
+    if case let .default(statusCode, value) = self,
+       case let .json(status) = value.body {
+      return (statusCode, status)
+    }
+    return nil
+  }
+}
+{% endfor %}
+{% endfor %}
