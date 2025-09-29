@@ -1,0 +1,24 @@
+{% macro addMethodParams requestStructName -%}
+{% for struct in types.structs where struct.name|hasPrefix:"Components.Schemas." and struct.name|hasSuffix:requestStructName -%}
+{% for var in struct.variables -%}
+{% if forloop.first -%}
+{{ var.name }}: {{ var.typeName|replace:"Swift.","" }}{% if not forloop.last %},
+{% endif -%}
+{%- else -%}
+    {{ var.name }}: {{ var.typeName|replace:"Swift.","" }}{% if not forloop.last %},
+{% endif -%}
+{%- endif %}
+{%- endfor %}
+{%- endfor %}
+{%- endmacro %}
+
+{% macro addRequestBody methodName -%}
+    {% for struct in types.structs where struct.localName|split:"Request"|join == methodName -%}
+        {% for method in struct.methods -%}
+            {% for param in method.parameters -%}
+                {{struct.name}}({{ param.name }}: {{ param.name }}){% if not forloop.last %}, {% endif %}
+            {%- endfor %}
+        {%- endfor %}
+    {%- endfor %}
+{%- endmacro %}
+
