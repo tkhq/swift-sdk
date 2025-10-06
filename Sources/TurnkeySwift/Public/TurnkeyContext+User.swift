@@ -10,8 +10,10 @@ extension TurnkeyContext {
     ///
     /// If no valid session is found, the method silently returns.
     public func refreshUser() async {
+        
         guard
-            let client,
+            authState == .authenticated,
+            let client = client,
             let sessionKey = selectedSessionKey,
             let dto = try? JwtSessionStore.load(key: sessionKey)
         else {
@@ -38,9 +40,15 @@ extension TurnkeyContext {
     /// - Throws: `TurnkeySwiftError.invalidSession` if no session is selected,
     ///           or `TurnkeySwiftError.failedToUpdateUser` if the update fails.
     public func updateUser(email: String? = nil, phone: String? = nil) async throws {
-        guard let client, let user else {
+        
+        guard
+            authState == .authenticated,
+            let client = client,
+            let user = user
+        else {
             throw TurnkeySwiftError.invalidSession
         }
+        
         
         let trimmedEmail = email?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty
         let trimmedPhone = phone?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty
@@ -76,10 +84,15 @@ extension TurnkeyContext {
     /// - Throws: `TurnkeySwiftError.invalidSession` if no session is selected,
     ///           or `TurnkeySwiftError.failedToUpdateUserEmail` if the update fails.
     public func updateUserEmail(email: String, verificationToken: String? = nil ) async throws {
-        guard let client, let user else {
+        guard
+            authState == .authenticated,
+            let client = client,
+            let user = user
+        else {
             throw TurnkeySwiftError.invalidSession
         }
-                
+        
+        
         do {
             let resp = try await client.updateUserEmail(
                 organizationId: user.organizationId,
@@ -109,10 +122,16 @@ extension TurnkeyContext {
     /// - Throws: `TurnkeySwiftError.invalidSession` if no session is selected,
     ///           or `TurnkeySwiftError.failedToUpdateUserPhoneNumber` if the update fails.
     public func updateUserPhoneNumber(phone: String, verificationToken: String? = nil ) async throws {
-        guard let client, let user else {
+        guard
+            authState == .authenticated,
+            let client = client,
+            let user = user
+        else {
             throw TurnkeySwiftError.invalidSession
         }
-                
+        
+        
+        
         do {
             let resp = try await client.updateUserPhoneNumber(
                 organizationId: user.organizationId,

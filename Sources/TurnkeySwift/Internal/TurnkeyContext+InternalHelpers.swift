@@ -270,4 +270,86 @@ extension TurnkeyContext {
             throw error
         }
     }
+    
+    /// Builds a `ProxySignupRequest` body for creating a new sub-organization.
+    ///
+    /// - This function constructs the complete signup payload required by the Turnkey Auth Proxy.
+    /// - It supports multiple credential types including authenticators, API keys, and OAuth providers.
+    /// - Fallback names and identifiers are automatically generated when not provided.
+    ///
+    /// - Parameters:
+    ///   - createSubOrgParams: A `CreateSubOrgParams` object containing optional
+    ///     authenticators, API keys, OAuth providers, and user metadata.
+    ///
+    /// - Returns: A fully populated `Components.Schemas.ProxySignupRequest` object
+    ///   suitable for submission to the Turnkey Auth Proxy.
+    ///
+    /// - Throws: Never directly throws, but downstream usage may throw serialization or network errors.
+    func buildSignUpBody(createSubOrgParams: CreateSubOrgParams) -> Components.Schemas.ProxySignupRequest {
+        let now = Int(Date().timeIntervalSince1970)
+
+        // fallback authenticatorName
+        let authenticatorName = "passkey-\(now)"
+
+        // authenticators → ProxyAuthenticatorParamsV2
+        let authenticators: [Components.Schemas.ProxyAuthenticatorParamsV2]
+        if let list = createSubOrgParams.authenticators, !list.isEmpty {
+            authenticators = list.map { auth in
+                Components.Schemas.ProxyAuthenticatorParamsV2(
+                    authenticatorName: auth.authenticatorName ?? authenticatorName,
+                    challenge: auth.challenge,
+                    attestation: auth.attestation
+                )
+            }
+        } else {
+            authenticators = []
+        }
+
+        let apiKeys: [Components.Schemas.ProxyApiKeyParamsV2]
+        if let list = createSubOrgParams.apiKeys, !list.isEmpty {
+            apiKeys = list.map { apiKey in
+                Components.Schemas.ProxyApiKeyParamsV2(
+                    apiKeyName: apiKey.apiKeyName ?? "api-key-\(now)",
+                    publicKey: apiKey.publicKey,
+                    curveType: apiKey.curveType, // fallback curve
+                    expirationSeconds: apiKey.expirationSeconds
+                )
+            }
+        } else {
+            apiKeys = []
+        }
+
+
+        // oauthProviders → ProxyOauthProviderParams
+        let oauthProviders: [Components.Schemas.ProxyOauthProviderParams]
+        if let list = createSubOrgParams.oauthProviders, !list.isEmpty {
+            oauthProviders = list.map { provider in
+                Components.Schemas.ProxyOauthProviderParams(
+                    providerName: provider.providerName,
+                    oidcToken: provider.oidcToken
+                )
+            }
+        } else {
+            oauthProviders = []
+        }
+
+        // Construct ProxySignupRequest
+        return Components.Schemas.ProxySignupRequest(
+            userEmail: createSubOrgParams.userEmail,
+            userPhoneNumber: createSubOrgParams.userPhoneNumber,
+            userTag: createSubOrgParams.userTag,
+            userName: createSubOrgParams.userName
+                ?? createSubOrgParams.userEmail
+                ?? "user-\(now)",
+            organizationName: createSubOrgParams.subOrgName
+                ?? "sub-org-\(now)",
+            verificationToken: createSubOrgParams.verificationToken,
+            apiKeys: apiKeys,
+            authenticators: authenticators,
+            oauthProviders: oauthProviders,
+            wallet: createSubOrgParams.customWallet
+        )
+    }
+
+
 }

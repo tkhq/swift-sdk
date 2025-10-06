@@ -21,14 +21,27 @@ let package = Package(
     ],
     targets: [
         .target(name: "TurnkeyEncoding", dependencies: []),
+        .target(name: "TurnkeyPublicAPI",  dependencies: [  
+            .product(name: "HTTPTypes", package: "swift-http-types"),
+            .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
+            .product(name: "OpenAPIURLSession", package: "swift-openapi-urlsession"),
+        ], path: "Sources/TurnkeyHttp/Generated/Public"),
+         .target(name: "TurnkeyAuthProxyAPI",  dependencies: [  
+            .product(name: "HTTPTypes", package: "swift-http-types"),
+            .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
+            .product(name: "OpenAPIURLSession", package: "swift-openapi-urlsession"),
+        ], path: "Sources/TurnkeyHttp/Generated/AuthProxy"),
         .target(
             name: "TurnkeyHttp",
             dependencies: [
                 "TurnkeyStamper",
+                "TurnkeyPublicAPI",
+                "TurnkeyAuthProxyAPI",
                 .product(name: "HTTPTypes", package: "swift-http-types"),
                 .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
                 .product(name: "OpenAPIURLSession", package: "swift-openapi-urlsession"),
-            ]),
+            ],
+            exclude: ["Generated"]),
         .target(
             name: "TurnkeyCrypto",
             dependencies: [

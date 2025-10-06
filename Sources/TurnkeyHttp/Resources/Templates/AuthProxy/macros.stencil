@@ -1,0 +1,33 @@
+{# --- Macros --- #}
+{% macro addMethodParams requestStructName -%}
+{# Find the request struct by local (module-agnostic) name #}
+{% for struct in types.structs
+   where struct.name|hasPrefix:"Components.Schemas."
+   and   struct.name|hasSuffix:requestStructName -%}
+  {% for var in struct.variables -%}
+    {%- set mappedType -%}
+      {{ var.typeName
+         | replace:"Swift.",""
+         | replace:"Components.Schemas.","Components.Schemas.Proxy"
+      }}
+    {%- endset -%}
+    {%- if forloop.first -%}
+{{ var.name }}: {{ mappedType }}{% if not forloop.last %}, {% endif -%}
+    {%- else -%}
+    {{ var.name }}: {{ mappedType }}{% if not forloop.last %}, {% endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endfor -%}
+{%- endmacro %}
+
+{% macro addRequestBody requestStructName -%}
+Components.Schemas.Proxy{{ requestStructName }}(
+  {%- for struct in types.structs
+        where struct.name|hasPrefix:"Components.Schemas.Proxy"
+        and   struct.name|hasSuffix:requestStructName -%}
+    {%- for var in struct.variables -%}
+      {{ var.name }}: {{ var.name }}{% if not forloop.last %}, {% endif %}
+    {%- endfor -%}
+  {%- endfor -%}
+)
+{%- endmacro %}

@@ -3,7 +3,10 @@
     {% for struct in types.structs where struct.localName|split:"Request"|join == methodName -%}
         {% for method in struct.methods -%}
             {% for param in method.parameters -%}
-                {{ param.name }}: {{ param.typeName|replace:"Swift.","" }}{% if not forloop.last %}, {% endif %}
+                {{ param.name }}: {{ param.typeName
+                    | replace:"Swift.",""
+                    | replace:"Components.Schemas.","Components.Schemas." }}
+                {% if not forloop.last %}, {% endif %}
             {%- endfor %}
         {%- endfor %}
     {%- endfor %}
@@ -13,25 +16,30 @@
     {% for struct in types.structs where struct.localName|split:"Request"|join == methodName -%}
         {% for method in struct.methods -%}
             {% for param in method.parameters -%}
-                {{struct.name}}({{ param.name }}: {{ param.name }}){% if not forloop.last %}, {% endif %}
+                Components.Schemas.{{struct.name}}({{ param.name }}: {{ param.name }})
+                {% if not forloop.last %}, {% endif %}
             {%- endfor %}
         {%- endfor %}
     {%- endfor %}
 {%- endmacro %}
-
 
 {% macro addActivityMethodParams methodName -%}
     {% for struct in types.structs where struct.localName|split:"Request"|join == methodName -%}
         {% for method in struct.methods -%}
             {# First handle non-parameters fields #}
             {% for param in method.parameters where param.name != "_type" and param.name != "timestampMs" and param.name != "parameters" -%}
-                {{ param.name }}: {{ param.typeName|replace:"Swift.","" }}
+                {{ param.name }}: {{ param.typeName
+                    | replace:"Swift.",""
+                    | replace:"Components.Schemas.","Components.Schemas." }}
             {%- endfor %}
             {# Then handle parameters fields if they exist #}
             {% for param in method.parameters where param.name == "parameters" -%}
                 {% if param.type.variables.count > 0 %}, {% endif %}
                 {% for var in param.type.variables -%}
-                    {{ var.name }}: {{ var.typeName|replace:"Swift.","" }}{% if not forloop.last %}, {% endif %}
+                    {{ var.name }}: {{ var.typeName
+                        | replace:"Swift.",""
+                        | replace:"Components.Schemas.","Components.Schemas." }}
+                    {% if not forloop.last %}, {% endif %}
                 {%- endfor %}
             {%- endfor %}
         {%- endfor %}
@@ -50,7 +58,9 @@
 
 {% macro getIntentParams intentStructName -%}
     {% for struct in types.structs where struct.localName == intentStructName -%}
-        {% map struct.variables into params -%}{{ maploop.item.name }}: {{ maploop.item.name }}{%- endmap %}
+        {% map struct.variables into params -%}
+            {{ maploop.item.name }}: {{ maploop.item.name }}
+        {%- endmap %}
         {{ params|join:", " }}
     {%- endfor %}
 {%- endmacro %}
@@ -58,21 +68,25 @@
 {% macro generateActivityMethod methodName -%}
         {% set bodyInput method.parameters.0.typeName %}
         {% set returnType method.returnType.name %}
-        {# e.g. GetWhoamiRequest #}
         {% set requestStruct %}{{methodName}}Request{% endset %}
         {% set intentStructName -%}
             {% for struct in types.structs where struct.localName == requestStruct -%}
                 {% for var in struct.variables where var.name == "parameters" -%}
-                    {{ var.typeName|replace:"Components.Schemas.","" }}
+                    {{ var.typeName
+                        | replace:"Components.Schemas.",""
+                    }}
                 {%- endfor %}
             {%- endfor %}
         {%- endset %}
 
     public func {{ method.callName|lowerFirstLetter }}({% call addActivityMethodParams method.callName %}) async throws -> Operations.{{method.callName}}.Output.Ok {
 
+        guard let publicClient else {
+            throw TurnkeyRequestError.clientNotConfigured("publicClient")
+        }
+        
         // Create the {{ intentStructName }}
         let {{ method.callName|lowerFirstLetter }}Intent = Components.Schemas.{{ intentStructName }}({% call getIntentParams intentStructName %})
-        
 
         // Create the {{ requestStruct }}
         let {{ method.callName|lowerFirstLetter }}Request = Components.Schemas.{{ requestStruct }}(
@@ -87,16 +101,13 @@
             {%- endfor %}
             parameters: {{ method.callName|lowerFirstLetter }}Intent
         )
-        
 
-        // Create the input for the {{ method.callName }} method
+        // Create the input
         let input = Operations.{{method.callName}}.Input(
             headers: .init(accept: [.init(contentType: .json)]),
             body: .json({{ requestStruct|lowerFirstLetter }})
         )
-        
 
-        // Call the {{ method.callName }} method using the underlyingClient
-        return try await call { try await underlyingClient.{{ methodName }}(input) }
+        return try await call { try await publicClient.{{ methodName }}(input) }
     }
 {%- endmacro %}

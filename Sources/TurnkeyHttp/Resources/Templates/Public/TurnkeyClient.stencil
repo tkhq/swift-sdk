@@ -1,17 +1,9 @@
-import AuthenticationServices
-import CryptoKit
 import Foundation
 import OpenAPIRuntime
 import OpenAPIURLSession
+import TurnkeyPublicAPI
 
-public struct TurnkeyClient {
-  public static let baseURLString = "https://api.turnkey.com"
-
-  private let underlyingClient: any APIProtocol
-
-  internal init(underlyingClient: any APIProtocol) {
-    self.underlyingClient = underlyingClient
-  }
+public extension TurnkeyClient {
   
   {% import "macros.stencil" %}
   {% for class in types.implementing.APIProtocol %}
@@ -27,6 +19,10 @@ public struct TurnkeyClient {
           {% set okStructType %}Operations.{{method.callName}}.Output.Ok{% endset %}
           public func {{ method.callName|lowerFirstLetter }}({% call addMethodParams method.callName %}) async throws -> {{ okStructType }} {
 
+          guard let publicClient else {
+            throw TurnkeyRequestError.clientNotConfigured("publicClient")
+          }
+
           // Create the {{ requestStructName }}
           let {{ method.callName|lowerFirstLetter }}Request = Components.Schemas.{{ requestStructName }}(
               {% for struct in types.structs where struct.name|hasSuffix:requestStructName -%}
@@ -41,7 +37,7 @@ public struct TurnkeyClient {
               body: .json({{ requestStructName|lowerFirstLetter }})
           )
 
-          return try await call { try await underlyingClient.{{ method.callName }}(input) }
+          return try await call { try await publicClient.{{ method.callName }}(input) }
 
       }
       {% endif -%}

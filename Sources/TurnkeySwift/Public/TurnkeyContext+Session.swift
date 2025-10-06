@@ -119,7 +119,7 @@ extension TurnkeyContext {
             if selectedSessionKey == sessionKey {
                 authState = .unAuthenticated
                 selectedSessionKey = nil
-                client = nil
+                client = self.makeAuthProxyClientIfNeeded()
                 user = nil
                 
                 SelectedSessionStore.delete()
@@ -155,12 +155,13 @@ extension TurnkeyContext {
         
         if targetSessionKey == selectedSessionKey {
             // refreshing the selected session
-            guard let currentClient = self.client,
-                  let currentUser = self.user
-            else {
+            guard authState == .authenticated,
+                  let currentUser = self.user,
+                  let client = self.client else {
                 throw TurnkeySwiftError.invalidSession
             }
-            clientToUse = currentClient
+            
+            clientToUse = client
             orgId = currentUser.organizationId
         } else {
             // refreshing a background session

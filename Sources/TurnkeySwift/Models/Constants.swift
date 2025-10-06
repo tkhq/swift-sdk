@@ -17,6 +17,7 @@ public enum Constants {
 
   public enum Turnkey {
     public static let defaultApiUrl = "https://api.turnkey.com"
+    public static let defaultAuthProxyUrl = "https://authproxy.turnkey.com"
     public static let oauthOriginUrl = "https://oauth-origin.turnkey.com"
     public static let oauthRedirectUrl = "https://oauth-redirect.turnkey.com"
   }

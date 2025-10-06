@@ -15,21 +15,28 @@ extension TurnkeyClient {
 func unwrapOK<OutputEnum>(_ output: OutputEnum) async throws -> Any {
   let mirror = Mirror(reflecting: output)
 
-  // if it's .ok we return its associated value
   if let child = mirror.children.first(where: { $0.label == "ok" }) {
     return child.value
   }
 
-  // if it's .undocumented we map to TurnkeyError.apiError
-  if let child = mirror.children.first(where: { $0.label == "undocumented" }),
-    let tuple = child.value as? (statusCode: Int, payload: UndocumentedPayload)
-  {
-
-    var payloadData: Data?
-    if let body = tuple.payload.body {
-      payloadData = try await Data(collecting: body, upTo: .max)
+  for child in mirror.children {
+    if let tuple = child.value as? (statusCode: Int, payload: UndocumentedPayload) {
+      var payloadData: Data?
+      if let body = tuple.payload.body {
+        payloadData = try await Data(collecting: body, upTo: .max)
+      }
+      let error = TurnkeyRequestError.apiError(statusCode: tuple.statusCode, payload: payloadData)
+      throw error
     }
-    throw TurnkeyRequestError.apiError(statusCode: tuple.statusCode, payload: payloadData)
+
+    if let tuple = child.value as? (Int?, UndocumentedPayload?) {
+      var payloadData: Data?
+      if let body = tuple.1?.body {
+        payloadData = try await Data(collecting: body, upTo: .max)
+      }
+      let error = TurnkeyRequestError.apiError(statusCode: tuple.0, payload: payloadData)
+      throw error
+    }
   }
 
   throw TurnkeyRequestError.invalidResponse
