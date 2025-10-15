@@ -52,6 +52,7 @@ public enum TurnkeySwiftError: LocalizedError, Sendable {
     case failedToUpdateUser(underlying: Error)
     case failedToUpdateUserEmail(underlying: Error)
     case failedToUpdateUserPhoneNumber(underlying: Error)
+    case failedToLoginWithPasskey(underlying: Error)
     case failedToInitOtp(underlying: Error)
     case failedToVerifyOtp(underlying: Error)
     case failedToLoginWithOtp(underlying: Error)
@@ -90,6 +91,7 @@ public enum TurnkeySwiftError: LocalizedError, Sendable {
              .failedToUpdateUser(let e),
              .failedToUpdateUserEmail(let e),
              .failedToUpdateUserPhoneNumber(let e),
+             .failedToLoginWithPasskey(let e),
              .failedToInitOtp(let e),
              .failedToVerifyOtp(let e),
              .failedToLoginWithOtp(let e),
@@ -122,6 +124,7 @@ public enum TurnkeySwiftError: LocalizedError, Sendable {
              .failedToUpdateUser(let e),
              .failedToUpdateUserEmail(let e),
              .failedToUpdateUserPhoneNumber(let e),
+             .failedToLoginWithPasskey(let e),
              .failedToInitOtp(let e),
              .failedToVerifyOtp(let e),
              .failedToLoginWithOtp(let e),

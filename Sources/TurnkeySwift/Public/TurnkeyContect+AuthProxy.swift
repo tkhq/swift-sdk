@@ -1,6 +1,8 @@
 import Foundation
 import AuthenticationServices
 import TurnkeyHttp
+import TurnkeyPasskeys
+import TurnkeyCrypto
 
 extension TurnkeyContext {
     
@@ -25,7 +27,7 @@ extension TurnkeyContext {
             let resp = try await client.proxyInitOtp(
                 otpType: otpType.rawValue,
                 contact: contact
-            )            
+            )
             
             let result = try resp.body.json.otpId
             
@@ -102,7 +104,7 @@ extension TurnkeyContext {
             let session = try response.body.json.session
             
             try await createSession(jwt: session, refreshedSessionTTLSeconds: "900")
-
+            
             
             return session
         } catch {
@@ -239,14 +241,14 @@ extension TurnkeyContext {
         do {
             // we verify the otp code
             let verificationToken = try await verifyOtp(otpId: otpId, otpCode: otpCode)
-                        
+            
             // we check if org already exists
             let response = try await client.proxyGetAccount(
                 filterType: otpType == .email ? "EMAIL" : "PHONE_NUMBER",
                 filterValue: contact,
                 verificationToken: verificationToken
             )
-                        
+            
             if let organizationId = try response.body.json.organizationId,
                !organizationId.isEmpty {
                 // there is an existing org so we login
@@ -284,4 +286,147 @@ extension TurnkeyContext {
             throw TurnkeySwiftError.failedToLoginWithOtp(underlying: error)
         }
     }
+    
+    public func loginWithPasskey(
+        anchor: ASPresentationAnchor,
+        publicKey: String? = nil,
+        sessionKey: String? = nil
+    ) async throws {
+        let client = TurnkeyClient(
+            rpId: "passkeyapp.tkhqlabs.xyz",
+            presentationAnchor: anchor,
+            baseUrl: apiUrl
+        )
+        
+        let publicKey = try createKeyPair()
+        
+        do {
+            
+            let resp = try await client.stampLogin(
+                organizationId: "7533b2e3-01f2-4573-98c3-2c8bee816cb6",
+                publicKey: publicKey,
+                expirationSeconds: "900",
+                invalidateExisting: true
+            )
+            
+            
+            guard
+                case let .json(body) = resp.body,
+                let session = body.activity.result.stampLoginResult?.session
+            else {
+                throw TurnkeySwiftError.invalidResponse
+            }
+            
+            try await createSession(jwt: session, refreshedSessionTTLSeconds: "900")
+            
+        } catch {
+            throw TurnkeySwiftError.failedToLoginWithPasskey(underlying: error)
+        }
+    }
+    
+    @available(iOS 16.0, macOS 13.0, *)
+    public func signUpWithPasskey(
+      anchor: ASPresentationAnchor,
+      passkeyDisplayName: String? = nil,
+      challenge: String? = nil,
+      createSubOrgParams: CreateSubOrgParams? = nil,
+      sessionKey: String? = nil,
+      organizationId: String? = nil
+    ) async throws {
+      let client = TurnkeyClient(
+        rpId: "passkeyapp.tkhqlabs.xyz",
+        presentationAnchor: anchor,
+        baseUrl: apiUrl
+      )
+
+      var generatedPublicKey: String?
+      do {
+        
+        let passkeyName = passkeyDisplayName ?? "passkey-\(Int(Date().timeIntervalSince1970))"
+          
+          // for one-tap passkey sign-up, we generate a temporary API key pair
+          // which is added as an authentication method for the new sub-org user
+          // this allows us to stamp the session creation request immediately after
+          // without prompting the user
+          let (_, publicKeyCompressed, privateKey) = TurnkeyCrypto.generateP256KeyPair()
+          
+          let passkey = try await createPasskey(
+            user: PasskeyUser(id: UUID().uuidString, name: passkeyName, displayName: passkeyName),
+              rp: RelyingParty(id: "", name: ""),
+              presentationAnchor: anchor
+          )
+        
+
+        // we build the signup body
+          var mergedParams = createSubOrgParams ?? CreateSubOrgParams()
+
+          // TODO: how do we make this cleaner?
+          mergedParams.authenticators = [
+              CreateSubOrgParams.Authenticator(
+                  authenticatorName: passkeyName,
+                  challenge: passkey.challenge,
+                  attestation: Components.Schemas.ProxyAttestation(
+                      credentialId: passkey.attestation.credentialId,
+                      clientDataJson: passkey.attestation.clientDataJson,
+                      attestationObject: passkey.attestation.attestationObject,
+                      transports: passkey.attestation.transports.compactMap {
+                          Components.Schemas.ProxyAuthenticatorTransport(rawValue: $0.rawValue)
+                      }
+                  )
+              )
+          ]
+
+        mergedParams.apiKeys = [
+          CreateSubOrgParams.ApiKey(
+            apiKeyName: "passkey-auth-\(generatedPublicKey!)",
+            publicKey: generatedPublicKey!,
+            curveType: .API_KEY_CURVE_P256,
+            expirationSeconds: "60"
+          )
+        ]
+
+        let signupBody = buildSignUpBody(createSubOrgParams: mergedParams)
+
+        // 4. Proxy signup call
+        let response = try await client.proxySignup(
+          userEmail: signupBody.userEmail,
+          userPhoneNumber: signupBody.userPhoneNumber,
+          userTag: signupBody.userTag,
+          userName: signupBody.userName,
+          organizationName: signupBody.organizationName,
+          verificationToken: signupBody.verificationToken,
+          apiKeys: signupBody.apiKeys,
+          authenticators: signupBody.authenticators,
+          oauthProviders: signupBody.oauthProviders,
+          wallet: signupBody.wallet
+        )
+
+        let organizationId = try response.body.json.organizationId
+
+        // 5. Generate another key for the session login
+        let newPublicKey = try createKeyPair()
+
+        // 6. Login and create session
+        let loginResponse = try await client.stampLogin(
+          organizationId: organizationId,
+          publicKey: newPublicKey,
+          expirationSeconds: "900",
+          invalidateExisting: true
+        )
+
+        guard
+          case let .json(body) = loginResponse.body,
+          let session = body.activity.result.stampLoginResult?.session
+        else {
+          throw TurnkeySwiftError.invalidResponse
+        }
+
+        try await createSession(jwt: session, refreshedSessionTTLSeconds: "900")
+
+      } catch {
+        throw TurnkeySwiftError.failedToCreateWallet(underlying: error)
+      }
+    }
+
+
 }

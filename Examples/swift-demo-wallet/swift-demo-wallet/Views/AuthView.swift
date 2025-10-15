@@ -122,7 +122,7 @@ struct AuthView: View {
             }
             
             do {
-                try await auth.loginWithPasskey(anchor: anchor)
+                try await turnkey.loginWithPasskey(anchor: anchor)
             } catch {
                 auth.error = "Failed to log in with passkey"
             }
