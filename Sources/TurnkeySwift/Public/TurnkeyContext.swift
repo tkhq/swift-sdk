@@ -17,35 +17,41 @@ public final class TurnkeyContext: NSObject, ObservableObject {
     internal let apiUrl: String
     internal let authProxyUrl: String
     internal let authProxyConfigId: String?
+    internal let rpId: String?
     
-    // configurable base URL, auth proxy URL and auth proxy config Id
+    // configurable base URL, auth proxy URL, auth proxy config Id, and rpId
     private static var _apiUrl: String = Constants.Turnkey.defaultApiUrl
     private static var _authProxyUrl: String = Constants.Turnkey.defaultAuthProxyUrl
     private static var _authProxyConfigId: String? = nil
+    private static var _rpId: String? = nil
     
     internal weak var oauthAnchor: ASPresentationAnchor?
     
     public static func configure(
         apiUrl: String = Constants.Turnkey.defaultApiUrl,
         authProxyUrl: String = Constants.Turnkey.defaultAuthProxyUrl,
-        authProxyConfigId: String? = nil
+        authProxyConfigId: String? = nil,
+        rpId: String? = nil
     ) {
         _apiUrl = apiUrl
         _authProxyUrl = authProxyUrl
         _authProxyConfigId = authProxyConfigId
+        _rpId = rpId
     }
 
     
     public static let shared = TurnkeyContext(
         apiUrl: _apiUrl,
         authProxyUrl: _authProxyUrl,
-        authProxyConfigId: _authProxyConfigId
+        authProxyConfigId: _authProxyConfigId,
+        rpId: _rpId
     )
     
     private override init() {
         self.apiUrl = Constants.Turnkey.defaultApiUrl
         self.authProxyUrl = Constants.Turnkey.defaultAuthProxyUrl
         self.authProxyConfigId = nil
+        self.rpId = nil
         
         self.client = nil
         
@@ -53,10 +59,11 @@ public final class TurnkeyContext: NSObject, ObservableObject {
         self.postInitSetup()
     }
     
-    private init(apiUrl: String, authProxyUrl: String, authProxyConfigId: String?) {
+    private init(apiUrl: String, authProxyUrl: String, authProxyConfigId: String?, rpId: String?) {
         self.apiUrl = apiUrl
         self.authProxyUrl = authProxyUrl
         self.authProxyConfigId = authProxyConfigId
+        self.rpId = rpId
         
         super.init()
         

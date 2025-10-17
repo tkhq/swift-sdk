@@ -11,11 +11,11 @@ enum Constants {
   }
 
   enum Turnkey {
-    static let organizationId = "7533b2e3-01f2-4573-98c3-2c8bee816cb6"
+    static let organizationId = "cd473579-efee-4cb1-8a23-734bd1b4be31" // "7533b2e3-01f2-4573-98c3-2c8bee816cb6"
     static let sessionDuration = "900"
-    static let apiUrl = "http://localhost:8081"
-    static let authProxyUrl = "http://localhost:8090"
-    static let authProxyConfigId = "5889b4b6-ec95-42ca-8551-660e9d50ed09"
+    static let apiUrl = "https://api.turnkey.com" // "http://localhost:8081"
+    static let authProxyUrl = "https://authproxy.turnkey.com" // http://localhost:8090"
+    static let authProxyConfigId = "544e423d-f5c9-4dfb-947e-8cf726e3922e" // 5889b4b6-ec95-42ca-8551-660e9d50ed09"
     static let defaultEthereumAccounts: [Components.Schemas.WalletAccountParams] = [
       Components.Schemas.WalletAccountParams(
         curve: Components.Schemas.Curve.CURVE_SECP256K1,

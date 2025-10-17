@@ -39,6 +39,7 @@ public enum TurnkeySwiftError: LocalizedError, Sendable {
     case invalidResponse
     case invalidSession
     case invalidRefreshTTL(String)
+    case invalidConfiguration(String)
 
     case failedToSignPayload(underlying: Error)
     case failedToCreateSession(underlying: Error)
@@ -70,6 +71,7 @@ public enum TurnkeySwiftError: LocalizedError, Sendable {
         case .invalidJWT: return "Invalid JWT format."
         case .invalidResponse: return "Invalid response from server."
         case .invalidSession: return "Session is invalid or expired."
+        case .invalidConfiguration(let msg): return "Invalid configuration: \(msg)"
         case .oauthInvalidURL: return "OAuth flow failed: invalid URL."
         case .oauthMissingIDToken: return "OAuth flow failed: missing ID token."
 

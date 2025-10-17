@@ -103,7 +103,7 @@ extension TurnkeyContext {
             
             let session = try response.body.json.session
             
-            try await createSession(jwt: session, refreshedSessionTTLSeconds: "900")
+            try await createSession(jwt: session, refreshedSessionTTLSeconds: Constants.Session.defaultExpirationSeconds)
             
             
             return session
@@ -188,7 +188,7 @@ extension TurnkeyContext {
                 publicKey: generatedPublicKey
             )
             
-            try await createSession(jwt: session, refreshedSessionTTLSeconds: "900")
+            try await createSession(jwt: session, refreshedSessionTTLSeconds: Constants.Session.defaultExpirationSeconds)
             
             return session
         } catch {
@@ -292,8 +292,11 @@ extension TurnkeyContext {
         publicKey: String? = nil,
         sessionKey: String? = nil
     ) async throws {
+        guard let rpId = self.rpId, !rpId.isEmpty else {
+            throw TurnkeySwiftError.invalidConfiguration("Missing rpId; set via TurnkeyContext.configure(rpId:)")
+        }
         let client = TurnkeyClient(
-            rpId: "passkeyapp.tkhqlabs.xyz",
+            rpId: rpId,
             presentationAnchor: anchor,
             baseUrl: apiUrl
         )
@@ -305,7 +308,7 @@ extension TurnkeyContext {
             let resp = try await client.stampLogin(
                 organizationId: "7533b2e3-01f2-4573-98c3-2c8bee816cb6",
                 publicKey: publicKey,
-                expirationSeconds: "900",
+                expirationSeconds: Constants.Session.defaultExpirationSeconds,
                 invalidateExisting: true
             )
             
@@ -317,7 +320,7 @@ extension TurnkeyContext {
                 throw TurnkeySwiftError.invalidResponse
             }
             
-            try await createSession(jwt: session, refreshedSessionTTLSeconds: "900")
+            try await createSession(jwt: session, refreshedSessionTTLSeconds: Constants.Session.defaultExpirationSeconds)
             
         } catch {
             throw TurnkeySwiftError.failedToLoginWithPasskey(underlying: error)
@@ -333,8 +336,11 @@ extension TurnkeyContext {
       sessionKey: String? = nil,
       organizationId: String? = nil
     ) async throws {
+      guard let rpId = self.rpId, !rpId.isEmpty else {
+        throw TurnkeySwiftError.invalidConfiguration("Missing rpId; set via TurnkeyContext.configure(rpId:)")
+      }
       let client = TurnkeyClient(
-        rpId: "passkeyapp.tkhqlabs.xyz",
+        rpId: rpId,
         presentationAnchor: anchor,
         baseUrl: apiUrl
       )
@@ -352,8 +358,8 @@ extension TurnkeyContext {
           
           let passkey = try await createPasskey(
             user: PasskeyUser(id: UUID().uuidString, name: passkeyName, displayName: passkeyName),
-              rp: RelyingParty(id: "", name: ""),
-              presentationAnchor: anchor
+            rp: RelyingParty(id: rpId, name: ""),
+            presentationAnchor: anchor
           )
         
 
@@ -410,7 +416,7 @@ extension TurnkeyContext {
         let loginResponse = try await client.stampLogin(
           organizationId: organizationId,
           publicKey: newPublicKey,
-          expirationSeconds: "900",
+          expirationSeconds: Constants.Session.defaultExpirationSeconds,
           invalidateExisting: true
         )
 
@@ -421,7 +427,7 @@ extension TurnkeyContext {
           throw TurnkeySwiftError.invalidResponse
         }
 
-        try await createSession(jwt: session, refreshedSessionTTLSeconds: "900")
+          try await createSession(jwt: session, refreshedSessionTTLSeconds: Constants.Session.defaultExpirationSeconds)
 
       } catch {
         throw TurnkeySwiftError.failedToCreateWallet(underlying: error)
