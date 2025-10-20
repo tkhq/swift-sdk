@@ -11,6 +11,7 @@ public final class TurnkeyContext: NSObject, ObservableObject {
     @Published public internal(set) var client: TurnkeyClient?
     @Published public internal(set) var selectedSessionKey: String?
     @Published public internal(set) var user: SessionUser?
+    @Published public internal(set) var runtimeConfig: TurnkeyRuntimeConfig?
     
     // internal state
     internal var expiryTasks: [String: DispatchSourceTimer] = [:]
@@ -20,60 +21,39 @@ public final class TurnkeyContext: NSObject, ObservableObject {
     internal let rpId: String?
     internal let organizationId: String?
     
-    // configurable base URL, auth proxy URL, auth proxy config Id, and rpId
-    private static var _apiUrl: String = Constants.Turnkey.defaultApiUrl
-    private static var _authProxyUrl: String = Constants.Turnkey.defaultAuthProxyUrl
-    private static var _authProxyConfigId: String? = nil
-    private static var _rpId: String? = nil
-    private static var _organizationId: String? = nil
+    // Single user config captured at configure-time
+    private static var _config: TurnkeyConfig = TurnkeyConfig()
     
     internal weak var oauthAnchor: ASPresentationAnchor?
     
-    public static func configure(
-        apiUrl: String = Constants.Turnkey.defaultApiUrl,
-        authProxyUrl: String = Constants.Turnkey.defaultAuthProxyUrl,
-        authProxyConfigId: String? = nil,
-        rpId: String? = nil,
-        organizationId: String? = nil
-    ) {
-        _apiUrl = apiUrl
-        _authProxyUrl = authProxyUrl
-        _authProxyConfigId = authProxyConfigId
-        _rpId = rpId
-        _organizationId = organizationId
+    public static func configure(_ config: TurnkeyConfig) {
+        _config = config
     }
 
     
-    public static let shared = TurnkeyContext(
-        apiUrl: _apiUrl,
-        authProxyUrl: _authProxyUrl,
-        authProxyConfigId: _authProxyConfigId,
-        rpId: _rpId,
-        organizationId: _organizationId
-    )
+    public static let shared = TurnkeyContext(config: _config)
     
     private override init() {
-        self.apiUrl = Constants.Turnkey.defaultApiUrl
-        self.authProxyUrl = Constants.Turnkey.defaultAuthProxyUrl
-        self.authProxyConfigId = nil
-        self.rpId = nil
-        self.organizationId = nil
-        
+        let cfg = TurnkeyConfig()
+        self.apiUrl = cfg.apiUrl
+        self.authProxyUrl = cfg.authProxyUrl
+        self.authProxyConfigId = cfg.authProxyConfigId
+        self.rpId = cfg.rpId
+        self.organizationId = cfg.organizationId
+        self.userConfig = cfg
         self.client = nil
-        
         super.init()
         self.postInitSetup()
     }
     
-    private init(apiUrl: String, authProxyUrl: String, authProxyConfigId: String?, rpId: String?, organizationId: String?) {
-        self.apiUrl = apiUrl
-        self.authProxyUrl = authProxyUrl
-        self.authProxyConfigId = authProxyConfigId
-        self.rpId = rpId
-        self.organizationId = organizationId
-        
+    private init(config: TurnkeyConfig) {
+        self.apiUrl = config.apiUrl
+        self.authProxyUrl = config.authProxyUrl
+        self.authProxyConfigId = config.authProxyConfigId
+        self.rpId = config.rpId
+        self.organizationId = config.organizationId
+        self.userConfig = config
         super.init()
-        
         self.client = self.makeAuthProxyClientIfNeeded()
         self.postInitSetup()
     }
@@ -84,8 +64,9 @@ public final class TurnkeyContext: NSObject, ObservableObject {
         PendingKeysStore.purge()
         
         
-        // restore session and timers after launch
+        // build runtime configuration, restore session and timers after launch
         Task { [weak self] in
+            await self?.initializeRuntimeConfig()
             await self?.rescheduleAllSessionExpiries()
             await self?.restoreSelectedSession()
         }
@@ -111,6 +92,22 @@ public final class TurnkeyContext: NSObject, ObservableObject {
         } else {
             return nil
         }
+    }
+
+    // MARK: - Config / Helpers
+
+    internal let userConfig: TurnkeyConfig
+
+    public var isEmailOtpEnabled: Bool {
+        return runtimeConfig?.auth.otp.email ?? false
+    }
+
+    public var isSmsOtpEnabled: Bool {
+        return runtimeConfig?.auth.otp.sms ?? false
+    }
+
+    internal func resolvedSessionTTLSeconds() -> String {
+        return runtimeConfig?.auth.sessionExpirationSeconds ?? Constants.Session.defaultExpirationSeconds
     }
 }
 

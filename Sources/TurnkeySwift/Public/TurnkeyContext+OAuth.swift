@@ -31,8 +31,8 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         self.oauthAnchor = anchor
         
         let finalOriginUri = originUri ?? Constants.Turnkey.oauthOriginUrl
-        let finalRedirectUri = redirectUri
-        ?? "\(Constants.Turnkey.oauthRedirectUrl)?scheme=\(scheme)"
+        let resolvedRedirectBase = runtimeConfig?.auth.oauth.redirectBaseUrl ?? Constants.Turnkey.oauthRedirectUrl
+        let finalRedirectUri = redirectUri ?? "\(resolvedRedirectBase)?scheme=\(scheme)"
         
         var comps = URLComponents(string: finalOriginUri)!
         comps.queryItems = [

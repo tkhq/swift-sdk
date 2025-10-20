@@ -103,7 +103,7 @@ extension TurnkeyContext {
             
             let session = try response.body.json.session
             
-            try await createSession(jwt: session, refreshedSessionTTLSeconds: Constants.Session.defaultExpirationSeconds)
+            try await createSession(jwt: session, refreshedSessionTTLSeconds: resolvedSessionTTLSeconds())
             
             
             return session
@@ -188,7 +188,7 @@ extension TurnkeyContext {
                 publicKey: generatedPublicKey
             )
             
-            try await createSession(jwt: session, refreshedSessionTTLSeconds: Constants.Session.defaultExpirationSeconds)
+            try await createSession(jwt: session, refreshedSessionTTLSeconds: resolvedSessionTTLSeconds())
             
             return session
         } catch {
@@ -313,7 +313,7 @@ extension TurnkeyContext {
             let resp = try await client.stampLogin(
                 organizationId: orgId,
                 publicKey: resolvedPublicKey,
-                expirationSeconds: Constants.Session.defaultExpirationSeconds,
+                expirationSeconds: resolvedSessionTTLSeconds(),
                 invalidateExisting: true
             )
             
@@ -325,7 +325,7 @@ extension TurnkeyContext {
                 throw TurnkeySwiftError.invalidResponse
             }
             
-            try await createSession(jwt: session, refreshedSessionTTLSeconds: Constants.Session.defaultExpirationSeconds)
+            try await createSession(jwt: session, refreshedSessionTTLSeconds: resolvedSessionTTLSeconds())
             
         } catch {
             throw TurnkeySwiftError.failedToLoginWithPasskey(underlying: error)
@@ -426,7 +426,7 @@ extension TurnkeyContext {
         let loginResponse = try await passkeyClient.stampLogin(
           organizationId: organizationId,
           publicKey: newPublicKey,
-          expirationSeconds: Constants.Session.defaultExpirationSeconds,
+          expirationSeconds: resolvedSessionTTLSeconds(),
           invalidateExisting: true
         )
 
@@ -437,7 +437,7 @@ extension TurnkeyContext {
           throw TurnkeySwiftError.invalidResponse
         }
 
-          try await createSession(jwt: session, refreshedSessionTTLSeconds: Constants.Session.defaultExpirationSeconds)
+          try await createSession(jwt: session, refreshedSessionTTLSeconds: resolvedSessionTTLSeconds())
 
       } catch {
         throw TurnkeySwiftError.failedToCreateWallet(underlying: error)

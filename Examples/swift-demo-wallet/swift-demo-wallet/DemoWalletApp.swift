@@ -8,13 +8,14 @@ struct DemoWalletApp: App {
     @StateObject private var toast = ToastContext()
     
     init() {
-        TurnkeyContext.configure(
+        let config = TurnkeyConfig(
             apiUrl: Constants.Turnkey.apiUrl,
             authProxyUrl: Constants.Turnkey.authProxyUrl,
             authProxyConfigId: Constants.Turnkey.authProxyConfigId,
             rpId: Constants.App.rpId,
             organizationId: Constants.Turnkey.organizationId
         )
+        TurnkeyContext.configure(config)
         
         let turnkey = TurnkeyContext.shared
         _turnkey = StateObject(wrappedValue: turnkey)

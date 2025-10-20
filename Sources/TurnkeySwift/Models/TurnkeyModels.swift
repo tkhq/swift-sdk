@@ -12,3 +12,5 @@ public typealias WalletAccount = SessionUser.UserWallet.WalletAccount
 
 public typealias SignRawPayloadResult = Components.Schemas.SignRawPayloadResult
 public typealias Activity = Components.Schemas.Activity
+
+public typealias ProxyGetWalletKitConfigResponse = Components.Schemas.ProxyGetWalletKitConfigResponse
