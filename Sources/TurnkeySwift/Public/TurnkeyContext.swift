@@ -11,7 +11,7 @@ public final class TurnkeyContext: NSObject, ObservableObject {
     @Published public internal(set) var client: TurnkeyClient?
     @Published public internal(set) var selectedSessionKey: String?
     @Published public internal(set) var user: SessionUser?
-    @Published public internal(set) var runtimeConfig: TurnkeyRuntimeConfig?
+    @Published internal var runtimeConfig: TurnkeyRuntimeConfig?
     
     // internal state
     internal var expiryTasks: [String: DispatchSourceTimer] = [:]

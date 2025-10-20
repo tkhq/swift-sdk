@@ -10,7 +10,7 @@ extension TurnkeyContext {
 
     internal func initializeRuntimeConfig() async {
         // Build with proxy if available; fetch once on init
-        var proxy: ProxyGetWalletKitConfigResponse?
+        var proxy: Components.Schemas.GetWalletKitConfigResponse?
         if let client, let _ = self.authProxyConfigId {
             do {
                 let response = try await client.proxyGetWalletKitConfig()
@@ -27,7 +27,7 @@ extension TurnkeyContext {
     }
 
     internal func buildRuntimeConfig(
-        proxy: ProxyGetWalletKitConfigResponse?
+        proxy: Components.Schemas.GetWalletKitConfigResponse?
     ) -> TurnkeyRuntimeConfig {
         // Sanitize auth proxy URL: empty string -> nil
         let trimmedAuthProxyUrl = authProxyUrl.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -46,6 +46,34 @@ extension TurnkeyContext {
             ?? proxy?.oauthRedirectUrl
             ?? Constants.Turnkey.oauthRedirectUrl
         let appScheme = userConfig.auth?.oauth?.appScheme
+
+        // Resolve per-provider OAuth overrides (exclude facebook)
+        var resolvedProviders: [String: TurnkeyRuntimeConfig.Auth.Oauth.Provider] = [:]
+        let proxyClientIds = proxy?.oauthClientIds?.additionalProperties ?? [:]
+        let providers = ["google", "apple", "x", "discord"]
+        for provider in providers {
+            let override: TurnkeyConfig.Auth.Oauth.ProviderOverride? = {
+                switch provider {
+                case "google": return userConfig.auth?.oauth?.providers?.google
+                case "apple": return userConfig.auth?.oauth?.providers?.apple
+                case "x": return userConfig.auth?.oauth?.providers?.x
+                case "discord": return userConfig.auth?.oauth?.providers?.discord
+                default: return nil
+                }
+            }()
+
+            let clientId = override?.clientId ?? proxyClientIds[provider]
+            // For X and Discord, if no explicit provider redirect and we have an appScheme, default to scheme://
+            let providerRedirect: String? = {
+                if let explicit = override?.redirectUri { return explicit }
+                if (provider == "x" || provider == "discord"), let scheme = appScheme, !scheme.isEmpty {
+                    return "\(scheme)://"
+                }
+                return nil
+            }()
+
+            resolvedProviders[provider] = .init(clientId: clientId, redirectUri: providerRedirect)
+        }
 
         // Warnings for proxy-controlled overrides when proxy is active
         if authProxyConfigId != nil {
@@ -66,6 +94,38 @@ extension TurnkeyContext {
         let otpAlphanumeric = proxy?.otpAlphanumeric ?? true
         let otpLength = proxy?.otpLength ?? "6"
 
+        // Resolve passkey options
+        let passkey = {
+            if let p = userConfig.auth?.passkey {
+                return TurnkeyRuntimeConfig.Auth.Passkey(
+                    passkeyName: p.passkeyName,
+                    rpId: p.rpId ?? userConfig.rpId,
+                    rpName: p.rpName
+                )
+            } else if userConfig.rpId != nil {
+                return TurnkeyRuntimeConfig.Auth.Passkey(
+                    passkeyName: nil,
+                    rpId: userConfig.rpId,
+                    rpName: nil
+                )
+            } else {
+                return nil
+            }
+        }()
+
+        // Resolve create suborg defaults
+        let createDefaults = {
+            if let d = userConfig.auth?.createSuborgDefaults {
+                return TurnkeyRuntimeConfig.Auth.CreateSuborgDefaults(
+                    emailOtpAuth: d.emailOtpAuth,
+                    smsOtpAuth: d.smsOtpAuth,
+                    passkeyAuth: d.passkeyAuth,
+                    oauth: d.oauth
+                )
+            }
+            return nil
+        }()
+
         let auth = TurnkeyRuntimeConfig.Auth(
             sessionExpirationSeconds: sessionTTL,
             otp: .init(
@@ -76,9 +136,12 @@ extension TurnkeyContext {
             ),
             oauth: .init(
                 redirectBaseUrl: redirectBaseUrl,
-                appScheme: appScheme
+                appScheme: appScheme,
+                providers: resolvedProviders
             ),
-            autoRefreshSession: userConfig.auth?.autoRefreshSession ?? true
+            autoRefreshSession: userConfig.auth?.autoRefreshSession ?? true,
+            passkey: passkey,
+            createSuborgDefaults: createDefaults
         )
 
         let runtime = TurnkeyRuntimeConfig(
