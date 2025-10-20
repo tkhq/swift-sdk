@@ -80,16 +80,13 @@ struct SignMessageView: View {
     private func handleSignPressed() {
         Task {
             do {
-                let digest = Ethereum.keccak256Digest(of: message)
-                let digestHex = digest.toHexString()
-
-                let result = try await turnkey.signRawPayload(
+                let result = try await turnkey.signMessage(
                     signWith: walletAddress,
-                    payload: digestHex,
-                    encoding: .PAYLOAD_ENCODING_HEXADECIMAL,
-                    hashFunction: .HASH_FUNCTION_NO_OP
+                    addressFormat: .ADDRESS_FORMAT_ETHEREUM,
+                    message: message,
+                    addEthereumPrefix: true
                 )
-
+                toast.show(message: "signed message", type: .success)
                 await MainActor.run {
                     signatureR = result.r
                     signatureS = result.s

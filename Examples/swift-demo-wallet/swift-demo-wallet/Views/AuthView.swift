@@ -87,7 +87,9 @@ struct AuthView: View {
             do {
                 try await auth.loginWithGoogle(anchor: anchor)
             } catch {
-                auth.error = "Failed to log in with Google"
+                let message = formatError(error, fallback: "Failed to log in with Google")
+                print("[AuthView] Google login error: \(message)")
+                auth.error = message
             }
         }
     }
@@ -98,7 +100,9 @@ struct AuthView: View {
                 let otpId = try await turnkey.initOtp(contact: email, otpType: OtpType.email)
                 coordinator.push(AuthRoute.otp(otpId: otpId, contact: email))
             } catch {
-                auth.error = "Failed to send OTP"
+                let message = formatError(error, fallback: "Failed to send OTP")
+                print("[AuthView] Email OTP error: \(message)")
+                auth.error = message
             }
         }
     }
@@ -109,7 +113,9 @@ struct AuthView: View {
                 let otpId = try await turnkey.initOtp(contact: phone, otpType: OtpType.sms)
                 coordinator.push(AuthRoute.otp(otpId: otpId, contact: email))
             } catch {
-                auth.error = "Failed to send OTP"
+                let message = formatError(error, fallback: "Failed to send OTP")
+                print("[AuthView] SMS OTP error: \(message)")
+                auth.error = message
             }
         }
     }
@@ -124,7 +130,9 @@ struct AuthView: View {
             do {
                 try await turnkey.loginWithPasskey(anchor: anchor)
             } catch {
-                auth.error = "Failed to log in with passkey"
+                let message = formatError(error, fallback: "Failed to log in with passkey")
+                print("[AuthView] Passkey login error: \(message)")
+                auth.error = message
             }
         }
     }
@@ -139,7 +147,9 @@ struct AuthView: View {
             do {
                 try await auth.signUpWithPasskey(anchor: anchor)
             } catch {
-                auth.error = "Failed to sign up with passkey"
+                let message = formatError(error, fallback: "Failed to sign up with passkey")
+                print("[AuthView] Passkey signup error: \(message)")
+                auth.error = message
             }
         }
     }
@@ -151,6 +161,16 @@ struct AuthView: View {
             .first(where: { $0.activationState == .foregroundActive })?
             .windows
             .first(where: { $0.isKeyWindow })
+    }
+
+    private func formatError(_ error: Error, fallback: String) -> String {
+        if let turnkeyError = error.turnkeyRequestError {
+            return "\(fallback): \(turnkeyError.fullMessage)"
+        }
+        if let localized = (error as? LocalizedError)?.errorDescription {
+            return "\(fallback): \(localized)"
+        }
+        return "\(fallback): \(String(describing: error))"
     }
     
     private struct OrSeparator: View {

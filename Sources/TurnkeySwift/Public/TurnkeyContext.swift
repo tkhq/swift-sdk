@@ -18,12 +18,14 @@ public final class TurnkeyContext: NSObject, ObservableObject {
     internal let authProxyUrl: String
     internal let authProxyConfigId: String?
     internal let rpId: String?
+    internal let organizationId: String?
     
     // configurable base URL, auth proxy URL, auth proxy config Id, and rpId
     private static var _apiUrl: String = Constants.Turnkey.defaultApiUrl
     private static var _authProxyUrl: String = Constants.Turnkey.defaultAuthProxyUrl
     private static var _authProxyConfigId: String? = nil
     private static var _rpId: String? = nil
+    private static var _organizationId: String? = nil
     
     internal weak var oauthAnchor: ASPresentationAnchor?
     
@@ -31,12 +33,14 @@ public final class TurnkeyContext: NSObject, ObservableObject {
         apiUrl: String = Constants.Turnkey.defaultApiUrl,
         authProxyUrl: String = Constants.Turnkey.defaultAuthProxyUrl,
         authProxyConfigId: String? = nil,
-        rpId: String? = nil
+        rpId: String? = nil,
+        organizationId: String? = nil
     ) {
         _apiUrl = apiUrl
         _authProxyUrl = authProxyUrl
         _authProxyConfigId = authProxyConfigId
         _rpId = rpId
+        _organizationId = organizationId
     }
 
     
@@ -44,7 +48,8 @@ public final class TurnkeyContext: NSObject, ObservableObject {
         apiUrl: _apiUrl,
         authProxyUrl: _authProxyUrl,
         authProxyConfigId: _authProxyConfigId,
-        rpId: _rpId
+        rpId: _rpId,
+        organizationId: _organizationId
     )
     
     private override init() {
@@ -52,6 +57,7 @@ public final class TurnkeyContext: NSObject, ObservableObject {
         self.authProxyUrl = Constants.Turnkey.defaultAuthProxyUrl
         self.authProxyConfigId = nil
         self.rpId = nil
+        self.organizationId = nil
         
         self.client = nil
         
@@ -59,11 +65,12 @@ public final class TurnkeyContext: NSObject, ObservableObject {
         self.postInitSetup()
     }
     
-    private init(apiUrl: String, authProxyUrl: String, authProxyConfigId: String?, rpId: String?) {
+    private init(apiUrl: String, authProxyUrl: String, authProxyConfigId: String?, rpId: String?, organizationId: String?) {
         self.apiUrl = apiUrl
         self.authProxyUrl = authProxyUrl
         self.authProxyConfigId = authProxyConfigId
         self.rpId = rpId
+        self.organizationId = organizationId
         
         super.init()
         

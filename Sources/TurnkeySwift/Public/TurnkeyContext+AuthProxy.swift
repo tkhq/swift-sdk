@@ -289,11 +289,16 @@ extension TurnkeyContext {
     
     public func loginWithPasskey(
         anchor: ASPresentationAnchor,
+        organizationId: String? = nil,
         publicKey: String? = nil,
         sessionKey: String? = nil
     ) async throws {
         guard let rpId = self.rpId, !rpId.isEmpty else {
             throw TurnkeySwiftError.invalidConfiguration("Missing rpId; set via TurnkeyContext.configure(rpId:)")
+        }
+        let resolvedOrganizationId = organizationId ?? self.organizationId
+        guard let orgId = resolvedOrganizationId, !orgId.isEmpty else {
+            throw TurnkeySwiftError.invalidConfiguration("Missing organizationId; pass as parameter or set via TurnkeyContext.configure(organizationId:)")
         }
         let client = TurnkeyClient(
             rpId: rpId,
@@ -301,13 +306,13 @@ extension TurnkeyContext {
             baseUrl: apiUrl
         )
         
-        let publicKey = try createKeyPair()
+        let resolvedPublicKey = try publicKey ?? createKeyPair()
         
         do {
             
             let resp = try await client.stampLogin(
-                organizationId: "7533b2e3-01f2-4573-98c3-2c8bee816cb6",
-                publicKey: publicKey,
+                organizationId: orgId,
+                publicKey: resolvedPublicKey,
                 expirationSeconds: Constants.Session.defaultExpirationSeconds,
                 invalidateExisting: true
             )
@@ -339,7 +344,7 @@ extension TurnkeyContext {
       guard let rpId = self.rpId, !rpId.isEmpty else {
         throw TurnkeySwiftError.invalidConfiguration("Missing rpId; set via TurnkeyContext.configure(rpId:)")
       }
-      let client = TurnkeyClient(
+      let passkeyClient = TurnkeyClient(
         rpId: rpId,
         presentationAnchor: anchor,
         baseUrl: apiUrl
@@ -355,6 +360,7 @@ extension TurnkeyContext {
           // this allows us to stamp the session creation request immediately after
           // without prompting the user
           let (_, publicKeyCompressed, privateKey) = TurnkeyCrypto.generateP256KeyPair()
+          generatedPublicKey = publicKeyCompressed
           
           let passkey = try await createPasskey(
             user: PasskeyUser(id: UUID().uuidString, name: passkeyName, displayName: passkeyName),
@@ -394,7 +400,11 @@ extension TurnkeyContext {
         let signupBody = buildSignUpBody(createSubOrgParams: mergedParams)
 
         // 4. Proxy signup call
-        let response = try await client.proxySignup(
+        // Use the Auth Proxy–configured client for signup
+        guard let proxyClient = self.client else {
+          throw TurnkeySwiftError.invalidSession
+        }
+        let response = try await proxyClient.proxySignup(
           userEmail: signupBody.userEmail,
           userPhoneNumber: signupBody.userPhoneNumber,
           userTag: signupBody.userTag,
@@ -413,7 +423,7 @@ extension TurnkeyContext {
         let newPublicKey = try createKeyPair()
 
         // 6. Login and create session
-        let loginResponse = try await client.stampLogin(
+        let loginResponse = try await passkeyClient.stampLogin(
           organizationId: organizationId,
           publicKey: newPublicKey,
           expirationSeconds: Constants.Session.defaultExpirationSeconds,
