@@ -176,39 +176,10 @@ final class AuthContext: ObservableObject {
         startLoading()
         defer { stopLoading() }
 
-        let publicKey = try turnkey.createKeyPair()
-        let nonce = publicKey
-            .data(using: .utf8)!
-            .sha256()
-            .map { String(format: "%02x", $0) }
-            .joined()
-
-        let oidcToken = try await turnkey.startGoogleOAuthFlow(
-            clientId: Constants.Google.clientId,
-            nonce: nonce,
-            scheme: Constants.App.scheme,
-            anchor: anchor
+        _ = try await turnkey.handleGoogleOAuth(
+            anchor: anchor,
+            params: .init(clientId: Constants.Google.clientId)
         )
-
-        let oAuthBody = OAuthLoginRequest(
-            publicKey: publicKey,
-            providerName: "google",
-            oidcToken: oidcToken,
-            expirationSeconds: Constants.Turnkey.sessionDuration
-        )
-
-        var request = URLRequest(url: backendURL.appendingPathComponent("/auth/oAuth"))
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONEncoder().encode(oAuthBody)
-
-        let (data, response) = try await URLSession.shared.data(for: request)
-        guard (response as? HTTPURLResponse)?.statusCode == 200 else {
-            throw AuthError.serverError
-        }
-
-        let result = try JSONDecoder().decode(OAuthLoginResponse.self, from: data)
-        try await turnkey.createSession(jwt: result.token, refreshedSessionTTLSeconds: Constants.Turnkey.sessionDuration)
     }
 
     

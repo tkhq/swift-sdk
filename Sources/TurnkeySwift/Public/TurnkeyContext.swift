@@ -109,5 +109,17 @@ public final class TurnkeyContext: NSObject, ObservableObject {
     internal func resolvedSessionTTLSeconds() -> String {
         return runtimeConfig?.auth.sessionExpirationSeconds ?? Constants.Session.defaultExpirationSeconds
     }
+
+    // Resolve OAuth provider settings using runtime and user config.
+    // Falls back to proxy-provided settings inside runtimeConfig.
+    internal func getOAuthProviderSettings(provider: String) throws -> (clientId: String, redirectUri: String, appScheme: String) {
+        let providerInfo = runtimeConfig?.auth.oauth.providers[provider]
+        let clientId = providerInfo?.clientId ?? ""
+        let redirectBase = runtimeConfig?.auth.oauth.redirectBaseUrl ?? Constants.Turnkey.oauthRedirectUrl
+        let appScheme = runtimeConfig?.auth.oauth.appScheme ?? ""
+        let redirectUri = "\(redirectBase)?scheme=\(appScheme)"
+
+        return (clientId: clientId, redirectUri: redirectUri, appScheme: appScheme)
+    }
 }
 

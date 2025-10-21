@@ -10,7 +10,7 @@ extension TurnkeyContext {
 
     internal func initializeRuntimeConfig() async {
         // Build with proxy if available; fetch once on init
-        var proxy: Components.Schemas.GetWalletKitConfigResponse?
+        var proxy: ProxyGetWalletKitConfigResponse?
         if let client, let _ = self.authProxyConfigId {
             do {
                 let response = try await client.proxyGetWalletKitConfig()
@@ -27,7 +27,7 @@ extension TurnkeyContext {
     }
 
     internal func buildRuntimeConfig(
-        proxy: Components.Schemas.GetWalletKitConfigResponse?
+        proxy: ProxyGetWalletKitConfigResponse?
     ) -> TurnkeyRuntimeConfig {
         // Sanitize auth proxy URL: empty string -> nil
         let trimmedAuthProxyUrl = authProxyUrl.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -95,7 +95,7 @@ extension TurnkeyContext {
         let otpLength = proxy?.otpLength ?? "6"
 
         // Resolve passkey options
-        let passkey = {
+        let passkey: TurnkeyRuntimeConfig.Auth.Passkey? = {
             if let p = userConfig.auth?.passkey {
                 return TurnkeyRuntimeConfig.Auth.Passkey(
                     passkeyName: p.passkeyName,
@@ -114,7 +114,7 @@ extension TurnkeyContext {
         }()
 
         // Resolve create suborg defaults
-        let createDefaults = {
+        let createDefaults: TurnkeyRuntimeConfig.Auth.CreateSuborgDefaults? = {
             if let d = userConfig.auth?.createSuborgDefaults {
                 return TurnkeyRuntimeConfig.Auth.CreateSuborgDefaults(
                     emailOtpAuth: d.emailOtpAuth,

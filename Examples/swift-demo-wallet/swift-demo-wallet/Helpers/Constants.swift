@@ -32,6 +32,6 @@ enum Constants {
   }
 
   enum Google {
-    static let clientId = "<your_google_web_client_id>"
+    static let clientId = "776352896366-07enngvt22l7cnq1ctf5a9ddcm1pv1sc.apps.googleusercontent.com"
   }
 }

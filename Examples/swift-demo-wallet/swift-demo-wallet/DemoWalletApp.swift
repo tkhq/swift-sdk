@@ -13,7 +13,15 @@ struct DemoWalletApp: App {
             authProxyUrl: Constants.Turnkey.authProxyUrl,
             authProxyConfigId: Constants.Turnkey.authProxyConfigId,
             rpId: Constants.App.rpId,
-            organizationId: Constants.Turnkey.organizationId
+            organizationId: Constants.Turnkey.organizationId,
+            auth: .init(
+                oauth: .init(
+                    appScheme: Constants.App.scheme,
+                    providers: .init(
+                        google: .init(clientId: Constants.Google.clientId)
+                    )
+                )
+            )
         )
         TurnkeyContext.configure(config)
         

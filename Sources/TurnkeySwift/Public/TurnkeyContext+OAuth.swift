@@ -1,9 +1,91 @@
 import Foundation
 import AuthenticationServices
+import CryptoKit
 import TurnkeyHttp
 
 extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
+    // MARK: - Public Types (OAuth)
+
+    public struct GoogleOAuthOptions: Sendable {
+        public var clientId: String?
+        public var additionalState: [String: String]?
+        public var onOAuthSuccess: ((OAuthSuccess) -> Void)?
+
+        public init(
+            clientId: String? = nil,
+            additionalState: [String: String]? = nil,
+            onOAuthSuccess: ((OAuthSuccess) -> Void)? = nil
+        ) {
+            self.clientId = clientId
+            self.additionalState = additionalState
+            self.onOAuthSuccess = onOAuthSuccess
+        }
+    }
+    @available(*, unavailable, renamed: "GoogleOAuthOptions")
+    public typealias HandleGoogleOAuthParams = GoogleOAuthOptions
+
+    public struct OAuthSuccess: Sendable {
+        public let oidcToken: String
+        public let providerName: String
+        public let publicKey: String
+    }
+
+    public struct OAuthCallbackParams: Sendable {
+        public let oidcToken: String
+        public let sessionKey: String?
+    }
+
+    // MARK: - Orchestrator
+
+    /// Launches Google OAuth, retrieves the OIDC token, and completes Turnkey login or signup.
+    public func handleGoogleOAuth(
+        anchor: ASPresentationAnchor,
+        params: GoogleOAuthOptions = .init()
+    ) async throws -> CompleteOAuthResult {
+        // Create keypair and compute nonce = sha256(publicKey)
+        let publicKey = try createKeyPair()
+        let nonceData = Data(publicKey.utf8)
+        let nonce = SHA256.hash(data: nonceData).map { String(format: "%02x", $0) }.joined()
+
+        // Resolve provider settings (clientId, redirect base URL, app scheme)
+        let settings = try getOAuthProviderSettings(provider: "google")
+        let clientId = params.clientId ?? settings.clientId
+        let scheme = settings.appScheme
+
+        guard !clientId.isEmpty else {
+            throw TurnkeySwiftError.invalidConfiguration("Missing clientId for Google OAuth")
+        }
+        guard !scheme.isEmpty else {
+            throw TurnkeySwiftError.invalidConfiguration("Missing app scheme for OAuth redirect")
+        }
+
+        // Start OAuth in system browser and obtain Google-issued id_token (+ optional sessionKey)
+        let oauth = try await runOAuthSession(
+            provider: "google",
+            clientId: clientId,
+            scheme: scheme,
+            anchor: anchor,
+            nonce: nonce,
+            additionalState: params.additionalState
+        )
+
+        // Optional early callback (parity with TS onOAuthSuccess)
+        if let cb = params.onOAuthSuccess {
+            cb(.init(oidcToken: oauth.oidcToken, providerName: "google", publicKey: publicKey))
+            // In early-return mode caller handles completion.
+            return .init(session: "", action: .login)
+        }
+
+        // Complete OAuth inside SDK (lookup → login or signup)
+        return try await completeOAuth(
+            oidcToken: oauth.oidcToken,
+            publicKey: publicKey,
+            providerName: "google",
+            sessionKey: oauth.sessionKey
+        )
+    }
     
+    // MARK: - Deprecated public starter (use handleGoogleOAuth)
     /// Launches the Google OAuth flow and returns the OIDC token.
     ///
     /// - Parameters:
@@ -19,57 +101,96 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     /// - Throws: `TurnkeySwiftError.oauthInvalidURL` if URL building fails,
     ///           `TurnkeySwiftError.oauthMissingIDToken` if token is not returned,
     ///           or `TurnkeySwiftError.oauthFailed` if the system session fails.
+    @available(*, deprecated, message: "Use handleGoogleOAuth(anchor:params:) instead")
     public func startGoogleOAuthFlow(
         clientId: String,
         nonce: String,
         scheme: String,
         anchor: ASPresentationAnchor,
         originUri: String? = nil,
-        redirectUri: String? = nil
+        redirectUri: String? = nil,
+        additionalState: [String: String]? = nil
     ) async throws -> String {
-        
-        self.oauthAnchor = anchor
-        
-        let finalOriginUri = originUri ?? Constants.Turnkey.oauthOriginUrl
-        let resolvedRedirectBase = runtimeConfig?.auth.oauth.redirectBaseUrl ?? Constants.Turnkey.oauthRedirectUrl
-        let finalRedirectUri = redirectUri ?? "\(resolvedRedirectBase)?scheme=\(scheme)"
-        
+        let result = try await runOAuthSession(
+            provider: "google",
+            clientId: clientId,
+            scheme: scheme,
+            anchor: anchor,
+            nonce: nonce,
+            additionalState: additionalState
+        )
+        return result.oidcToken
+    }
+
+    // MARK: - Internal helpers
+    private func buildOAuthURL(
+        provider: String,
+        clientId: String,
+        redirectUri: String,
+        nonce: String,
+        additionalState: [String: String]?
+    ) throws -> URL {
+        let finalOriginUri = Constants.Turnkey.oauthOriginUrl
+        // Encode nested redirectUri like encodeURIComponent
+        let allowedUnreserved = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
+        let encodedRedirectUri = redirectUri.addingPercentEncoding(withAllowedCharacters: allowedUnreserved) ?? redirectUri
+
         var comps = URLComponents(string: finalOriginUri)!
-        comps.queryItems = [
-            URLQueryItem(name: "provider",    value: "google"),
+        var items: [URLQueryItem] = [
+            URLQueryItem(name: "provider",    value: provider),
             URLQueryItem(name: "clientId",    value: clientId),
-            URLQueryItem(name: "redirectUri", value: finalRedirectUri),
+            URLQueryItem(name: "redirectUri", value: encodedRedirectUri),
             URLQueryItem(name: "nonce",       value: nonce)
         ]
-        
-        guard let url = comps.url else {
-            throw TurnkeySwiftError.oauthInvalidURL
+        if let state = additionalState, !state.isEmpty {
+            for (k, v) in state {
+                let ev = v.addingPercentEncoding(withAllowedCharacters: allowedUnreserved) ?? v
+                items.append(URLQueryItem(name: k, value: ev))
+            }
         }
-        
+        comps.percentEncodedQueryItems = items
+        guard let url = comps.url else { throw TurnkeySwiftError.oauthInvalidURL }
+        return url
+    }
+
+    internal func runOAuthSession(
+        provider: String,
+        clientId: String,
+        scheme: String,
+        anchor: ASPresentationAnchor,
+        nonce: String,
+        additionalState: [String: String]? = nil
+    ) async throws -> OAuthCallbackParams {
+        self.oauthAnchor = anchor
+        let settings = try getOAuthProviderSettings(provider: provider)
+        let url = try buildOAuthURL(
+            provider: provider,
+            clientId: clientId,
+            redirectUri: settings.redirectUri,
+            nonce: nonce,
+            additionalState: additionalState
+        )
+
         return try await withCheckedThrowingContinuation { continuation in
             let session = ASWebAuthenticationSession(
                 url: url,
                 callbackURLScheme: scheme
             ) { callbackURL, error in
-                
                 if let error {
                     continuation.resume(throwing: TurnkeySwiftError.oauthFailed(underlying: error))
                     return
                 }
-                
                 guard
                     let callbackURL,
-                    let idToken = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)?
-                        .queryItems?
-                        .first(where: { $0.name == "id_token" })?.value
+                    let comps = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false),
+                    let idToken = comps.queryItems?.first(where: { $0.name == "id_token" })?.value
                 else {
                     continuation.resume(throwing: TurnkeySwiftError.oauthMissingIDToken)
                     return
                 }
-                
-                continuation.resume(returning: idToken)
+                let sessionKey = comps.queryItems?.first(where: { $0.name == "sessionKey" })?.value
+                continuation.resume(returning: OAuthCallbackParams(oidcToken: idToken, sessionKey: sessionKey))
             }
-            
             session.presentationContextProvider = self
             session.prefersEphemeralWebBrowserSession = false
             session.start()

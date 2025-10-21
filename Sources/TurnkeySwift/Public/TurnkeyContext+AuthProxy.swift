@@ -5,6 +5,134 @@ import TurnkeyPasskeys
 import TurnkeyCrypto
 
 extension TurnkeyContext {
+    // MARK: - OAuth Completion Types
+
+    public enum OAuthAction: String, Codable {
+        case login
+        case signup
+    }
+
+    public struct CompleteOAuthResult: Codable {
+        public let session: String
+        public let action: OAuthAction
+    }
+
+    // MARK: - OAuth (Login/Signup/Complete)
+
+    internal func loginWithOAuth(
+        oidcToken: String,
+        publicKey: String,
+        invalidateExisting: Bool = false,
+        sessionKey: String? = nil,
+        organizationId: String? = nil
+    ) async throws -> String {
+        guard let client = client else {
+            throw TurnkeySwiftError.invalidSession
+        }
+
+        do {
+            let response = try await client.proxyOAuthLogin(
+                oidcToken: oidcToken,
+                publicKey: publicKey,
+                invalidateExisting: invalidateExisting,
+                organizationId: organizationId
+            )
+            let session = try response.body.json.session
+            try await createSession(jwt: session, refreshedSessionTTLSeconds: resolvedSessionTTLSeconds())
+            return session
+        } catch {
+            throw TurnkeySwiftError.failedToCreateSession(underlying: error)
+        }
+    }
+
+    internal func signUpWithOAuth(
+        oidcToken: String,
+        publicKey: String,
+        providerName: String,
+        createSubOrgParams: CreateSubOrgParams? = nil,
+        sessionKey: String? = nil
+    ) async throws -> String {
+        guard let client = client else {
+            throw TurnkeySwiftError.invalidSession
+        }
+
+        do {
+            var merged = createSubOrgParams ?? CreateSubOrgParams()
+            var oauthProviders = merged.oauthProviders ?? []
+            oauthProviders.append(.init(providerName: providerName, oidcToken: oidcToken))
+            merged.oauthProviders = oauthProviders
+
+            let signupBody = buildSignUpBody(createSubOrgParams: merged)
+            let res = try await client.proxySignup(
+                userEmail: signupBody.userEmail,
+                userPhoneNumber: signupBody.userPhoneNumber,
+                userTag: signupBody.userTag,
+                userName: signupBody.userName,
+                organizationName: signupBody.organizationName,
+                verificationToken: signupBody.verificationToken,
+                apiKeys: signupBody.apiKeys,
+                authenticators: signupBody.authenticators,
+                oauthProviders: signupBody.oauthProviders,
+                wallet: signupBody.wallet
+            )
+            _ = try res.body.json.organizationId
+
+            // After signup, perform OAuth login using the same public key
+            return try await loginWithOAuth(
+                oidcToken: oidcToken,
+                publicKey: publicKey,
+                invalidateExisting: false,
+                sessionKey: sessionKey
+            )
+        } catch {
+            throw TurnkeySwiftError.failedToCreateSession(underlying: error)
+        }
+    }
+
+    public func completeOAuth(
+        oidcToken: String,
+        publicKey: String,
+        providerName: String = "google",
+        sessionKey: String? = nil,
+        invalidateExisting: Bool = false,
+        createSubOrgParams: CreateSubOrgParams? = nil
+    ) async throws -> CompleteOAuthResult {
+        guard let client = client else {
+            throw TurnkeySwiftError.invalidSession
+        }
+
+        do {
+            // Lookup account by raw OIDC token
+            let account = try await client.proxyGetAccount(
+                filterType: "OIDC_TOKEN",
+                filterValue: oidcToken,
+                verificationToken: nil
+            )
+
+            if let orgId = try account.body.json.organizationId, !orgId.isEmpty {
+                
+                let session = try await loginWithOAuth(
+                    oidcToken: oidcToken,
+                    publicKey: publicKey,
+                    invalidateExisting: invalidateExisting,
+                    sessionKey: sessionKey,
+                    organizationId: orgId
+                )
+                return .init(session: session, action: .login)
+            } else {
+                let session = try await signUpWithOAuth(
+                    oidcToken: oidcToken,
+                    publicKey: publicKey,
+                    providerName: providerName,
+                    createSubOrgParams: createSubOrgParams,
+                    sessionKey: sessionKey
+                )
+                return .init(session: session, action: .signup)
+            }
+        } catch {
+            throw TurnkeySwiftError.failedToCreateSession(underlying: error)
+        }
+    }
     
     /// Initiates an OTP flow for the given contact and type.
     ///
