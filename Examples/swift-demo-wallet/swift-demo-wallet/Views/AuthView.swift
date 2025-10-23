@@ -28,6 +28,10 @@ struct AuthView: View {
                     GoogleButton(action: handleLoginWithGoogle)
                     
                     OrSeparator()
+
+                    AppleButton(action: handleLoginWithApple)
+
+                    OrSeparator()
                     
                     EmailInputView(email: $email)
                     
@@ -89,6 +93,23 @@ struct AuthView: View {
             } catch {
                 let message = formatError(error, fallback: "Failed to log in with Google")
                 print("[AuthView] Google login error: \(message)")
+                auth.error = message
+            }
+        }
+    }
+
+    private func handleLoginWithApple() {
+        Task {
+            guard let anchor = defaultAnchor() else {
+                toast.show(message: "No window available", type: .error)
+                return
+            }
+
+            do {
+                try await auth.loginWithApple(anchor: anchor)
+            } catch {
+                let message = formatError(error, fallback: "Failed to log in with Apple")
+                print("[AuthView] Apple login error: \(message)")
                 auth.error = message
             }
         }
@@ -239,6 +260,38 @@ struct AuthView: View {
                     }
                     
                     Text("Continue with Google")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.black)
+                }
+                .padding(.vertical, 6)
+                .frame(maxWidth: .infinity)
+                .background(Color.white)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.black.opacity(0.2), lineWidth: 1)
+                )
+                .cornerRadius(10)
+            }
+            .frame(maxWidth: .infinity)
+        }
+    }
+
+    private struct AppleButton: View {
+        let action: () -> Void
+
+        var body: some View {
+            Button(action: action) {
+                ZStack {
+                    HStack {
+                        Image(systemName: "applelogo")
+                            .font(.system(size: 20, weight: .regular))
+                            .frame(width: 40, height: 40)
+                            .padding(.leading, 12)
+
+                        Spacer()
+                    }
+
+                    Text("Continue with Apple")
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.black)
                 }

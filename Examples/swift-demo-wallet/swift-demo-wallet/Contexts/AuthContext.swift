@@ -182,6 +182,16 @@ final class AuthContext: ObservableObject {
         )
     }
 
+    func loginWithApple(anchor: ASPresentationAnchor) async throws {
+        startLoading()
+        defer { stopLoading() }
+
+        _ = try await turnkey.handleAppleOAuth(
+            anchor: anchor,
+            params: .init(clientId: Constants.Apple.clientId)
+        )
+    }
+
     
     private func createSubOrganization(body: CreateSubOrgRequest) async throws -> String {
         var request = URLRequest(url: backendURL.appendingPathComponent("/auth/createSubOrg"))

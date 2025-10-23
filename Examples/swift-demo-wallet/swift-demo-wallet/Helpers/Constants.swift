@@ -34,4 +34,8 @@ enum Constants {
   enum Google {
     static let clientId = "776352896366-07enngvt22l7cnq1ctf5a9ddcm1pv1sc.apps.googleusercontent.com"
   }
+
+  enum Apple {
+    static let clientId = "withreactnativewalletkit" // Fill with your Apple Services ID (client ID)
+  }
 }

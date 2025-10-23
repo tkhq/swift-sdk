@@ -24,6 +24,22 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     @available(*, unavailable, renamed: "GoogleOAuthOptions")
     public typealias HandleGoogleOAuthParams = GoogleOAuthOptions
 
+    public struct AppleOAuthOptions: Sendable {
+        public var clientId: String?
+        public var additionalState: [String: String]?
+        public var onOAuthSuccess: ((OAuthSuccess) -> Void)?
+
+        public init(
+            clientId: String? = nil,
+            additionalState: [String: String]? = nil,
+            onOAuthSuccess: ((OAuthSuccess) -> Void)? = nil
+        ) {
+            self.clientId = clientId
+            self.additionalState = additionalState
+            self.onOAuthSuccess = onOAuthSuccess
+        }
+    }
+
     public struct OAuthSuccess: Sendable {
         public let oidcToken: String
         public let providerName: String
@@ -81,6 +97,54 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
             oidcToken: oauth.oidcToken,
             publicKey: publicKey,
             providerName: "google",
+            sessionKey: oauth.sessionKey
+        )
+    }
+
+    /// Launches Apple OAuth, retrieves the OIDC token, and completes Turnkey login or signup.
+    public func handleAppleOAuth(
+        anchor: ASPresentationAnchor,
+        params: AppleOAuthOptions = .init()
+    ) async throws -> CompleteOAuthResult {
+        // Create keypair and compute nonce = sha256(publicKey)
+        let publicKey = try createKeyPair()
+        let nonceData = Data(publicKey.utf8)
+        let nonce = SHA256.hash(data: nonceData).map { String(format: "%02x", $0) }.joined()
+
+        // Resolve provider settings (clientId, redirect base URL, app scheme)
+        let settings = try getOAuthProviderSettings(provider: "apple")
+        let clientId = params.clientId ?? settings.clientId
+        let scheme = settings.appScheme
+
+        guard !clientId.isEmpty else {
+            throw TurnkeySwiftError.invalidConfiguration("Missing clientId for Apple OAuth")
+        }
+        guard !scheme.isEmpty else {
+            throw TurnkeySwiftError.invalidConfiguration("Missing app scheme for OAuth redirect")
+        }
+
+        // Start OAuth in system browser and obtain Apple-issued id_token (+ optional sessionKey)
+        let oauth = try await runOAuthSession(
+            provider: "apple",
+            clientId: clientId,
+            scheme: scheme,
+            anchor: anchor,
+            nonce: nonce,
+            additionalState: params.additionalState
+        )
+
+        // Optional early callback (parity with TS onOAuthSuccess)
+        if let cb = params.onOAuthSuccess {
+            cb(.init(oidcToken: oauth.oidcToken, providerName: "apple", publicKey: publicKey))
+            // In early-return mode caller handles completion.
+            return .init(session: "", action: .login)
+        }
+
+        // Complete OAuth inside SDK (lookup → login or signup)
+        return try await completeOAuth(
+            oidcToken: oauth.oidcToken,
+            publicKey: publicKey,
+            providerName: "apple",
             sessionKey: oauth.sessionKey
         )
     }
@@ -170,7 +234,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
             nonce: nonce,
             additionalState: additionalState
         )
-
+        print("[Turnkey][OAuth] running OAuth session for provider=\(provider), clientId=\(clientId), scheme=\(scheme), url=\(url.absoluteString)")
         return try await withCheckedThrowingContinuation { continuation in
             let session = ASWebAuthenticationSession(
                 url: url,
