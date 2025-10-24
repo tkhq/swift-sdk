@@ -25,11 +25,15 @@ struct AuthView: View {
                         .multilineTextAlignment(.center)
                         .padding(.vertical, 8)
                     
-                    GoogleButton(action: handleLoginWithGoogle)
-                    
-                    OrSeparator()
+                    OrSeparator(label: "Or continue with")
 
-                    AppleButton(action: handleLoginWithApple)
+                    HStack(spacing: 12) {
+                        SocialIconButton(image: Image(systemName: "applelogo"), action: handleLoginWithApple)
+                        SocialIconButton(image: Image("google-icon"), action: handleLoginWithGoogle)
+                        SocialIconButton(image: Image("x-icon"), action: handleLoginWithX)
+                        SocialIconButton(image: Image("discord-icon"), action: handleLoginWithDiscord)
+                    }
+                    .frame(height: 48)
 
                     OrSeparator()
                     
@@ -110,6 +114,40 @@ struct AuthView: View {
             } catch {
                 let message = formatError(error, fallback: "Failed to log in with Apple")
                 print("[AuthView] Apple login error: \(message)")
+                auth.error = message
+            }
+        }
+    }
+
+    private func handleLoginWithX() {
+        Task {
+            guard let anchor = defaultAnchor() else {
+                toast.show(message: "No window available", type: .error)
+                return
+            }
+
+            do {
+                try await auth.loginWithX(anchor: anchor)
+            } catch {
+                let message = formatError(error, fallback: "Failed to log in with X")
+                print("[AuthView] X login error: \(message)")
+                auth.error = message
+            }
+        }
+    }
+
+    private func handleLoginWithDiscord() {
+        Task {
+            guard let anchor = defaultAnchor() else {
+                toast.show(message: "No window available", type: .error)
+                return
+            }
+
+            do {
+                try await auth.loginWithDiscord(anchor: anchor)
+            } catch {
+                let message = formatError(error, fallback: "Failed to log in with Discord")
+                print("[AuthView] Discord login error: \(message)")
                 auth.error = message
             }
         }
@@ -195,10 +233,11 @@ struct AuthView: View {
     }
     
     private struct OrSeparator: View {
+        var label: String = "OR"
         var body: some View {
             HStack {
                 Rectangle().frame(height: 1).foregroundColor(.gray.opacity(0.3))
-                Text("OR")
+                Text(label)
                     .font(.caption)
                     .foregroundColor(.gray)
                     .padding(.horizontal, 4)
@@ -244,67 +283,28 @@ struct AuthView: View {
         }
     }
     
-    private struct GoogleButton: View {
-        let action: () -> Void
-        
-        var body: some View {
-            Button(action: action) {
-                ZStack {
-                    HStack {
-                        Image("google-icon")
-                            .resizable()
-                            .frame(width: 40, height: 40)
-                            .padding(.leading, 12)
-                        
-                        Spacer()
-                    }
-                    
-                    Text("Continue with Google")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.black)
-                }
-                .padding(.vertical, 6)
-                .frame(maxWidth: .infinity)
-                .background(Color.white)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color.black.opacity(0.2), lineWidth: 1)
-                )
-                .cornerRadius(10)
-            }
-            .frame(maxWidth: .infinity)
-        }
-    }
-
-    private struct AppleButton: View {
+    private struct SocialIconButton: View {
+        let image: Image
         let action: () -> Void
 
         var body: some View {
             Button(action: action) {
                 ZStack {
-                    HStack {
-                        Image(systemName: "applelogo")
-                            .font(.system(size: 20, weight: .regular))
-                            .frame(width: 40, height: 40)
-                            .padding(.leading, 12)
-
-                        Spacer()
-                    }
-
-                    Text("Continue with Apple")
-                        .font(.system(size: 16, weight: .medium))
+                    Color.white
+                    image
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 20, height: 20)
                         .foregroundColor(.black)
                 }
-                .padding(.vertical, 6)
-                .frame(maxWidth: .infinity)
-                .background(Color.white)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color.black.opacity(0.2), lineWidth: 1)
-                )
-                .cornerRadius(10)
             }
             .frame(maxWidth: .infinity)
+            .background(Color.white)
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(Color.black.opacity(0.2), lineWidth: 1)
+            )
+            .cornerRadius(10)
         }
     }
     

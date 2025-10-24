@@ -111,13 +111,15 @@ public final class TurnkeyContext: NSObject, ObservableObject {
     }
 
     // Resolve OAuth provider settings using runtime and user config.
-    // Falls back to proxy-provided settings inside runtimeConfig.
+    // Honors per-provider redirect overrides (e.g., Discord/X defaulting to scheme://) and falls back to proxy/user redirect base.
     internal func getOAuthProviderSettings(provider: String) throws -> (clientId: String, redirectUri: String, appScheme: String) {
         let providerInfo = runtimeConfig?.auth.oauth.providers[provider]
         let clientId = providerInfo?.clientId ?? ""
-        let redirectBase = runtimeConfig?.auth.oauth.redirectBaseUrl ?? Constants.Turnkey.oauthRedirectUrl
         let appScheme = runtimeConfig?.auth.oauth.appScheme ?? ""
-        let redirectUri = "\(redirectBase)?scheme=\(appScheme)"
+        let redirectBase = runtimeConfig?.auth.oauth.redirectBaseUrl ?? Constants.Turnkey.oauthRedirectUrl
+        let redirectUri = (providerInfo?.redirectUri?.isEmpty == false)
+            ? (providerInfo!.redirectUri!)
+            : "\(redirectBase)?scheme=\(appScheme)"
 
         return (clientId: clientId, redirectUri: redirectUri, appScheme: appScheme)
     }

@@ -40,6 +40,38 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         }
     }
 
+    public struct DiscordOAuthOptions: Sendable {
+        public var clientId: String?
+        public var additionalState: [String: String]?
+        public var onOAuthSuccess: ((OAuthSuccess) -> Void)?
+
+        public init(
+            clientId: String? = nil,
+            additionalState: [String: String]? = nil,
+            onOAuthSuccess: ((OAuthSuccess) -> Void)? = nil
+        ) {
+            self.clientId = clientId
+            self.additionalState = additionalState
+            self.onOAuthSuccess = onOAuthSuccess
+        }
+    }
+
+    public struct XOAuthOptions: Sendable {
+        public var clientId: String?
+        public var additionalState: [String: String]?
+        public var onOAuthSuccess: ((OAuthSuccess) -> Void)?
+
+        public init(
+            clientId: String? = nil,
+            additionalState: [String: String]? = nil,
+            onOAuthSuccess: ((OAuthSuccess) -> Void)? = nil
+        ) {
+            self.clientId = clientId
+            self.additionalState = additionalState
+            self.onOAuthSuccess = onOAuthSuccess
+        }
+    }
+
     public struct OAuthSuccess: Sendable {
         public let oidcToken: String
         public let providerName: String
@@ -146,6 +178,170 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
             publicKey: publicKey,
             providerName: "apple",
             sessionKey: oauth.sessionKey
+        )
+    }
+    
+    /// Launches Discord OAuth (PKCE), exchanges the code via Auth Proxy, and completes login/signup.
+    public func handleDiscordOAuth(
+        anchor: ASPresentationAnchor,
+        params: DiscordOAuthOptions = .init()
+    ) async throws -> CompleteOAuthResult {
+        // Create keypair and compute nonce = sha256(publicKey)
+        let publicKey = try createKeyPair()
+        let nonceData = Data(publicKey.utf8)
+        let nonce = SHA256.hash(data: nonceData).map { String(format: "%02x", $0) }.joined()
+
+        // Resolve provider settings
+        let settings = try getOAuthProviderSettings(provider: "discord")
+        let clientId = params.clientId ?? settings.clientId
+        let redirectUri = settings.redirectUri
+        let scheme = settings.appScheme
+
+        guard !clientId.isEmpty else {
+            throw TurnkeySwiftError.invalidConfiguration("Missing clientId for Discord OAuth")
+        }
+        guard !redirectUri.isEmpty else {
+            throw TurnkeySwiftError.invalidConfiguration("Missing redirectUri for OAuth")
+        }
+        guard !scheme.isEmpty else {
+            throw TurnkeySwiftError.invalidConfiguration("Missing app scheme for OAuth redirect")
+        }
+
+        // Generate PKCE pair
+        let pkce = try generatePKCEPair()
+
+        // Build state
+        var state = "provider=discord&flow=redirect&publicKey=\(publicKey.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? publicKey)&nonce=\(nonce)"
+        if let additional = params.additionalState, !additional.isEmpty {
+            let extra = additional
+                .map { key, value in
+                    let k = key.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? key
+                    let v = value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? value
+                    return "\(k)=\(v)"
+                }
+                .joined(separator: "&")
+            if !extra.isEmpty { state += "&\(extra)" }
+        }
+
+        // Build provider auth URL
+        let discordAuthUrl = try buildOAuth2AuthURL(
+            baseURL: "https://discord.com/oauth2/authorize",
+            clientId: clientId,
+            redirectUri: redirectUri,
+            codeChallenge: pkce.challenge,
+            scope: "identify email",
+            state: state
+        )
+
+        // Run system web auth to retrieve authorization code and state
+        let result = try await runOAuth2CodeSession(url: discordAuthUrl, scheme: scheme, anchor: anchor)
+        guard let client = client else { throw TurnkeySwiftError.invalidSession }
+
+        // Exchange code for OIDC token via Auth Proxy
+        let resp = try await client.proxyOAuth2Authenticate(
+            provider: .OAUTH2_PROVIDER_DISCORD,
+            authCode: result.code,
+            redirectUri: redirectUri,
+            codeVerifier: pkce.verifier,
+            nonce: nonce,
+            clientId: clientId
+        )
+
+        let oidcToken = try resp.body.json.oidcToken
+        let sessionKey = parseSessionKey(fromState: result.state)
+
+        if let cb = params.onOAuthSuccess {
+            cb(.init(oidcToken: oidcToken, providerName: "discord", publicKey: publicKey))
+            return .init(session: "", action: .login)
+        }
+
+        return try await completeOAuth(
+            oidcToken: oidcToken,
+            publicKey: publicKey,
+            providerName: "discord",
+            sessionKey: sessionKey
+        )
+    }
+
+    /// Launches X (Twitter) OAuth (PKCE), exchanges the code via Auth Proxy, and completes login/signup.
+    public func handleXOauth(
+        anchor: ASPresentationAnchor,
+        params: XOAuthOptions = .init()
+    ) async throws -> CompleteOAuthResult {
+        // Create keypair and compute nonce = sha256(publicKey)
+        let publicKey = try createKeyPair()
+        let nonceData = Data(publicKey.utf8)
+        let nonce = SHA256.hash(data: nonceData).map { String(format: "%02x", $0) }.joined()
+
+        // Resolve provider settings
+        let settings = try getOAuthProviderSettings(provider: "x")
+        let clientId = params.clientId ?? settings.clientId
+        let redirectUri = settings.redirectUri
+        let scheme = settings.appScheme
+
+        guard !clientId.isEmpty else {
+            throw TurnkeySwiftError.invalidConfiguration("Missing clientId for X OAuth")
+        }
+        guard !redirectUri.isEmpty else {
+            throw TurnkeySwiftError.invalidConfiguration("Missing redirectUri for OAuth")
+        }
+        guard !scheme.isEmpty else {
+            throw TurnkeySwiftError.invalidConfiguration("Missing app scheme for OAuth redirect")
+        }
+
+        // Generate PKCE pair
+        let pkce = try generatePKCEPair()
+
+        // Build state (RN uses provider=twitter)
+        var state = "provider=twitter&flow=redirect&publicKey=\(publicKey.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? publicKey)&nonce=\(nonce)"
+        if let additional = params.additionalState, !additional.isEmpty {
+            let extra = additional
+                .map { key, value in
+                    let k = key.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? key
+                    let v = value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? value
+                    return "\(k)=\(v)"
+                }
+                .joined(separator: "&")
+            if !extra.isEmpty { state += "&\(extra)" }
+        }
+
+        // Build provider auth URL
+        let xAuthUrl = try buildOAuth2AuthURL(
+            baseURL: "https://x.com/i/oauth2/authorize",
+            clientId: clientId,
+            redirectUri: redirectUri,
+            codeChallenge: pkce.challenge,
+            scope: "tweet.read users.read",
+            state: state
+        )
+
+        // Run system web auth to retrieve authorization code and state
+        let result = try await runOAuth2CodeSession(url: xAuthUrl, scheme: scheme, anchor: anchor)
+        guard let client = client else { throw TurnkeySwiftError.invalidSession }
+
+        // Exchange code for OIDC token via Auth Proxy
+        let resp = try await client.proxyOAuth2Authenticate(
+            provider: .OAUTH2_PROVIDER_X,
+            authCode: result.code,
+            redirectUri: redirectUri,
+            codeVerifier: pkce.verifier,
+            nonce: nonce,
+            clientId: clientId
+        )
+
+        let oidcToken = try resp.body.json.oidcToken
+        let sessionKey = parseSessionKey(fromState: result.state)
+
+        if let cb = params.onOAuthSuccess {
+            cb(.init(oidcToken: oidcToken, providerName: "twitter", publicKey: publicKey))
+            return .init(session: "", action: .login)
+        }
+
+        return try await completeOAuth(
+            oidcToken: oidcToken,
+            publicKey: publicKey,
+            providerName: "twitter",
+            sessionKey: sessionKey
         )
     }
     

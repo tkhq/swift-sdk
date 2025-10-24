@@ -19,7 +19,9 @@ struct DemoWalletApp: App {
                     appScheme: Constants.App.scheme,
                     providers: .init(
                         google: .init(clientId: Constants.Google.clientId),
-                        apple: .init(clientId: Constants.Apple.clientId)
+                        apple: .init(clientId: Constants.Apple.clientId),
+                        x: .init(clientId: Constants.X.clientId),
+                        discord: .init(clientId: Constants.Discord.clientId)
                     )
                 )
             )

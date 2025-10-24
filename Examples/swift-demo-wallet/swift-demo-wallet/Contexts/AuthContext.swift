@@ -192,6 +192,26 @@ final class AuthContext: ObservableObject {
         )
     }
 
+    func loginWithX(anchor: ASPresentationAnchor) async throws {
+        startLoading()
+        defer { stopLoading() }
+
+        _ = try await turnkey.handleXOauth(
+            anchor: anchor,
+            params: .init(clientId: Constants.X.clientId)
+        )
+    }
+
+    func loginWithDiscord(anchor: ASPresentationAnchor) async throws {
+        startLoading()
+        defer { stopLoading() }
+
+        _ = try await turnkey.handleDiscordOAuth(
+            anchor: anchor,
+            params: .init(clientId: Constants.Discord.clientId)
+        )
+    }
+
     
     private func createSubOrganization(body: CreateSubOrgRequest) async throws -> String {
         var request = URLRequest(url: backendURL.appendingPathComponent("/auth/createSubOrg"))
