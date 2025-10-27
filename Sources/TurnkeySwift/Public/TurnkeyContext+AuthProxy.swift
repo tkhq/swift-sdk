@@ -5,6 +5,134 @@ import TurnkeyPasskeys
 import TurnkeyCrypto
 
 extension TurnkeyContext {
+    // MARK: - OAuth Completion Types
+
+    public enum OAuthAction: String, Codable {
+        case login
+        case signup
+    }
+
+    public struct CompleteOAuthResult: Codable {
+        public let session: String
+        public let action: OAuthAction
+    }
+
+    // MARK: - OAuth (Login/Signup/Complete)
+
+    internal func loginWithOAuth(
+        oidcToken: String,
+        publicKey: String,
+        invalidateExisting: Bool = false,
+        sessionKey: String? = nil,
+        organizationId: String? = nil
+    ) async throws -> String {
+        guard let client = client else {
+            throw TurnkeySwiftError.invalidSession
+        }
+
+        do {
+            let response = try await client.proxyOAuthLogin(
+                oidcToken: oidcToken,
+                publicKey: publicKey,
+                invalidateExisting: invalidateExisting,
+                organizationId: organizationId
+            )
+            let session = try response.body.json.session
+            try await createSession(jwt: session, refreshedSessionTTLSeconds: resolvedSessionTTLSeconds())
+            return session
+        } catch {
+            throw TurnkeySwiftError.failedToCreateSession(underlying: error)
+        }
+    }
+
+    internal func signUpWithOAuth(
+        oidcToken: String,
+        publicKey: String,
+        providerName: String,
+        createSubOrgParams: CreateSubOrgParams? = nil,
+        sessionKey: String? = nil
+    ) async throws -> String {
+        guard let client = client else {
+            throw TurnkeySwiftError.invalidSession
+        }
+
+        do {
+            var merged = createSubOrgParams ?? CreateSubOrgParams()
+            var oauthProviders = merged.oauthProviders ?? []
+            oauthProviders.append(.init(providerName: providerName, oidcToken: oidcToken))
+            merged.oauthProviders = oauthProviders
+
+            let signupBody = buildSignUpBody(createSubOrgParams: merged)
+            let res = try await client.proxySignup(
+                userEmail: signupBody.userEmail,
+                userPhoneNumber: signupBody.userPhoneNumber,
+                userTag: signupBody.userTag,
+                userName: signupBody.userName,
+                organizationName: signupBody.organizationName,
+                verificationToken: signupBody.verificationToken,
+                apiKeys: signupBody.apiKeys,
+                authenticators: signupBody.authenticators,
+                oauthProviders: signupBody.oauthProviders,
+                wallet: signupBody.wallet
+            )
+            _ = try res.body.json.organizationId
+
+            // After signup, perform OAuth login using the same public key
+            return try await loginWithOAuth(
+                oidcToken: oidcToken,
+                publicKey: publicKey,
+                invalidateExisting: false,
+                sessionKey: sessionKey
+            )
+        } catch {
+            throw TurnkeySwiftError.failedToCreateSession(underlying: error)
+        }
+    }
+
+    public func completeOAuth(
+        oidcToken: String,
+        publicKey: String,
+        providerName: String = "google",
+        sessionKey: String? = nil,
+        invalidateExisting: Bool = false,
+        createSubOrgParams: CreateSubOrgParams? = nil
+    ) async throws -> CompleteOAuthResult {
+        guard let client = client else {
+            throw TurnkeySwiftError.invalidSession
+        }
+
+        do {
+            // Lookup account by raw OIDC token
+            let account = try await client.proxyGetAccount(
+                filterType: "OIDC_TOKEN",
+                filterValue: oidcToken,
+                verificationToken: nil
+            )
+
+            if let orgId = try account.body.json.organizationId, !orgId.isEmpty {
+                
+                let session = try await loginWithOAuth(
+                    oidcToken: oidcToken,
+                    publicKey: publicKey,
+                    invalidateExisting: invalidateExisting,
+                    sessionKey: sessionKey,
+                    organizationId: orgId
+                )
+                return .init(session: session, action: .login)
+            } else {
+                let session = try await signUpWithOAuth(
+                    oidcToken: oidcToken,
+                    publicKey: publicKey,
+                    providerName: providerName,
+                    createSubOrgParams: createSubOrgParams,
+                    sessionKey: sessionKey
+                )
+                return .init(session: session, action: .signup)
+            }
+        } catch {
+            throw TurnkeySwiftError.failedToCreateSession(underlying: error)
+        }
+    }
     
     /// Initiates an OTP flow for the given contact and type.
     ///
@@ -103,7 +231,7 @@ extension TurnkeyContext {
             
             let session = try response.body.json.session
             
-            try await createSession(jwt: session, refreshedSessionTTLSeconds: "900")
+            try await createSession(jwt: session, refreshedSessionTTLSeconds: resolvedSessionTTLSeconds())
             
             
             return session
@@ -188,7 +316,7 @@ extension TurnkeyContext {
                 publicKey: generatedPublicKey
             )
             
-            try await createSession(jwt: session, refreshedSessionTTLSeconds: "900")
+            try await createSession(jwt: session, refreshedSessionTTLSeconds: resolvedSessionTTLSeconds())
             
             return session
         } catch {
@@ -289,23 +417,31 @@ extension TurnkeyContext {
     
     public func loginWithPasskey(
         anchor: ASPresentationAnchor,
+        organizationId: String? = nil,
         publicKey: String? = nil,
         sessionKey: String? = nil
     ) async throws {
+        guard let rpId = self.rpId, !rpId.isEmpty else {
+            throw TurnkeySwiftError.invalidConfiguration("Missing rpId; set via TurnkeyContext.configure(rpId:)")
+        }
+        let resolvedOrganizationId = organizationId ?? self.organizationId
+        guard let orgId = resolvedOrganizationId, !orgId.isEmpty else {
+            throw TurnkeySwiftError.invalidConfiguration("Missing organizationId; pass as parameter or set via TurnkeyContext.configure(organizationId:)")
+        }
         let client = TurnkeyClient(
-            rpId: "passkeyapp.tkhqlabs.xyz",
+            rpId: rpId,
             presentationAnchor: anchor,
             baseUrl: apiUrl
         )
         
-        let publicKey = try createKeyPair()
+        let resolvedPublicKey = try publicKey ?? createKeyPair()
         
         do {
             
             let resp = try await client.stampLogin(
-                organizationId: "7533b2e3-01f2-4573-98c3-2c8bee816cb6",
-                publicKey: publicKey,
-                expirationSeconds: "900",
+                organizationId: orgId,
+                publicKey: resolvedPublicKey,
+                expirationSeconds: resolvedSessionTTLSeconds(),
                 invalidateExisting: true
             )
             
@@ -317,7 +453,7 @@ extension TurnkeyContext {
                 throw TurnkeySwiftError.invalidResponse
             }
             
-            try await createSession(jwt: session, refreshedSessionTTLSeconds: "900")
+            try await createSession(jwt: session, refreshedSessionTTLSeconds: resolvedSessionTTLSeconds())
             
         } catch {
             throw TurnkeySwiftError.failedToLoginWithPasskey(underlying: error)
@@ -333,8 +469,11 @@ extension TurnkeyContext {
       sessionKey: String? = nil,
       organizationId: String? = nil
     ) async throws {
-      let client = TurnkeyClient(
-        rpId: "passkeyapp.tkhqlabs.xyz",
+      guard let rpId = self.rpId, !rpId.isEmpty else {
+        throw TurnkeySwiftError.invalidConfiguration("Missing rpId; set via TurnkeyContext.configure(rpId:)")
+      }
+      let passkeyClient = TurnkeyClient(
+        rpId: rpId,
         presentationAnchor: anchor,
         baseUrl: apiUrl
       )
@@ -349,11 +488,12 @@ extension TurnkeyContext {
           // this allows us to stamp the session creation request immediately after
           // without prompting the user
           let (_, publicKeyCompressed, privateKey) = TurnkeyCrypto.generateP256KeyPair()
+          generatedPublicKey = publicKeyCompressed
           
           let passkey = try await createPasskey(
             user: PasskeyUser(id: UUID().uuidString, name: passkeyName, displayName: passkeyName),
-              rp: RelyingParty(id: "", name: ""),
-              presentationAnchor: anchor
+            rp: RelyingParty(id: rpId, name: ""),
+            presentationAnchor: anchor
           )
         
 
@@ -388,7 +528,11 @@ extension TurnkeyContext {
         let signupBody = buildSignUpBody(createSubOrgParams: mergedParams)
 
         // 4. Proxy signup call
-        let response = try await client.proxySignup(
+        // Use the Auth Proxy–configured client for signup
+        guard let proxyClient = self.client else {
+          throw TurnkeySwiftError.invalidSession
+        }
+        let response = try await proxyClient.proxySignup(
           userEmail: signupBody.userEmail,
           userPhoneNumber: signupBody.userPhoneNumber,
           userTag: signupBody.userTag,
@@ -407,10 +551,10 @@ extension TurnkeyContext {
         let newPublicKey = try createKeyPair()
 
         // 6. Login and create session
-        let loginResponse = try await client.stampLogin(
+        let loginResponse = try await passkeyClient.stampLogin(
           organizationId: organizationId,
           publicKey: newPublicKey,
-          expirationSeconds: "900",
+          expirationSeconds: resolvedSessionTTLSeconds(),
           invalidateExisting: true
         )
 
@@ -421,7 +565,7 @@ extension TurnkeyContext {
           throw TurnkeySwiftError.invalidResponse
         }
 
-        try await createSession(jwt: session, refreshedSessionTTLSeconds: "900")
+          try await createSession(jwt: session, refreshedSessionTTLSeconds: resolvedSessionTTLSeconds())
 
       } catch {
         throw TurnkeySwiftError.failedToCreateWallet(underlying: error)

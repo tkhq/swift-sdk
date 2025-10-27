@@ -25,8 +25,16 @@ struct AuthView: View {
                         .multilineTextAlignment(.center)
                         .padding(.vertical, 8)
                     
-                    GoogleButton(action: handleLoginWithGoogle)
-                    
+                    OrSeparator(label: "Or continue with")
+
+                    HStack(spacing: 12) {
+                        SocialIconButton(image: Image(systemName: "applelogo"), action: handleLoginWithApple)
+                        SocialIconButton(image: Image("google-icon"), action: handleLoginWithGoogle)
+                        SocialIconButton(image: Image("x-icon"), action: handleLoginWithX)
+                        SocialIconButton(image: Image("discord-icon"), action: handleLoginWithDiscord)
+                    }
+                    .frame(height: 48)
+
                     OrSeparator()
                     
                     EmailInputView(email: $email)
@@ -87,7 +95,60 @@ struct AuthView: View {
             do {
                 try await auth.loginWithGoogle(anchor: anchor)
             } catch {
-                auth.error = "Failed to log in with Google"
+                let message = formatError(error, fallback: "Failed to log in with Google")
+                print("[AuthView] Google login error: \(message)")
+                auth.error = message
+            }
+        }
+    }
+
+    private func handleLoginWithApple() {
+        Task {
+            guard let anchor = defaultAnchor() else {
+                toast.show(message: "No window available", type: .error)
+                return
+            }
+
+            do {
+                try await auth.loginWithApple(anchor: anchor)
+            } catch {
+                let message = formatError(error, fallback: "Failed to log in with Apple")
+                print("[AuthView] Apple login error: \(message)")
+                auth.error = message
+            }
+        }
+    }
+
+    private func handleLoginWithX() {
+        Task {
+            guard let anchor = defaultAnchor() else {
+                toast.show(message: "No window available", type: .error)
+                return
+            }
+
+            do {
+                try await auth.loginWithX(anchor: anchor)
+            } catch {
+                let message = formatError(error, fallback: "Failed to log in with X")
+                print("[AuthView] X login error: \(message)")
+                auth.error = message
+            }
+        }
+    }
+
+    private func handleLoginWithDiscord() {
+        Task {
+            guard let anchor = defaultAnchor() else {
+                toast.show(message: "No window available", type: .error)
+                return
+            }
+
+            do {
+                try await auth.loginWithDiscord(anchor: anchor)
+            } catch {
+                let message = formatError(error, fallback: "Failed to log in with Discord")
+                print("[AuthView] Discord login error: \(message)")
+                auth.error = message
             }
         }
     }
@@ -98,7 +159,9 @@ struct AuthView: View {
                 let otpId = try await turnkey.initOtp(contact: email, otpType: OtpType.email)
                 coordinator.push(AuthRoute.otp(otpId: otpId, contact: email))
             } catch {
-                auth.error = "Failed to send OTP"
+                let message = formatError(error, fallback: "Failed to send OTP")
+                print("[AuthView] Email OTP error: \(message)")
+                auth.error = message
             }
         }
     }
@@ -109,7 +172,9 @@ struct AuthView: View {
                 let otpId = try await turnkey.initOtp(contact: phone, otpType: OtpType.sms)
                 coordinator.push(AuthRoute.otp(otpId: otpId, contact: email))
             } catch {
-                auth.error = "Failed to send OTP"
+                let message = formatError(error, fallback: "Failed to send OTP")
+                print("[AuthView] SMS OTP error: \(message)")
+                auth.error = message
             }
         }
     }
@@ -124,7 +189,9 @@ struct AuthView: View {
             do {
                 try await turnkey.loginWithPasskey(anchor: anchor)
             } catch {
-                auth.error = "Failed to log in with passkey"
+                let message = formatError(error, fallback: "Failed to log in with passkey")
+                print("[AuthView] Passkey login error: \(message)")
+                auth.error = message
             }
         }
     }
@@ -139,7 +206,9 @@ struct AuthView: View {
             do {
                 try await auth.signUpWithPasskey(anchor: anchor)
             } catch {
-                auth.error = "Failed to sign up with passkey"
+                let message = formatError(error, fallback: "Failed to sign up with passkey")
+                print("[AuthView] Passkey signup error: \(message)")
+                auth.error = message
             }
         }
     }
@@ -152,12 +221,23 @@ struct AuthView: View {
             .windows
             .first(where: { $0.isKeyWindow })
     }
+
+    private func formatError(_ error: Error, fallback: String) -> String {
+        if let turnkeyError = error.turnkeyRequestError {
+            return "\(fallback): \(turnkeyError.fullMessage)"
+        }
+        if let localized = (error as? LocalizedError)?.errorDescription {
+            return "\(fallback): \(localized)"
+        }
+        return "\(fallback): \(String(describing: error))"
+    }
     
     private struct OrSeparator: View {
+        var label: String = "OR"
         var body: some View {
             HStack {
                 Rectangle().frame(height: 1).foregroundColor(.gray.opacity(0.3))
-                Text("OR")
+                Text(label)
                     .font(.caption)
                     .foregroundColor(.gray)
                     .padding(.horizontal, 4)
@@ -203,35 +283,28 @@ struct AuthView: View {
         }
     }
     
-    private struct GoogleButton: View {
+    private struct SocialIconButton: View {
+        let image: Image
         let action: () -> Void
-        
+
         var body: some View {
             Button(action: action) {
                 ZStack {
-                    HStack {
-                        Image("google-icon")
-                            .resizable()
-                            .frame(width: 40, height: 40)
-                            .padding(.leading, 12)
-                        
-                        Spacer()
-                    }
-                    
-                    Text("Continue with Google")
-                        .font(.system(size: 16, weight: .medium))
+                    Color.white
+                    image
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 20, height: 20)
                         .foregroundColor(.black)
                 }
-                .padding(.vertical, 6)
-                .frame(maxWidth: .infinity)
-                .background(Color.white)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color.black.opacity(0.2), lineWidth: 1)
-                )
-                .cornerRadius(10)
             }
             .frame(maxWidth: .infinity)
+            .background(Color.white)
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(Color.black.opacity(0.2), lineWidth: 1)
+            )
+            .cornerRadius(10)
         }
     }
     
