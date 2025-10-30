@@ -1,4 +1,5 @@
 import Foundation
+import TurnkeyTypes
 import TurnkeyHttp
 
 extension TurnkeyContext {
@@ -54,16 +55,15 @@ extension TurnkeyContext {
         let trimmedPhone = phone?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty
         
         do {
-            let resp = try await client.updateUser(
+            let resp = try await client.updateUser(TUpdateUserBody(
                 organizationId: user.organizationId,
-                userId: user.id,
-                userName: nil,
                 userEmail: trimmedEmail,
-                userTagIds: [],
-                userPhoneNumber: trimmedPhone
-            )
+                userId: user.id,
+                userPhoneNumber: trimmedPhone,
+                userTagIds: []
+            ))
             
-            if try resp.body.json.activity.result.updateUserResult?.userId != nil {
+            if resp.activity.result.updateUserResult?.userId != nil {
                 await refreshUser()
             }
             
@@ -94,14 +94,14 @@ extension TurnkeyContext {
         
         
         do {
-            let resp = try await client.updateUserEmail(
+            let resp = try await client.updateUserEmail(TUpdateUserEmailBody(
                 organizationId: user.organizationId,
-                userId: user.id,
                 userEmail: email,
+                userId: user.id,
                 verificationToken: verificationToken
-            )
+            ))
             
-            if try resp.body.json.activity.result.updateUserEmailResult?.userId != nil {
+            if resp.activity.result.updateUserEmailResult?.userId != nil {
                 await refreshUser()
             }
             
@@ -133,14 +133,14 @@ extension TurnkeyContext {
         
         
         do {
-            let resp = try await client.updateUserPhoneNumber(
+            let resp = try await client.updateUserPhoneNumber(TUpdateUserPhoneNumberBody(
                 organizationId: user.organizationId,
                 userId: user.id,
                 userPhoneNumber: phone,
                 verificationToken: verificationToken
-            )
+            ))
             
-            if try resp.body.json.activity.result.updateUserPhoneNumberResult?.userId != nil {
+            if resp.activity.result.updateUserPhoneNumberResult?.userId != nil {
                 await refreshUser()
             }
             

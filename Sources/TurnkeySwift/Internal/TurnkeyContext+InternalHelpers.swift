@@ -1,4 +1,5 @@
 import Foundation
+import TurnkeyTypes
 import TurnkeyHttp
 import AuthenticationServices
 import CryptoKit
@@ -225,21 +226,20 @@ extension TurnkeyContext {
         
         do {
             // run user and wallets requests in parallel
-            async let userResp = client.getUser(organizationId: organizationId, userId: userId)
-            async let walletsResp = client.getWallets(organizationId: organizationId)
+            async let userResp = client.getUser(TGetUserBody(organizationId: organizationId, userId: userId))
+            async let walletsResp = client.getWallets(TGetWalletsBody(organizationId: organizationId))
             
-            let user = try await userResp.body.json.user
-            let wallets = try await walletsResp.body.json.wallets
+            let user = try await userResp.user
+            let wallets = try await walletsResp.wallets
             
             // fetch wallet accounts concurrently
             let detailed = try await withThrowingTaskGroup(of: SessionUser.UserWallet.self) { group in
                 for w in wallets {
                     group.addTask {
-                        let accounts = try await client.getWalletAccounts(
+                        let accounts = try await client.getWalletAccounts(TGetWalletAccountsBody(
                             organizationId: organizationId,
-                            walletId: w.walletId,
-                            paginationOptions: nil
-                        ).body.json.accounts.map {
+                            walletId: w.walletId
+                        )).accounts.map {
                             SessionUser.UserWallet.WalletAccount(
                                 id: $0.walletAccountId,
                                 curve: $0.curve,
@@ -284,38 +284,38 @@ extension TurnkeyContext {
     ///   - createSubOrgParams: A `CreateSubOrgParams` object containing optional
     ///     authenticators, API keys, OAuth providers, and user metadata.
     ///
-    /// - Returns: A fully populated `Components.Schemas.ProxySignupRequest` object
+    /// - Returns: A fully populated `ProxyTSignupBody` object
     ///   suitable for submission to the Turnkey Auth Proxy.
     ///
     /// - Throws: Never directly throws, but downstream usage may throw serialization or network errors.
-    func buildSignUpBody(createSubOrgParams: CreateSubOrgParams) -> Components.Schemas.ProxySignupRequest {
+    func buildSignUpBody(createSubOrgParams: CreateSubOrgParams) -> ProxyTSignupBody {
         let now = Int(Date().timeIntervalSince1970)
 
         // fallback authenticatorName
         let authenticatorName = "passkey-\(now)"
 
-        // authenticators → ProxyAuthenticatorParamsV2
-        let authenticators: [Components.Schemas.ProxyAuthenticatorParamsV2]
+        // authenticators → v1AuthenticatorParamsV2
+        let authenticators: [v1AuthenticatorParamsV2]
         if let list = createSubOrgParams.authenticators, !list.isEmpty {
             authenticators = list.map { auth in
-                Components.Schemas.ProxyAuthenticatorParamsV2(
+                v1AuthenticatorParamsV2(
+                    attestation: auth.attestation,
                     authenticatorName: auth.authenticatorName ?? authenticatorName,
-                    challenge: auth.challenge,
-                    attestation: auth.attestation
+                    challenge: auth.challenge
                 )
             }
         } else {
             authenticators = []
         }
 
-        let apiKeys: [Components.Schemas.ProxyApiKeyParamsV2]
+        let apiKeys: [v1ApiKeyParamsV2]
         if let list = createSubOrgParams.apiKeys, !list.isEmpty {
             apiKeys = list.map { apiKey in
-                Components.Schemas.ProxyApiKeyParamsV2(
+                v1ApiKeyParamsV2(
                     apiKeyName: apiKey.apiKeyName ?? "api-key-\(now)",
-                    publicKey: apiKey.publicKey,
                     curveType: apiKey.curveType, // fallback curve
-                    expirationSeconds: apiKey.expirationSeconds
+                    expirationSeconds: apiKey.expirationSeconds,
+                    publicKey: apiKey.publicKey
                 )
             }
         } else {
@@ -323,33 +323,32 @@ extension TurnkeyContext {
         }
 
 
-        // oauthProviders → ProxyOauthProviderParams
-        let oauthProviders: [Components.Schemas.ProxyOauthProviderParams]
+        // oauthProviders → v1OauthProviderParams
+        let oauthProviders: [v1OauthProviderParams]
         if let list = createSubOrgParams.oauthProviders, !list.isEmpty {
             oauthProviders = list.map { provider in
-                Components.Schemas.ProxyOauthProviderParams(
-                    providerName: provider.providerName,
-                    oidcToken: provider.oidcToken
+                v1OauthProviderParams(
+                    oidcToken: provider.oidcToken,
+                    providerName: provider.providerName
                 )
             }
         } else {
             oauthProviders = []
         }
 
-        // Construct ProxySignupRequest
-        return Components.Schemas.ProxySignupRequest(
-            userEmail: createSubOrgParams.userEmail,
-            userPhoneNumber: createSubOrgParams.userPhoneNumber,
-            userTag: createSubOrgParams.userTag,
-            userName: createSubOrgParams.userName
-                ?? createSubOrgParams.userEmail
-                ?? "user-\(now)",
-            organizationName: createSubOrgParams.subOrgName
-                ?? "sub-org-\(now)",
-            verificationToken: createSubOrgParams.verificationToken,
+        // Construct ProxyTSignupBody
+        return ProxyTSignupBody(
             apiKeys: apiKeys,
             authenticators: authenticators,
             oauthProviders: oauthProviders,
+            organizationName: createSubOrgParams.subOrgName ?? "sub-org-\(now)",
+            userEmail: createSubOrgParams.userEmail,
+            userName: createSubOrgParams.userName
+                ?? createSubOrgParams.userEmail
+                ?? "user-\(now)",
+            userPhoneNumber: createSubOrgParams.userPhoneNumber,
+            userTag: createSubOrgParams.userTag,
+            verificationToken: createSubOrgParams.verificationToken,
             wallet: createSubOrgParams.customWallet
         )
     }

@@ -1,12 +1,13 @@
 import Foundation
 import TurnkeyHttp
+import TurnkeyTypes
 
 public enum OtpType: String, Codable {
     case email = "OTP_TYPE_EMAIL"
     case sms = "OTP_TYPE_SMS"
 }
 
-public struct CreateSubOrgParams: Codable, Hashable, Sendable {
+public struct CreateSubOrgParams: Codable, Sendable {
     /// Name of the user
     public var userName: String?
     
@@ -32,12 +33,12 @@ public struct CreateSubOrgParams: Codable, Hashable, Sendable {
     public var apiKeys: [ApiKey]?
     
     /// Custom wallet to create during sub-org creation time
-    public var customWallet: Components.Schemas.ProxyWalletParams?
+    public var customWallet: v1WalletParams?
     
     /// List of OAuth providers
     public var oauthProviders: [Provider]?
     
-    public struct Authenticator: Codable, Hashable, Sendable {
+    public struct Authenticator: Codable, Sendable {
         /// Name of the authenticator
         public var authenticatorName: String?
         
@@ -45,10 +46,10 @@ public struct CreateSubOrgParams: Codable, Hashable, Sendable {
         public var challenge: String
         
         /// Attestation object returned from the passkey creation process
-        public var attestation: Components.Schemas.ProxyAttestation
+        public var attestation: v1Attestation
     }
     
-    public struct ApiKey: Codable, Hashable, Sendable {
+    public struct ApiKey: Codable, Sendable {
         /// Name of the API key
         public var apiKeyName: String?
         
@@ -56,21 +57,21 @@ public struct CreateSubOrgParams: Codable, Hashable, Sendable {
         public var publicKey: String
         
         /// Curve type
-        public var curveType: Components.Schemas.ProxyApiKeyCurve
+        public var curveType: v1ApiKeyCurve
         
         /// Expiration in seconds
         public var expirationSeconds: String?
     }
     
-    public struct CustomWallet: Codable, Hashable, Sendable {
+    public struct CustomWallet: Codable, Sendable {
         /// Name of the wallet created
         public var walletName: String
         
         /// List of wallet accounts to create
-        public var walletAccounts: [Components.Schemas.WalletAccountParams]
+        public var walletAccounts: [v1WalletAccountParams]
     }
     
-    public struct Provider: Codable, Hashable, Sendable {
+    public struct Provider: Codable, Sendable {
         /// Name of the OAuth provider
         public var providerName: String
         

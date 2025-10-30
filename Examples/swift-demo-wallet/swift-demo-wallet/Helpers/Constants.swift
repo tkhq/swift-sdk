@@ -1,5 +1,6 @@
 import Foundation
 import TurnkeyHttp
+import TurnkeyTypes
 
 enum Constants {
 
@@ -16,12 +17,12 @@ enum Constants {
     static let apiUrl = "https://api.turnkey.com" // "http://localhost:8081"
     static let authProxyUrl = "https://authproxy.turnkey.com" // http://localhost:8090"
     static let authProxyConfigId = "544e423d-f5c9-4dfb-947e-8cf726e3922e" // 5889b4b6-ec95-42ca-8551-660e9d50ed09"
-    static let defaultEthereumAccounts: [Components.Schemas.WalletAccountParams] = [
-      Components.Schemas.WalletAccountParams(
-        curve: Components.Schemas.Curve.CURVE_SECP256K1,
-        pathFormat: Components.Schemas.PathFormat.PATH_FORMAT_BIP32,
+    static let defaultEthereumAccounts: [v1WalletAccountParams] = [
+      v1WalletAccountParams(
+        addressFormat: v1AddressFormat.address_format_ethereum,
+        curve: v1Curve.curve_secp256k1,
         path: "m/44'/60'/0'/0/0",
-        addressFormat: Components.Schemas.AddressFormat.ADDRESS_FORMAT_ETHEREUM
+        pathFormat: v1PathFormat.path_format_bip32,
       )
     ]
   }

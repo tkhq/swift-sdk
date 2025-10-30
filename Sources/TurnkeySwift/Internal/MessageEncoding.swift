@@ -11,15 +11,14 @@ enum MessageEncodingHelper {
     }
 
     static func encodeMessageBytes(_ bytes: Data, as encoding: PayloadEncoding) -> String {
-        switch encoding {
-        case .PAYLOAD_ENCODING_HEXADECIMAL:
-            return "0x" + bytes.map { String(format: "%02x", $0) }.joined()
-        case .PAYLOAD_ENCODING_TEXT_UTF8:
-            return String(decoding: bytes, as: UTF8.self)
-        @unknown default:
+        if encoding == .payload_encoding_hexadecimal {
             return "0x" + bytes.map { String(format: "%02x", $0) }.joined()
         }
+
+        // we decode back to a UTF-8 string
+        return String(decoding: bytes, as: UTF8.self)
     }
+
 }
 
 

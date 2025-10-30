@@ -1,4 +1,5 @@
 import Foundation
+import TurnkeyTypes
 import TurnkeyCrypto
 
 extension TurnkeyContext {
@@ -29,14 +30,14 @@ extension TurnkeyContext {
         
         
         do {
-            let resp = try await client.createWallet(
+            let resp = try await client.createWallet(TCreateWalletBody(
                 organizationId: user.organizationId,
-                walletName: walletName,
                 accounts: accounts,
-                mnemonicLength: mnemonicLength
-            )
+                mnemonicLength: mnemonicLength.map(Int.init),
+                walletName: walletName
+            ))
             
-            if try resp.body.json.activity.result.createWalletResult?.walletId != nil {
+            if resp.activity.result.createWalletResult?.walletId != nil {
                 await refreshUser()
             }
         } catch {
@@ -67,14 +68,13 @@ extension TurnkeyContext {
         
         
         do {
-            let resp = try await client.exportWallet(
+            let resp = try await client.exportWallet(TExportWalletBody(
                 organizationId: user.organizationId,
-                walletId: walletId,
                 targetPublicKey: targetPublicKey,
-                language: nil
-            )
+                walletId: walletId
+            ))
             
-            guard let bundle = try resp.body.json.activity.result.exportWalletResult?.exportBundle
+            guard let bundle = resp.activity.result.exportWalletResult?.exportBundle
             else {
                 throw TurnkeySwiftError.invalidResponse
             }
@@ -120,13 +120,13 @@ extension TurnkeyContext {
         
         
         do {
-            let initResp = try await client.initImportWallet(
+            let initResp = try await client.initImportWallet(TInitImportWalletBody(
                 organizationId: user.organizationId,
                 userId: user.id
-            )
+            ))
             
             guard
-                let importBundle = try initResp.body.json
+                let importBundle = initResp
                     .activity.result.initImportWalletResult?.importBundle
             else {
                 throw TurnkeySwiftError.invalidResponse
@@ -139,15 +139,15 @@ extension TurnkeyContext {
                 organizationId: user.organizationId
             )
             
-            let resp = try await client.importWallet(
+            let resp = try await client.importWallet(TImportWalletBody(
                 organizationId: user.organizationId,
-                userId: user.id,
-                walletName: walletName,
+                accounts: accounts,
                 encryptedBundle: encrypted,
-                accounts: accounts
-            )
+                userId: user.id,
+                walletName: walletName
+            ))
             
-            let activity = try resp.body.json.activity
+            let activity = resp.activity
             
             if activity.result.importWalletResult?.walletId != nil {
                 await refreshUser()

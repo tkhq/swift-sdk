@@ -1,4 +1,5 @@
 import Foundation
+import TurnkeyTypes
 import AuthenticationServices
 import TurnkeyHttp
 import TurnkeyPasskeys
@@ -31,13 +32,13 @@ extension TurnkeyContext {
         }
 
         do {
-            let response = try await client.proxyOAuthLogin(
-                oidcToken: oidcToken,
-                publicKey: publicKey,
+            let response = try await client.proxyOAuthLogin(ProxyTOAuthLoginBody(
                 invalidateExisting: invalidateExisting,
-                organizationId: organizationId
-            )
-            let session = try response.body.json.session
+                oidcToken: oidcToken,
+                organizationId: organizationId,
+                publicKey: publicKey
+            ))
+            let session = response.session
             try await createSession(jwt: session, refreshedSessionTTLSeconds: resolvedSessionTTLSeconds())
             return session
         } catch {
@@ -63,19 +64,8 @@ extension TurnkeyContext {
             merged.oauthProviders = oauthProviders
 
             let signupBody = buildSignUpBody(createSubOrgParams: merged)
-            let res = try await client.proxySignup(
-                userEmail: signupBody.userEmail,
-                userPhoneNumber: signupBody.userPhoneNumber,
-                userTag: signupBody.userTag,
-                userName: signupBody.userName,
-                organizationName: signupBody.organizationName,
-                verificationToken: signupBody.verificationToken,
-                apiKeys: signupBody.apiKeys,
-                authenticators: signupBody.authenticators,
-                oauthProviders: signupBody.oauthProviders,
-                wallet: signupBody.wallet
-            )
-            _ = try res.body.json.organizationId
+            let res = try await client.proxySignup(signupBody)
+            _ = res.organizationId
 
             // After signup, perform OAuth login using the same public key
             return try await loginWithOAuth(
@@ -103,13 +93,12 @@ extension TurnkeyContext {
 
         do {
             // Lookup account by raw OIDC token
-            let account = try await client.proxyGetAccount(
+            let account = try await client.proxyGetAccount(ProxyTGetAccountBody(
                 filterType: "OIDC_TOKEN",
-                filterValue: oidcToken,
-                verificationToken: nil
-            )
+                filterValue: oidcToken
+            ))
 
-            if let orgId = try account.body.json.organizationId, !orgId.isEmpty {
+            if let orgId = account.organizationId, !orgId.isEmpty {
                 
                 let session = try await loginWithOAuth(
                     oidcToken: oidcToken,
@@ -152,12 +141,12 @@ extension TurnkeyContext {
         }
         
         do {
-            let resp = try await client.proxyInitOtp(
-                otpType: otpType.rawValue,
-                contact: contact
-            )
+            let resp = try await client.proxyInitOtp(ProxyTInitOtpBody(
+                contact: contact,
+                otpType: otpType.rawValue
+            ))
             
-            let result = try resp.body.json.otpId
+            let result = resp.otpId
             
             return result
         } catch {
@@ -183,9 +172,12 @@ extension TurnkeyContext {
         }
         
         do {
-            let resp = try await client.proxyVerifyOtp(otpId: otpId, otpCode: otpCode, publicKey: nil)
+            let resp = try await client.proxyVerifyOtp(ProxyTVerifyOtpBody(
+                otpCode: otpCode,
+                otpId: otpId
+            ))
             
-            let result = try resp.body.json.verificationToken
+            let result = resp.verificationToken
             
             return result
         } catch {
@@ -221,15 +213,14 @@ extension TurnkeyContext {
         do {
             let resolvedPublicKey = try publicKey ?? createKeyPair()
             
-            let response = try await client.proxyOtpLogin(
-                verificationToken: verificationToken,
-                publicKey: resolvedPublicKey,
+            let response = try await client.proxyOtpLogin(ProxyTOtpLoginBody(
                 invalidateExisting: invalidateExisting,
                 organizationId: organizationId,
-                clientSignature: nil
-            )
+                publicKey: resolvedPublicKey,
+                verificationToken: verificationToken
+            ))
             
-            let session = try response.body.json.session
+            let session = response.session
             
             try await createSession(jwt: session, refreshedSessionTTLSeconds: resolvedSessionTTLSeconds())
             
@@ -286,27 +277,16 @@ extension TurnkeyContext {
                 CreateSubOrgParams.ApiKey(
                     apiKeyName: "api-key-\(Int(Date().timeIntervalSince1970))",
                     publicKey: generatedPublicKey,
-                    curveType: Components.Schemas.ProxyApiKeyCurve.API_KEY_CURVE_P256,
+                    curveType: .api_key_curve_p256,
                     expirationSeconds: nil
                 )
             ]
             
             // build body and call proxySignup
             let signupBody = buildSignUpBody(createSubOrgParams: mergedParams)
-            let response = try await client.proxySignup(
-                userEmail: signupBody.userEmail,
-                userPhoneNumber: signupBody.userPhoneNumber,
-                userTag: signupBody.userTag,
-                userName: signupBody.userName,
-                organizationName: signupBody.organizationName,
-                verificationToken: signupBody.verificationToken,
-                apiKeys: signupBody.apiKeys,
-                authenticators: signupBody.authenticators,
-                oauthProviders: signupBody.oauthProviders,
-                wallet: signupBody.wallet
-            )
+            let response = try await client.proxySignup(signupBody)
             
-            let organizationId = try response.body.json.organizationId
+            let organizationId = response.organizationId
             
             let session = try await loginWithOtp(
                 verificationToken: verificationToken,
@@ -371,13 +351,13 @@ extension TurnkeyContext {
             let verificationToken = try await verifyOtp(otpId: otpId, otpCode: otpCode)
             
             // we check if org already exists
-            let response = try await client.proxyGetAccount(
+            let response = try await client.proxyGetAccount(ProxyTGetAccountBody(
                 filterType: otpType == .email ? "EMAIL" : "PHONE_NUMBER",
                 filterValue: contact,
                 verificationToken: verificationToken
-            )
+            ))
             
-            if let organizationId = try response.body.json.organizationId,
+            if let organizationId = response.organizationId,
                !organizationId.isEmpty {
                 // there is an existing org so we login
                 let session = try await loginWithOtp(
@@ -437,18 +417,13 @@ extension TurnkeyContext {
         let resolvedPublicKey = try publicKey ?? createKeyPair()
         
         do {
-            
-            let resp = try await client.stampLogin(
+            let resp = try await client.stampLogin(TStampLoginBody(
                 organizationId: orgId,
-                publicKey: resolvedPublicKey,
                 expirationSeconds: resolvedSessionTTLSeconds(),
-                invalidateExisting: true
-            )
+                publicKey: resolvedPublicKey
+            ))            
             
-            
-            guard
-                case let .json(body) = resp.body,
-                let session = body.activity.result.stampLoginResult?.session
+            guard let session = resp.activity.result.stampLoginResult?.session
             else {
                 throw TurnkeySwiftError.invalidResponse
             }
@@ -505,12 +480,12 @@ extension TurnkeyContext {
               CreateSubOrgParams.Authenticator(
                   authenticatorName: passkeyName,
                   challenge: passkey.challenge,
-                  attestation: Components.Schemas.ProxyAttestation(
-                      credentialId: passkey.attestation.credentialId,
-                      clientDataJson: passkey.attestation.clientDataJson,
+                  attestation: v1Attestation(
                       attestationObject: passkey.attestation.attestationObject,
+                      clientDataJson: passkey.attestation.clientDataJson,
+                      credentialId: passkey.attestation.credentialId,
                       transports: passkey.attestation.transports.compactMap {
-                          Components.Schemas.ProxyAuthenticatorTransport(rawValue: $0.rawValue)
+                          v1AuthenticatorTransport(rawValue: $0.rawValue)
                       }
                   )
               )
@@ -520,7 +495,7 @@ extension TurnkeyContext {
           CreateSubOrgParams.ApiKey(
             apiKeyName: "passkey-auth-\(generatedPublicKey!)",
             publicKey: generatedPublicKey!,
-            curveType: .API_KEY_CURVE_P256,
+            curveType: .api_key_curve_p256,
             expirationSeconds: "60"
           )
         ]
@@ -532,35 +507,22 @@ extension TurnkeyContext {
         guard let proxyClient = self.client else {
           throw TurnkeySwiftError.invalidSession
         }
-        let response = try await proxyClient.proxySignup(
-          userEmail: signupBody.userEmail,
-          userPhoneNumber: signupBody.userPhoneNumber,
-          userTag: signupBody.userTag,
-          userName: signupBody.userName,
-          organizationName: signupBody.organizationName,
-          verificationToken: signupBody.verificationToken,
-          apiKeys: signupBody.apiKeys,
-          authenticators: signupBody.authenticators,
-          oauthProviders: signupBody.oauthProviders,
-          wallet: signupBody.wallet
-        )
+        let response = try await proxyClient.proxySignup(signupBody)
 
-        let organizationId = try response.body.json.organizationId
+        let organizationId = response.organizationId
 
         // 5. Generate another key for the session login
         let newPublicKey = try createKeyPair()
 
         // 6. Login and create session
-        let loginResponse = try await passkeyClient.stampLogin(
+        let loginResponse = try await passkeyClient.stampLogin(TStampLoginBody(
           organizationId: organizationId,
-          publicKey: newPublicKey,
           expirationSeconds: resolvedSessionTTLSeconds(),
-          invalidateExisting: true
-        )
+          invalidateExisting: true,
+          publicKey: newPublicKey
+        ))
 
-        guard
-          case let .json(body) = loginResponse.body,
-          let session = body.activity.result.stampLoginResult?.session
+        guard let session = loginResponse.activity.result.stampLoginResult?.session
         else {
           throw TurnkeySwiftError.invalidResponse
         }

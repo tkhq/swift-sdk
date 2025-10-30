@@ -11,51 +11,51 @@ struct AddressFormatDefaults {
 
     static func defaults(for addressFormat: AddressFormat) -> Defaults {
         switch addressFormat {
-        case .ADDRESS_FORMAT_UNCOMPRESSED,
-             .ADDRESS_FORMAT_COMPRESSED:
-            return .init(encoding: .PAYLOAD_ENCODING_HEXADECIMAL, hashFunction: .HASH_FUNCTION_SHA256)
+        case .address_format_uncompressed,
+             .address_format_compressed:
+            return .init(encoding: .payload_encoding_hexadecimal, hashFunction: .hash_function_sha256)
 
-        case .ADDRESS_FORMAT_ETHEREUM:
-            return .init(encoding: .PAYLOAD_ENCODING_HEXADECIMAL, hashFunction: .HASH_FUNCTION_KECCAK256)
+        case .address_format_ethereum:
+            return .init(encoding: .payload_encoding_hexadecimal, hashFunction: .hash_function_keccak256)
 
-        case .ADDRESS_FORMAT_SOLANA,
-             .ADDRESS_FORMAT_SUI,
-             .ADDRESS_FORMAT_APTOS,
-             .ADDRESS_FORMAT_TON_V3R2,
-             .ADDRESS_FORMAT_TON_V4R2,
-             .ADDRESS_FORMAT_TON_V5R1,
-             .ADDRESS_FORMAT_XLM:
-            return .init(encoding: .PAYLOAD_ENCODING_HEXADECIMAL, hashFunction: .HASH_FUNCTION_NOT_APPLICABLE)
+        case .address_format_solana,
+             .address_format_sui,
+             .address_format_aptos,
+             .address_format_ton_v3r2,
+             .address_format_ton_v4r2,
+             .address_format_ton_v5r1,
+             .address_format_xlm:
+            return .init(encoding: .payload_encoding_hexadecimal, hashFunction: .hash_function_not_applicable)
 
-        case .ADDRESS_FORMAT_COSMOS,
-             .ADDRESS_FORMAT_SEI:
-            return .init(encoding: .PAYLOAD_ENCODING_TEXT_UTF8, hashFunction: .HASH_FUNCTION_SHA256)
+        case .address_format_cosmos,
+             .address_format_sei:
+            return .init(encoding: .payload_encoding_text_utf8, hashFunction: .hash_function_sha256)
 
-        case .ADDRESS_FORMAT_TRON,
-             .ADDRESS_FORMAT_BITCOIN_MAINNET_P2PKH,
-             .ADDRESS_FORMAT_BITCOIN_MAINNET_P2SH,
-             .ADDRESS_FORMAT_BITCOIN_MAINNET_P2WPKH,
-             .ADDRESS_FORMAT_BITCOIN_MAINNET_P2WSH,
-             .ADDRESS_FORMAT_BITCOIN_MAINNET_P2TR,
-             .ADDRESS_FORMAT_BITCOIN_TESTNET_P2PKH,
-             .ADDRESS_FORMAT_BITCOIN_TESTNET_P2SH,
-             .ADDRESS_FORMAT_BITCOIN_TESTNET_P2WPKH,
-             .ADDRESS_FORMAT_BITCOIN_TESTNET_P2WSH,
-             .ADDRESS_FORMAT_BITCOIN_TESTNET_P2TR,
-             .ADDRESS_FORMAT_BITCOIN_SIGNET_P2PKH,
-             .ADDRESS_FORMAT_BITCOIN_SIGNET_P2SH,
-             .ADDRESS_FORMAT_BITCOIN_SIGNET_P2WPKH,
-             .ADDRESS_FORMAT_BITCOIN_SIGNET_P2WSH,
-             .ADDRESS_FORMAT_BITCOIN_SIGNET_P2TR,
-             .ADDRESS_FORMAT_BITCOIN_REGTEST_P2PKH,
-             .ADDRESS_FORMAT_BITCOIN_REGTEST_P2SH,
-             .ADDRESS_FORMAT_BITCOIN_REGTEST_P2WPKH,
-             .ADDRESS_FORMAT_BITCOIN_REGTEST_P2WSH,
-             .ADDRESS_FORMAT_BITCOIN_REGTEST_P2TR,
-             .ADDRESS_FORMAT_DOGE_MAINNET,
-             .ADDRESS_FORMAT_DOGE_TESTNET,
-             .ADDRESS_FORMAT_XRP:
-            return .init(encoding: .PAYLOAD_ENCODING_HEXADECIMAL, hashFunction: .HASH_FUNCTION_SHA256)
+        case .address_format_tron,
+             .address_format_bitcoin_mainnet_p2pkh,
+             .address_format_bitcoin_mainnet_p2sh,
+             .address_format_bitcoin_mainnet_p2wpkh,
+             .address_format_bitcoin_mainnet_p2wsh,
+             .address_format_bitcoin_mainnet_p2tr,
+             .address_format_bitcoin_testnet_p2pkh,
+             .address_format_bitcoin_testnet_p2sh,
+             .address_format_bitcoin_testnet_p2wpkh,
+             .address_format_bitcoin_testnet_p2wsh,
+             .address_format_bitcoin_testnet_p2tr,
+             .address_format_bitcoin_signet_p2pkh,
+             .address_format_bitcoin_signet_p2sh,
+             .address_format_bitcoin_signet_p2wpkh,
+             .address_format_bitcoin_signet_p2wsh,
+             .address_format_bitcoin_signet_p2tr,
+             .address_format_bitcoin_regtest_p2pkh,
+             .address_format_bitcoin_regtest_p2sh,
+             .address_format_bitcoin_regtest_p2wpkh,
+             .address_format_bitcoin_regtest_p2wsh,
+             .address_format_bitcoin_regtest_p2tr,
+             .address_format_doge_mainnet,
+             .address_format_doge_testnet,
+             .address_format_xrp:
+            return .init(encoding: .payload_encoding_hexadecimal, hashFunction: .hash_function_sha256)
         }
     }
 }

@@ -1,6 +1,7 @@
 import Foundation
 import AuthenticationServices
 import Combine
+import TurnkeyTypes
 import TurnkeyPasskeys
 import TurnkeyHttp
 import TurnkeyCrypto
@@ -42,7 +43,7 @@ final class AuthContext: ObservableObject {
         struct ApiKeyPayload: Codable {
             var apiKeyName: String
             var publicKey: String
-            var curveType: Components.Schemas.ApiKeyCurve
+            var curveType: v1ApiKeyCurve
             var expirationSeconds: String?
         }
         

@@ -1,20 +1,21 @@
 import Foundation
+import TurnkeyTypes
 import AuthenticationServices
 import CryptoKit
 import TurnkeyHttp
 
 extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     // MARK: - Public Types (OAuth)
-
+    
     public struct GoogleOAuthOptions: Sendable {
         public var clientId: String?
         public var additionalState: [String: String]?
-        public var onOAuthSuccess: ((OAuthSuccess) -> Void)?
-
+        public var onOAuthSuccess: ( @Sendable (OAuthSuccess) -> Void)?
+        
         public init(
             clientId: String? = nil,
             additionalState: [String: String]? = nil,
-            onOAuthSuccess: ((OAuthSuccess) -> Void)? = nil
+            onOAuthSuccess: ( @Sendable (OAuthSuccess) -> Void)? = nil
         ) {
             self.clientId = clientId
             self.additionalState = additionalState
@@ -23,68 +24,68 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     }
     @available(*, unavailable, renamed: "GoogleOAuthOptions")
     public typealias HandleGoogleOAuthParams = GoogleOAuthOptions
-
+    
     public struct AppleOAuthOptions: Sendable {
         public var clientId: String?
         public var additionalState: [String: String]?
-        public var onOAuthSuccess: ((OAuthSuccess) -> Void)?
-
+        public var onOAuthSuccess: ( @Sendable (OAuthSuccess) -> Void)?
+        
         public init(
             clientId: String? = nil,
             additionalState: [String: String]? = nil,
-            onOAuthSuccess: ((OAuthSuccess) -> Void)? = nil
+            onOAuthSuccess: ( @Sendable(OAuthSuccess) -> Void)? = nil
         ) {
             self.clientId = clientId
             self.additionalState = additionalState
             self.onOAuthSuccess = onOAuthSuccess
         }
     }
-
+    
     public struct DiscordOAuthOptions: Sendable {
         public var clientId: String?
         public var additionalState: [String: String]?
-        public var onOAuthSuccess: ((OAuthSuccess) -> Void)?
-
+        public var onOAuthSuccess: (@Sendable (OAuthSuccess) -> Void)?
+        
         public init(
             clientId: String? = nil,
             additionalState: [String: String]? = nil,
-            onOAuthSuccess: ((OAuthSuccess) -> Void)? = nil
+            onOAuthSuccess: ( @Sendable(OAuthSuccess) -> Void)? = nil
         ) {
             self.clientId = clientId
             self.additionalState = additionalState
             self.onOAuthSuccess = onOAuthSuccess
         }
     }
-
+    
     public struct XOAuthOptions: Sendable {
         public var clientId: String?
         public var additionalState: [String: String]?
-        public var onOAuthSuccess: ((OAuthSuccess) -> Void)?
-
+        public var onOAuthSuccess: ( @Sendable (OAuthSuccess) -> Void)?
+        
         public init(
             clientId: String? = nil,
             additionalState: [String: String]? = nil,
-            onOAuthSuccess: ((OAuthSuccess) -> Void)? = nil
+            onOAuthSuccess: (@Sendable (OAuthSuccess) -> Void)? = nil
         ) {
             self.clientId = clientId
             self.additionalState = additionalState
             self.onOAuthSuccess = onOAuthSuccess
         }
     }
-
+    
     public struct OAuthSuccess: Sendable {
         public let oidcToken: String
         public let providerName: String
         public let publicKey: String
     }
-
+    
     public struct OAuthCallbackParams: Sendable {
         public let oidcToken: String
         public let sessionKey: String?
     }
-
+    
     // MARK: - Orchestrator
-
+    
     /// Launches Google OAuth, retrieves the OIDC token, and completes Turnkey login or signup.
     public func handleGoogleOAuth(
         anchor: ASPresentationAnchor,
@@ -94,19 +95,19 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         let publicKey = try createKeyPair()
         let nonceData = Data(publicKey.utf8)
         let nonce = SHA256.hash(data: nonceData).map { String(format: "%02x", $0) }.joined()
-
+        
         // Resolve provider settings (clientId, redirect base URL, app scheme)
         let settings = try getOAuthProviderSettings(provider: "google")
         let clientId = params.clientId ?? settings.clientId
         let scheme = settings.appScheme
-
+        
         guard !clientId.isEmpty else {
             throw TurnkeySwiftError.invalidConfiguration("Missing clientId for Google OAuth")
         }
         guard !scheme.isEmpty else {
             throw TurnkeySwiftError.invalidConfiguration("Missing app scheme for OAuth redirect")
         }
-
+        
         // Start OAuth in system browser and obtain Google-issued id_token (+ optional sessionKey)
         let oauth = try await runOAuthSession(
             provider: "google",
@@ -116,14 +117,14 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
             nonce: nonce,
             additionalState: params.additionalState
         )
-
+        
         // Optional early callback (parity with TS onOAuthSuccess)
         if let cb = params.onOAuthSuccess {
             cb(.init(oidcToken: oauth.oidcToken, providerName: "google", publicKey: publicKey))
             // In early-return mode caller handles completion.
             return .init(session: "", action: .login)
         }
-
+        
         // Complete OAuth inside SDK (lookup → login or signup)
         return try await completeOAuth(
             oidcToken: oauth.oidcToken,
@@ -132,7 +133,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
             sessionKey: oauth.sessionKey
         )
     }
-
+    
     /// Launches Apple OAuth, retrieves the OIDC token, and completes Turnkey login or signup.
     public func handleAppleOAuth(
         anchor: ASPresentationAnchor,
@@ -142,19 +143,19 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         let publicKey = try createKeyPair()
         let nonceData = Data(publicKey.utf8)
         let nonce = SHA256.hash(data: nonceData).map { String(format: "%02x", $0) }.joined()
-
+        
         // Resolve provider settings (clientId, redirect base URL, app scheme)
         let settings = try getOAuthProviderSettings(provider: "apple")
         let clientId = params.clientId ?? settings.clientId
         let scheme = settings.appScheme
-
+        
         guard !clientId.isEmpty else {
             throw TurnkeySwiftError.invalidConfiguration("Missing clientId for Apple OAuth")
         }
         guard !scheme.isEmpty else {
             throw TurnkeySwiftError.invalidConfiguration("Missing app scheme for OAuth redirect")
         }
-
+        
         // Start OAuth in system browser and obtain Apple-issued id_token (+ optional sessionKey)
         let oauth = try await runOAuthSession(
             provider: "apple",
@@ -164,14 +165,14 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
             nonce: nonce,
             additionalState: params.additionalState
         )
-
+        
         // Optional early callback (parity with TS onOAuthSuccess)
         if let cb = params.onOAuthSuccess {
             cb(.init(oidcToken: oauth.oidcToken, providerName: "apple", publicKey: publicKey))
             // In early-return mode caller handles completion.
             return .init(session: "", action: .login)
         }
-
+        
         // Complete OAuth inside SDK (lookup → login or signup)
         return try await completeOAuth(
             oidcToken: oauth.oidcToken,
@@ -190,13 +191,13 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         let publicKey = try createKeyPair()
         let nonceData = Data(publicKey.utf8)
         let nonce = SHA256.hash(data: nonceData).map { String(format: "%02x", $0) }.joined()
-
+        
         // Resolve provider settings
         let settings = try getOAuthProviderSettings(provider: "discord")
         let clientId = params.clientId ?? settings.clientId
         let redirectUri = settings.redirectUri
         let scheme = settings.appScheme
-
+        
         guard !clientId.isEmpty else {
             throw TurnkeySwiftError.invalidConfiguration("Missing clientId for Discord OAuth")
         }
@@ -206,10 +207,10 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         guard !scheme.isEmpty else {
             throw TurnkeySwiftError.invalidConfiguration("Missing app scheme for OAuth redirect")
         }
-
+        
         // Generate PKCE pair
         let pkce = try generatePKCEPair()
-
+        
         // Build state
         var state = "provider=discord&flow=redirect&publicKey=\(publicKey.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? publicKey)&nonce=\(nonce)"
         if let additional = params.additionalState, !additional.isEmpty {
@@ -222,7 +223,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
                 .joined(separator: "&")
             if !extra.isEmpty { state += "&\(extra)" }
         }
-
+        
         // Build provider auth URL
         let discordAuthUrl = try buildOAuth2AuthURL(
             baseURL: "https://discord.com/oauth2/authorize",
@@ -232,29 +233,29 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
             scope: "identify email",
             state: state
         )
-
+        
         // Run system web auth to retrieve authorization code and state
         let result = try await runOAuth2CodeSession(url: discordAuthUrl, scheme: scheme, anchor: anchor)
         guard let client = client else { throw TurnkeySwiftError.invalidSession }
-
+        
         // Exchange code for OIDC token via Auth Proxy
-        let resp = try await client.proxyOAuth2Authenticate(
-            provider: .OAUTH2_PROVIDER_DISCORD,
+        let resp = try await client.proxyOAuth2Authenticate(ProxyTOAuth2AuthenticateBody(
             authCode: result.code,
-            redirectUri: redirectUri,
+            clientId: clientId,
             codeVerifier: pkce.verifier,
             nonce: nonce,
-            clientId: clientId
-        )
-
-        let oidcToken = try resp.body.json.oidcToken
+            provider: .oauth2_provider_discord,
+            redirectUri: redirectUri
+        ))
+        
+        let oidcToken = resp.oidcToken
         let sessionKey = parseSessionKey(fromState: result.state)
-
+        
         if let cb = params.onOAuthSuccess {
             cb(.init(oidcToken: oidcToken, providerName: "discord", publicKey: publicKey))
             return .init(session: "", action: .login)
         }
-
+        
         return try await completeOAuth(
             oidcToken: oidcToken,
             publicKey: publicKey,
@@ -262,7 +263,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
             sessionKey: sessionKey
         )
     }
-
+    
     /// Launches X (Twitter) OAuth (PKCE), exchanges the code via Auth Proxy, and completes login/signup.
     public func handleXOauth(
         anchor: ASPresentationAnchor,
@@ -272,13 +273,13 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         let publicKey = try createKeyPair()
         let nonceData = Data(publicKey.utf8)
         let nonce = SHA256.hash(data: nonceData).map { String(format: "%02x", $0) }.joined()
-
+        
         // Resolve provider settings
         let settings = try getOAuthProviderSettings(provider: "x")
         let clientId = params.clientId ?? settings.clientId
         let redirectUri = settings.redirectUri
         let scheme = settings.appScheme
-
+        
         guard !clientId.isEmpty else {
             throw TurnkeySwiftError.invalidConfiguration("Missing clientId for X OAuth")
         }
@@ -288,10 +289,10 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         guard !scheme.isEmpty else {
             throw TurnkeySwiftError.invalidConfiguration("Missing app scheme for OAuth redirect")
         }
-
+        
         // Generate PKCE pair
         let pkce = try generatePKCEPair()
-
+        
         // Build state (RN uses provider=twitter)
         var state = "provider=twitter&flow=redirect&publicKey=\(publicKey.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? publicKey)&nonce=\(nonce)"
         if let additional = params.additionalState, !additional.isEmpty {
@@ -304,7 +305,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
                 .joined(separator: "&")
             if !extra.isEmpty { state += "&\(extra)" }
         }
-
+        
         // Build provider auth URL
         let xAuthUrl = try buildOAuth2AuthURL(
             baseURL: "https://x.com/i/oauth2/authorize",
@@ -314,29 +315,29 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
             scope: "tweet.read users.read",
             state: state
         )
-
+        
         // Run system web auth to retrieve authorization code and state
         let result = try await runOAuth2CodeSession(url: xAuthUrl, scheme: scheme, anchor: anchor)
         guard let client = client else { throw TurnkeySwiftError.invalidSession }
-
+        
         // Exchange code for OIDC token via Auth Proxy
-        let resp = try await client.proxyOAuth2Authenticate(
-            provider: .OAUTH2_PROVIDER_X,
+        let resp = try await client.proxyOAuth2Authenticate(ProxyTOAuth2AuthenticateBody(
             authCode: result.code,
-            redirectUri: redirectUri,
+            clientId: clientId,
             codeVerifier: pkce.verifier,
             nonce: nonce,
-            clientId: clientId
-        )
-
-        let oidcToken = try resp.body.json.oidcToken
+            provider: .oauth2_provider_x,
+            redirectUri: redirectUri
+        ))
+        
+        let oidcToken = resp.oidcToken
         let sessionKey = parseSessionKey(fromState: result.state)
-
+        
         if let cb = params.onOAuthSuccess {
             cb(.init(oidcToken: oidcToken, providerName: "twitter", publicKey: publicKey))
             return .init(session: "", action: .login)
         }
-
+        
         return try await completeOAuth(
             oidcToken: oidcToken,
             publicKey: publicKey,
@@ -381,7 +382,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         )
         return result.oidcToken
     }
-
+    
     // MARK: - Internal helpers
     private func buildOAuthURL(
         provider: String,
@@ -394,7 +395,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         // Encode nested redirectUri like encodeURIComponent
         let allowedUnreserved = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
         let encodedRedirectUri = redirectUri.addingPercentEncoding(withAllowedCharacters: allowedUnreserved) ?? redirectUri
-
+        
         var comps = URLComponents(string: finalOriginUri)!
         var items: [URLQueryItem] = [
             URLQueryItem(name: "provider",    value: provider),
@@ -412,7 +413,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         guard let url = comps.url else { throw TurnkeySwiftError.oauthInvalidURL }
         return url
     }
-
+    
     internal func runOAuthSession(
         provider: String,
         clientId: String,
@@ -430,7 +431,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
             nonce: nonce,
             additionalState: additionalState
         )
-        print("[Turnkey][OAuth] running OAuth session for provider=\(provider), clientId=\(clientId), scheme=\(scheme), url=\(url.absoluteString)")
+        
         return try await withCheckedThrowingContinuation { continuation in
             let session = ASWebAuthenticationSession(
                 url: url,

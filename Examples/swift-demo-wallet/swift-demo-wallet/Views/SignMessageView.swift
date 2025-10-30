@@ -1,4 +1,5 @@
 import SwiftUI
+import TurnkeyTypes
 import TurnkeyHttp
 import TurnkeySwift
 import TurnkeyEncoding
@@ -82,7 +83,7 @@ struct SignMessageView: View {
             do {
                 let result = try await turnkey.signMessage(
                     signWith: walletAddress,
-                    addressFormat: .ADDRESS_FORMAT_ETHEREUM,
+                    addressFormat: v1AddressFormat.address_format_ethereum,
                     message: message,
                     addEthereumPrefix: true
                 )

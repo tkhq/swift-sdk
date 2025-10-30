@@ -1,4 +1,5 @@
 import Foundation
+import TurnkeyTypes
 import TurnkeyHttp
 
 extension TurnkeyContext {
@@ -13,8 +14,8 @@ extension TurnkeyContext {
         var proxy: ProxyGetWalletKitConfigResponse?
         if let client, let _ = self.authProxyConfigId {
             do {
-                let response = try await client.proxyGetWalletKitConfig()
-                proxy = try response.body.json
+                let response = try await client.proxyGetWalletKitConfig(ProxyTGetWalletKitConfigBody())
+                proxy = response
             } catch {
                 proxy = nil
             }
@@ -49,7 +50,7 @@ extension TurnkeyContext {
 
         // Resolve per-provider OAuth overrides (exclude facebook)
         var resolvedProviders: [String: TurnkeyRuntimeConfig.Auth.Oauth.Provider] = [:]
-        let proxyClientIds = proxy?.oauthClientIds?.additionalProperties ?? [:]
+        let proxyClientIds = proxy?.oauthClientIds ?? [:]
         let providers = ["google", "apple", "x", "discord"]
         for provider in providers {
             let override: TurnkeyConfig.Auth.Oauth.ProviderOverride? = {

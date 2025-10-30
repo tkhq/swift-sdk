@@ -1,4 +1,5 @@
 import Foundation
+import TurnkeyTypes
 import TurnkeyCrypto
 import TurnkeyHttp
 
@@ -182,15 +183,13 @@ extension TurnkeyContext {
         let newPublicKey = try createKeyPair()
         
         do {
-            let resp = try await clientToUse.stampLogin(
+            let resp = try await clientToUse.stampLogin(TStampLoginBody(
                 organizationId: orgId,
-                publicKey: newPublicKey,
                 expirationSeconds: expirationSeconds,
-                invalidateExisting: invalidateExisting
-            )
-            guard
-                case let .json(body) = resp.body,
-                let jwt = body.activity.result.stampLoginResult?.session
+                invalidateExisting: invalidateExisting,
+                publicKey: newPublicKey
+            ))
+            guard let jwt = resp.activity.result.stampLoginResult?.session
             else {
                 throw TurnkeySwiftError.invalidResponse
             }

@@ -50,7 +50,7 @@ public enum TurnkeyRequestError: LocalizedError, Sendable, Equatable {
 
   public var errorDescription: String? {
     switch self {
-    case let .apiError(_, data?):
+    case .apiError(_, _?):
       return fullMessage
     case .apiError:
       return "Turnkey API returned an error response."

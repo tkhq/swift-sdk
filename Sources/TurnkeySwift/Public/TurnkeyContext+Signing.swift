@@ -1,4 +1,5 @@
 import Foundation
+import TurnkeyTypes
 import TurnkeyHttp
 
 extension TurnkeyContext {
@@ -34,15 +35,15 @@ extension TurnkeyContext {
         
         
         do {
-            let resp = try await client.signRawPayload(
+            let resp = try await client.signRawPayload(TSignRawPayloadBody(
                 organizationId: dto.organizationId,
-                signWith: signWith,
-                payload: payload,
                 encoding: encoding,
-                hashFunction: hashFunction
-            )
+                hashFunction: hashFunction,
+                payload: payload,
+                signWith: signWith
+            ))
             
-            guard let result = try resp.body.json.activity.result.signRawPayloadResult else {
+            guard let result = resp.activity.result.signRawPayloadResult else {
                 throw TurnkeySwiftError.invalidResponse
             }
             
@@ -116,7 +117,7 @@ extension TurnkeyContext {
         var messageBytes = Data(message.utf8)
 
         // Apply Ethereum prefix if applicable
-        if addressFormat == .ADDRESS_FORMAT_ETHEREUM {
+        if addressFormat == .address_format_ethereum {
             let shouldPrefix = addEthereumPrefix ?? true
             if shouldPrefix {
                 messageBytes = MessageEncodingHelper.ethereumPrefixed(messageData: messageBytes)
@@ -126,15 +127,15 @@ extension TurnkeyContext {
         let payload = MessageEncodingHelper.encodeMessageBytes(messageBytes, as: finalEncoding)
 
         do {
-            let resp = try await client.signRawPayload(
+            let resp = try await client.signRawPayload(TSignRawPayloadBody(
                 organizationId: dto.organizationId,
-                signWith: signWith,
-                payload: payload,
                 encoding: finalEncoding,
-                hashFunction: finalHash
-            )
+                hashFunction: finalHash,
+                payload: payload,
+                signWith: signWith
+            ))
 
-            guard let result = try resp.body.json.activity.result.signRawPayloadResult else {
+            guard let result = resp.activity.result.signRawPayloadResult else {
                 throw TurnkeySwiftError.invalidResponse
             }
             return result
