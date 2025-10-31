@@ -22,7 +22,7 @@ enum Constants {
         addressFormat: v1AddressFormat.address_format_ethereum,
         curve: v1Curve.curve_secp256k1,
         path: "m/44'/60'/0'/0/0",
-        pathFormat: v1PathFormat.path_format_bip32,
+        pathFormat: v1PathFormat.path_format_bip32
       )
     ]
   }
