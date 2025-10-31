@@ -56,16 +56,14 @@ extension TurnkeyContext {
         sessionKey: String? = nil,
         organizationId: String? = nil
     ) async throws -> PasskeyAuthResult {
+        guard let client = client else {
+            throw TurnkeySwiftError.invalidSession
+        }
+        
         guard let rpId = self.rpId, !rpId.isEmpty else {
             throw TurnkeySwiftError.invalidConfiguration("Missing rpId; set via TurnkeyContext.configure(rpId:)")
         }
-        let passkeyClient = TurnkeyClient(
-            rpId: rpId,
-            presentationAnchor: anchor,
-            baseUrl: apiUrl
-        )
         
-        var generatedPublicKey: String?
         do {
             
             let passkeyName = passkeyDisplayName ?? "passkey-\(Int(Date().timeIntervalSince1970))"
@@ -74,8 +72,7 @@ extension TurnkeyContext {
             // which is added as an authentication method for the new sub-org user
             // this allows us to stamp the session creation request immediately after
             // without prompting the user
-            let (_, publicKeyCompressed, privateKey) = TurnkeyCrypto.generateP256KeyPair()
-            generatedPublicKey = publicKeyCompressed
+            let (_, publicKeyCompressed: generatedPublicKey, privateKey) = TurnkeyCrypto.generateP256KeyPair()
             
             let passkey = try await createPasskey(
                 user: PasskeyUser(id: UUID().uuidString, name: passkeyName, displayName: passkeyName),
@@ -97,29 +94,27 @@ extension TurnkeyContext {
             
             // Add the API key for session authentication (append to existing or create new array)
             let newApiKey = CreateSubOrgParams.ApiKey(
-                apiKeyName: "passkey-auth-\(generatedPublicKey!)",
-                publicKey: generatedPublicKey!,
+                apiKeyName: "passkey-auth-\(generatedPublicKey)",
+                publicKey: generatedPublicKey,
                 curveType: .api_key_curve_p256,
                 expirationSeconds: "60"
             )
             mergedParams.apiKeys = (mergedParams.apiKeys ?? []) + [newApiKey]
             
             let signupBody = buildSignUpBody(createSubOrgParams: mergedParams)
-            
-            // 4. Proxy signup call
-            // Use the Auth Proxy–configured client for signup
-            guard let proxyClient = self.client else {
-                throw TurnkeySwiftError.invalidSession
-            }
-            let response = try await proxyClient.proxySignup(signupBody)
+            let response = try await client.proxySignup(signupBody)
             
             let organizationId = response.organizationId
             
-            // 5. Generate another key for the session login
+            let temporaryClient = TurnkeyClient(
+                apiPrivateKey: privateKey,
+                apiPublicKey: generatedPublicKey,
+                baseUrl: apiUrl
+            )
+            
             let newKeyPairResult = try createKeyPair()
             
-            // 6. Login and create session
-            let loginResponse = try await passkeyClient.stampLogin(TStampLoginBody(
+            let loginResponse = try await temporaryClient.stampLogin(TStampLoginBody(
                 organizationId: organizationId,
                 expirationSeconds: resolvedSessionTTLSeconds(),
                 invalidateExisting: true,
