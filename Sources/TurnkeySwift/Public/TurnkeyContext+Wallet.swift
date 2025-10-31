@@ -49,12 +49,12 @@ extension TurnkeyContext {
     ///
     /// - Parameter walletId: The wallet identifier to export.
     ///
-    /// - Returns: The decrypted mnemonic phrase.
+    /// - Returns: An `ExportWalletResult` containing the decrypted mnemonic phrase.
     ///
     /// - Throws: `TurnkeySwiftError.invalidSession` if no session is selected,
     ///           `TurnkeySwiftError.invalidResponse` if response is malformed,
     ///           or `TurnkeySwiftError.failedToExportWallet` if export fails.
-    public func exportWallet(walletId: String) async throws -> String {
+    public func exportWallet(walletId: String, dangerouslyOverrideSignerPublicKey: String? = nil, returnMnemonic: Bool = true) async throws -> String {
         let (targetPublicKey, _, embeddedPriv) = TurnkeyCrypto.generateP256KeyPair()
         
         guard
@@ -79,12 +79,15 @@ extension TurnkeyContext {
                 throw TurnkeySwiftError.invalidResponse
             }
             
-            return try TurnkeyCrypto.decryptExportBundle(
+            let decrypted = try TurnkeyCrypto.decryptExportBundle(
                 exportBundle: bundle,
                 organizationId: user.organizationId,
                 embeddedPrivateKey: embeddedPriv,
-                returnMnemonic: true
+                dangerouslyOverrideSignerPublicKey: dangerouslyOverrideSignerPublicKey,
+                returnMnemonic: returnMnemonic
             )
+            
+            return decrypted
         } catch {
             throw TurnkeySwiftError.failedToExportWallet(underlying: error)
         }

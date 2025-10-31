@@ -1,5 +1,6 @@
 import AuthenticationServices
 import TurnkeyEncoding
+import TurnkeyTypes
 
 private struct ClientData: Decodable {
   let challenge: String
@@ -128,14 +129,14 @@ final class PasskeyRequestBuilder {
 
     return PasskeyRegistrationResult(
       challenge: clientData.challenge,
-      attestation: Attestation(
-        credentialId: credential.credentialID.base64URLEncodedString(),
-        clientDataJson: credential.rawClientDataJSON.base64URLEncodedString(),
+      attestation: v1Attestation(
         attestationObject: attestation.base64URLEncodedString(),
+        clientDataJson: credential.rawClientDataJSON.base64URLEncodedString(),
+        credentialId: credential.credentialID.base64URLEncodedString(),
 
         // TODO: Can we infer the transport from the registration result?
         // Defaulting to "hybrid" since that's commonly used for passkeys.
-        transports: [Transport.hybrid]
+        transports: [v1AuthenticatorTransport.authenticator_transport_hybrid]
       )
     )
   }

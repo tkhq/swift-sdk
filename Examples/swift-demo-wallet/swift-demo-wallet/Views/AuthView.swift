@@ -156,8 +156,8 @@ struct AuthView: View {
     private func handleContinueWithEmail() {
         Task {
             do {
-                let otpId = try await turnkey.initOtp(contact: email, otpType: OtpType.email)
-                coordinator.push(AuthRoute.otp(otpId: otpId, contact: email))
+                let resp = try await turnkey.initOtp(contact: email, otpType: OtpType.email)
+                coordinator.push(AuthRoute.otp(otpId: resp.otpId, contact: email))
             } catch {
                 let message = formatError(error, fallback: "Failed to send OTP")
                 print("[AuthView] Email OTP error: \(message)")
@@ -169,8 +169,8 @@ struct AuthView: View {
     private func handleContinueWithPhone() {
         Task {
             do {
-                let otpId = try await turnkey.initOtp(contact: phone, otpType: OtpType.sms)
-                coordinator.push(AuthRoute.otp(otpId: otpId, contact: email))
+                let resp = try await turnkey.initOtp(contact: phone, otpType: OtpType.sms)
+                coordinator.push(AuthRoute.otp(otpId: resp.otpId, contact: email))
             } catch {
                 let message = formatError(error, fallback: "Failed to send OTP")
                 print("[AuthView] SMS OTP error: \(message)")

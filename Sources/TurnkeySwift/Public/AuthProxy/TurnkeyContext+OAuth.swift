@@ -5,6 +5,110 @@ import CryptoKit
 import TurnkeyHttp
 
 extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
+    
+    internal func loginWithOAuth(
+        oidcToken: String,
+        publicKey: String,
+        invalidateExisting: Bool = false,
+        sessionKey: String? = nil,
+        organizationId: String? = nil
+    ) async throws -> BaseAuthResult {
+        guard let client = client else {
+            throw TurnkeySwiftError.invalidSession
+        }
+        
+        do {
+            let response = try await client.proxyOAuthLogin(ProxyTOAuthLoginBody(
+                invalidateExisting: invalidateExisting,
+                oidcToken: oidcToken,
+                organizationId: organizationId,
+                publicKey: publicKey
+            ))
+            let session = response.session
+            try await createSession(jwt: session, refreshedSessionTTLSeconds: resolvedSessionTTLSeconds())
+            return BaseAuthResult(session: session)
+        } catch {
+            throw TurnkeySwiftError.failedToCreateSession(underlying: error)
+        }
+    }
+    
+    internal func signUpWithOAuth(
+        oidcToken: String,
+        publicKey: String,
+        providerName: String,
+        createSubOrgParams: CreateSubOrgParams? = nil,
+        sessionKey: String? = nil
+    ) async throws -> BaseAuthResult {
+        guard let client = client else {
+            throw TurnkeySwiftError.invalidSession
+        }
+        
+        do {
+            var merged = createSubOrgParams ?? CreateSubOrgParams()
+            var oauthProviders = merged.oauthProviders ?? []
+            oauthProviders.append(.init(providerName: providerName, oidcToken: oidcToken))
+            merged.oauthProviders = oauthProviders
+            
+            let signupBody = buildSignUpBody(createSubOrgParams: merged)
+            let res = try await client.proxySignup(signupBody)
+            _ = res.organizationId
+            
+            // After signup, perform OAuth login using the same public key
+            return try await loginWithOAuth(
+                oidcToken: oidcToken,
+                publicKey: publicKey,
+                invalidateExisting: false,
+                sessionKey: sessionKey
+            )
+        } catch {
+            throw TurnkeySwiftError.failedToCreateSession(underlying: error)
+        }
+    }
+    
+    public func completeOAuth(
+        oidcToken: String,
+        publicKey: String,
+        providerName: String = "google",
+        sessionKey: String? = nil,
+        invalidateExisting: Bool = false,
+        createSubOrgParams: CreateSubOrgParams? = nil
+    ) async throws -> CompleteOAuthResult {
+        guard let client = client else {
+            throw TurnkeySwiftError.invalidSession
+        }
+        
+        do {
+            // Lookup account by raw OIDC token
+            let account = try await client.proxyGetAccount(ProxyTGetAccountBody(
+                filterType: "OIDC_TOKEN",
+                filterValue: oidcToken
+            ))
+            
+            if let orgId = account.organizationId, !orgId.isEmpty {
+                
+                let result = try await loginWithOAuth(
+                    oidcToken: oidcToken,
+                    publicKey: publicKey,
+                    invalidateExisting: invalidateExisting,
+                    sessionKey: sessionKey,
+                    organizationId: orgId
+                )
+                return .init(session: result.session, action: .login)
+            } else {
+                let result = try await signUpWithOAuth(
+                    oidcToken: oidcToken,
+                    publicKey: publicKey,
+                    providerName: providerName,
+                    createSubOrgParams: createSubOrgParams,
+                    sessionKey: sessionKey
+                )
+                return .init(session: result.session, action: .signup)
+            }
+        } catch {
+            throw TurnkeySwiftError.failedToCreateSession(underlying: error)
+        }
+    }
+    
     // MARK: - Public Types (OAuth)
     
     public struct GoogleOAuthOptions: Sendable {
@@ -83,9 +187,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         public let oidcToken: String
         public let sessionKey: String?
     }
-    
-    // MARK: - Orchestrator
-    
+        
     /// Launches Google OAuth, retrieves the OIDC token, and completes Turnkey login or signup.
     public func handleGoogleOAuth(
         anchor: ASPresentationAnchor,
