@@ -10,47 +10,50 @@ extension TurnkeyContext {
     }
 
     internal func initializeRuntimeConfig() async {
-        // Build with proxy if available; fetch once on init
-        var proxy: ProxyGetWalletKitConfigResponse?
+        // if an Auth Proxy config ID is available we fetch the Wallet Kit config
+        var walletKitConfig: ProxyGetWalletKitConfigResponse?
         if let client, let _ = self.authProxyConfigId {
             do {
                 let response = try await client.proxyGetWalletKitConfig(ProxyTGetWalletKitConfigBody())
-                proxy = response
+                walletKitConfig = response
             } catch {
-                proxy = nil
+                walletKitConfig = nil
             }
         }
 
-        let config = buildRuntimeConfig(proxy: proxy)
+        // we always build the runtime configuration using the Wallet Kit config (if available)
+        // and local defaults
+        let config = buildRuntimeConfig(walletKitConfig: walletKitConfig)
         await MainActor.run {
             self.runtimeConfig = config
         }
     }
 
     internal func buildRuntimeConfig(
-        proxy: ProxyGetWalletKitConfigResponse?
+        walletKitConfig: ProxyGetWalletKitConfigResponse?
     ) -> TurnkeyRuntimeConfig {
-        // Sanitize auth proxy URL: empty string -> nil
+        // we sanitize the auth proxy URL
         let trimmedAuthProxyUrl = authProxyUrl.trimmingCharacters(in: .whitespacesAndNewlines)
         let sanitizedAuthProxyUrl = trimmedAuthProxyUrl.isEmpty ? nil : authProxyUrl
 
-        // Resolve OTP enablement flags
+        // we resolve the OTP enablement flags
+        // TODO: we don't currently have UI, so these are never used
         let emailEnabled = userConfig.auth?.otp?.email
-            ?? proxy?.enabledProviders.contains("email")
+            ?? walletKitConfig?.enabledProviders.contains("email")
             ?? false
         let smsEnabled = userConfig.auth?.otp?.sms
-            ?? proxy?.enabledProviders.contains("sms")
+            ?? walletKitConfig?.enabledProviders.contains("sms")
             ?? false
 
-        // Resolve OAuth redirect base URL and app scheme
+        // we resolve the OAuth redirect base URL and app scheme
         let redirectBaseUrl = userConfig.auth?.oauth?.redirectUri
-            ?? proxy?.oauthRedirectUrl
+            ?? walletKitConfig?.oauthRedirectUrl
             ?? Constants.Turnkey.oauthRedirectUrl
         let appScheme = userConfig.auth?.oauth?.appScheme
 
-        // Resolve per-provider OAuth overrides (exclude facebook)
+        // we resolve per-provider OAuth info
         var resolvedProviders: [String: TurnkeyRuntimeConfig.Auth.Oauth.Provider] = [:]
-        let proxyClientIds = proxy?.oauthClientIds ?? [:]
+        let proxyClientIds = walletKitConfig?.oauthClientIds ?? [:]
         let providers = ["google", "apple", "x", "discord"]
         for provider in providers {
             let override: TurnkeyConfig.Auth.Oauth.ProviderOverride? = {
@@ -64,38 +67,23 @@ extension TurnkeyContext {
             }()
 
             let clientId = override?.clientId ?? proxyClientIds[provider]
-            // For X and Discord, if no explicit provider redirect and we have an appScheme, default to scheme://
+            
+            // for X and Discord, if there is no explicit provider redirect and we have an appScheme
+            // we default to scheme://
             let providerRedirect: String? = {
-                if let explicit = override?.redirectUri { return explicit }
+                if let explicit = override?.redirectUri {
+                    return explicit
+                }
                 if (provider == "x" || provider == "discord"), let scheme = appScheme, !scheme.isEmpty {
-                    return "\(scheme)://"
+                    return scheme.hasSuffix("://") ? scheme : "\(scheme)://"
                 }
                 return nil
             }()
 
             resolvedProviders[provider] = .init(clientId: clientId, redirectUri: providerRedirect)
         }
-
-        // Warnings for proxy-controlled overrides when proxy is active
-        if authProxyConfigId != nil {
-            if userConfig.auth?.sessionExpirationSeconds != nil {
-                print("Turnkey SDK warning: sessionExpirationSeconds is proxy-controlled and will be ignored when using an auth proxy.")
-            }
-            if userConfig.auth?.otp?.alphanumeric != nil {
-                print("Turnkey SDK warning: otp.alphanumeric is proxy-controlled and will be ignored when using an auth proxy.")
-            }
-            if userConfig.auth?.otp?.length != nil {
-                print("Turnkey SDK warning: otp.length is proxy-controlled and will be ignored when using an auth proxy.")
-            }
-        }
-
-        // Proxy-controlled settings
-        let sessionTTL = proxy?.sessionExpirationSeconds
-            ?? Constants.Session.defaultExpirationSeconds
-        let otpAlphanumeric = proxy?.otpAlphanumeric ?? true
-        let otpLength = proxy?.otpLength ?? "6"
-
-        // Resolve passkey options
+        
+        // we resolve passkey options
         let passkey: TurnkeyRuntimeConfig.Auth.Passkey? = {
             if let p = userConfig.auth?.passkey {
                 return TurnkeyRuntimeConfig.Auth.Passkey(
@@ -114,7 +102,32 @@ extension TurnkeyContext {
             }
         }()
 
-        // Resolve create suborg defaults
+        // warnings for auth-proxy controlled overrides when the auth proxy is active
+        if authProxyConfigId != nil {
+            if userConfig.auth?.sessionExpirationSeconds != nil {
+                // TODO: this is partly true, but sessions created client-side (e.g. passkeys) will use this! Lets make that clearer
+                print("Turnkey SDK warning: sessionExpirationSeconds is proxy-controlled and will be ignored when using an auth proxy.")
+            }
+            if userConfig.auth?.otp?.alphanumeric != nil {
+                // TODO: so if this does nothing then why even expose it as an option?
+                print("Turnkey SDK warning: otp.alphanumeric is proxy-controlled and will be ignored when using an auth proxy.")
+            }
+            if userConfig.auth?.otp?.length != nil {
+                // TODO: so if this does nothing then why even expose it as an option?
+                print("Turnkey SDK warning: otp.length is proxy-controlled and will be ignored when using an auth proxy.")
+            }
+        }
+
+        // Proxy-controlled settings
+        // TODO: this will be affected from comment above ^
+        let sessionTTL = walletKitConfig?.sessionExpirationSeconds
+            ?? Constants.Session.defaultExpirationSeconds
+        let otpAlphanumeric = walletKitConfig?.otpAlphanumeric ?? true
+        let otpLength = walletKitConfig?.otpLength ?? "6"
+
+
+        // we resolve create suborg defaults
+        // TODO: in other sdks this is normally per auth method and not universal, should we do the same here to be consistent? 
         let createDefaults: TurnkeyRuntimeConfig.Auth.CreateSuborgDefaults? = {
             if let d = userConfig.auth?.createSuborgDefaults {
                 return TurnkeyRuntimeConfig.Auth.CreateSuborgDefaults(

@@ -130,7 +130,7 @@ final class AuthContext: ObservableObject {
         startLoading()
         defer { stopLoading() }
 
-        try await turnkey.signUpWithPasskey(
+        _ = try await turnkey.signUpWithPasskey(
             anchor: anchor,
             passkeyDisplayName: "Demo App"
         )
@@ -141,7 +141,7 @@ final class AuthContext: ObservableObject {
         startLoading()
         defer { stopLoading() }
 
-        try await turnkey.loginWithPasskey(
+        _ = try await turnkey.loginWithPasskey(
             anchor: anchor,
             organizationId: Constants.Turnkey.organizationId
         )
@@ -153,7 +153,7 @@ final class AuthContext: ObservableObject {
 
         _ = try await turnkey.handleGoogleOAuth(
             anchor: anchor,
-            params: .init(clientId: Constants.Google.clientId)
+            clientId: Constants.Google.clientId
         )
     }
 
@@ -163,7 +163,7 @@ final class AuthContext: ObservableObject {
 
         _ = try await turnkey.handleAppleOAuth(
             anchor: anchor,
-            params: .init(clientId: Constants.Apple.clientId)
+            clientId: Constants.Apple.clientId
         )
     }
 
@@ -173,7 +173,7 @@ final class AuthContext: ObservableObject {
 
         _ = try await turnkey.handleXOauth(
             anchor: anchor,
-            params: .init(clientId: Constants.X.clientId)
+            clientId: Constants.X.clientId
         )
     }
 
@@ -183,7 +183,7 @@ final class AuthContext: ObservableObject {
 
         _ = try await turnkey.handleDiscordOAuth(
             anchor: anchor,
-            params: .init(clientId: Constants.Discord.clientId)
+            clientId: Constants.Discord.clientId
         )
     }
 

@@ -289,18 +289,17 @@ extension TurnkeyContext {
     ///
     /// - Throws: Never directly throws, but downstream usage may throw serialization or network errors.
     func buildSignUpBody(createSubOrgParams: CreateSubOrgParams) -> ProxyTSignupBody {
+        // TODO: is there names have a uniqueness constraint per user?
+        // if so then this will fail if we have to autofill multiple authenticators (e.g. two apiKeys)
         let now = Int(Date().timeIntervalSince1970)
 
-        // fallback authenticatorName
-        let authenticatorName = "passkey-\(now)"
-
-        // authenticators → v1AuthenticatorParamsV2
+        // authenticators to v1AuthenticatorParamsV2
         let authenticators: [v1AuthenticatorParamsV2]
         if let list = createSubOrgParams.authenticators, !list.isEmpty {
             authenticators = list.map { auth in
                 v1AuthenticatorParamsV2(
                     attestation: auth.attestation,
-                    authenticatorName: auth.authenticatorName ?? authenticatorName,
+                    authenticatorName: auth.authenticatorName ?? "passkey-\(now)",
                     challenge: auth.challenge
                 )
             }
@@ -308,12 +307,13 @@ extension TurnkeyContext {
             authenticators = []
         }
 
+        // apiKeys to v1ApiKeyParamsV2
         let apiKeys: [v1ApiKeyParamsV2]
         if let list = createSubOrgParams.apiKeys, !list.isEmpty {
             apiKeys = list.map { apiKey in
                 v1ApiKeyParamsV2(
                     apiKeyName: apiKey.apiKeyName ?? "api-key-\(now)",
-                    curveType: apiKey.curveType, // fallback curve
+                    curveType: apiKey.curveType,
                     expirationSeconds: apiKey.expirationSeconds,
                     publicKey: apiKey.publicKey
                 )
@@ -323,7 +323,7 @@ extension TurnkeyContext {
         }
 
 
-        // oauthProviders → v1OauthProviderParams
+        // oauthProviders to v1OauthProviderParams
         let oauthProviders: [v1OauthProviderParams]
         if let list = createSubOrgParams.oauthProviders, !list.isEmpty {
             oauthProviders = list.map { provider in

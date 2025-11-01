@@ -66,9 +66,13 @@ public final class TurnkeyContext: NSObject, ObservableObject {
         
         // build runtime configuration, restore session and timers after launch
         Task { [weak self] in
-            await self?.initializeRuntimeConfig()
             await self?.rescheduleAllSessionExpiries()
             await self?.restoreSelectedSession()
+            
+            // we call this last because `restoreSelectedSession()` sets the authentication
+            // state and we don't want this to slow that down
+            // TODO: how should this affect authentication state if this fails?
+            await self?.initializeRuntimeConfig()
         }
         
         // clean up periodically when app enters foreground
