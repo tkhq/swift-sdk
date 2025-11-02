@@ -352,9 +352,82 @@ extension TurnkeyContext {
             wallet: createSubOrgParams.customWallet
         )
     }
+    
+    internal func buildOAuthURL(
+        provider: String,
+        clientId: String,
+        redirectUri: String,
+        nonce: String,
+        additionalState: [String: String]?
+    ) throws -> URL {
+        let finalOriginUri = Constants.Turnkey.oauthOriginUrl
+        // Encode nested redirectUri like encodeURIComponent
+        let allowedUnreserved = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
+        let encodedRedirectUri = redirectUri.addingPercentEncoding(withAllowedCharacters: allowedUnreserved) ?? redirectUri
+        
+        var comps = URLComponents(string: finalOriginUri)!
+        var items: [URLQueryItem] = [
+            URLQueryItem(name: "provider",    value: provider),
+            URLQueryItem(name: "clientId",    value: clientId),
+            URLQueryItem(name: "redirectUri", value: encodedRedirectUri),
+            URLQueryItem(name: "nonce",       value: nonce)
+        ]
+        if let state = additionalState, !state.isEmpty {
+            for (k, v) in state {
+                let ev = v.addingPercentEncoding(withAllowedCharacters: allowedUnreserved) ?? v
+                items.append(URLQueryItem(name: k, value: ev))
+            }
+        }
+        comps.percentEncodedQueryItems = items
+        guard let url = comps.url else { throw TurnkeySwiftError.oauthInvalidURL }
+        return url
+    }
+    
+    internal func runOAuthSession(
+        provider: String,
+        clientId: String,
+        scheme: String,
+        anchor: ASPresentationAnchor,
+        nonce: String,
+        additionalState: [String: String]? = nil
+    ) async throws -> OAuthCallbackParams {
+        self.oauthAnchor = anchor
+        let settings = try getOAuthProviderSettings(provider: provider)
+        let url = try buildOAuthURL(
+            provider: provider,
+            clientId: clientId,
+            redirectUri: settings.redirectUri,
+            nonce: nonce,
+            additionalState: additionalState
+        )
+        
+        return try await withCheckedThrowingContinuation { continuation in
+            let session = ASWebAuthenticationSession(
+                url: url,
+                callbackURLScheme: scheme
+            ) { callbackURL, error in
+                if let error {
+                    continuation.resume(throwing: TurnkeySwiftError.oauthFailed(underlying: error))
+                    return
+                }
+                guard
+                    let callbackURL,
+                    let comps = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false),
+                    let idToken = comps.queryItems?.first(where: { $0.name == "id_token" })?.value
+                else {
+                    continuation.resume(throwing: TurnkeySwiftError.oauthMissingIDToken)
+                    return
+                }
+                let sessionKey = comps.queryItems?.first(where: { $0.name == "sessionKey" })?.value
+                continuation.resume(returning: OAuthCallbackParams(oidcToken: idToken, sessionKey: sessionKey))
+            }
+            session.presentationContextProvider = self
+            session.prefersEphemeralWebBrowserSession = false
+            session.start()
+        }
+    }
 
 
-    // MARK: - OAuth2 helpers (PKCE + ASWebAuthenticationSession)
     internal func generatePKCEPair() throws -> (verifier: String, challenge: String) {
         var randomBytes = [UInt8](repeating: 0, count: 32)
         let status = SecRandomCopyBytes(kSecRandomDefault, randomBytes.count, &randomBytes)

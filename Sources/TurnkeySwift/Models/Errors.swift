@@ -40,6 +40,8 @@ public enum TurnkeySwiftError: LocalizedError, Sendable {
     case invalidSession
     case invalidRefreshTTL(String)
     case invalidConfiguration(String)
+    
+    case missingAuthProxyConfiguration
 
     case failedToSignPayload(underlying: Error)
     case failedToCreateSession(underlying: Error)
@@ -72,6 +74,8 @@ public enum TurnkeySwiftError: LocalizedError, Sendable {
         case .invalidResponse: return "Invalid response from server."
         case .invalidSession: return "Session is invalid or expired."
         case .invalidConfiguration(let msg): return "Invalid configuration: \(msg)"
+        case .missingAuthProxyConfiguration:
+            return "Auth Proxy client not initialized. Ensure `authProxyConfigId` is provided in the TurnkeyConfig."
         case .oauthInvalidURL: return "OAuth flow failed: invalid URL."
         case .oauthMissingIDToken: return "OAuth flow failed: missing ID token."
 

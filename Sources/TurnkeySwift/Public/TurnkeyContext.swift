@@ -8,7 +8,11 @@ public final class TurnkeyContext: NSObject, ObservableObject {
     
     // public state
     @Published public internal(set) var authState: AuthState = .loading
+    
+    /// this is `nil` if no `authProxyConfigId` is provided in the configuration
+    /// and there are no active sessions
     @Published public internal(set) var client: TurnkeyClient?
+    
     @Published public internal(set) var selectedSessionKey: String?
     @Published public internal(set) var user: SessionUser?
     @Published internal var runtimeConfig: TurnkeyRuntimeConfig?

@@ -57,7 +57,7 @@ extension TurnkeyContext {
         organizationId: String? = nil
     ) async throws -> PasskeyAuthResult {
         guard let client = client else {
-            throw TurnkeySwiftError.invalidSession
+            throw TurnkeySwiftError.missingAuthProxyConfiguration
         }
         
         guard let rpId = self.rpId, !rpId.isEmpty else {

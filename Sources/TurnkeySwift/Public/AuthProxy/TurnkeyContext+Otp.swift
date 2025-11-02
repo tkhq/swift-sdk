@@ -13,12 +13,12 @@ extension TurnkeyContext {
     /// - Returns: An `InitOtpResult` containing the `otpId` representing this OTP request.
     ///
     /// - Throws:
-    ///   - `TurnkeySwiftError.invalidSession` if no session is active.
+    ///   - `TurnkeySwiftError.missingAuthProxyConfiguration` if client is not configured.
     ///   - `TurnkeySwiftError.failedToInitOtp` if the OTP request fails.
     public func initOtp(contact: String, otpType: OtpType) async throws -> InitOtpResult {
         
         guard let client = client else {
-            throw TurnkeySwiftError.invalidSession
+            throw TurnkeySwiftError.missingAuthProxyConfiguration
         }
         
         do {
@@ -42,12 +42,12 @@ extension TurnkeyContext {
     /// - Returns: A `VerifyOtpResult` containing the verification token confirming the OTP was validated.
     ///
     /// - Throws:
-    ///   - `TurnkeySwiftError.invalidSession` if no session is active.
+    ///   - `TurnkeySwiftError.missingAuthProxyConfiguration` if no session is active.
     ///   - `TurnkeySwiftError.failedToInitOtp` if verification fails.
     public func verifyOtp(otpId: String, otpCode: String) async throws -> VerifyOtpResult {
         
         guard let client = client else {
-            throw TurnkeySwiftError.invalidSession
+            throw TurnkeySwiftError.missingAuthProxyConfiguration
         }
         
         do {
@@ -74,7 +74,7 @@ extension TurnkeyContext {
     /// - Returns: The session JWT string.
     ///
     /// - Throws:
-    ///   - `TurnkeySwiftError.invalidSession` if no session is active.
+    ///   - `TurnkeySwiftError.missingAuthProxyConfiguration` if no session is active.
     ///   - `TurnkeySwiftError.failedToLoginWithOtp` if the login request fails.
     public func loginWithOtp(
         verificationToken: String,
@@ -84,7 +84,7 @@ extension TurnkeyContext {
         publicKey: String?
     ) async throws -> BaseAuthResult {
         guard let client = client else {
-            throw TurnkeySwiftError.invalidSession
+            throw TurnkeySwiftError.missingAuthProxyConfiguration
         }
         
         do {
@@ -121,7 +121,7 @@ extension TurnkeyContext {
     /// - Returns: The session JWT string.
     ///
     /// - Throws:
-    ///   - `TurnkeySwiftError.invalidSession` if no session is active.
+    ///   - `TurnkeySwiftError.missingAuthProxyConfiguration` if no session is active.
     ///   - `TurnkeySwiftError.failedToLoginWithOtp` if signup or login fails.
     public func signUpWithOtp(
         verificationToken: String,
@@ -132,7 +132,7 @@ extension TurnkeyContext {
         sessionKey: String? = nil
     ) async throws -> BaseAuthResult {
         guard let client = client else {
-            throw TurnkeySwiftError.invalidSession
+            throw TurnkeySwiftError.missingAuthProxyConfiguration
         }
         
         do {
@@ -197,7 +197,7 @@ extension TurnkeyContext {
     /// - Returns: A `CompleteOtpResult` indicating whether the action was a login or signup.
     ///
     /// - Throws:
-    ///   - `TurnkeySwiftError.invalidSession` if no session is active.
+    ///   - `TurnkeySwiftError.missingAuthProxyConfiguration` if no session is active.
     ///   - `TurnkeySwiftError.failedToLoginWithOtp` if the flow fails.
     public func completeOtp(
         otpId: String,
@@ -210,7 +210,7 @@ extension TurnkeyContext {
         createSubOrgParams: CreateSubOrgParams? = nil
     ) async throws -> CompleteOtpResult {
         guard let client = client else {
-            throw TurnkeySwiftError.invalidSession
+            throw TurnkeySwiftError.missingAuthProxyConfiguration
         }
         
         do {
