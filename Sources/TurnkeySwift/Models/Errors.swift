@@ -56,13 +56,20 @@ public enum TurnkeySwiftError: LocalizedError, Sendable {
     case failedToUpdateUserEmail(underlying: Error)
     case failedToUpdateUserPhoneNumber(underlying: Error)
     case failedToLoginWithPasskey(underlying: Error)
+    case failedToSignUpWithPasskey(underlying: Error)
     case failedToInitOtp(underlying: Error)
     case failedToVerifyOtp(underlying: Error)
     case failedToLoginWithOtp(underlying: Error)
+    case failedToSignUpWithOtp(underlying: Error)
+    case failedToCompleteOtp(underlying: Error)
+    case failedToLoginWithOAuth(underlying: Error)
+    case failedToSignUpWithOAuth(underlying: Error)
+    case failedToCompleteOAuth(underlying: Error)
 
     case oauthInvalidURL
     case oauthMissingIDToken
-    case oauthFailed(underlying: Error)
+    case failedToRetrieveOAuthCredential(type: OAuthCredentialType, underlying: Error)
+
 
     public var errorDescription: String? {
         switch self {
@@ -83,6 +90,9 @@ public enum TurnkeySwiftError: LocalizedError, Sendable {
             return "Failed to retrieve key index (OSStatus: \(status))."
         case .keychainAddFailed(let status):
             return "Keychain add operation failed (OSStatus: \(status))."
+        
+        case .failedToRetrieveOAuthCredential(let type, let e):
+                    return "Failed to retrieve \(type.rawValue) from OAuth callback: \(e.localizedDescription)"
 
         case .keyGenerationFailed(let e),
              .failedToSignPayload(let e),
@@ -98,10 +108,15 @@ public enum TurnkeySwiftError: LocalizedError, Sendable {
              .failedToUpdateUserEmail(let e),
              .failedToUpdateUserPhoneNumber(let e),
              .failedToLoginWithPasskey(let e),
+             .failedToSignUpWithPasskey(let e),
              .failedToInitOtp(let e),
              .failedToVerifyOtp(let e),
              .failedToLoginWithOtp(let e),
-             .oauthFailed(let e):
+             .failedToSignUpWithOtp(let e),
+             .failedToCompleteOtp(let e),
+             .failedToLoginWithOAuth(let e),
+             .failedToSignUpWithOAuth(let e),
+             .failedToCompleteOAuth(let e):
 
             // prefer rich TurnkeyRequestError message when available
             if let turnkeyError = e as? TurnkeyRequestError {
@@ -133,8 +148,7 @@ public enum TurnkeySwiftError: LocalizedError, Sendable {
              .failedToLoginWithPasskey(let e),
              .failedToInitOtp(let e),
              .failedToVerifyOtp(let e),
-             .failedToLoginWithOtp(let e),
-             .oauthFailed(let e):
+             .failedToLoginWithOtp(let e):
             return e as? TurnkeyRequestError
         default:
             return nil

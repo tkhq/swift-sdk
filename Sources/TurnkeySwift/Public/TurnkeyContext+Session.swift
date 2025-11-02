@@ -31,9 +31,13 @@ extension TurnkeyContext {
     ///   - `TurnkeySwiftError.failedToCreateSession` if decoding, persistence, or other internal operations fail.
     public func createSession(
         jwt: String,
-        sessionKey: String = Constants.Session.defaultSessionKey,
+        sessionKey: String? = nil,
         refreshedSessionTTLSeconds: String? = nil
     ) async throws {
+        let resolvedSessionKey = sessionKey?.isEmpty == false
+                ? sessionKey!
+                : Constants.Session.defaultSessionKey
+        
         do {
             // eventually we should verify that the jwt was signed by Turnkey
             // but for now we just assume it is
@@ -46,19 +50,19 @@ extension TurnkeyContext {
             
             // we check if there is already an active session under that sessionKey
             // if so we throw an error
-            if let _ = try JwtSessionStore.load(key: sessionKey) {
+            if let _ = try JwtSessionStore.load(key: resolvedSessionKey) {
                 throw TurnkeySwiftError.keyAlreadyExists
             }
             
             let dto = try JWTDecoder.decode(jwt, as: TurnkeySession.self)
             try persistSession(
                 dto: dto,
-                sessionKey: sessionKey,
+                sessionKey: resolvedSessionKey,
                 refreshedSessionTTLSeconds: refreshedSessionTTLSeconds
             )
             
             if selectedSessionKey == nil {
-                _ = try await setSelectedSession(sessionKey: sessionKey)
+                _ = try await setSelectedSession(sessionKey: resolvedSessionKey)
             }
             
             await MainActor.run { self.authState = .authenticated }

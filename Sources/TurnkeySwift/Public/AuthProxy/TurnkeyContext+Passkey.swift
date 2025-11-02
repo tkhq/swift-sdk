@@ -7,6 +7,22 @@ import TurnkeyCrypto
 
 extension TurnkeyContext {
     
+    /// Logs in an existing user using a registered passkey (WebAuthn).
+    ///
+    /// Initiates a passkey assertion through the system passkey UI,
+    /// then sends the signed assertion to Turnkey to create a new authenticated session.
+    ///
+    /// - Parameters:
+    ///   - anchor: The presentation anchor used to display the system passkey UI.
+    ///   - organizationId: Optional organization ID. If not provided, uses the configured value in `TurnkeyContext`.
+    ///   - publicKey: Optional public key to bind the session to (auto-generates if not provided).
+    ///   - sessionKey: Optional session storage key for the resulting session.
+    ///
+    /// - Returns: A `PasskeyAuthResult` containing the created session and credential ID (currently empty).
+    ///
+    /// - Throws:
+    ///   - `TurnkeySwiftError.invalidConfiguration` if `rpId` or `organizationId` is missing.
+    ///   - `TurnkeySwiftError.failedToLoginWithPasskey` if the login or stamping process fails.
     public func loginWithPasskey(
         anchor: ASPresentationAnchor,
         organizationId: String? = nil,
@@ -47,6 +63,25 @@ extension TurnkeyContext {
         }
     }
     
+    /// Signs up a new user and sub-organization using a passkey (WebAuthn).
+    ///
+    /// Creates a new passkey via the system UI, registers it with Turnkey as an authenticator,
+    /// and performs a one-tap login using a temporary API key generated during signup.
+    ///
+    /// - Parameters:
+    ///   - anchor: The presentation anchor used to display the system passkey UI.
+    ///   - passkeyDisplayName: Optional display name for the passkey (defaults to `"passkey-<timestamp>"`).
+    ///   - challenge: Optional custom challenge string to use during passkey creation.
+    ///   - createSubOrgParams: Optional configuration for sub-organization creation (merged with passkey and API key data).
+    ///   - sessionKey: Optional session storage key for the resulting session.
+    ///   - organizationId: Optional organization ID override (not typically required for sign-up).
+    ///
+    /// - Returns: A `PasskeyAuthResult` containing the new session and the registered passkey’s credential ID.
+    ///
+    /// - Throws:
+    ///   - `TurnkeySwiftError.missingAuthProxyConfiguration` if the Auth Proxy client is not initialized.
+    ///   - `TurnkeySwiftError.invalidConfiguration` if `rpId` is missing.
+    ///   - `TurnkeySwiftError.failedToSignUpWithPasskey` if signup or stamping fails.
     @available(iOS 16.0, macOS 13.0, *)
     public func signUpWithPasskey(
         anchor: ASPresentationAnchor,
@@ -127,7 +162,7 @@ extension TurnkeyContext {
             return PasskeyAuthResult(session: session, credentialId: passkey.attestation.credentialId)
             
         } catch {
-            throw TurnkeySwiftError.failedToCreateWallet(underlying: error)
+            throw TurnkeySwiftError.failedToSignUpWithPasskey(underlying: error)
         }
     }
 }

@@ -407,7 +407,7 @@ extension TurnkeyContext {
                 callbackURLScheme: scheme
             ) { callbackURL, error in
                 if let error {
-                    continuation.resume(throwing: TurnkeySwiftError.oauthFailed(underlying: error))
+                    continuation.resume(throwing: TurnkeySwiftError.failedToRetrieveOAuthCredential(type: .oidcToken, underlying: error))
                     return
                 }
                 guard
@@ -483,7 +483,7 @@ extension TurnkeyContext {
                 callbackURLScheme: scheme
             ) { callbackURL, error in
                 if let error {
-                    continuation.resume(throwing: TurnkeySwiftError.oauthFailed(underlying: error))
+                    continuation.resume(throwing: TurnkeySwiftError.failedToRetrieveOAuthCredential(type: .authCode, underlying: error))
                     return
                 }
                 guard

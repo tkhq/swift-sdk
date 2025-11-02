@@ -6,15 +6,17 @@ import TurnkeyHttp
 extension TurnkeyContext {
     /// Initiates an OTP flow for the given contact and type.
     ///
+    /// Sends an OTP to the specified contact using the configured Auth Proxy.
+    ///
     /// - Parameters:
     ///   - contact: The user's contact (email or phone) to send the OTP to.
-    ///   - otpType: The type of OTP to initiate (e.g., email, SMS).
+    ///   - otpType: The type of OTP to initiate (`.email` or `.sms`).
     ///
-    /// - Returns: An `InitOtpResult` containing the `otpId` representing this OTP request.
+    /// - Returns: An `InitOtpResult` containing the `otpId` that uniquely identifies this OTP request.
     ///
     /// - Throws:
-    ///   - `TurnkeySwiftError.missingAuthProxyConfiguration` if client is not configured.
-    ///   - `TurnkeySwiftError.failedToInitOtp` if the OTP request fails.
+    ///   - `TurnkeySwiftError.missingAuthProxyConfiguration` if the Auth Proxy client is not configured.
+    ///   - `TurnkeySwiftError.failedToInitOtp` if the OTP initiation request fails.
     public func initOtp(contact: String, otpType: OtpType) async throws -> InitOtpResult {
         
         guard let client = client else {
@@ -35,15 +37,17 @@ extension TurnkeyContext {
     
     /// Verifies a user-provided OTP code for a given OTP request.
     ///
+    /// Validates the provided code and returns a verification token for subsequent login or signup.
+    ///
     /// - Parameters:
     ///   - otpId: The unique identifier returned from `initOtp`.
-    ///   - otpCode: The one-time password entered by the user.
+    ///   - otpCode: The code entered by the user.
     ///
-    /// - Returns: A `VerifyOtpResult` containing the verification token confirming the OTP was validated.
+    /// - Returns: A `VerifyOtpResult` containing the verification token confirming that the OTP was validated.
     ///
     /// - Throws:
-    ///   - `TurnkeySwiftError.missingAuthProxyConfiguration` if no session is active.
-    ///   - `TurnkeySwiftError.failedToInitOtp` if verification fails.
+    ///   - `TurnkeySwiftError.missingAuthProxyConfiguration` if the Auth Proxy client is not configured.
+    ///   - `TurnkeySwiftError.failedToVerifyOtp` if the verification request fails.
     public func verifyOtp(otpId: String, otpCode: String) async throws -> VerifyOtpResult {
         
         guard let client = client else {
@@ -58,23 +62,25 @@ extension TurnkeyContext {
             
             return VerifyOtpResult(credentialBundle: resp.verificationToken)
         } catch {
-            throw TurnkeySwiftError.failedToInitOtp(underlying: error)
+            throw TurnkeySwiftError.failedToVerifyOtp(underlying: error)
         }
     }
     
     /// Logs in an existing user using a previously verified OTP.
     ///
+    /// Exchanges the verification token for a new session and stores it in the session registry.
+    ///
     /// - Parameters:
     ///   - verificationToken: The verification token returned from `verifyOtp`.
     ///   - organizationId: The ID of the organization associated with the user.
-    ///   - sessionKey: The storage key for the new session (optional).
+    ///   - sessionKey: The key under which to store the new session (optional).
     ///   - invalidateExisting: Whether to invalidate any existing sessions.
     ///   - publicKey: The public key used for the session (optional).
     ///
-    /// - Returns: The session JWT string.
+    /// - Returns: A `BaseAuthResult` containing the created session.
     ///
     /// - Throws:
-    ///   - `TurnkeySwiftError.missingAuthProxyConfiguration` if no session is active.
+    ///   - `TurnkeySwiftError.missingAuthProxyConfiguration` if the Auth Proxy client is not configured.
     ///   - `TurnkeySwiftError.failedToLoginWithOtp` if the login request fails.
     public func loginWithOtp(
         verificationToken: String,
@@ -89,7 +95,7 @@ extension TurnkeyContext {
         
         do {
             let resolvedPublicKey = try publicKey ?? createKeyPair()
-
+            
             let response = try await client.proxyOtpLogin(ProxyTOtpLoginBody(
                 invalidateExisting: invalidateExisting,
                 organizationId: organizationId,
@@ -108,21 +114,23 @@ extension TurnkeyContext {
         }
     }
     
-    /// Signs up a new user using an OTP flow.
+    /// Signs up a new user using an OTP-based flow.
+    ///
+    /// Creates a new sub-organization and user using the verified OTP, then performs automatic login.
     ///
     /// - Parameters:
     ///   - verificationToken: The verification token returned from `verifyOtp`.
     ///   - contact: The user’s contact (email or phone).
-    ///   - otpType: The OTP type (email or SMS).
+    ///   - otpType: The OTP type (`.email` or `.sms`).
     ///   - createSubOrgParams: Optional configuration for sub-organization creation.
     ///   - invalidateExisting: Whether to invalidate any existing sessions.
-    ///   - sessionKey: The session key to use for storing the new session (optional).
+    ///   - sessionKey: Optional key to store the new session.
     ///
-    /// - Returns: The session JWT string.
+    /// - Returns: A `BaseAuthResult` containing the created session.
     ///
     /// - Throws:
-    ///   - `TurnkeySwiftError.missingAuthProxyConfiguration` if no session is active.
-    ///   - `TurnkeySwiftError.failedToLoginWithOtp` if signup or login fails.
+    ///   - `TurnkeySwiftError.missingAuthProxyConfiguration` if the Auth Proxy client is not configured.
+    ///   - `TurnkeySwiftError.failedToSignUpWithOtp` if signup fails.
     public func signUpWithOtp(
         verificationToken: String,
         contact: String,
@@ -178,27 +186,30 @@ extension TurnkeyContext {
             
             return loginResp
         } catch {
-            throw TurnkeySwiftError.failedToLoginWithOtp(underlying: error)
+            throw TurnkeySwiftError.failedToSignUpWithOtp(underlying: error)
         }
     }
     
     /// Completes a full OTP-based authentication flow (login or signup).
     ///
+    /// Determines whether the user already exists and performs the appropriate action:
+    /// logs in if an organization exists, otherwise signs up a new user.
+    ///
     /// - Parameters:
     ///   - otpId: The unique identifier for the OTP request.
     ///   - otpCode: The OTP code provided by the user.
     ///   - contact: The contact associated with the OTP (email or phone).
-    ///   - otpType: The OTP type (email or SMS).
+    ///   - otpType: The OTP type (`.email` or `.sms`).
     ///   - publicKey: Optional public key to use during authentication.
     ///   - invalidateExisting: Whether to invalidate any existing sessions.
     ///   - sessionKey: Optional key to store the resulting session.
     ///   - createSubOrgParams: Optional parameters for sub-organization creation.
     ///
-    /// - Returns: A `CompleteOtpResult` indicating whether the action was a login or signup.
+    /// - Returns: A `CompleteOtpResult` describing whether a login or signup occurred.
     ///
     /// - Throws:
-    ///   - `TurnkeySwiftError.missingAuthProxyConfiguration` if no session is active.
-    ///   - `TurnkeySwiftError.failedToLoginWithOtp` if the flow fails.
+    ///   - `TurnkeySwiftError.missingAuthProxyConfiguration` if the Auth Proxy client is not configured.
+    ///   - `TurnkeySwiftError.failedToCompleteOtp` if the authentication flow fails.
     public func completeOtp(
         otpId: String,
         otpCode: String,
@@ -259,7 +270,7 @@ extension TurnkeyContext {
                 )
             }
         } catch {
-            throw TurnkeySwiftError.failedToLoginWithOtp(underlying: error)
+            throw TurnkeySwiftError.failedToCompleteOtp(underlying: error)
         }
     }
     

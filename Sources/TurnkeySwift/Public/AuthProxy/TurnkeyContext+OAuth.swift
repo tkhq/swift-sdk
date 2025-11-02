@@ -12,21 +12,23 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     ///
     /// - Parameters:
     ///   - oidcToken: The OIDC token returned from the OAuth provider.
-    ///   - publicKey: The public key bound to the login session.
+    ///   - publicKey: The public key bound to the login session. This key is required because it is directly
+    ///                tied to the nonce used during OIDC token generation and must match the value
+    ///                encoded in the token.
+    ///   -  organizationId: Optional organization ID if known.
     ///   - invalidateExisting: Whether to invalidate any existing session (defaults to `false`).
     ///   - sessionKey: Optional session key to associate with the login.
-    ///   - organizationId: Optional organization ID if known.
     ///
     /// - Returns: A `BaseAuthResult` containing the created session.
     ///
     /// - Throws: `TurnkeySwiftError.missingAuthProxyConfiguration` if no client is configured,
-    ///           or `TurnkeySwiftError.failedToCreateSession` if login fails.
+    ///           or `TurnkeySwiftError.failedToLoginWithOAuth` if login fails.
     internal func loginWithOAuth(
         oidcToken: String,
         publicKey: String,
+        organizationId: String? = nil,
         invalidateExisting: Bool = false,
         sessionKey: String? = nil,
-        organizationId: String? = nil
     ) async throws -> BaseAuthResult {
         guard let client = client else {
             throw TurnkeySwiftError.missingAuthProxyConfiguration
@@ -40,10 +42,10 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
                 publicKey: publicKey
             ))
             let session = response.session
-            try await createSession(jwt: session, refreshedSessionTTLSeconds: resolvedSessionTTLSeconds())
+            try await createSession(jwt: session, sessionKey: sessionKey, refreshedSessionTTLSeconds: resolvedSessionTTLSeconds())
             return BaseAuthResult(session: session)
         } catch {
-            throw TurnkeySwiftError.failedToCreateSession(underlying: error)
+            throw TurnkeySwiftError.failedToLoginWithOAuth(underlying: error)
         }
     }
     
@@ -54,20 +56,23 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     ///
     /// - Parameters:
     ///   - oidcToken: The OIDC token returned from the OAuth provider.
-    ///   - publicKey: The public key bound to the signup session.
-    ///   - providerName: The OAuth provider name (e.g., `"google"`, `"apple"`).
+    ///   - publicKey: The public key bound to the login session. This key is required because it is directly
+    ///                tied to the nonce used during OIDC token generation and must match the value
+    ///                encoded in the token.
+    ///   - providerName: The OAuth provider name (defaults to `"OpenID Connect Provider <timestamp>"`).
     ///   - createSubOrgParams: Optional parameters for sub-organization creation.
     ///   - sessionKey: Optional session key to associate with the signup.
     ///
     /// - Returns: A `BaseAuthResult` containing the created session.
     ///
     /// - Throws: `TurnkeySwiftError.missingAuthProxyConfiguration` if no client is configured,
-    ///           or `TurnkeySwiftError.failedToCreateSession` if signup or login fails.
+    ///           or `TurnkeySwiftError.failedToSignUpWithOAuth` if signup or login fails.
     internal func signUpWithOAuth(
         oidcToken: String,
         publicKey: String,
-        providerName: String,
+        providerName: String?,
         createSubOrgParams: CreateSubOrgParams? = nil,
+        invalidateExisting: Bool = false,
         sessionKey: String? = nil
     ) async throws -> BaseAuthResult {
         guard let client = client else {
@@ -76,8 +81,10 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         
         do {
             var merged = createSubOrgParams ?? CreateSubOrgParams()
+            
+            let resolvedProviderName = providerName ?? "OpenID Connect Provider \(Int(Date().timeIntervalSince1970))"
             var oauthProviders = merged.oauthProviders ?? []
-            oauthProviders.append(.init(providerName: providerName, oidcToken: oidcToken))
+            oauthProviders.append(.init(providerName: resolvedProviderName, oidcToken: oidcToken))
             merged.oauthProviders = oauthProviders
             
             let signupBody = buildSignUpBody(createSubOrgParams: merged)
@@ -88,11 +95,11 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
             return try await loginWithOAuth(
                 oidcToken: oidcToken,
                 publicKey: publicKey,
-                invalidateExisting: false,
+                invalidateExisting: invalidateExisting,
                 sessionKey: sessionKey
             )
         } catch {
-            throw TurnkeySwiftError.failedToCreateSession(underlying: error)
+            throw TurnkeySwiftError.failedToSignUpWithOAuth(underlying: error)
         }
     }
     
@@ -112,14 +119,14 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     /// - Returns: A `CompleteOAuthResult` describing whether a login or signup occurred.
     ///
     /// - Throws: `TurnkeySwiftError.missingAuthProxyConfiguration` if no client is configured,
-    ///           or `TurnkeySwiftError.failedToCreateSession` if the operation fails.
+    ///           or `TurnkeySwiftError.failedToCompleteOAuth` if the operation fails.
     public func completeOAuth(
         oidcToken: String,
         publicKey: String,
-        providerName: String = "OpenID Connect Provider \(Int(Date().timeIntervalSince1970))",
-        sessionKey: String? = nil,
+        providerName: String? = nil,
         invalidateExisting: Bool = false,
-        createSubOrgParams: CreateSubOrgParams? = nil
+        createSubOrgParams: CreateSubOrgParams? = nil,
+        sessionKey: String? = nil
     ) async throws -> CompleteOAuthResult {
         guard let client = client else {
             throw TurnkeySwiftError.missingAuthProxyConfiguration
@@ -136,9 +143,9 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
                 let result = try await loginWithOAuth(
                     oidcToken: oidcToken,
                     publicKey: publicKey,
+                    organizationId: organizationId,
                     invalidateExisting: invalidateExisting,
-                    sessionKey: sessionKey,
-                    organizationId: organizationId
+                    sessionKey: sessionKey
                 )
                 return .init(session: result.session, action: .login)
             } else {
@@ -147,12 +154,13 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
                     publicKey: publicKey,
                     providerName: providerName,
                     createSubOrgParams: createSubOrgParams,
+                    invalidateExisting: invalidateExisting,
                     sessionKey: sessionKey
                 )
                 return .init(session: result.session, action: .signup)
             }
         } catch {
-            throw TurnkeySwiftError.failedToCreateSession(underlying: error)
+            throw TurnkeySwiftError.failedToCompleteOAuth(underlying: error)
         }
     }
     
@@ -167,8 +175,10 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     ///   - additionalState: Optional key-value pairs appended to the OAuth request state.
     ///   - onOAuthSuccess: Optional callback invoked with the OIDC token and public key before auto-login.
     ///
-    /// - Throws: `TurnkeySwiftError.invalidConfiguration` if required provider settings are missing,
-    ///           or `TurnkeySwiftError.oauthFailed` if the OAuth session fails.
+    /// - Throws:
+    ///   - `TurnkeySwiftError.invalidConfiguration` if required provider settings are missing.
+    ///   - `TurnkeySwiftError.failedToRetrieveOAuthCredential` if the OAuth session fails.
+    ///   - `TurnkeySwiftError.failedToCompleteOAuth` if login or signup via Auth Proxy fails.
     public func handleGoogleOAuth(
         anchor: ASPresentationAnchor,
         clientId: String? = nil,
@@ -231,8 +241,10 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     ///   - additionalState: Optional key-value pairs appended to the OAuth request state.
     ///   - onOAuthSuccess: Optional callback invoked with the OIDC token and public key before auto-login.
     ///
-    /// - Throws: `TurnkeySwiftError.invalidConfiguration` if required provider settings are missing,
-    ///           or `TurnkeySwiftError.oauthFailed` if the OAuth session fails.
+    /// - Throws:
+    ///   - `TurnkeySwiftError.invalidConfiguration` if required provider settings are missing.
+    ///   - `TurnkeySwiftError.failedToRetrieveOAuthCredential` if the OAuth session fails.
+    ///   - `TurnkeySwiftError.failedToCompleteOAuth` if login or signup via Auth Proxy fails.
     public func handleAppleOAuth(
         anchor: ASPresentationAnchor,
         clientId: String? = nil,
@@ -295,9 +307,11 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     ///   - additionalState: Optional key-value pairs appended to the OAuth request state.
     ///   - onOAuthSuccess: Optional callback invoked with the OIDC token and public key before auto-login.
     ///
-    /// - Throws: `TurnkeySwiftError.invalidConfiguration` if provider configuration is missing,
-    ///           `TurnkeySwiftError.missingAuthProxyConfiguration` if no client is configured,
-    ///           or `TurnkeySwiftError.failedToCreateSession` if authentication fails.
+    /// - Throws:
+    ///   - `TurnkeySwiftError.invalidConfiguration` if provider configuration is missing.
+    ///   - `TurnkeySwiftError.missingAuthProxyConfiguration` if no client is configured.
+    ///   - `TurnkeySwiftError.failedToRetrieveOAuthCredential` if the OAuth session fails.
+    ///   - `TurnkeySwiftError.failedToCompleteOAuth` if login or signup via Auth Proxy fails.
     public func handleDiscordOAuth(
         anchor: ASPresentationAnchor,
         clientId: String? = nil,
@@ -400,9 +414,11 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     ///   - additionalState: Optional key-value pairs appended to the OAuth request state.
     ///   - onOAuthSuccess: Optional callback invoked with the OIDC token and public key before auto-login.
     ///
-    /// - Throws: `TurnkeySwiftError.invalidConfiguration` if provider configuration is missing,
-    ///           `TurnkeySwiftError.missingAuthProxyConfiguration` if no client is configured,
-    ///           or `TurnkeySwiftError.failedToCreateSession` if authentication fails.
+    /// - Throws:
+    ///   - `TurnkeySwiftError.invalidConfiguration` if provider configuration is missing.
+    ///   - `TurnkeySwiftError.missingAuthProxyConfiguration` if no client is configured.
+    ///   - `TurnkeySwiftError.failedToRetrieveOAuthCredential` if the OAuth session fails.
+    ///   - `TurnkeySwiftError.failedToCompleteOAuth` if login or signup via Auth Proxy fails.
     public func handleXOauth(
         anchor: ASPresentationAnchor,
         clientId: String? = nil,

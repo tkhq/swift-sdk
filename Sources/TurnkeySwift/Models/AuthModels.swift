@@ -7,6 +7,11 @@ public enum OtpType: String, Codable {
     case sms = "OTP_TYPE_SMS"
 }
 
+public enum OAuthCredentialType: String, Sendable {
+    case oidcToken
+    case authCode
+}
+
 public struct OAuthSuccess: Sendable {
     public let oidcToken: String
     public let providerName: String
