@@ -346,18 +346,8 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         // we generate a verifier and challenge pair
         let pkce = try generatePKCEPair()
         
-        // we build state
-        var state = "provider=discord&flow=redirect&publicKey=\(publicKey.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? publicKey)&nonce=\(nonce)"
-        if let additional = additionalState, !additional.isEmpty {
-            let extra = additional
-                .map { key, value in
-                    let k = key.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? key
-                    let v = value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? value
-                    return "\(k)=\(v)"
-                }
-                .joined(separator: "&")
-            if !extra.isEmpty { state += "&\(extra)" }
-        }
+        // random state
+        let state = UUID().uuidString
         
         // we build the provider auth url
         let discordAuthUrl = try buildOAuth2AuthURL(
@@ -371,6 +361,18 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         
         // run system web auth to retrieve authorization code and state
         let oauth = try await runOAuth2CodeSession(url: discordAuthUrl, scheme: scheme, anchor: anchor)
+        
+        // we validate that returned state matches what we sent
+        guard oauth.state == state else {
+            throw TurnkeySwiftError.failedToRetrieveOAuthCredential(
+                type: .authCode,
+                underlying: NSError(
+                    domain: "TurnkeySwiftError",
+                    code: -1,
+                    userInfo: [NSLocalizedDescriptionKey: "OAuth state mismatch"]
+                )
+            )
+        }
         
         // we exchange the code for an oidcToken via the authProxy
         let resp = try await client.proxyOAuth2Authenticate(ProxyTOAuth2AuthenticateBody(
@@ -453,18 +455,8 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         // we generate a verifier and challenge pair
         let pkce = try generatePKCEPair()
         
-        // we build state
-        var state = "provider=twitter&flow=redirect&publicKey=\(publicKey.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? publicKey)&nonce=\(nonce)"
-        if let additional = additionalState, !additional.isEmpty {
-            let extra = additional
-                .map { key, value in
-                    let k = key.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? key
-                    let v = value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? value
-                    return "\(k)=\(v)"
-                }
-                .joined(separator: "&")
-            if !extra.isEmpty { state += "&\(extra)" }
-        }
+        // random state
+        let state = UUID().uuidString
         
         // we build the provider auth url
         let xAuthUrl = try buildOAuth2AuthURL(
@@ -478,6 +470,18 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         
         // run system web auth to retrieve authorization code and state
         let oauth = try await runOAuth2CodeSession(url: xAuthUrl, scheme: scheme, anchor: anchor)
+        
+        // we validate that returned state matches what we sent
+        guard oauth.state == state else {
+            throw TurnkeySwiftError.failedToRetrieveOAuthCredential(
+                type: .authCode,
+                underlying: NSError(
+                    domain: "TurnkeySwiftError",
+                    code: -1,
+                    userInfo: [NSLocalizedDescriptionKey: "OAuth state mismatch"]
+                )
+            )
+        }
         
         // we exchange the code for an oidcToken via the authProxy
         let resp = try await client.proxyOAuth2Authenticate(ProxyTOAuth2AuthenticateBody(
