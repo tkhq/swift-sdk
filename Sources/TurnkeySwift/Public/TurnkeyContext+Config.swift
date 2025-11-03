@@ -36,15 +36,6 @@ extension TurnkeyContext {
         let trimmedAuthProxyUrl = authProxyUrl.trimmingCharacters(in: .whitespacesAndNewlines)
         let sanitizedAuthProxyUrl = trimmedAuthProxyUrl.isEmpty ? nil : authProxyUrl
 
-        // we resolve the OTP enablement flags
-        // TODO: we don't currently have UI, so these are never used
-        let emailEnabled = userConfig.auth?.otp?.email
-            ?? walletKitConfig?.enabledProviders.contains("email")
-            ?? false
-        let smsEnabled = userConfig.auth?.otp?.sms
-            ?? walletKitConfig?.enabledProviders.contains("sms")
-            ?? false
-
         // we resolve the OAuth redirect base URL and app scheme
         let redirectBaseUrl = userConfig.auth?.oauth?.redirectUri
             ?? walletKitConfig?.oauthRedirectUrl
@@ -102,52 +93,8 @@ extension TurnkeyContext {
             }
         }()
 
-        // warnings for auth-proxy controlled overrides when the auth proxy is active
-        if authProxyConfigId != nil {
-            if userConfig.auth?.sessionExpirationSeconds != nil {
-                // TODO: this is partly true, but sessions created client-side (e.g. passkeys) will use this! Lets make that clearer
-                print("Turnkey SDK warning: sessionExpirationSeconds is proxy-controlled and will be ignored when using an auth proxy.")
-            }
-            if userConfig.auth?.otp?.alphanumeric != nil {
-                // TODO: so if this does nothing then why even expose it as an option?
-                print("Turnkey SDK warning: otp.alphanumeric is proxy-controlled and will be ignored when using an auth proxy.")
-            }
-            if userConfig.auth?.otp?.length != nil {
-                // TODO: so if this does nothing then why even expose it as an option?
-                print("Turnkey SDK warning: otp.length is proxy-controlled and will be ignored when using an auth proxy.")
-            }
-        }
-
-        // Proxy-controlled settings
-        // TODO: this will be affected from comment above ^
-        let sessionTTL = walletKitConfig?.sessionExpirationSeconds
-            ?? Constants.Session.defaultExpirationSeconds
-        let otpAlphanumeric = walletKitConfig?.otpAlphanumeric ?? true
-        let otpLength = walletKitConfig?.otpLength ?? "6"
-
-
-        // we resolve create suborg defaults
-        // TODO: in other sdks this is normally per auth method and not universal, should we do the same here to be consistent? 
-        let createDefaults: TurnkeyRuntimeConfig.Auth.CreateSuborgDefaults? = {
-            if let d = userConfig.auth?.createSuborgDefaults {
-                return TurnkeyRuntimeConfig.Auth.CreateSuborgDefaults(
-                    emailOtpAuth: d.emailOtpAuth,
-                    smsOtpAuth: d.smsOtpAuth,
-                    passkeyAuth: d.passkeyAuth,
-                    oauth: d.oauth
-                )
-            }
-            return nil
-        }()
-
         let auth = TurnkeyRuntimeConfig.Auth(
-            sessionExpirationSeconds: sessionTTL,
-            otp: .init(
-                email: emailEnabled,
-                sms: smsEnabled,
-                alphanumeric: otpAlphanumeric,
-                length: otpLength
-            ),
+            sessionExpirationSeconds:  walletKitConfig?.sessionExpirationSeconds ?? Constants.Session.defaultExpirationSeconds,
             oauth: .init(
                 redirectBaseUrl: redirectBaseUrl,
                 appScheme: appScheme,
@@ -155,7 +102,7 @@ extension TurnkeyContext {
             ),
             autoRefreshSession: userConfig.auth?.autoRefreshSession ?? true,
             passkey: passkey,
-            createSuborgDefaults: createDefaults
+            createSuborgParams: userConfig.auth?.createSuborgParams
         )
 
         let runtime = TurnkeyRuntimeConfig(

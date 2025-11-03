@@ -14,8 +14,8 @@ extension TurnkeyContext {
     ///
     /// - Parameters:
     ///   - anchor: The presentation anchor used to display the system passkey UI.
-    ///   - organizationId: Optional organization ID. If not provided, uses the configured value in `TurnkeyContext`.
     ///   - publicKey: Optional public key to bind the session to (auto-generates if not provided).
+    ///   - organizationId: Optional organization ID. If not provided, uses the configured value in `TurnkeyContext`.
     ///   - sessionKey: Optional session storage key for the resulting session.
     ///
     /// - Returns: A `PasskeyAuthResult` containing the created session and credential ID (currently empty).
@@ -25,8 +25,9 @@ extension TurnkeyContext {
     ///   - `TurnkeySwiftError.failedToLoginWithPasskey` if the login or stamping process fails.
     public func loginWithPasskey(
         anchor: ASPresentationAnchor,
-        organizationId: String? = nil,
         publicKey: String? = nil,
+        organizationId: String? = nil,
+        expirationSeconds: String? = nil,
         sessionKey: String? = nil
     ) async throws -> PasskeyAuthResult {
         guard let rpId = self.rpId, !rpId.isEmpty else {
@@ -47,12 +48,16 @@ extension TurnkeyContext {
         do {
             let resp = try await client.stampLogin(TStampLoginBody(
                 organizationId: orgId,
-                expirationSeconds: resolvedSessionTTLSeconds(),
+                expirationSeconds:  resolvedSessionExpirationSeconds(expirationSeconds: expirationSeconds),
                 publicKey: resolvedPublicKey
             ))
             
+            let resolvedRefreshedSessionTTLSeconds = runtimeConfig?.auth.autoRefreshSession == true
+                ? expirationSeconds
+                : nil
+            
             let session = resp.session
-            try await createSession(jwt: session, refreshedSessionTTLSeconds: resolvedSessionTTLSeconds())
+            try await storeSession(jwt: session, refreshedSessionTTLSeconds: resolvedRefreshedSessionTTLSeconds)
             
             // TODO: can we return the credentialId here?
             // from a quick glance this is going to be difficult
@@ -87,9 +92,9 @@ extension TurnkeyContext {
         anchor: ASPresentationAnchor,
         passkeyDisplayName: String? = nil,
         challenge: String? = nil,
+        expirationSeconds: String? = nil,
         createSubOrgParams: CreateSubOrgParams? = nil,
         sessionKey: String? = nil,
-        organizationId: String? = nil
     ) async throws -> PasskeyAuthResult {
         guard let client = client else {
             throw TurnkeySwiftError.missingAuthProxyConfiguration
@@ -151,13 +156,17 @@ extension TurnkeyContext {
             
             let loginResponse = try await temporaryClient.stampLogin(TStampLoginBody(
                 organizationId: organizationId,
-                expirationSeconds: resolvedSessionTTLSeconds(),
+                expirationSeconds:  resolvedSessionExpirationSeconds(expirationSeconds: expirationSeconds),
                 invalidateExisting: true,
                 publicKey: newKeyPairResult
             ))
             
+            let resolvedRefreshedSessionTTLSeconds = runtimeConfig?.auth.autoRefreshSession == true
+                ? expirationSeconds
+                : nil
+            
             let session = loginResponse.session
-            try await createSession(jwt: session, refreshedSessionTTLSeconds: resolvedSessionTTLSeconds())
+            try await storeSession(jwt: session, refreshedSessionTTLSeconds: resolvedRefreshedSessionTTLSeconds)
             
             return PasskeyAuthResult(session: session, credentialId: passkey.attestation.credentialId)
             

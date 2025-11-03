@@ -4,7 +4,6 @@ import TurnkeySwift
 struct OtpView: View {
     @EnvironmentObject private var coordinator: NavigationCoordinator
     @EnvironmentObject private var turnkey: TurnkeyContext
-    @EnvironmentObject private var auth: AuthContext
     @EnvironmentObject private var toast: ToastContext
     
     @Environment(\.dismiss) private var dismiss
@@ -83,7 +82,7 @@ struct OtpView: View {
         Task {
             do {
                 let otpType: OtpType = isEmail ? .email : .sms
-                try await turnkey.completeOtp(
+                _ = try await turnkey.completeOtp(
                     otpId: otpId,
                     otpCode: otpCode,
                     contact: contact,

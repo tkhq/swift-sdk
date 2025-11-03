@@ -55,7 +55,7 @@ Then in your views, access it via:
 
   * Generates a new ephemeral key pair and saves the private key securely.
 
-* `createSession(jwt:sessionKey:refreshedSessionTTLSeconds:)`
+* `storeSession(jwt:sessionKey:refreshedSessionTTLSeconds:)`
 
   * Creates and stores a session from a JWT.
   * Optionally sets up automatic refresh behavior if `refreshedSessionTTLSeconds` is provided. This value defines how long each refreshed session will last and must be at least 30 seconds.

@@ -42,7 +42,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
                 publicKey: publicKey
             ))
             let session = response.session
-            try await createSession(jwt: session, sessionKey: sessionKey, refreshedSessionTTLSeconds: resolvedSessionTTLSeconds())
+            try await storeSession(jwt: session, sessionKey: sessionKey)
             return BaseAuthResult(session: session)
         } catch {
             throw TurnkeySwiftError.failedToLoginWithOAuth(underlying: error)
@@ -147,7 +147,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
                     invalidateExisting: invalidateExisting,
                     sessionKey: sessionKey
                 )
-                return .init(session: result.session, action: .login)
+                return CompleteOAuthResult(session: result.session, action: .login)
             } else {
                 let result = try await signUpWithOAuth(
                     oidcToken: oidcToken,
@@ -157,7 +157,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
                     invalidateExisting: invalidateExisting,
                     sessionKey: sessionKey
                 )
-                return .init(session: result.session, action: .signup)
+                return CompleteOAuthResult(session: result.session, action: .signup)
             }
         } catch {
             throw TurnkeySwiftError.failedToCompleteOAuth(underlying: error)

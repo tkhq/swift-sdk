@@ -72,11 +72,10 @@ extension TurnkeyContext {
     ///
     /// - Parameters:
     ///   - verificationToken: The verification token returned from `verifyOtp`.
-    ///   - organizationId: The ID of the organization associated with the user.
-    ///   - sessionKey: The key under which to store the new session (optional).
-    ///   - invalidateExisting: Whether to invalidate any existing sessions.
     ///   - publicKey: The public key used for the session (optional).
-    ///
+    ///   - organizationId: The ID of the organization associated with the user.
+    ///   - invalidateExisting: Whether to invalidate any existing sessions.
+    ///   - sessionKey: The key under which to store the new session (optional).
     /// - Returns: A `BaseAuthResult` containing the created session.
     ///
     /// - Throws:
@@ -84,10 +83,10 @@ extension TurnkeyContext {
     ///   - `TurnkeySwiftError.failedToLoginWithOtp` if the login request fails.
     public func loginWithOtp(
         verificationToken: String,
+        publicKey: String?,
         organizationId: String,
-        sessionKey: String?,
         invalidateExisting: Bool,
-        publicKey: String?
+        sessionKey: String?
     ) async throws -> BaseAuthResult {
         guard let client = client else {
             throw TurnkeySwiftError.missingAuthProxyConfiguration
@@ -105,8 +104,7 @@ extension TurnkeyContext {
             
             let session = response.session
             
-            try await createSession(jwt: session, refreshedSessionTTLSeconds: resolvedSessionTTLSeconds())
-            
+            try await storeSession(jwt: session, sessionKey: sessionKey)
             
             return BaseAuthResult(session: session)
         } catch {
@@ -174,17 +172,14 @@ extension TurnkeyContext {
             
             let organizationId = response.organizationId
             
-            let loginResp = try await loginWithOtp(
+            return try await loginWithOtp(
                 verificationToken: verificationToken,
+                publicKey: publicKey,
                 organizationId: organizationId,
-                sessionKey: sessionKey,
                 invalidateExisting: invalidateExisting,
-                publicKey: publicKey
+                sessionKey: sessionKey
             )
             
-            try await createSession(jwt: loginResp.session, refreshedSessionTTLSeconds: resolvedSessionTTLSeconds())
-            
-            return loginResp
         } catch {
             throw TurnkeySwiftError.failedToSignUpWithOtp(underlying: error)
         }
@@ -201,9 +196,9 @@ extension TurnkeyContext {
     ///   - contact: The contact associated with the OTP (email or phone).
     ///   - otpType: The OTP type (`.email` or `.sms`).
     ///   - publicKey: Optional public key to use during authentication.
+    ///   - createSubOrgParams: Optional parameters for sub-organization creation.
     ///   - invalidateExisting: Whether to invalidate any existing sessions.
     ///   - sessionKey: Optional key to store the resulting session.
-    ///   - createSubOrgParams: Optional parameters for sub-organization creation.
     ///
     /// - Returns: A `CompleteOtpResult` describing whether a login or signup occurred.
     ///
@@ -216,9 +211,9 @@ extension TurnkeyContext {
         contact: String,
         otpType: OtpType,
         publicKey: String? = nil,
+        createSubOrgParams: CreateSubOrgParams? = nil,
         invalidateExisting: Bool = false,
         sessionKey: String? = nil,
-        createSubOrgParams: CreateSubOrgParams? = nil
     ) async throws -> CompleteOtpResult {
         guard let client = client else {
             throw TurnkeySwiftError.missingAuthProxyConfiguration
@@ -241,10 +236,10 @@ extension TurnkeyContext {
                 // there is an existing org so we login
                 let loginResp = try await loginWithOtp(
                     verificationToken: verificationToken,
+                    publicKey: publicKey,
                     organizationId: organizationId,
-                    sessionKey: sessionKey,
                     invalidateExisting: invalidateExisting,
-                    publicKey: publicKey
+                    sessionKey: sessionKey,
                 )
                 
                 return CompleteOtpResult(

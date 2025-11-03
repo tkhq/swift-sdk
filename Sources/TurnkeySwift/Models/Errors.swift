@@ -44,7 +44,7 @@ public enum TurnkeySwiftError: LocalizedError, Sendable {
     case missingAuthProxyConfiguration
 
     case failedToSignPayload(underlying: Error)
-    case failedToCreateSession(underlying: Error)
+    case failedToStoreSession(underlying: Error)
     case failedToClearSession(underlying: Error)
     case failedToRefreshSession(underlying: Error)
     case failedToRefreshUser(underlying: Error)
@@ -96,7 +96,7 @@ public enum TurnkeySwiftError: LocalizedError, Sendable {
 
         case .keyGenerationFailed(let e),
              .failedToSignPayload(let e),
-             .failedToCreateSession(let e),
+             .failedToStoreSession(let e),
              .failedToClearSession(let e),
              .failedToRefreshSession(let e),
              .failedToRefreshUser(let e),
@@ -134,7 +134,7 @@ public enum TurnkeySwiftError: LocalizedError, Sendable {
         switch self {
         case .keyGenerationFailed(let e),
              .failedToSignPayload(let e),
-             .failedToCreateSession(let e),
+             .failedToStoreSession(let e),
              .failedToClearSession(let e),
              .failedToRefreshSession(let e),
              .failedToRefreshUser(let e),

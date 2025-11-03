@@ -7,12 +7,12 @@ import TurnkeyHttp
 struct AuthView: View {
     @EnvironmentObject private var coordinator: NavigationCoordinator
     @EnvironmentObject private var turnkey: TurnkeyContext
-    @EnvironmentObject private var auth: AuthContext
     @EnvironmentObject private var toast: ToastContext
     
     @State private var email = ""
     @State private var phone = ""
     @State private var selectedCountry = "US"
+    @State private var error: String? = nil
     
     var body: some View {
         VStack {
@@ -77,10 +77,10 @@ struct AuthView: View {
             Spacer()
         }
         .background(Color.gray.opacity(0.05).ignoresSafeArea())
-        .onChange(of: auth.error) {
-            if let error = auth.error {
-                toast.show(message: error, type: .error)
-                auth.error = nil
+        .onChange(of: error) {
+            if let message = error {
+                toast.show(message: message, type: .error)
+                error = nil
             }
         }
     }
@@ -93,11 +93,11 @@ struct AuthView: View {
             }
             
             do {
-                try await auth.loginWithGoogle(anchor: anchor)
+                try await turnkey.handleGoogleOAuth(anchor: anchor)
             } catch {
                 let message = formatError(error, fallback: "Failed to log in with Google")
                 print("[AuthView] Google login error: \(message)")
-                auth.error = message
+                self.error = message
             }
         }
     }
@@ -110,11 +110,11 @@ struct AuthView: View {
             }
 
             do {
-                try await auth.loginWithApple(anchor: anchor)
+                try await turnkey.handleAppleOAuth(anchor: anchor)
             } catch {
                 let message = formatError(error, fallback: "Failed to log in with Apple")
                 print("[AuthView] Apple login error: \(message)")
-                auth.error = message
+                self.error = message
             }
         }
     }
@@ -127,11 +127,11 @@ struct AuthView: View {
             }
 
             do {
-                try await auth.loginWithX(anchor: anchor)
+                try await turnkey.handleXOauth(anchor: anchor)
             } catch {
                 let message = formatError(error, fallback: "Failed to log in with X")
                 print("[AuthView] X login error: \(message)")
-                auth.error = message
+                self.error = message
             }
         }
     }
@@ -144,11 +144,11 @@ struct AuthView: View {
             }
 
             do {
-                try await auth.loginWithDiscord(anchor: anchor)
+                try await turnkey.handleDiscordOAuth(anchor: anchor)
             } catch {
                 let message = formatError(error, fallback: "Failed to log in with Discord")
                 print("[AuthView] Discord login error: \(message)")
-                auth.error = message
+                self.error = message
             }
         }
     }
@@ -161,7 +161,7 @@ struct AuthView: View {
             } catch {
                 let message = formatError(error, fallback: "Failed to send OTP")
                 print("[AuthView] Email OTP error: \(message)")
-                auth.error = message
+                self.error = message
             }
         }
     }
@@ -174,7 +174,7 @@ struct AuthView: View {
             } catch {
                 let message = formatError(error, fallback: "Failed to send OTP")
                 print("[AuthView] SMS OTP error: \(message)")
-                auth.error = message
+                self.error = message
             }
         }
     }
@@ -187,11 +187,11 @@ struct AuthView: View {
             }
             
             do {
-                try await turnkey.loginWithPasskey(anchor: anchor)
+                _ = try await turnkey.loginWithPasskey(anchor: anchor)
             } catch {
                 let message = formatError(error, fallback: "Failed to log in with passkey")
                 print("[AuthView] Passkey login error: \(message)")
-                auth.error = message
+                self.error = message
             }
         }
     }
@@ -204,11 +204,11 @@ struct AuthView: View {
             }
             
             do {
-                try await auth.signUpWithPasskey(anchor: anchor)
+                _ = try await turnkey.signUpWithPasskey(anchor: anchor)
             } catch {
                 let message = formatError(error, fallback: "Failed to sign up with passkey")
                 print("[AuthView] Passkey signup error: \(message)")
-                auth.error = message
+                self.error = message
             }
         }
     }
@@ -307,5 +307,4 @@ struct AuthView: View {
             .cornerRadius(10)
         }
     }
-    
 }

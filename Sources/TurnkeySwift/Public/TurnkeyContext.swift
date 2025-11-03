@@ -106,16 +106,9 @@ public final class TurnkeyContext: NSObject, ObservableObject {
 
     internal let userConfig: TurnkeyConfig
 
-    public var isEmailOtpEnabled: Bool {
-        return runtimeConfig?.auth.otp.email ?? false
-    }
 
-    public var isSmsOtpEnabled: Bool {
-        return runtimeConfig?.auth.otp.sms ?? false
-    }
-
-    internal func resolvedSessionTTLSeconds() -> String {
-        return runtimeConfig?.auth.sessionExpirationSeconds ?? Constants.Session.defaultExpirationSeconds
+    internal func resolvedSessionExpirationSeconds(expirationSeconds: String? = nil) -> String {
+        return expirationSeconds ?? runtimeConfig?.auth.sessionExpirationSeconds ?? Constants.Session.defaultExpirationSeconds
     }
 
     // Resolve OAuth provider settings using runtime and user config.

@@ -1,20 +1,5 @@
 import Foundation
 
-// MARK: Shared sub-shapes (Partial inputs vs Resolved runtime)
-
-public struct OtpConfigPartial: Sendable {
-    public var email: Bool?
-    public var sms: Bool?
-    public var alphanumeric: Bool?
-    public var length: String?
-    public init(email: Bool? = nil, sms: Bool? = nil, alphanumeric: Bool? = nil, length: String? = nil) {
-        self.email = email
-        self.sms = sms
-        self.alphanumeric = alphanumeric
-        self.length = length
-    }
-}
-
 struct OtpConfigResolved: Sendable {
     var email: Bool
     var sms: Bool
@@ -104,35 +89,34 @@ struct CreateSuborgDefaultsResolved: Sendable {
 }
 
 // MARK: Internal runtime config using resolved shapes
-
 struct TurnkeyRuntimeConfig: Sendable {
     struct Auth: Sendable {
-        typealias Otp = OtpConfigResolved
         struct Oauth: Sendable {
             typealias Provider = OauthProviderResolved
             var redirectBaseUrl: String
             var appScheme: String?
             var providers: [String: Provider]
         }
+
         var sessionExpirationSeconds: String
-        var otp: Otp
         var oauth: Oauth
         var autoRefreshSession: Bool
+        
         typealias Passkey = PasskeyOptionsResolved
         var passkey: Passkey?
-        typealias CreateSuborgDefaults = CreateSuborgDefaultsResolved
-        var createSuborgDefaults: CreateSuborgDefaults?
+
+        typealias CreateSuborgParamsByAuthMethod = TurnkeyConfig.Auth.CreateSuborgParamsByAuthMethod
+        var createSuborgParams: CreateSuborgParamsByAuthMethod?
     }
+
     var authProxyUrl: String?
     var auth: Auth
     var autoRefreshManagedState: Bool
 }
 
-
-
 public struct TurnkeyConfig: Sendable {
     public struct Auth: Sendable {
-        public typealias Otp = OtpConfigPartial
+        
         public struct Oauth: Sendable {
             public typealias ProviderOverride = OauthProviderOverride
             public typealias Providers = OauthProvidersPartial
@@ -145,43 +129,58 @@ public struct TurnkeyConfig: Sendable {
                 self.providers = providers
             }
         }
-
-        public var otp: Otp?
+        
+        /// CreateSubOrg parameters for each authentication method.
+        public struct CreateSuborgParamsByAuthMethod: Sendable {
+            public var emailOtpAuth: CreateSubOrgParams?
+            public var smsOtpAuth: CreateSubOrgParams?
+            public var passkeyAuth: CreateSubOrgParams?
+            public var walletAuth: CreateSubOrgParams?
+            public var oauth: CreateSubOrgParams?
+            
+            public init(
+                emailOtpAuth: CreateSubOrgParams? = nil,
+                smsOtpAuth: CreateSubOrgParams? = nil,
+                passkeyAuth: CreateSubOrgParams? = nil,
+                walletAuth: CreateSubOrgParams? = nil,
+                oauth: CreateSubOrgParams? = nil
+            ) {
+                self.emailOtpAuth = emailOtpAuth
+                self.smsOtpAuth = smsOtpAuth
+                self.passkeyAuth = passkeyAuth
+                self.walletAuth = walletAuth
+                self.oauth = oauth
+            }
+        }
+        
         public var oauth: Oauth?
         public var autoRefreshSession: Bool?
-        // Proxy-controlled: ignored when Auth Proxy is active
-        public var sessionExpirationSeconds: String?
         public typealias Passkey = PasskeyOptionsPartial
         public var passkey: Passkey?
-        public typealias CreateSuborgDefaults = CreateSuborgDefaultsPartial
-        public var createSuborgDefaults: CreateSuborgDefaults?
-
+        public var createSuborgParams: CreateSuborgParamsByAuthMethod?
+        
         public init(
-            otp: Otp? = nil,
             oauth: Oauth? = nil,
             autoRefreshSession: Bool? = nil,
-            sessionExpirationSeconds: String? = nil,
             passkey: Passkey? = nil,
-            createSuborgDefaults: CreateSuborgDefaults? = nil
+            createSuborgParams: CreateSuborgParamsByAuthMethod? = nil
         ) {
-            self.otp = otp
             self.oauth = oauth
             self.autoRefreshSession = autoRefreshSession
-            self.sessionExpirationSeconds = sessionExpirationSeconds
             self.passkey = passkey
-            self.createSuborgDefaults = createSuborgDefaults
+            self.createSuborgParams = createSuborgParams
         }
     }
-
+    
     public var apiUrl: String
     public var authProxyUrl: String
     public var authProxyConfigId: String?
     public var rpId: String?
     public var organizationId: String?
-
+    
     public var auth: Auth?
     public var autoRefreshManagedState: Bool?
-
+    
     public init(
         apiUrl: String = Constants.Turnkey.defaultApiUrl,
         authProxyUrl: String = Constants.Turnkey.defaultAuthProxyUrl,

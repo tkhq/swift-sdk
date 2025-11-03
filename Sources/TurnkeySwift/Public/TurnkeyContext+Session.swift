@@ -28,8 +28,8 @@ extension TurnkeyContext {
     /// - Throws:
     ///   - `TurnkeySwiftError.invalidRefreshTTL` if `refreshedSessionTTLSeconds` is provided but less than 30 seconds.
     ///   - `TurnkeySwiftError.keyAlreadyExists` if a session with the same `sessionKey` already exists.
-    ///   - `TurnkeySwiftError.failedToCreateSession` if decoding, persistence, or other internal operations fail.
-    public func createSession(
+    ///   - `TurnkeySwiftError.failedToStoreSession` if decoding, persistence, or other internal operations fail.
+    public func storeSession(
         jwt: String,
         sessionKey: String? = nil,
         refreshedSessionTTLSeconds: String? = nil
@@ -55,10 +55,34 @@ extension TurnkeyContext {
             }
             
             let dto = try JWTDecoder.decode(jwt, as: TurnkeySession.self)
+           
+            // determine if auto-refresh should be enabled and how to set the TTL
+            // - auto-refresh is enabled if either:
+            //     (a) `refreshedSessionTTLSeconds` is explicitly provided, OR
+            //     (b) `runtimeConfig.auth.autoRefreshSession` is true
+            // - if `refreshedSessionTTLSeconds` was passed in, we use it directly
+            // - if it wasn’t passed in but auto-refresh is enabled via config,
+            //   then we calculate the TTL dynamically based on the current time and the
+            //   JWT’s expiration (`exp - now`)
+            //
+            // Note: this calculated TTL will be slightly shorter than the actual session
+            //       lifetime due to timing differences, but that’s acceptable because it’s
+            //       stored inside `AutoRefreshStore` and reused for future refreshes, so this
+            //       loss only occurs once
+            var ttlToStore: String? = refreshedSessionTTLSeconds
+            if ttlToStore == nil {
+                if runtimeConfig?.auth.autoRefreshSession == true {
+                    let exp = dto.exp
+                    let now = Date().timeIntervalSince1970
+                    let ttl = max(0, exp - now)
+                    ttlToStore = String(Int(ttl))
+                }
+            }
+            
             try persistSession(
                 dto: dto,
                 sessionKey: resolvedSessionKey,
-                refreshedSessionTTLSeconds: refreshedSessionTTLSeconds
+                refreshedSessionTTLSeconds: ttlToStore
             )
             
             if selectedSessionKey == nil {
@@ -67,7 +91,7 @@ extension TurnkeyContext {
             
             await MainActor.run { self.authState = .authenticated }
         } catch {
-            throw TurnkeySwiftError.failedToCreateSession(underlying: error)
+            throw TurnkeySwiftError.failedToStoreSession(underlying: error)
         }
     }
     

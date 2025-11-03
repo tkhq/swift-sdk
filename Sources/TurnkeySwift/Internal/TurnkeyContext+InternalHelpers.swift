@@ -182,7 +182,7 @@ extension TurnkeyContext {
     ///   
     /// - Throws:
     ///   - `TurnkeySwiftError.keyNotFound` if no session exists under the given key.
-    ///   - `TurnkeySwiftError.failedToCreateSession` if decoding or persistence operations fail.
+    ///   - `TurnkeySwiftError.failedToStoreSession` if decoding or persistence operations fail.
     func updateSession(
         jwt: String,
         sessionKey: String = Constants.Session.defaultSessionKey
@@ -204,7 +204,7 @@ extension TurnkeyContext {
                                sessionKey: sessionKey,
                                refreshedSessionTTLSeconds: nextDuration)
         } catch {
-            throw TurnkeySwiftError.failedToCreateSession(underlying: error)
+            throw TurnkeySwiftError.failedToStoreSession(underlying: error)
         }
     }
     
