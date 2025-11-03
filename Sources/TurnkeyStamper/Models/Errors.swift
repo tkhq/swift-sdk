@@ -54,6 +54,8 @@ public enum StampError: Error {
   case unknownError(String)
   case passkeyManagerNotSet
   case invalidPayload
+  case secureEnclaveUnavailable
+  case keyNotFound(publicKeyHex: String)
 
   public var localizedDescription: String {
     switch self {
@@ -71,6 +73,10 @@ public enum StampError: Error {
       return "Passkey manager has not been initialized."
     case .invalidPayload:
       return "Invalid payload provided for stamping."
+    case .secureEnclaveUnavailable:
+      return "Secure Enclave is not available on this device."
+    case .keyNotFound(let publicKeyHex):
+      return "No private key found for public key: \(publicKeyHex)"
     }
   }
 }

@@ -1,5 +1,6 @@
 import CryptoKit
 import Foundation
+import CoreFoundation
 import Security
 import TurnkeyEncoding
 
@@ -12,6 +13,32 @@ enum SecureEnclaveStamperError: Error, Equatable {
   case unsupportedAlgorithm
   case payloadEncodingFailed
   case externalKeyImportNotSupported
+}
+
+extension SecureEnclaveStamperError {
+  static func == (lhs: SecureEnclaveStamperError, rhs: SecureEnclaveStamperError) -> Bool {
+    switch (lhs, rhs) {
+    case (.secureEnclaveUnavailable, .secureEnclaveUnavailable):
+      return true
+    case let (.keychainError(a), .keychainError(b)):
+      return a == b
+    case (.keyGenerationFailed, .keyGenerationFailed):
+      // Compare only by case; underlying Error? is not Equatable
+      return true
+    case let (.keyNotFound(a), .keyNotFound(b)):
+      return a == b
+    case (.publicKeyEncodingFailed, .publicKeyEncodingFailed):
+      return true
+    case (.unsupportedAlgorithm, .unsupportedAlgorithm):
+      return true
+    case (.payloadEncodingFailed, .payloadEncodingFailed):
+      return true
+    case (.externalKeyImportNotSupported, .externalKeyImportNotSupported):
+      return true
+    default:
+      return false
+    }
+  }
 }
 
 /// A Secure Enclave–backed stamper for generating and using P-256 keys inside the device TEE.
@@ -37,6 +64,13 @@ enum SecureEnclaveStamper {
 
   // MARK: - Public API
 
+  /// Indicates whether Secure Enclave is available and usable on this device.
+  ///
+  /// Uses the same probing logic as key generation to determine support.
+  static func isSupported() -> Bool {
+    return isSecureEnclaveAvailable()
+  }
+
   static func listKeyPairs() throws -> [String] {
     let query: [String: Any] = [
       kSecClass as String: kSecClassKey,
@@ -60,8 +94,8 @@ enum SecureEnclaveStamper {
     var keys: [SecKey] = []
     if let array = result as? [SecKey] {
       keys = array
-    } else if let single = result as? SecKey {
-      keys = [single]
+    } else if let r = result, CFGetTypeID(r) == SecKeyGetTypeID() {
+      keys = [r as! SecKey]
     }
 
     var publicKeys: [String] = []
@@ -93,7 +127,6 @@ enum SecureEnclaveStamper {
     guard isSecureEnclaveAvailable() else {
       throw SecureEnclaveStamperError.secureEnclaveUnavailable
     }
-
     let accessControlFlags = accessControlFlags(for: config.authPolicy)
     var acError: Unmanaged<CFError>?
     guard let access = SecAccessControlCreateWithFlags(
@@ -290,8 +323,8 @@ enum SecureEnclaveStamper {
 
       var tagResult: CFTypeRef?
       let tagStatus = SecItemCopyMatching(tagQuery as CFDictionary, &tagResult)
-      if tagStatus == errSecSuccess, let key = tagResult as? SecKey {
-        return key
+      if tagStatus == errSecSuccess, let r = tagResult, CFGetTypeID(r) == SecKeyGetTypeID() {
+        return r as! SecKey
       }
     }
 
@@ -321,7 +354,8 @@ enum SecureEnclaveStamper {
           return priv
         }
       }
-    } else if let single = result as? SecKey {
+    } else if let r = result, CFGetTypeID(r) == SecKeyGetTypeID() {
+      let single = r as! SecKey
       if let hex = try? compressedPublicKeyHex(fromPrivateKey: single), hex == publicKeyHex {
         return single
       }
