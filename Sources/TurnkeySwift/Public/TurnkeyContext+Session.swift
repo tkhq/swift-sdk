@@ -2,6 +2,7 @@ import Foundation
 import TurnkeyTypes
 import TurnkeyCrypto
 import TurnkeyHttp
+import TurnkeyStamper
 
 extension TurnkeyContext {
     
@@ -13,8 +14,7 @@ extension TurnkeyContext {
     ///   - `TurnkeySwiftError.failedToSaveKeyPair` if the key pair could not be persisted.
     ///   - Any underlying error from the secure storage layer.
     public func createKeyPair() throws -> String {
-        let (_, publicKey, privateKey) = TurnkeyCrypto.generateP256KeyPair()
-        try KeyPairStore.save(privateHex: privateKey, for: publicKey)
+        let publicKey = try Stamper.createOnDeviceKeyPair()
         try PendingKeysStore.add(publicKey)
         return publicKey
     }
@@ -43,6 +43,7 @@ extension TurnkeyContext {
         : Constants.Session.defaultSessionKey
         
         do {
+
             // eventually we should verify that the jwt was signed by Turnkey
             // but for now we just assume it is
             
@@ -147,10 +148,8 @@ extension TurnkeyContext {
             
             let dto = stored.decoded
             let jwt = stored.jwt
-            let privHex = try KeyPairStore.getPrivateHex(for: dto.publicKey)
-            
-            let cli = TurnkeyClient(
-                apiPrivateKey: privHex,
+        
+            let client = try TurnkeyClient(
                 apiPublicKey: dto.publicKey,
                 baseUrl: apiUrl
             )
@@ -167,7 +166,7 @@ extension TurnkeyContext {
             await MainActor.run {
                 try? SelectedSessionStore.save(sessionKey)
                 self.selectedSessionKey = sessionKey
-                self.client = cli
+                self.client = client
                 self.session = session
             }
             
@@ -175,7 +174,7 @@ extension TurnkeyContext {
             try? await refreshUser()
             try? await refreshWallets()
             
-            return cli
+            return client
         } catch {
             throw TurnkeySwiftError.failedToSetSelectedSession(underlying: error)
         }
@@ -252,9 +251,8 @@ extension TurnkeyContext {
             }
             
             let dto = stored.decoded
-            let privHex = try KeyPairStore.getPrivateHex(for: dto.publicKey)
-            clientToUse = TurnkeyClient(
-                apiPrivateKey: privHex,
+
+            clientToUse = try TurnkeyClient(
                 apiPublicKey: dto.publicKey,
                 baseUrl: apiUrl
             )
@@ -286,9 +284,8 @@ extension TurnkeyContext {
             
             // if this was the selected session we update client and session state
             if targetSessionKey == selectedSessionKey {
-                let privHex = try KeyPairStore.getPrivateHex(for: dto.publicKey)
+
                 let newClient = TurnkeyClient(
-                    apiPrivateKey: privHex,
                     apiPublicKey: dto.publicKey,
                     baseUrl: apiUrl
                 )

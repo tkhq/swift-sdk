@@ -346,7 +346,7 @@ enum SecureStorageStamper {
       let c = LAContext()
       if #available(iOS 13.0, *) {
         let seconds = max(0, min(10, cfg.biometryReuseWindowSeconds))
-        c.biometryAuthenticationAllowableReuseDuration = TimeInterval(seconds)
+        c.touchIDAuthenticationAllowableReuseDuration = TimeInterval(seconds)
       }
       ctx = c
       query[kSecUseAuthenticationContext as String] = c
