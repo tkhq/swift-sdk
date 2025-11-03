@@ -4,6 +4,12 @@ import Foundation
 import LocalAuthentication
 import TurnkeyPasskeys
 
+public enum OnDeviceStamperPreference {
+  case auto
+  case secureEnclave
+  case secureStorage
+}
+
 public class Stamper {
   private let apiPublicKey: String?
   private let apiPrivateKey: String?
@@ -53,6 +59,53 @@ public class Stamper {
     self.mode = .passkey(manager: self.passkeyManager!)
   }
 
+  /// Initializes the stamper for on-device key signing using only a public key, with a selectable backend.
+  ///
+  /// - Parameters:
+  ///   - apiPublicKey: The public key (compressed hex) whose private key resides on-device.
+  ///   - onDevicePreference: Preferred backend selection. `.auto` prefers Secure Enclave when supported; otherwise uses Secure Storage.
+  /// - Throws:
+  ///   - `StampError.secureEnclaveUnavailable` when `.secureEnclave` is selected but the device does not support it.
+  ///   - `StampError.keyNotFound(publicKeyHex:)` if the private key for the given public key is not found in the selected backend.
+  public init(apiPublicKey: String, onDevicePreference: OnDeviceStamperPreference = .auto) throws {
+    self.presentationAnchor = nil
+    self.passkeyManager = nil
+    self.apiPrivateKey = nil
+    self.apiPublicKey = apiPublicKey
+
+    switch onDevicePreference {
+    case .auto:
+      if SecureEnclaveStamper.isSupported() {
+        let existing = try SecureEnclaveStamper.listKeyPairs()
+        guard existing.contains(apiPublicKey) else {
+          throw StampError.keyNotFound(publicKeyHex: apiPublicKey)
+        }
+        self.mode = .secureEnclave(publicKey: apiPublicKey)
+      } else {
+        let existing = try SecureStorageStamper.listKeyPairs()
+        guard existing.contains(apiPublicKey) else {
+          throw StampError.keyNotFound(publicKeyHex: apiPublicKey)
+        }
+        self.mode = .secureStorage(publicKey: apiPublicKey)
+      }
+    case .secureEnclave:
+      guard SecureEnclaveStamper.isSupported() else {
+        throw StampError.secureEnclaveUnavailable
+      }
+      let existing = try SecureEnclaveStamper.listKeyPairs()
+      guard existing.contains(apiPublicKey) else {
+        throw StampError.keyNotFound(publicKeyHex: apiPublicKey)
+      }
+      self.mode = .secureEnclave(publicKey: apiPublicKey)
+    case .secureStorage:
+      let existing = try SecureStorageStamper.listKeyPairs()
+      guard existing.contains(apiPublicKey) else {
+        throw StampError.keyNotFound(publicKeyHex: apiPublicKey)
+      }
+      self.mode = .secureStorage(publicKey: apiPublicKey)
+    }
+  }
+
   /// Initializes the stamper for hardware/software-stored private key signing using only a public key.
   ///
   /// Selection rules:
@@ -61,27 +114,8 @@ public class Stamper {
   ///
   /// - Parameter apiPublicKey: The public key (compressed hex) whose private key resides on-device.
   /// - Throws: `StampError.secureEnclaveUnavailable` or `StampError.keyNotFound(publicKeyHex:)` when appropriate.
-  public init(apiPublicKey: String) throws {
-    self.presentationAnchor = nil
-    self.passkeyManager = nil
-    self.apiPrivateKey = nil
-    self.apiPublicKey = apiPublicKey
-
-    if SecureEnclaveStamper.isSupported() {
-      // Ensure the enclave holds the corresponding private key
-      let existing = try SecureEnclaveStamper.listKeyPairs()
-      guard existing.contains(apiPublicKey) else {
-        throw StampError.keyNotFound(publicKeyHex: apiPublicKey)
-      }
-      self.mode = .secureEnclave(publicKey: apiPublicKey)
-    } else {
-      // Fallback to secure storage
-      let existing = try SecureStorageStamper.listKeyPairs()
-      guard existing.contains(apiPublicKey) else {
-        throw StampError.keyNotFound(publicKeyHex: apiPublicKey)
-      }
-      self.mode = .secureStorage(publicKey: apiPublicKey)
-    }
+  public convenience init(apiPublicKey: String) throws {
+    try self.init(apiPublicKey: apiPublicKey, onDevicePreference: .auto)
   }
 
   /// Generates a signed stamp for the given payload using either API key or passkey credentials.
