@@ -213,7 +213,7 @@ extension TurnkeyContext {
         publicKey: String? = nil,
         createSubOrgParams: CreateSubOrgParams? = nil,
         invalidateExisting: Bool = false,
-        sessionKey: String? = nil,
+        sessionKey: String? = nil
     ) async throws -> CompleteOtpResult {
         guard let client = client else {
             throw TurnkeySwiftError.missingAuthProxyConfiguration
@@ -239,7 +239,7 @@ extension TurnkeyContext {
                     publicKey: publicKey,
                     organizationId: organizationId,
                     invalidateExisting: invalidateExisting,
-                    sessionKey: sessionKey,
+                    sessionKey: sessionKey
                 )
                 
                 return CompleteOtpResult(

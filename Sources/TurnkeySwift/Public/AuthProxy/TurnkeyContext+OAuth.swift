@@ -28,7 +28,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         publicKey: String,
         organizationId: String? = nil,
         invalidateExisting: Bool = false,
-        sessionKey: String? = nil,
+        sessionKey: String? = nil
     ) async throws -> BaseAuthResult {
         guard let client = client else {
             throw TurnkeySwiftError.missingAuthProxyConfiguration

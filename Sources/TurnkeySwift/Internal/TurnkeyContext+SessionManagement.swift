@@ -1,5 +1,6 @@
 import Foundation
 import TurnkeyTypes
+import TurnkeyStamper
 
 extension TurnkeyContext {
     
@@ -54,9 +55,9 @@ extension TurnkeyContext {
         let stored = StoredSession(decoded: dto, jwt: jwt)
         try JwtSessionStore.save(stored, key: sessionKey)
         try SessionRegistryStore.add(sessionKey)
-        
-        let priv = try KeyPairStore.getPrivateHex(for: dto.publicKey)
-        if priv.isEmpty { throw TurnkeySwiftError.keyNotFound }
+
+        let exists = try Stamper.existsOnDeviceKeyPair(publicKeyHex: dto.publicKey)
+        if !exists { throw TurnkeySwiftError.keyNotFound }
         try PendingKeysStore.remove(dto.publicKey)
         
         if let duration = refreshedSessionTTLSeconds {
@@ -85,7 +86,7 @@ extension TurnkeyContext {
         expiryTasks.removeValue(forKey: sessionKey)
         
         if let stored = try? JwtSessionStore.load(key: sessionKey) {
-            try? KeyPairStore.delete(for: stored.decoded.publicKey)
+            try? Stamper.deleteOnDeviceKeyPair(publicKeyHex: stored.decoded.publicKey)
         }
         
         JwtSessionStore.delete(key: sessionKey)
