@@ -5,11 +5,13 @@ import TurnkeyHttp
 
 extension TurnkeyContext {
     
-    /// Generates a new ephemeral key pair, stores it securely, and adds it to the pending list.
+    /// Generates a new ephemeral key pair, stores it securely, and adds it to the pending key registry.
     ///
-    /// - Returns: The public key string.
-    /// - Throws: An error if the key could not be saved.
-    @discardableResult
+    /// - Returns: The generated public key as a string.
+    ///
+    /// - Throws:
+    ///   - `TurnkeySwiftError.failedToSaveKeyPair` if the key pair could not be persisted.
+    ///   - Any underlying error from the secure storage layer.
     public func createKeyPair() throws -> String {
         let (_, publicKey, privateKey) = TurnkeyCrypto.generateP256KeyPair()
         try KeyPairStore.save(privateHex: privateKey, for: publicKey)
@@ -17,26 +19,28 @@ extension TurnkeyContext {
         return publicKey
     }
     
-    /// Creates a new session from the provided JWT, persists its metadata, and (optionally) schedules auto-refresh.
+    /// Creates and stores a new session from the provided JWT.
+    ///
+    /// Decodes the session payload, persists its metadata, and optionally enables auto-refresh
+    /// based on runtime configuration or the provided TTL value.
     ///
     /// - Parameters:
-    ///   - jwt: The JWT string returned by the Turnkey backend.
-    ///   - sessionKey: An identifier under which to store this session. Defaults to `Constants.Session.defaultSessionKey`.
-    ///   - refreshedSessionTTLSeconds: *Optional.* The duration (in seconds) that refreshed sessions will be valid for.
-    ///     If provided, the SDK will automatically refresh this session near expiry using this value. Must be at least 30 seconds.
+    ///   - jwt: The session token (JWT) returned by the Turnkey backend.
+    ///   - sessionKey: Optional identifier under which to store the session. Defaults to `Constants.Session.defaultSessionKey`.
+    ///   - refreshedSessionTTLSeconds: Optional session lifetime (in seconds) used for auto-refresh scheduling.
     ///
     /// - Throws:
-    ///   - `TurnkeySwiftError.invalidRefreshTTL` if `refreshedSessionTTLSeconds` is provided but less than 30 seconds.
+    ///   - `TurnkeySwiftError.invalidRefreshTTL` if `refreshedSessionTTLSeconds` is less than 30 seconds.
     ///   - `TurnkeySwiftError.keyAlreadyExists` if a session with the same `sessionKey` already exists.
-    ///   - `TurnkeySwiftError.failedToStoreSession` if decoding, persistence, or other internal operations fail.
+    ///   - `TurnkeySwiftError.failedToStoreSession` if decoding or persistence fails.
     public func storeSession(
         jwt: String,
         sessionKey: String? = nil,
         refreshedSessionTTLSeconds: String? = nil
     ) async throws {
         let resolvedSessionKey = sessionKey?.isEmpty == false
-                ? sessionKey!
-                : Constants.Session.defaultSessionKey
+        ? sessionKey!
+        : Constants.Session.defaultSessionKey
         
         do {
             // eventually we should verify that the jwt was signed by Turnkey
@@ -53,9 +57,9 @@ extension TurnkeyContext {
             if let _ = try JwtSessionStore.load(key: resolvedSessionKey) {
                 throw TurnkeySwiftError.keyAlreadyExists
             }
-                        
+            
             let dto = try JWTDecoder.decode(jwt, as: TurnkeySession.self)
-                       
+            
             // determine if auto-refresh should be enabled and how to set the TTL
             // - auto-refresh is enabled if either:
             //     (a) `refreshedSessionTTLSeconds` is explicitly provided, OR
@@ -123,12 +127,18 @@ extension TurnkeyContext {
         }
     }
     
-    /// Sets the currently active session to the specified session key.
+    /// Activates the specified session and updates the current context.
     ///
-    /// - Parameter sessionKey: The key identifying the session to activate.
-    /// - Returns: A configured `TurnkeyClient` for the session.
-    /// - Throws: `TurnkeySwiftError` if loading session details fails.
-    @discardableResult
+    /// Loads the stored session and key material, configures a new `TurnkeyClient`,
+    /// and updates the runtime state to reflect the selected session.
+    ///
+    /// - Parameter sessionKey: The key of the session to activate.
+    ///
+    /// - Returns: A configured `TurnkeyClient` bound to the active session.
+    ///
+    /// - Throws:
+    ///   - `TurnkeySwiftError.keyNotFound` if the session key does not exist.
+    ///   - `TurnkeySwiftError.failedToSetSelectedSession` if the operation fails.
     public func setActiveSession(sessionKey: String) async throws -> TurnkeyClient {
         do {
             guard let stored = try JwtSessionStore.load(key: sessionKey) else {
@@ -195,16 +205,19 @@ extension TurnkeyContext {
         }
     }
     
-    /// Refreshes a session by generating a new key pair, stamping a login request, and updating stored metadata.
+    /// Refreshes an existing session by generating a new key pair and obtaining a new JWT.
+    ///
+    /// Issues a fresh session via `stampLogin`, replaces local key material, and updates stored metadata.
     ///
     /// - Parameters:
-    ///   - expirationSeconds: The requested lifetime for the new session in seconds. Defaults to `Constants.Session.defaultExpirationSeconds`.
-    ///   - sessionKey: The key of the session to refresh. If `nil`, the currently selected session is used.
+    ///   - expirationSeconds: The desired session lifetime in seconds. Defaults to `Constants.Session.defaultExpirationSeconds`.
+    ///   - sessionKey: The key of the session to refresh. Defaults to the currently selected session.
     ///   - invalidateExisting: Whether to invalidate the previous session on the server. Defaults to `false`.
+    ///
     /// - Throws:
-    ///   - `TurnkeySwiftError.keyNotFound` if no session exists under the given `sessionKey`.
-    ///   - `TurnkeySwiftError.invalidSession` if the selected session is not initialized.
-    ///   - `TurnkeySwiftError.failedToRefreshSession` if stamping or persistence fails..
+    ///   - `TurnkeySwiftError.keyNotFound` if the session key cannot be found.
+    ///   - `TurnkeySwiftError.invalidSession` if no valid session is active.
+    ///   - `TurnkeySwiftError.failedToRefreshSession` if stamping or persistence fails.
     public func refreshSession(
         expirationSeconds: String = Constants.Session.defaultExpirationSeconds,
         sessionKey: String? = nil,

@@ -6,7 +6,7 @@ extension TurnkeyContext {
     
     /// Signs a raw payload using the currently selected session’s credentials.
     ///
-    /// Uses the selected session to sign arbitrary data with the specified key and encoding parameters.
+    /// Uses the active session to sign arbitrary data with the specified key and encoding parameters.
     ///
     /// - Parameters:
     ///   - signWith: The key ID or alias to sign with.
@@ -60,7 +60,7 @@ extension TurnkeyContext {
     ///
     /// - Parameters:
     ///   - signWith: The wallet account to use for signing.
-    ///   - message: The UTF-8 plaintext message to sign.
+    ///   - message: The plaintext message to sign.
     ///   - encoding: Optional override for payload encoding.
     ///   - hashFunction: Optional override for hash function.
     ///   - addEthereumPrefix: Optional flag to prefix Ethereum messages (defaults to true for Ethereum accounts).
@@ -90,13 +90,13 @@ extension TurnkeyContext {
     
     /// Signs a plaintext message using the currently selected session’s credentials.
     ///
-    /// Determines the encoding and hash function from the address format, applies
-    /// optional Ethereum message prefixing, and signs the resulting payload.
+    /// Resolves encoding and hashing defaults from the address format, applies Ethereum
+    /// prefixing when required, and performs signing using the selected session key.
     ///
     /// - Parameters:
     ///   - signWith: The address or key identifier to sign with.
     ///   - addressFormat: The address format associated with the signing key.
-    ///   - message: The UTF-8 plaintext message to sign.
+    ///   - message: The plaintext message to sign.
     ///   - encoding: Optional override for payload encoding.
     ///   - hashFunction: Optional override for hash function.
     ///   - addEthereumPrefix: Optional flag to prefix Ethereum messages (defaults to true for Ethereum accounts).

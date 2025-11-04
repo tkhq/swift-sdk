@@ -5,6 +5,22 @@ import CryptoKit
 import Security
 
 extension TurnkeyContext {
+    
+    /// Builds an OAuth URL for initiating a login or signup flow.
+    ///
+    /// Constructs a fully encoded OAuth URL for the given provider,
+    /// including client ID, redirect URI, nonce, and optional additional state parameters.
+    ///
+    /// - Parameters:
+    ///   - provider: The OAuth provider name (e.g., "google", "apple", "x", "discord").
+    ///   - clientId: The client identifier registered with the OAuth provider.
+    ///   - redirectUri: The redirect URI used for callback.
+    ///   - nonce: A unique nonce value to include in the request.
+    ///   - additionalState: Optional additional key–value pairs to append as state.
+    ///
+    /// - Returns: A fully constructed OAuth request `URL`.
+    ///
+    /// - Throws: `TurnkeySwiftError.oauthInvalidURL` if the final URL cannot be created.
     internal func buildOAuthURL(
         provider: String,
         clientId: String,
@@ -35,6 +51,24 @@ extension TurnkeyContext {
         return url
     }
     
+    /// Runs an OAuth session and retrieves an OIDC token.
+    ///
+    /// Opens a system browser using `ASWebAuthenticationSession` to complete an OAuth flow.
+    /// Returns the `id_token` (OIDC token) and optional session key upon successful authentication.
+    ///
+    /// - Parameters:
+    ///   - provider: The OAuth provider name.
+    ///   - clientId: The client identifier for the provider.
+    ///   - scheme: The callback scheme used for the redirect.
+    ///   - anchor: The presentation anchor for the authentication session.
+    ///   - nonce: A unique nonce used for verification.
+    ///   - additionalState: Optional additional state key–value pairs.
+    ///
+    /// - Returns: An `OAuthCallbackParams` object containing the OIDC token and optional session key.
+    ///
+    /// - Throws:
+    ///   - `TurnkeySwiftError.failedToRetrieveOAuthCredential` if the OAuth flow fails.
+    ///   - `TurnkeySwiftError.oauthMissingIDToken` if the callback lacks an `id_token`.
     internal func runOAuthSession(
         provider: String,
         clientId: String,
@@ -78,8 +112,15 @@ extension TurnkeyContext {
             session.start()
         }
     }
-
-
+    
+    /// Generates a PKCE verifier and challenge pair.
+    ///
+    /// Produces a cryptographically secure random verifier and its corresponding SHA-256 challenge
+    /// encoded in Base64URL format, compliant with RFC 7636.
+    ///
+    /// - Returns: A tuple containing the `verifier` and `challenge` strings.
+    ///
+    /// - Throws: `TurnkeySwiftError.keyGenerationFailed` if secure random byte generation fails.
     internal func generatePKCEPair() throws -> (verifier: String, challenge: String) {
         var randomBytes = [UInt8](repeating: 0, count: 32)
         let status = SecRandomCopyBytes(kSecRandomDefault, randomBytes.count, &randomBytes)
@@ -100,7 +141,23 @@ extension TurnkeyContext {
             .replacingOccurrences(of: "=", with: "")
         return (verifier: verifier, challenge: challenge)
     }
-
+    
+    /// Builds an OAuth 2.0 authorization URL using the PKCE flow.
+    ///
+    /// Constructs a compliant authorization URL including PKCE parameters such as
+    /// `code_challenge` and `code_challenge_method`, used for exchanging an auth code later.
+    ///
+    /// - Parameters:
+    ///   - baseURL: The OAuth authorization endpoint.
+    ///   - clientId: The client identifier.
+    ///   - redirectUri: The redirect URI registered for the client.
+    ///   - codeChallenge: The PKCE challenge derived from the verifier.
+    ///   - scope: The OAuth scope to request.
+    ///   - state: A unique string used to verify request integrity.
+    ///
+    /// - Returns: A fully composed authorization `URL`.
+    ///
+    /// - Throws: `TurnkeySwiftError.oauthInvalidURL` if URL construction fails.
     internal func buildOAuth2AuthURL(
         baseURL: String,
         clientId: String,
@@ -122,7 +179,22 @@ extension TurnkeyContext {
         guard let url = comps.url else { throw TurnkeySwiftError.oauthInvalidURL }
         return url
     }
-
+    
+    /// Runs an OAuth 2.0 authorization code session.
+    ///
+    /// Launches a browser session using `ASWebAuthenticationSession` and waits for
+    /// a redirect containing an authorization code and optional state.
+    ///
+    /// - Parameters:
+    ///   - url: The authorization URL to open.
+    ///   - scheme: The callback scheme for the redirect URI.
+    ///   - anchor: The presentation anchor for the browser session.
+    ///
+    /// - Returns: A tuple containing the `authorization code` and optional `state` string.
+    ///
+    /// - Throws:
+    ///   - `TurnkeySwiftError.failedToRetrieveOAuthCredential` if the session fails.
+    ///   - `TurnkeySwiftError.invalidResponse` if the callback URL or code is missing.
     internal func runOAuth2CodeSession(
         url: URL,
         scheme: String,
@@ -159,23 +231,24 @@ extension TurnkeyContext {
         }
     }
     
-    /// Resolves OAuth provider settings using runtime and user config.
+    /// Resolves OAuth provider configuration for the given provider.
     ///
-    /// Honors per-provider redirect overrides (e.g., Discord/X defaulting to scheme://)
-    /// and falls back to proxy/user redirect base.
+    /// Uses runtime and user configuration to determine client ID, redirect URI,
+    /// and app scheme for a specific OAuth provider.
     ///
-    /// - Parameter provider: The OAuth provider name (e.g., "google", "apple", "x", "discord").
-    /// - Returns: A tuple containing the clientId, redirectUri, and appScheme for the provider.
-    /// - Throws: Never directly, but consumers may need to handle missing configuration.
+    /// - Parameter provider: The provider identifier (e.g., "google", "apple", "x", "discord").
+    /// - Returns: A tuple containing the resolved `clientId`, `redirectUri`, and `appScheme`.
+    ///
+    /// - Throws: Never directly, but may return empty values if configuration is incomplete.
     internal func getOAuthProviderSettings(provider: String) throws -> (clientId: String, redirectUri: String, appScheme: String) {
         let providerInfo = runtimeConfig?.auth.oauth.providers[provider]
         let clientId = providerInfo?.clientId ?? ""
         let appScheme = runtimeConfig?.auth.oauth.appScheme ?? ""
         let redirectBase = runtimeConfig?.auth.oauth.redirectBaseUrl ?? Constants.Turnkey.oauthRedirectUrl
         let redirectUri = (providerInfo?.redirectUri?.isEmpty == false)
-            ? (providerInfo!.redirectUri!)
-            : "\(redirectBase)?scheme=\(appScheme)"
-
+        ? (providerInfo!.redirectUri!)
+        : "\(redirectBase)?scheme=\(appScheme)"
+        
         return (clientId: clientId, redirectUri: redirectUri, appScheme: appScheme)
     }
 }

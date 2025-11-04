@@ -7,7 +7,14 @@ extension TurnkeyContext {
     internal func setRuntimeConfig(_ config: TurnkeyRuntimeConfig) {
         self.runtimeConfig = config
     }
-
+    
+    /// Initializes the runtime configuration.
+    ///
+    /// If an Auth Proxy configuration ID is available, this method fetches the Wallet Kit configuration
+    /// from the Turnkey Auth Proxy. It then constructs the complete runtime configuration
+    /// combining remote and local settings.
+    ///
+    /// - Note: This function runs asynchronously and updates `runtimeConfig` on the main thread.
     internal func initializeRuntimeConfig() async {
         // if an Auth Proxy config ID is available we fetch the Wallet Kit config
         var walletKitConfig: ProxyGetWalletKitConfigResponse?
@@ -19,7 +26,7 @@ extension TurnkeyContext {
                 walletKitConfig = nil
             }
         }
-
+        
         // we always build the runtime configuration using the Wallet Kit config (if available)
         // and local defaults
         let config = buildRuntimeConfig(walletKitConfig: walletKitConfig)
@@ -27,20 +34,27 @@ extension TurnkeyContext {
             self.runtimeConfig = config
         }
     }
-
+    
+    /// Builds the complete runtime configuration object.
+    ///
+    /// Merges values from the fetched Wallet Kit configuration, user-provided configuration,
+    /// and fallback defaults. Handles URL sanitization, OAuth provider overrides, and passkey options.
+    ///
+    /// - Parameter walletKitConfig: Optional configuration fetched from the Auth Proxy.
+    /// - Returns: A fully constructed `TurnkeyRuntimeConfig` instance.
     internal func buildRuntimeConfig(
         walletKitConfig: ProxyGetWalletKitConfigResponse?
     ) -> TurnkeyRuntimeConfig {
         // we sanitize the auth proxy URL
         let trimmedAuthProxyUrl = authProxyUrl.trimmingCharacters(in: .whitespacesAndNewlines)
         let sanitizedAuthProxyUrl = trimmedAuthProxyUrl.isEmpty ? nil : authProxyUrl
-
+        
         // we resolve the OAuth redirect base URL and app scheme
         let redirectBaseUrl = userConfig.auth?.oauth?.redirectUri
-            ?? walletKitConfig?.oauthRedirectUrl
-            ?? Constants.Turnkey.oauthRedirectUrl
+        ?? walletKitConfig?.oauthRedirectUrl
+        ?? Constants.Turnkey.oauthRedirectUrl
         let appScheme = userConfig.auth?.oauth?.appScheme
-
+        
         // we resolve per-provider OAuth info
         var resolvedProviders: [String: TurnkeyRuntimeConfig.Auth.Oauth.Provider] = [:]
         let proxyClientIds = walletKitConfig?.oauthClientIds ?? [:]
@@ -55,7 +69,7 @@ extension TurnkeyContext {
                 default: return nil
                 }
             }()
-
+            
             let clientId = override?.clientId ?? proxyClientIds[provider]
             
             // for X and Discord, if there is no explicit provider redirect and we have an appScheme
@@ -69,7 +83,7 @@ extension TurnkeyContext {
                 }
                 return nil
             }()
-
+            
             resolvedProviders[provider] = .init(clientId: clientId, redirectUri: providerRedirect)
         }
         
@@ -91,7 +105,7 @@ extension TurnkeyContext {
                 return nil
             }
         }()
-
+        
         let auth = TurnkeyRuntimeConfig.Auth(
             sessionExpirationSeconds:  walletKitConfig?.sessionExpirationSeconds ?? Constants.Session.defaultExpirationSeconds,
             oauth: .init(
@@ -103,35 +117,29 @@ extension TurnkeyContext {
             passkey: passkey,
             createSuborgParams: userConfig.auth?.createSuborgParams
         )
-
+        
         let runtime = TurnkeyRuntimeConfig(
             authProxyUrl: sanitizedAuthProxyUrl,
             auth: auth,
             autoRefreshManagedState: userConfig.autoRefreshManagedState ?? true
         )
-
+        
         return runtime
     }
-
-        /// Builds a `ProxySignupRequest` body for creating a new sub-organization.
+    
+    /// Builds a signup body for creating a new sub-organization.
     ///
-    /// - This function constructs the complete signup payload required by the Turnkey Auth Proxy.
-    /// - It supports multiple credential types including authenticators, API keys, and OAuth providers.
-    /// - Fallback names and identifiers are automatically generated when not provided.
+    /// Constructs a `ProxyTSignupBody` payload for the Turnkey Auth Proxy based on the provided
+    /// `CreateSubOrgParams`. Supports authenticators, API keys, OAuth providers, and user metadata.
+    /// Default names are generated automatically when missing.
     ///
-    /// - Parameters:
-    ///   - createSubOrgParams: A `CreateSubOrgParams` object containing optional
-    ///     authenticators, API keys, OAuth providers, and user metadata.
-    ///
-    /// - Returns: A fully populated `ProxyTSignupBody` object
-    ///   suitable for submission to the Turnkey Auth Proxy.
-    ///
-    /// - Throws: Never directly throws, but downstream usage may throw serialization or network errors.
+    /// - Parameter createSubOrgParams: Parameters describing the new sub-organization, credentials, and user details.
+    /// - Returns: A fully populated `ProxyTSignupBody` object suitable for submission to the Auth Proxy.
     func buildSignUpBody(createSubOrgParams: CreateSubOrgParams) -> ProxyTSignupBody {
         // TODO: is there names have a uniqueness constraint per user?
         // if so then this will fail if we have to autofill multiple authenticators (e.g. two apiKeys)
         let now = Int(Date().timeIntervalSince1970)
-
+        
         // authenticators to v1AuthenticatorParamsV2
         let authenticators: [v1AuthenticatorParamsV2]
         if let list = createSubOrgParams.authenticators, !list.isEmpty {
@@ -145,7 +153,7 @@ extension TurnkeyContext {
         } else {
             authenticators = []
         }
-
+        
         // apiKeys to v1ApiKeyParamsV2
         let apiKeys: [v1ApiKeyParamsV2]
         if let list = createSubOrgParams.apiKeys, !list.isEmpty {
@@ -160,8 +168,8 @@ extension TurnkeyContext {
         } else {
             apiKeys = []
         }
-
-
+        
+        
         // oauthProviders to v1OauthProviderParams
         let oauthProviders: [v1OauthProviderParams]
         if let list = createSubOrgParams.oauthProviders, !list.isEmpty {
@@ -174,7 +182,7 @@ extension TurnkeyContext {
         } else {
             oauthProviders = []
         }
-
+        
         // Construct ProxyTSignupBody
         return ProxyTSignupBody(
             apiKeys: apiKeys,
@@ -183,8 +191,8 @@ extension TurnkeyContext {
             organizationName: createSubOrgParams.subOrgName ?? "sub-org-\(now)",
             userEmail: createSubOrgParams.userEmail,
             userName: createSubOrgParams.userName
-                ?? createSubOrgParams.userEmail
-                ?? "user-\(now)",
+            ?? createSubOrgParams.userEmail
+            ?? "user-\(now)",
             userPhoneNumber: createSubOrgParams.userPhoneNumber,
             userTag: createSubOrgParams.userTag,
             verificationToken: createSubOrgParams.verificationToken,
@@ -192,9 +200,12 @@ extension TurnkeyContext {
         )
     }
     
-    /// Creates a `TurnkeyClient` for Auth Proxy requests if a config ID is set.
+    /// Creates an Auth Proxy client if a configuration ID is available.
     ///
-    /// - Returns: A configured `TurnkeyClient` if `authProxyConfigId` is present, otherwise `nil`.
+    /// Generates a `TurnkeyClient` preconfigured for Auth Proxy requests using the stored
+    /// proxy URL and configuration ID.
+    ///
+    /// - Returns: A configured `TurnkeyClient` if `authProxyConfigId` is set, otherwise `nil`.
     internal func makeAuthProxyClientIfNeeded() -> TurnkeyClient? {
         if let configId = self.authProxyConfigId {
             return TurnkeyClient(
@@ -208,9 +219,10 @@ extension TurnkeyContext {
     
     /// Resolves the session expiration duration in seconds.
     ///
-    /// Uses the provided value if available, otherwise falls back to runtime config, then the default constant.
+    /// Determines the expiration time based on the provided value, runtime configuration,
+    /// or the default constant if neither is set.
     ///
-    /// - Parameter expirationSeconds: Optional explicit expiration duration.
+    /// - Parameter expirationSeconds: Optional explicit expiration duration in seconds.
     /// - Returns: The resolved expiration duration as a string.
     internal func resolvedSessionExpirationSeconds(expirationSeconds: String? = nil) -> String {
         return expirationSeconds ?? runtimeConfig?.auth.sessionExpirationSeconds ?? Constants.Session.defaultExpirationSeconds

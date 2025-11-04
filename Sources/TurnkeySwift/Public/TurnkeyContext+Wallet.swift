@@ -4,12 +4,15 @@ import TurnkeyCrypto
 
 extension TurnkeyContext {
     
-    /// Fetches wallets with their accounts.
+    /// Fetches all wallets and their associated accounts for the active session.
     ///
-    /// - Parameters:
-    ///   - client: The authenticated TurnkeyClient.
-    ///   - organizationId: The organization ID associated with the session.
-    /// - Returns: An array of `Wallet` objects with accounts.
+    /// Retrieves wallet metadata and concurrently fetches account details for each wallet.
+    ///
+    /// - Returns: An array of `Wallet` objects including their accounts.
+    ///
+    /// - Throws:
+    ///   - `TurnkeySwiftError.invalidSession` if no active session is found.
+    ///   - `TurnkeySwiftError.failedToFetchWallets` if fetching wallets or accounts fails.
     public func fetchWallets() async throws -> [Wallet] {
         guard
             authState == .authenticated,
@@ -57,12 +60,13 @@ extension TurnkeyContext {
         
     }
     
-    /// Refreshes the current wallets data.
+    /// Refreshes the wallet list for the active session.
     ///
-    /// This method uses the currently selected session to refetch wallet data
-    /// from the Turnkey API and updates the internal state.
+    /// Refetches all wallets and their accounts from the Turnkey API
+    /// and updates the local wallet state on the main thread.
     ///
-    /// - Throws: `TurnkeySwiftError.failedToFetchWallets` if the refresh fails.
+    /// - Throws:
+    ///   - `TurnkeySwiftError.failedToFetchWallets` if the refresh operation fails.
     public func refreshWallets() async throws {
         // TODO: we currently throw a failedToFetchWallets error which breaks our convention
         // this should be failedToRefreshWallets
@@ -72,15 +76,18 @@ extension TurnkeyContext {
         }
     }
     
-    /// Creates a new wallet with the given name and accounts.
+    /// Creates a new wallet under the active organization.
+    ///
+    /// Generates a wallet with the specified name, account parameters, and optional mnemonic length.
     ///
     /// - Parameters:
-    ///   - walletName: Name to assign to the new wallet.
-    ///   - accounts: List of wallet accounts to generate.
-    ///   - mnemonicLength: Optional mnemonic length (e.g. 12, 24).
+    ///   - walletName: The name to assign to the new wallet.
+    ///   - accounts: The list of account parameters to generate under this wallet.
+    ///   - mnemonicLength: Optional mnemonic phrase length (e.g. `12` or `24`).
     ///
-    /// - Throws: `TurnkeySwiftError.invalidSession` if no session is selected,
-    ///           or `TurnkeySwiftError.failedToCreateWallet` on failure.
+    /// - Throws:
+    ///   - `TurnkeySwiftError.invalidSession` if no active session is found.
+    ///   - `TurnkeySwiftError.failedToCreateWallet` if wallet creation fails.
     public func createWallet(
         walletName: String,
         accounts: [WalletAccountParams],
@@ -111,19 +118,22 @@ extension TurnkeyContext {
         }
     }
     
-    /// Imports an existing wallet using the provided mnemonic and account list.
+    /// Imports an existing wallet using a mnemonic phrase.
+    ///
+    /// Initializes an import bundle, encrypts the mnemonic, and sends it to the Turnkey API.
+    /// The imported wallet is automatically added to the current session’s organization.
     ///
     /// - Parameters:
-    ///   - walletName: Name to assign to the imported wallet.
+    ///   - walletName: The name to assign to the imported wallet.
     ///   - mnemonic: The recovery phrase to import.
-    ///   - accounts: List of wallet accounts to generate.
+    ///   - accounts: The list of wallet accounts to generate.
     ///
-    /// - Returns: The resulting `Activity` object from the import.
+    /// - Returns: The ID of the imported wallet.
     ///
-    /// - Throws: `TurnkeySwiftError.invalidSession` if no session is selected,
-    ///           `TurnkeySwiftError.invalidResponse` if response is malformed,
-    ///           or `TurnkeySwiftError.failedToImportWallet` if import fails.
-    @discardableResult
+    /// - Throws:
+    ///   - `TurnkeySwiftError.invalidSession` if no active session is found.
+    ///   - `TurnkeySwiftError.invalidResponse` if the API response is malformed.
+    ///   - `TurnkeySwiftError.failedToImportWallet` if the import operation fails.
     public func importWallet(
         walletName: String,
         mnemonic: String,
@@ -173,15 +183,21 @@ extension TurnkeyContext {
     }
     
     
-    /// Exports the mnemonic phrase for the specified wallet.
+    /// Exports a wallet’s mnemonic phrase.
     ///
-    /// - Parameter walletId: The wallet identifier to export.
+    /// Generates an ephemeral key pair, requests an export bundle, and decrypts it locally.
     ///
-    /// - Returns: An `ExportWalletResult` containing the decrypted mnemonic phrase.
+    /// - Parameters:
+    ///   - walletId: The wallet identifier to export.
+    ///   - dangerouslyOverrideSignerPublicKey: Optional public key override for advanced use.
+    ///   - returnMnemonic: Whether to return the mnemonic phrase (defaults to `true`).
     ///
-    /// - Throws: `TurnkeySwiftError.invalidSession` if no session is selected,
-    ///           `TurnkeySwiftError.invalidResponse` if response is malformed,
-    ///           or `TurnkeySwiftError.failedToExportWallet` if export fails.
+    /// - Returns: The decrypted mnemonic phrase or export data.
+    ///
+    /// - Throws:
+    ///   - `TurnkeySwiftError.invalidSession` if no active session is found.
+    ///   - `TurnkeySwiftError.invalidResponse` if the API response is malformed.
+    ///   - `TurnkeySwiftError.failedToExportWallet` if decryption or export fails.
     public func exportWallet(walletId: String, dangerouslyOverrideSignerPublicKey: String? = nil, returnMnemonic: Bool = true) async throws -> String {
         let (targetPublicKey, _, embeddedPriv) = TurnkeyCrypto.generateP256KeyPair()
         

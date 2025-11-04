@@ -9,23 +9,28 @@ import AppKit
 #endif
 
 extension TurnkeyContext {
-
-    /// Returns the appropriate notification that fires when the app returns to foreground.
+    
+    /// Returns the system notification triggered when the app enters the foreground.
     ///
-    /// - Returns: The notification name for foreground entry on supported platforms.
+    /// Resolves the appropriate notification name based on the active platform (iOS, tvOS, visionOS, or macOS).
+    ///
+    /// - Returns: The platform-specific `Notification.Name` for foreground entry, or `nil` if unsupported.
     static var foregroundNotification: Notification.Name? {
         #if os(iOS) || os(tvOS) || os(visionOS)
-        UIApplication.willEnterForegroundNotification
+            UIApplication.willEnterForegroundNotification
         #elseif os(macOS)
-        NSApplication.didBecomeActiveNotification
+            NSApplication.didBecomeActiveNotification
         #else
-        nil
+            nil
         #endif
     }
     
     /// Reschedules expiry timers for all persisted sessions.
     ///
-    /// Iterates over all stored session keys and schedules timers based on JWT expiration.
+    /// Iterates through all stored sessions in the registry, restoring
+    /// their expiration timers based on JWT expiry timestamps.
+    ///
+    /// - Note: This method is typically invoked during startup or after app resume.
     func rescheduleAllSessionExpiries() async {
         do {
             for key in try SessionRegistryStore.all() {
@@ -37,12 +42,18 @@ extension TurnkeyContext {
         }
     }
     
-    /// Schedules an expiry timer to automatically refresh or clear a session when its JWT expires.
+    /// Schedules an expiry timer for a given session.
+    ///
+    /// Sets up a timer that triggers just before a session’s JWT expiration time.
+    /// If an auto-refresh duration is configured, the timer attempts to refresh the session.
+    /// Otherwise, it clears the session when the timer fires.
     ///
     /// - Parameters:
     ///   - sessionKey: The key identifying the session to monitor.
     ///   - expTimestamp: The UNIX timestamp (in seconds) when the JWT expires.
-    ///   - buffer: Seconds to subtract from the expiry time to fire early (default is 5 seconds)
+    ///   - buffer: The number of seconds before expiry to trigger the timer early (default is 5 seconds).
+    ///
+    /// - Note: Existing timers for the same session are automatically cancelled before scheduling a new one.
     func scheduleExpiryTimer(
         for sessionKey: String,
         expTimestamp: TimeInterval,
@@ -50,23 +61,23 @@ extension TurnkeyContext {
     ) {
         // cancel any old timer
         expiryTasks[sessionKey]?.cancel()
-
+        
         let timeLeft = expTimestamp - Date().timeIntervalSince1970
-
+        
         // if already within (or past) the buffer window, we just clear now
         if timeLeft <= buffer {
             clearSession(for: sessionKey)
             return
         }
-
+        
         let interval = timeLeft - buffer
         let deadline = DispatchTime.now() + .milliseconds(Int(interval * 1_000))
         let timer = DispatchSource.makeTimerSource()
-
+        
         timer.schedule(deadline: deadline, leeway: .milliseconds(100))
         timer.setEventHandler { [weak self] in
             guard let self = self else { return }
-
+            
             // we calculate how much time is left when this handler actually runs
             // this is needed because if the app was backgrounded past the expiry,
             // the dispatch timer will still fire once the app returns to foreground
@@ -77,7 +88,7 @@ extension TurnkeyContext {
                 timer.cancel()
                 return
             }
-
+            
             if let dur = AutoRefreshStore.durationSeconds(for: sessionKey) {
                 Task {
                     do {
@@ -92,10 +103,10 @@ extension TurnkeyContext {
             } else {
                 self.clearSession(for: sessionKey)
             }
-
+            
             timer.cancel()
         }
-
+        
         timer.resume()
         expiryTasks[sessionKey] = timer
     }
