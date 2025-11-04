@@ -96,7 +96,7 @@ extension TurnkeyContext {
         challenge: String? = nil,
         expirationSeconds: String? = nil,
         createSubOrgParams: CreateSubOrgParams? = nil,
-        sessionKey: String? = nil,
+        sessionKey: String? = nil
     ) async throws -> PasskeyAuthResult {
         guard let client = client else {
             throw TurnkeySwiftError.missingAuthProxyConfiguration

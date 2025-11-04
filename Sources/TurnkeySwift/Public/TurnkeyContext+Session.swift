@@ -93,9 +93,7 @@ extension TurnkeyContext {
             if selectedSessionKey == nil {
                 try? SelectedSessionStore.save(resolvedSessionKey)
                 
-                let privHex = try KeyPairStore.getPrivateHex(for: dto.publicKey)
-                let cli = TurnkeyClient(
-                    apiPrivateKey: privHex,
+                let cli = try TurnkeyClient(
                     apiPublicKey: dto.publicKey,
                     baseUrl: apiUrl
                 )
@@ -275,7 +273,7 @@ extension TurnkeyContext {
             // if this was the selected session we update client and session state
             if targetSessionKey == selectedSessionKey {
 
-                let newClient = TurnkeyClient(
+                let newClient = try TurnkeyClient(
                     apiPublicKey: dto.publicKey,
                     baseUrl: apiUrl
                 )
