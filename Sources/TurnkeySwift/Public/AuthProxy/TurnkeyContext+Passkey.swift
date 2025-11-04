@@ -16,6 +16,7 @@ extension TurnkeyContext {
     ///   - anchor: The presentation anchor used to display the system passkey UI.
     ///   - publicKey: Optional public key to bind the session to (auto-generates if not provided).
     ///   - organizationId: Optional organization ID. If not provided, uses the configured value in `TurnkeyContext`.
+    ///   - expirationSeconds: Optional duration (in seconds) for the session's lifetime.
     ///   - sessionKey: Optional session storage key for the resulting session.
     ///
     /// - Returns: A `PasskeyAuthResult` containing the created session and credential ID (currently empty).
@@ -77,11 +78,12 @@ extension TurnkeyContext {
     ///   - anchor: The presentation anchor used to display the system passkey UI.
     ///   - passkeyDisplayName: Optional display name for the passkey (defaults to `"passkey-<timestamp>"`).
     ///   - challenge: Optional custom challenge string to use during passkey creation.
+    ///   - expirationSeconds: Optional duration (in seconds) for the session's lifetime.
     ///   - createSubOrgParams: Optional configuration for sub-organization creation (merged with passkey and API key data).
     ///   - sessionKey: Optional session storage key for the resulting session.
     ///   - organizationId: Optional organization ID override (not typically required for sign-up).
     ///
-    /// - Returns: A `PasskeyAuthResult` containing the new session and the registered passkey’s credential ID.
+    /// - Returns: A `PasskeyAuthResult` containing the new session and the registered passkey's credential ID.
     ///
     /// - Throws:
     ///   - `TurnkeySwiftError.missingAuthProxyConfiguration` if the Auth Proxy client is not initialized.

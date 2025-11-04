@@ -22,16 +22,16 @@ public final class TurnkeyContext: NSObject, ObservableObject {
     
     // internal state
     internal var expiryTasks: [String: DispatchSourceTimer] = [:]
+    internal let userConfig: TurnkeyConfig
     internal let apiUrl: String
     internal let authProxyUrl: String
     internal let authProxyConfigId: String?
     internal let rpId: String?
     internal let organizationId: String?
+    internal weak var oauthAnchor: ASPresentationAnchor?
     
     // Single user config captured at configure-time
     private static var _config: TurnkeyConfig = TurnkeyConfig()
-    
-    internal weak var oauthAnchor: ASPresentationAnchor?
     
     public static func configure(_ config: TurnkeyConfig) {
         _config = config
@@ -91,41 +91,6 @@ public final class TurnkeyContext: NSObject, ObservableObject {
                 }
             }
         }
-    }
-    
-    /// creates a `TurnkeyClient` for Auth Proxy requests if a config ID is set
-    internal func makeAuthProxyClientIfNeeded() -> TurnkeyClient? {
-        if let configId = self.authProxyConfigId {
-            return TurnkeyClient(
-                authProxyConfigId: configId,
-                authProxyUrl: self.authProxyUrl
-            )
-        } else {
-            return nil
-        }
-    }
-
-    // MARK: - Config / Helpers
-
-    internal let userConfig: TurnkeyConfig
-
-
-    internal func resolvedSessionExpirationSeconds(expirationSeconds: String? = nil) -> String {
-        return expirationSeconds ?? runtimeConfig?.auth.sessionExpirationSeconds ?? Constants.Session.defaultExpirationSeconds
-    }
-
-    // Resolve OAuth provider settings using runtime and user config.
-    // Honors per-provider redirect overrides (e.g., Discord/X defaulting to scheme://) and falls back to proxy/user redirect base.
-    internal func getOAuthProviderSettings(provider: String) throws -> (clientId: String, redirectUri: String, appScheme: String) {
-        let providerInfo = runtimeConfig?.auth.oauth.providers[provider]
-        let clientId = providerInfo?.clientId ?? ""
-        let appScheme = runtimeConfig?.auth.oauth.appScheme ?? ""
-        let redirectBase = runtimeConfig?.auth.oauth.redirectBaseUrl ?? Constants.Turnkey.oauthRedirectUrl
-        let redirectUri = (providerInfo?.redirectUri?.isEmpty == false)
-            ? (providerInfo!.redirectUri!)
-            : "\(redirectBase)?scheme=\(appScheme)"
-
-        return (clientId: clientId, redirectUri: redirectUri, appScheme: appScheme)
     }
 }
 

@@ -61,6 +61,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     ///                encoded in the token.
     ///   - providerName: The OAuth provider name (defaults to `"OpenID Connect Provider <timestamp>"`).
     ///   - createSubOrgParams: Optional parameters for sub-organization creation.
+    ///   - invalidateExisting: Whether to invalidate any existing session (defaults to `false`).
     ///   - sessionKey: Optional session key to associate with the signup.
     ///
     /// - Returns: A `BaseAuthResult` containing the created session.
@@ -112,9 +113,9 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     ///   - oidcToken: The OIDC token returned from the OAuth provider.
     ///   - publicKey: The public key bound to the session.
     ///   - providerName: The OAuth provider name (defaults to `"OpenID Connect Provider <timestamp>"`).
-    ///   - sessionKey: Optional session key returned from the OAuth redirect.
     ///   - invalidateExisting: Whether to invalidate any existing session (defaults to `false`).
     ///   - createSubOrgParams: Optional parameters for sub-organization creation.
+    ///   - sessionKey: Optional session key returned from the OAuth redirect.
     ///
     /// - Returns: A `CompleteOAuthResult` describing whether a login or signup occurred.
     ///
@@ -385,7 +386,6 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         ))
         
         let oidcToken = resp.oidcToken
-        let sessionKey = parseSessionKey(fromState: oauth.state)
         
         // if onOAuthSuccess was passed in then we run the callback
         // and then return early
@@ -399,8 +399,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         _ = try await completeOAuth(
             oidcToken: oidcToken,
             publicKey: publicKey,
-            providerName: "discord",
-            sessionKey: sessionKey
+            providerName: "discord"
         )
     }
     
@@ -413,6 +412,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     /// - Parameters:
     ///   - anchor: The presentation anchor for the OAuth web session.
     ///   - clientId: Optional X OAuth client ID override.
+    ///   - sessionKey: Optional session storage key for the resulting session.
     ///   - additionalState: Optional key-value pairs appended to the OAuth request state.
     ///   - onOAuthSuccess: Optional callback invoked with the OIDC token and public key before auto-login.
     ///
@@ -424,6 +424,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     public func handleXOauth(
         anchor: ASPresentationAnchor,
         clientId: String? = nil,
+        sessionKey: String? = nil,
         additionalState: [String: String]? = nil,
         onOAuthSuccess: (@Sendable (OAuthSuccess) -> Void)? = nil
     ) async throws {
@@ -494,7 +495,6 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         ))
         
         let oidcToken = resp.oidcToken
-        let sessionKey = parseSessionKey(fromState: oauth.state)
         
         // if onOAuthSuccess was passed in then we run the callback
         // and then return early
@@ -508,8 +508,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         _ = try await completeOAuth(
             oidcToken: oidcToken,
             publicKey: publicKey,
-            providerName: "twitter",
-            sessionKey: sessionKey
+            providerName: "twitter"
         )
     }
     
