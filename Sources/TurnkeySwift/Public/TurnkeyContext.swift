@@ -2,6 +2,7 @@ import Combine
 import CryptoKit
 import Foundation
 import AuthenticationServices
+import TurnkeyTypes
 import TurnkeyHttp
 
 public final class TurnkeyContext: NSObject, ObservableObject {
@@ -14,7 +15,9 @@ public final class TurnkeyContext: NSObject, ObservableObject {
     @Published public internal(set) var client: TurnkeyClient?
     
     @Published public internal(set) var selectedSessionKey: String?
-    @Published public internal(set) var user: SessionUser?
+    @Published public internal(set) var session: Session?
+    @Published public internal(set) var user: v1User?
+    @Published public internal(set) var wallets: [Wallet] = []
     @Published internal var runtimeConfig: TurnkeyRuntimeConfig?
     
     // internal state

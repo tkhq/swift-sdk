@@ -47,11 +47,12 @@ public enum TurnkeySwiftError: LocalizedError, Sendable {
     case failedToStoreSession(underlying: Error)
     case failedToClearSession(underlying: Error)
     case failedToRefreshSession(underlying: Error)
-    case failedToRefreshUser(underlying: Error)
+    case failedToFetchUser(underlying: Error)
     case failedToSetSelectedSession(underlying: Error)
     case failedToCreateWallet(underlying: Error)
     case failedToExportWallet(underlying: Error)
     case failedToImportWallet(underlying: Error)
+    case failedToFetchWallets(underlying: Error)
     case failedToUpdateUser(underlying: Error)
     case failedToUpdateUserEmail(underlying: Error)
     case failedToUpdateUserPhoneNumber(underlying: Error)
@@ -99,11 +100,12 @@ public enum TurnkeySwiftError: LocalizedError, Sendable {
              .failedToStoreSession(let e),
              .failedToClearSession(let e),
              .failedToRefreshSession(let e),
-             .failedToRefreshUser(let e),
+             .failedToFetchUser(let e),
              .failedToSetSelectedSession(let e),
              .failedToCreateWallet(let e),
              .failedToExportWallet(let e),
              .failedToImportWallet(let e),
+             .failedToFetchWallets(let e),
              .failedToUpdateUser(let e),
              .failedToUpdateUserEmail(let e),
              .failedToUpdateUserPhoneNumber(let e),
@@ -137,11 +139,12 @@ public enum TurnkeySwiftError: LocalizedError, Sendable {
              .failedToStoreSession(let e),
              .failedToClearSession(let e),
              .failedToRefreshSession(let e),
-             .failedToRefreshUser(let e),
+             .failedToFetchUser(let e),
              .failedToSetSelectedSession(let e),
              .failedToCreateWallet(let e),
              .failedToExportWallet(let e),
              .failedToImportWallet(let e),
+             .failedToFetchWallets(let e),
              .failedToUpdateUser(let e),
              .failedToUpdateUserEmail(let e),
              .failedToUpdateUserPhoneNumber(let e),

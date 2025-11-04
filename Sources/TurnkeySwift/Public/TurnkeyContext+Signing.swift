@@ -4,19 +4,22 @@ import TurnkeyHttp
 
 extension TurnkeyContext {
     
-    /// Signs a raw payload using the currently selected session's credentials.
+    /// Signs a raw payload using the currently selected session’s credentials.
+    ///
+    /// Uses the selected session to sign arbitrary data with the specified key and encoding parameters.
     ///
     /// - Parameters:
     ///   - signWith: The key ID or alias to sign with.
     ///   - payload: The raw data to be signed.
     ///   - encoding: The encoding of the payload (e.g., `utf8`, `hex`, `base64url`).
-    ///   - hashFunction: The hash function to apply prior to signing.
+    ///   - hashFunction: The hash function to apply before signing.
     ///
-    /// - Returns: A `SignRawPayloadResult` containing the signature and metadata.
+    /// - Returns: A `SignRawPayloadResult` containing the signature components and metadata.
     ///
-    /// - Throws: `TurnkeySwiftError.invalidSession` if no session is selected,
-    ///           `TurnkeySwiftError.invalidResponse` if the server response is malformed,
-    ///           or `TurnkeySwiftError.failedToSignPayload` if the signing operation fails.
+    /// - Throws:
+    ///   - `TurnkeySwiftError.invalidSession` if no active session is found.
+    ///   - `TurnkeySwiftError.invalidResponse` if the server response is malformed.
+    ///   - `TurnkeySwiftError.failedToSignPayload` if the signing operation fails.
     public func signRawPayload(
         signWith: String,
         payload: String,
@@ -28,7 +31,7 @@ extension TurnkeyContext {
             authState == .authenticated,
             let client = client,
             let sessionKey = selectedSessionKey,
-            let dto = try JwtSessionStore.load(key: sessionKey)
+            let stored = try JwtSessionStore.load(key: sessionKey)
         else {
             throw TurnkeySwiftError.invalidSession
         }
@@ -36,42 +39,38 @@ extension TurnkeyContext {
         
         do {
             let resp = try await client.signRawPayload(TSignRawPayloadBody(
-                organizationId: dto.organizationId,
+                organizationId: stored.decoded.organizationId,
                 encoding: encoding,
                 hashFunction: hashFunction,
                 payload: payload,
                 signWith: signWith
             ))
             
-            guard let result = resp.activity.result.signRawPayloadResult else {
-                throw TurnkeySwiftError.invalidResponse
-            }
-            
-            return result
+            return SignRawPayloadResult(r: resp.r, s: resp.s, v: resp.v)
             
         } catch {
             throw TurnkeySwiftError.failedToSignPayload(underlying: error)
         }
     }
-
-    /// Signs a plaintext message using the currently selected session's credentials.
+    
+    /// Signs a plaintext message using the currently selected session’s credentials.
     ///
-    /// Behavior mirrors JS SDK for embedded wallets:
-    /// - Ethereum: optionally prefixes with "\x19Ethereum Signed Message:\n" + len(messageBytes)
-    /// - Defaults for encoding and hashFunction are inferred from the address format
+    /// Determines the encoding and hash function based on the provided wallet account and applies
+    /// optional Ethereum message prefixing before signing.
     ///
     /// - Parameters:
-    ///   - signWith: Wallet account to use for signing.
-    ///   - message: UTF-8 plaintext message to sign.
+    ///   - signWith: The wallet account to use for signing.
+    ///   - message: The UTF-8 plaintext message to sign.
     ///   - encoding: Optional override for payload encoding.
     ///   - hashFunction: Optional override for hash function.
-    ///   - addEthereumPrefix: Optional override for Ethereum message prefixing (defaults to true for Ethereum accounts).
+    ///   - addEthereumPrefix: Optional flag to prefix Ethereum messages (defaults to true for Ethereum accounts).
     ///
     /// - Returns: A `SignRawPayloadResult` containing the signature components.
     ///
-    /// - Throws: `TurnkeySwiftError.invalidSession` if no session is selected,
-    ///           `TurnkeySwiftError.invalidResponse` if the server response is malformed,
-    ///           or `TurnkeySwiftError.failedToSignPayload` if the signing operation fails.
+    /// - Throws:
+    ///   - `TurnkeySwiftError.invalidSession` if no active session is found.
+    ///   - `TurnkeySwiftError.invalidResponse` if the server response is malformed.
+    ///   - `TurnkeySwiftError.failedToSignPayload` if the signing operation fails.
     public func signMessage(
         signWith account: WalletAccount,
         message: String,
@@ -88,9 +87,26 @@ extension TurnkeyContext {
             addEthereumPrefix: addEthereumPrefix
         )
     }
-
-    /// Signs a plaintext message using the currently selected session's credentials.
-    /// See the other overload for behavior details.
+    
+    /// Signs a plaintext message using the currently selected session’s credentials.
+    ///
+    /// Determines the encoding and hash function from the address format, applies
+    /// optional Ethereum message prefixing, and signs the resulting payload.
+    ///
+    /// - Parameters:
+    ///   - signWith: The address or key identifier to sign with.
+    ///   - addressFormat: The address format associated with the signing key.
+    ///   - message: The UTF-8 plaintext message to sign.
+    ///   - encoding: Optional override for payload encoding.
+    ///   - hashFunction: Optional override for hash function.
+    ///   - addEthereumPrefix: Optional flag to prefix Ethereum messages (defaults to true for Ethereum accounts).
+    ///
+    /// - Returns: A `SignRawPayloadResult` containing the signature components.
+    ///
+    /// - Throws:
+    ///   - `TurnkeySwiftError.invalidSession` if no active session is found.
+    ///   - `TurnkeySwiftError.invalidResponse` if the server response is malformed.
+    ///   - `TurnkeySwiftError.failedToSignPayload` if the signing operation fails.
     public func signMessage(
         signWith: String,
         addressFormat: AddressFormat,
@@ -103,19 +119,19 @@ extension TurnkeyContext {
             authState == .authenticated,
             let client = client,
             let sessionKey = selectedSessionKey,
-            let dto = try JwtSessionStore.load(key: sessionKey)
+            let stored = try JwtSessionStore.load(key: sessionKey)
         else {
             throw TurnkeySwiftError.invalidSession
         }
-
+        
         // Determine defaults from address format
         let defaults = AddressFormatDefaults.defaults(for: addressFormat)
         let finalEncoding = encoding ?? defaults.encoding
         let finalHash = hashFunction ?? defaults.hashFunction
-
+        
         // Start with UTF-8 message bytes
         var messageBytes = Data(message.utf8)
-
+        
         // Apply Ethereum prefix if applicable
         if addressFormat == .address_format_ethereum {
             let shouldPrefix = addEthereumPrefix ?? true
@@ -123,22 +139,19 @@ extension TurnkeyContext {
                 messageBytes = MessageEncodingHelper.ethereumPrefixed(messageData: messageBytes)
             }
         }
-
+        
         let payload = MessageEncodingHelper.encodeMessageBytes(messageBytes, as: finalEncoding)
-
+        
         do {
             let resp = try await client.signRawPayload(TSignRawPayloadBody(
-                organizationId: dto.organizationId,
+                organizationId: stored.decoded.organizationId,
                 encoding: finalEncoding,
                 hashFunction: finalHash,
                 payload: payload,
                 signWith: signWith
             ))
-
-            guard let result = resp.activity.result.signRawPayloadResult else {
-                throw TurnkeySwiftError.invalidResponse
-            }
-            return result
+            
+            return SignRawPayloadResult(r: resp.r, s: resp.s, v: resp.v)
         } catch {
             throw TurnkeySwiftError.failedToSignPayload(underlying: error)
         }

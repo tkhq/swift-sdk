@@ -53,9 +53,9 @@ extension TurnkeyContext {
             if let _ = try JwtSessionStore.load(key: resolvedSessionKey) {
                 throw TurnkeySwiftError.keyAlreadyExists
             }
-            
+                        
             let dto = try JWTDecoder.decode(jwt, as: TurnkeySession.self)
-           
+                       
             // determine if auto-refresh should be enabled and how to set the TTL
             // - auto-refresh is enabled if either:
             //     (a) `refreshedSessionTTLSeconds` is explicitly provided, OR
@@ -81,15 +81,43 @@ extension TurnkeyContext {
             
             try persistSession(
                 dto: dto,
+                jwt: jwt,
                 sessionKey: resolvedSessionKey,
                 refreshedSessionTTLSeconds: ttlToStore
             )
             
             if selectedSessionKey == nil {
-                _ = try await setSelectedSession(sessionKey: resolvedSessionKey)
+                try? SelectedSessionStore.save(resolvedSessionKey)
+                
+                let privHex = try KeyPairStore.getPrivateHex(for: dto.publicKey)
+                let cli = TurnkeyClient(
+                    apiPrivateKey: privHex,
+                    apiPublicKey: dto.publicKey,
+                    baseUrl: apiUrl
+                )
+                
+                // Create and set session state
+                let session = Session(
+                    exp: dto.exp,
+                    publicKey: dto.publicKey,
+                    sessionType: dto.sessionType,
+                    userId: dto.userId,
+                    organizationId: dto.organizationId,
+                    token: jwt
+                )
+                
+                await MainActor.run {
+                    self.selectedSessionKey = resolvedSessionKey
+                    self.client = cli
+                    self.session = session
+                    self.authState = .authenticated
+                }
+                
+                // we set user and wallet state
+                try? await refreshUser()
+                try? await refreshWallets()
             }
             
-            await MainActor.run { self.authState = .authenticated }
         } catch {
             throw TurnkeySwiftError.failedToStoreSession(underlying: error)
         }
@@ -101,12 +129,14 @@ extension TurnkeyContext {
     /// - Returns: A configured `TurnkeyClient` for the session.
     /// - Throws: `TurnkeySwiftError` if loading session details fails.
     @discardableResult
-    public func setSelectedSession(sessionKey: String) async throws -> TurnkeyClient {
+    public func setActiveSession(sessionKey: String) async throws -> TurnkeyClient {
         do {
-            guard let dto = try JwtSessionStore.load(key: sessionKey) else {
+            guard let stored = try JwtSessionStore.load(key: sessionKey) else {
                 throw TurnkeySwiftError.keyNotFound
             }
             
+            let dto = stored.decoded
+            let jwt = stored.jwt
             let privHex = try KeyPairStore.getPrivateHex(for: dto.publicKey)
             
             let cli = TurnkeyClient(
@@ -115,18 +145,25 @@ extension TurnkeyContext {
                 baseUrl: apiUrl
             )
             
-            let fetched = try await fetchSessionUser(
-                using: cli,
+            let session = Session(
+                exp: dto.exp,
+                publicKey: dto.publicKey,
+                sessionType: dto.sessionType,
+                userId: dto.userId,
                 organizationId: dto.organizationId,
-                userId: dto.userId
+                token: jwt
             )
             
             await MainActor.run {
                 try? SelectedSessionStore.save(sessionKey)
                 self.selectedSessionKey = sessionKey
                 self.client = cli
-                self.user = fetched
+                self.session = session
             }
+            
+            // we update user and wallet state
+            try? await refreshUser()
+            try? await refreshWallets()
             
             return cli
         } catch {
@@ -149,7 +186,9 @@ extension TurnkeyContext {
                 authState = .unAuthenticated
                 selectedSessionKey = nil
                 client = self.makeAuthProxyClientIfNeeded()
+                session = nil
                 user = nil
+                wallets = []
                 
                 SelectedSessionStore.delete()
             }
@@ -185,20 +224,21 @@ extension TurnkeyContext {
         if targetSessionKey == selectedSessionKey {
             // refreshing the selected session
             guard authState == .authenticated,
-                  let currentUser = self.user,
+                  let currentSession = self.session,
                   let client = self.client else {
                 throw TurnkeySwiftError.invalidSession
             }
             
             clientToUse = client
-            orgId = currentUser.organizationId
+            orgId = currentSession.organizationId
         } else {
             // refreshing a background session
             
-            guard let dto = try JwtSessionStore.load(key: targetSessionKey) else {
+            guard let stored = try JwtSessionStore.load(key: targetSessionKey) else {
                 throw TurnkeySwiftError.keyNotFound
             }
             
+            let dto = stored.decoded
             let privHex = try KeyPairStore.getPrivateHex(for: dto.publicKey)
             clientToUse = TurnkeyClient(
                 apiPrivateKey: privHex,
@@ -217,24 +257,41 @@ extension TurnkeyContext {
                 invalidateExisting: invalidateExisting,
                 publicKey: newPublicKey
             ))
-            guard let jwt = resp.activity.result.stampLoginResult?.session
-            else {
-                throw TurnkeySwiftError.invalidResponse
-            }
+            let jwt = resp.session
             
-            try await updateSession(jwt: jwt, sessionKey: targetSessionKey)
+            // we purge old key material but preserve the auto-refresh metadata stored
+            try purgeStoredSession(for: targetSessionKey, keepAutoRefresh: true)
             
-            // if this was the selected session, swap in the new client
+            let dto = try JWTDecoder.decode(jwt, as: TurnkeySession.self)
+            let nextDuration = AutoRefreshStore.durationSeconds(for: targetSessionKey)
+            try persistSession(
+                dto: dto,
+                jwt: jwt,
+                sessionKey: targetSessionKey,
+                refreshedSessionTTLSeconds: nextDuration
+            )
+            
+            // if this was the selected session we update client and session state
             if targetSessionKey == selectedSessionKey {
-                let updatedDto = try JwtSessionStore.load(key: targetSessionKey)!
-                let privHex = try KeyPairStore.getPrivateHex(for: updatedDto.publicKey)
+                let privHex = try KeyPairStore.getPrivateHex(for: dto.publicKey)
                 let newClient = TurnkeyClient(
                     apiPrivateKey: privHex,
-                    apiPublicKey: updatedDto.publicKey,
+                    apiPublicKey: dto.publicKey,
                     baseUrl: apiUrl
                 )
+                
+                let newSession = Session(
+                    exp: dto.exp,
+                    publicKey: dto.publicKey,
+                    sessionType: dto.sessionType,
+                    userId: dto.userId,
+                    organizationId: dto.organizationId,
+                    token: jwt
+                )
+                
                 await MainActor.run {
                     self.client = newClient
+                    self.session = newSession
                 }
             }
             

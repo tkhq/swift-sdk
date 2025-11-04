@@ -9,7 +9,7 @@ public typealias AddressFormat = v1AddressFormat
 public typealias Timestamp = externaldatav1Timestamp
 
 public typealias WalletAccountParams = v1WalletAccountParams
-public typealias WalletAccount = SessionUser.UserWallet.WalletAccount
+public typealias WalletAccount = v1WalletAccount
 
 public typealias SignRawPayloadResult = v1SignRawPayloadResult
 public typealias Activity = v1Activity

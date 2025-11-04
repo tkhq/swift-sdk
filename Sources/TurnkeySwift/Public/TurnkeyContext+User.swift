@@ -4,71 +4,43 @@ import TurnkeyHttp
 
 extension TurnkeyContext {
     
-    /// Refreshes the current user and associated wallet data.
+    /// Fetches user data.
     ///
-    /// This method uses the currently selected session to refetch user data
-    /// from the Turnkey API and updates the internal state.
-    ///
-    /// If no valid session is found, the method silently returns.
-    public func refreshUser() async {
-        
-        guard
-            authState == .authenticated,
-            let client = client,
-            let sessionKey = selectedSessionKey,
-            let dto = try? JwtSessionStore.load(key: sessionKey)
-        else {
-            return
-        }
-        
-        if let updated = try? await fetchSessionUser(
-            using: client,
-            organizationId: dto.organizationId,
-            userId: dto.userId
-        ) {
-            await MainActor.run {
-                self.user = updated
-            }
-        }
-    }
-    
-    /// Updates the contact information for the user associated with the currently selected session.
-    ///
-    /// - Parameters:
-    ///   - email: Optional email address to update.
-    ///   - phone: Optional phone number to update.
-    ///
+    /// - Returns: A `v1User` object containing user metadata.
     /// - Throws: `TurnkeySwiftError.invalidSession` if no session is selected,
-    ///           or `TurnkeySwiftError.failedToUpdateUser` if the update fails.
-    public func updateUser(email: String? = nil, phone: String? = nil) async throws {
-        
+    ///           or `TurnkeySwiftError.failedToFetchUser` if the fetch fails.
+    public func fetchUser() async throws -> v1User {
         guard
             authState == .authenticated,
             let client = client,
-            let user = user
+            let session = session
         else {
             throw TurnkeySwiftError.invalidSession
         }
         
-        
-        let trimmedEmail = email?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty
-        let trimmedPhone = phone?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty
-        
         do {
-            let resp = try await client.updateUser(TUpdateUserBody(
-                organizationId: user.organizationId,
-                userEmail: trimmedEmail,
-                userId: user.id,
-                userPhoneNumber: trimmedPhone,
-                userTagIds: []
+            let userResp = try await client.getUser(TGetUserBody(
+                organizationId: session.organizationId,
+                userId: session.userId
             ))
-            
-            if resp.activity.result.updateUserResult?.userId != nil {
-                await refreshUser()
-            }
-            
+            return userResp.user
         } catch {
-            throw TurnkeySwiftError.failedToUpdateUser(underlying: error)
+            throw TurnkeySwiftError.failedToFetchUser(underlying: error)
+        }
+    }
+    
+    /// Refreshes the current user data.
+    ///
+    /// This method uses the currently selected session to refetch user data
+    /// from the Turnkey API and updates the internal state.
+    ///
+    /// - Throws: `TurnkeySwiftError.failedToFetchUser` if the refresh fails.
+    public func refreshUser() async throws {
+        // TODO: we currently throw a failedToFetchUser error which breaks our convention
+        // this should be failedToRefreshUser
+        let user = try await fetchUser()
+        await MainActor.run {
+            self.user = user
         }
     }
     
@@ -87,23 +59,22 @@ extension TurnkeyContext {
         guard
             authState == .authenticated,
             let client = client,
-            let user = user
+            let user = user,
+            let session = session
         else {
             throw TurnkeySwiftError.invalidSession
         }
         
         
         do {
-            let resp = try await client.updateUserEmail(TUpdateUserEmailBody(
-                organizationId: user.organizationId,
+            _ = try await client.updateUserEmail(TUpdateUserEmailBody(
+                organizationId: session.organizationId,
                 userEmail: email,
-                userId: user.id,
+                userId: user.userId,
                 verificationToken: verificationToken
             ))
             
-            if resp.activity.result.updateUserEmailResult?.userId != nil {
-                await refreshUser()
-            }
+            try await refreshUser()
             
         } catch {
             throw TurnkeySwiftError.failedToUpdateUserEmail(underlying: error)
@@ -125,7 +96,8 @@ extension TurnkeyContext {
         guard
             authState == .authenticated,
             let client = client,
-            let user = user
+            let user = user,
+            let session = session
         else {
             throw TurnkeySwiftError.invalidSession
         }
@@ -133,16 +105,14 @@ extension TurnkeyContext {
         
         
         do {
-            let resp = try await client.updateUserPhoneNumber(TUpdateUserPhoneNumberBody(
-                organizationId: user.organizationId,
-                userId: user.id,
+            _ = try await client.updateUserPhoneNumber(TUpdateUserPhoneNumberBody(
+                organizationId: session.organizationId,
+                userId: user.userId,
                 userPhoneNumber: phone,
                 verificationToken: verificationToken
             ))
             
-            if resp.activity.result.updateUserPhoneNumberResult?.userId != nil {
-                await refreshUser()
-            }
+            try await refreshUser()
             
         } catch {
             throw TurnkeySwiftError.failedToUpdateUserPhoneNumber(underlying: error)

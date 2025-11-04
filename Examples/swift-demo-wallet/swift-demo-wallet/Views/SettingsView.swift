@@ -52,9 +52,9 @@ struct SettingsView: View {
         .padding()
         .onAppear {
             if !didInitialize {
-                email = turnkey.user?.email ?? ""
+                email = turnkey.user?.userEmail ?? ""
                 
-                if let fullNumber = turnkey.user?.phoneNumber,
+                if let fullNumber = turnkey.user?.userPhoneNumber,
                    let parsed = parsePhone(fullNumber) {
                     phone = parsed.nationalNumber
                     selectedCountry = parsed.regionCode
@@ -75,7 +75,7 @@ struct SettingsView: View {
                 // combines the country code and number
                 let formattedPhone = formatToE164(phone, region: selectedCountry)
                 
-                try await turnkey.updateUser(email: email, phone: formattedPhone)
+                //try await turnkey.updateUser(email: email, phone: formattedPhone)
             } catch {
                 toast.show(message: "Failed to update user", type: .error)
             }

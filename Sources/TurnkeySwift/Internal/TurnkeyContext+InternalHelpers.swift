@@ -44,7 +44,7 @@ extension TurnkeyContext {
             }
             
             await MainActor.run { self.authState = .authenticated }
-            _ = try? await setSelectedSession(sessionKey: sessionKey)
+            _ = try? await self.setActiveSession(sessionKey: sessionKey)
         } catch {
             await MainActor.run { self.authState = .unAuthenticated }
         }
@@ -56,8 +56,8 @@ extension TurnkeyContext {
     func rescheduleAllSessionExpiries() async {
         do {
             for key in try SessionRegistryStore.all() {
-                guard let dto = try? JwtSessionStore.load(key: key) else { continue }
-                scheduleExpiryTimer(for: key, expTimestamp: dto.exp)
+                guard let stored = try? JwtSessionStore.load(key: key) else { continue }
+                scheduleExpiryTimer(for: key, expTimestamp: stored.decoded.exp)
             }
         } catch {
             // Silently fail
@@ -133,10 +133,12 @@ extension TurnkeyContext {
     /// timer, and (optionally) registers the session for auto-refresh.
     func persistSession(
         dto: TurnkeySession,
+        jwt: String,
         sessionKey: String,
         refreshedSessionTTLSeconds: String? = nil
     ) throws {
-        try JwtSessionStore.save(dto, key: sessionKey)
+        let stored = StoredSession(decoded: dto, jwt: jwt)
+        try JwtSessionStore.save(stored, key: sessionKey)
         try SessionRegistryStore.add(sessionKey)
 
         let priv = try KeyPairStore.getPrivateHex(for: dto.publicKey)
@@ -162,8 +164,8 @@ extension TurnkeyContext {
         expiryTasks[sessionKey]?.cancel()
         expiryTasks.removeValue(forKey: sessionKey)
 
-        if let dto = try? JwtSessionStore.load(key: sessionKey) {
-            try? KeyPairStore.delete(for: dto.publicKey)
+        if let stored = try? JwtSessionStore.load(key: sessionKey) {
+            try? KeyPairStore.delete(for: stored.decoded.publicKey)
         }
 
         JwtSessionStore.delete(key: sessionKey)
@@ -171,106 +173,6 @@ extension TurnkeyContext {
 
         if !keepAutoRefresh {
             try? AutoRefreshStore.remove(for: sessionKey)
-        }
-    }
-    
-    /// Updates an existing session with a new JWT, preserving any configured auto-refresh duration.
-    ///
-    /// - Parameters:
-    ///   - jwt: The fresh JWT string returned by the Turnkey backend.
-    ///   - sessionKey: The identifier of the session to update. Defaults to `Constants.Session.defaultSessionKey`.
-    ///   
-    /// - Throws:
-    ///   - `TurnkeySwiftError.keyNotFound` if no session exists under the given key.
-    ///   - `TurnkeySwiftError.failedToStoreSession` if decoding or persistence operations fail.
-    func updateSession(
-        jwt: String,
-        sessionKey: String = Constants.Session.defaultSessionKey
-    ) async throws {
-        do {
-            // eventually we should verify that the jwt was signed by Turnkey
-            // but for now we just assume it is
-
-            guard try JwtSessionStore.load(key: sessionKey) != nil else {
-                throw TurnkeySwiftError.keyNotFound
-            }
-
-            // remove old key material but preserve any auto-refresh duration
-            try purgeStoredSession(for: sessionKey, keepAutoRefresh: true)
-
-            let dto = try JWTDecoder.decode(jwt, as: TurnkeySession.self)
-            let nextDuration = AutoRefreshStore.durationSeconds(for: sessionKey)
-            try persistSession(dto: dto,
-                               sessionKey: sessionKey,
-                               refreshedSessionTTLSeconds: nextDuration)
-        } catch {
-            throw TurnkeySwiftError.failedToStoreSession(underlying: error)
-        }
-    }
-    
-    /// Fetches the current session user's full profile and associated wallets.
-    ///
-    /// - Parameters:
-    ///   - client: The `TurnkeyClient` instance for API calls.
-    ///   - organizationId: The organization ID associated with the session.
-    ///   - userId: The user ID to retrieve.
-    /// - Returns: A fully populated `SessionUser` object containing user metadata and wallet accounts.
-    func fetchSessionUser(
-        using client: TurnkeyClient,
-        organizationId: String,
-        userId: String
-    ) async throws -> SessionUser {
-        guard !organizationId.isEmpty, !userId.isEmpty else {
-            throw TurnkeySwiftError.invalidResponse
-        }
-        
-        do {
-            // run user and wallets requests in parallel
-            async let userResp = client.getUser(TGetUserBody(organizationId: organizationId, userId: userId))
-            async let walletsResp = client.getWallets(TGetWalletsBody(organizationId: organizationId))
-            
-            let user = try await userResp.user
-            let wallets = try await walletsResp.wallets
-            
-            // fetch wallet accounts concurrently
-            let detailed = try await withThrowingTaskGroup(of: SessionUser.UserWallet.self) { group in
-                for w in wallets {
-                    group.addTask {
-                        let accounts = try await client.getWalletAccounts(TGetWalletAccountsBody(
-                            organizationId: organizationId,
-                            walletId: w.walletId
-                        )).accounts.map {
-                            SessionUser.UserWallet.WalletAccount(
-                                id: $0.walletAccountId,
-                                curve: $0.curve,
-                                pathFormat: $0.pathFormat,
-                                path: $0.path,
-                                addressFormat: $0.addressFormat,
-                                address: $0.address,
-                                createdAt: $0.createdAt,
-                                updatedAt: $0.updatedAt
-                            )
-                        }
-                        return SessionUser.UserWallet(id: w.walletId, name: w.walletName, accounts: accounts)
-                    }
-                }
-                
-                var res: [SessionUser.UserWallet] = []
-                for try await item in group { res.append(item) }
-                return res
-            }
-            
-            return SessionUser(
-                id: user.userId,
-                userName: user.userName,
-                email: user.userEmail,
-                phoneNumber: user.userPhoneNumber,
-                organizationId: organizationId,
-                wallets: detailed
-            )
-            
-        } catch {
-            throw error
         }
     }
     
