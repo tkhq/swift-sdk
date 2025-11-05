@@ -30,37 +30,35 @@ struct DashboardView: View {
                 
                 ScrollView {
                     VStack(spacing: 0) {
-                        if let wallets = turnkey.user?.wallets {
-                            ForEach(wallets, id: \.id) { wallet in
-                                let address = wallet.accounts.first?.address ?? ""
-                                let balance = balances[address] ?? 0
-                                let balanceUSD = balance * ethPriceUSD
-                                
-                                
-                                WalletCardView(
-                                    walletId: wallet.id,
-                                    walletName: wallet.name,
-                                    address: address,
-                                    balanceUSD: balanceUSD,
-                                    balanceETH: balance,
-                                    onExport: handleExportPressed,
-                                    onSign: handleSignMessagePressed
-                                )
-                                .padding()
-                                .task {
-                                    if !address.isEmpty && balances[address] == nil {
-                                        do {
-                                            let fetched = try await Ethereum.getBalance(for: address)
-                                            await MainActor.run {
-                                                balances[address] = fetched
-                                            }
-                                        } catch {
-                                            await MainActor.run {
-                                                balances[address] = 0
-                                            }
-                                            // we are using a free api, so rate limits are very common
-                                            // so we fail silently and default to 0
+                        ForEach(turnkey.wallets, id: \.id) { wallet in
+                            let address = wallet.accounts.first?.address ?? ""
+                            let balance = balances[address] ?? 0
+                            let balanceUSD = balance * ethPriceUSD
+                            
+                            
+                            WalletCardView(
+                                walletId: wallet.id,
+                                walletName: wallet.walletName,
+                                address: address,
+                                balanceUSD: balanceUSD,
+                                balanceETH: balance,
+                                onExport: handleExportPressed,
+                                onSign: handleSignMessagePressed
+                            )
+                            .padding()
+                            .task {
+                                if !address.isEmpty && balances[address] == nil {
+                                    do {
+                                        let fetched = try await Ethereum.getBalance(for: address)
+                                        await MainActor.run {
+                                            balances[address] = fetched
                                         }
+                                    } catch {
+                                        await MainActor.run {
+                                            balances[address] = 0
+                                        }
+                                        // we are using a free api, so rate limits are very common
+                                        // so we fail silently and default to 0
                                     }
                                 }
                             }

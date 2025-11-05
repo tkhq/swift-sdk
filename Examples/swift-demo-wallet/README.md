@@ -1,39 +1,58 @@
-# Swift Demo Wallet&#x20;
+# Swift Demo Wallet
 
-The Swift Demo Wallet is a sample iOS/macOS application that demonstrates how to build a simple wallet experience using Turnkey infrastructure. It showcases session handling, wallet creation/import, and transaction signing in a native SwiftUI application.
+A minimal iOS/macOS application demonstrating how to build an embedded wallet experience using Turnkey infrastructure and Auth Proxy.
 
----
+## What this demo shows
 
-## Quick Start
+A high-level summary of the user experience and what you can see on screen:
 
-### 1. Clone the Repository
+- **Authentication**: Log in with passkeys, OTP (email/SMS), or OAuth (Google, Apple, Discord, X)
+- **Session Management**: Automatic session handling with secure key storage in Secure Enclave
+- **Wallet Operations**: Create, import, and export wallets with mnemonic phrases
+- **Message Signing**: Sign messages and raw payloads with wallet accounts
+- **User Management**: Update email/phone and view wallet details
 
-```
+## Getting started
+
+### 1/ Cloning the example
+
+Make sure you have Xcode 15+ installed.
+
+```bash
 git clone https://github.com/tkhq/swift-sdk
-cd Examples/swift-demo-wallet
+cd swift-sdk/Examples/swift-demo-wallet
 ```
 
-### 2. Open the Project
+### 2/ Setting up Turnkey
 
-Open the `Examples/swift-demo-wallet` folder and build the project in Xcode.
+1. Set up your Turnkey organization and account. You'll need your **parent organization ID**.
+2. Enable **Auth Proxy** from your Turnkey dashboard:
+   - Choose the user auth methods (Email OTP, SMS OTP, OAuth providers)
+   - Configure redirect URLs for OAuth (if using)
+   - Copy your **Auth Proxy Config ID** for the next step
+3. (Optional) For passkey authentication, set up your **RP ID** domain with associated domains
 
-### 3. Configure Constants
+### 3/ Configure Constants
 
-Edit `Helpers/Constants.swift` and fill in the required values:
+Edit `swift-demo-wallet/Helpers/Constants.swift` and add your values:
 
 ```swift
 enum Constants {
     enum App {
         static let appName = "Swift Demo Wallet App"
-        static let rpId = "<your_rp_id>"                     // e.g. passkeyapp.tkhqlabs.xyz
-        static let backendBaseUrl = "<your_backend_url>"     // e.g. http://localhost:3000
+        static let rpId = "<your_rp_id>"  // required for passkeys
     }
 
     enum Turnkey {
         static let organizationId = "<your_organization_id>"
-        static let sessionDuration = "900"                   // session duration in seconds
         static let apiUrl = "https://api.turnkey.com"
+        
+        // Auth Proxy Configuration
+        static let authProxyUrl = "https://auth.turnkey.com"
+        static let authProxyConfigId = "<your_auth_proxy_config_id>"
 
+        // Default accounts to create when using the "Create Wallet" button
+        // Customize this array to create wallets with different curves, paths, or address formats
         static let defaultEthereumAccounts: [Components.Schemas.WalletAccountParams] = [
             Components.Schemas.WalletAccountParams(
                 curve: .CURVE_SECP256K1,
@@ -51,65 +70,16 @@ enum Constants {
 }
 ```
 
----
+### 4/ Running the demo
 
-## Backend Setup
-
-### Why Do We Need a Backend?
-
-Turnkey requires authentication requests (sign-up/login) to be validated (stamped) using your root user API key-pair. Since this key-pair must remain private, it cannot be used directly in the frontend. Instead, authentication requests must be processed and stamped through a backend server before being forwarded to Turnkey.
-
-### 1. Configure Environment Variables
-
-Create a `.env` file inside the `example-server` folder:
-
-```
-PORT="3000"
-
-TURNKEY_API_URL="https://api.turnkey.com"
-TURNKEY_ORGANIZATION_ID="<your_turnkey_organization_id>"
-
-TURNKEY_API_PUBLIC_KEY="<your_turnkey_api_public_key>"
-TURNKEY_API_PRIVATE_KEY="<your_turnkey_api_private_key>"
-```
-
-### 2. Start the Server
-
-```
-cd example-server
-npm install
-npm run start
-```
-
----
-
-## Passkey Setup
-
-To enable passkey authentication, you must configure your domain and app settings correctly:
-
-### Associated Domains
-
-1. In your app's `Signing & Capabilities` tab, add the `Associated Domains` capability.
-2. Add your domain:
-
-```
-webcredentials:<your_rpid_domain>
-```
-
-3. Host an `apple-app-site-association` file at `https://<your_rpid_domain>/.well-known/apple-app-site-association`
-
-4. Ensure your `rpId` in Constants.swift matches the domain:
-
-```swift
-static let rpId = "<your_rpid_domain>"
-```
+Open `swift-demo-wallet.xcodeproj` in Xcode and run the app on your device or simulator.
 
 ---
 
 ## Requirements
 
-- iOS 17+ / macOS 13.0+
-- Swift 5.7+
+- iOS 17+ / macOS 14.0+
+- Swift 5.9+
 - Xcode 15+
 
 ---

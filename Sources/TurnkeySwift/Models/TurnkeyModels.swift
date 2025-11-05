@@ -1,13 +1,17 @@
 import TurnkeyHttp
+import TurnkeyTypes
 
-public typealias PayloadEncoding = Components.Schemas.PayloadEncoding
-public typealias HashFunction = Components.Schemas.HashFunction
-public typealias Curve = Components.Schemas.Curve
-public typealias PathFormat = Components.Schemas.PathFormat
-public typealias AddressFormat = Components.Schemas.AddressFormat
-public typealias Timestamp = Components.Schemas.external_period_data_period_v1_period_Timestamp
+public typealias PayloadEncoding = v1PayloadEncoding
+public typealias HashFunction = v1HashFunction
+public typealias Curve = v1Curve
+public typealias PathFormat = v1PathFormat
+public typealias AddressFormat = v1AddressFormat
+public typealias Timestamp = externaldatav1Timestamp
 
-public typealias WalletAccountParams = Components.Schemas.WalletAccountParams
+public typealias WalletAccountParams = v1WalletAccountParams
+public typealias WalletAccount = v1WalletAccount
 
-public typealias SignRawPayloadResult = Components.Schemas.SignRawPayloadResult
-public typealias Activity = Components.Schemas.Activity
+public typealias SignRawPayloadResult = v1SignRawPayloadResult
+public typealias Activity = v1Activity
+
+public typealias ProxyGetWalletKitConfigResponse = ProxyTGetWalletKitConfigResponse

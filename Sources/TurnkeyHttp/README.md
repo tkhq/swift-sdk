@@ -50,37 +50,13 @@ let proxyClient = TurnkeyClient(proxyURL: "http://localhost:3000/proxy")
 
 ## Code Generation
 
-This project uses `swift-openapi-generator` and [Sourcery](https://github.com/krzysztofzablocki/Sourcery) with Stencil templates to generate code based on Turnkey's OpenAPI schema.
-
-With the provided `Makefile`, you can:
-
-* Generate updated HTTP fetchers from the OpenAPI spec:
+Client methods are auto-generated from Swagger specifications. To regenerate:
 
 ```bash
-make turnkey_client_types
-```
-* Regenerate the `TurnkeyClient` using Sourcery templates:
-
-```bash
-make turnkey_client
-```
-* Run the full code generation flow (types + client + format):
-
-```bash
-make generate
-```
-* Format Swift code recursively:
-
-```bash
-make format
-```
-* Clean generated files:
-
-```bash
-make clean
+cd Scripts && make generate
 ```
 
-> Curious how our Stencil templates work? Check out [`Resources/Templates/README.md`](Resources/Templates/README.md) for a deeper dive into how we generate the Swift client using macros and template composition.
+See [Scripts README](../../Scripts/README.md) for details.
 
 ---
 

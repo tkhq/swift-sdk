@@ -54,6 +54,8 @@ public enum StampError: Error {
   case unknownError(String)
   case passkeyManagerNotSet
   case invalidPayload
+  case secureEnclaveUnavailable
+  case keyNotFound(publicKeyHex: String)
 
   public var localizedDescription: String {
     switch self {
@@ -71,6 +73,50 @@ public enum StampError: Error {
       return "Passkey manager has not been initialized."
     case .invalidPayload:
       return "Invalid payload provided for stamping."
+    case .secureEnclaveUnavailable:
+      return "Secure Enclave is not available on this device."
+    case .keyNotFound(let publicKeyHex):
+      return "No private key found for public key: \(publicKeyHex)"
     }
   }
+}
+
+enum SecureEnclaveStamperError: Error, Equatable {
+  case secureEnclaveUnavailable
+  case keychainError(OSStatus)
+  case keyGenerationFailed(Error?)
+  case keyNotFound(publicKeyHex: String)
+  case publicKeyEncodingFailed
+  case unsupportedAlgorithm
+  case payloadEncodingFailed
+}
+
+extension SecureEnclaveStamperError {
+  static func == (lhs: SecureEnclaveStamperError, rhs: SecureEnclaveStamperError) -> Bool {
+    switch (lhs, rhs) {
+    case (.secureEnclaveUnavailable, .secureEnclaveUnavailable):
+      return true
+    case let (.keychainError(a), .keychainError(b)):
+      return a == b
+    case (.keyGenerationFailed, .keyGenerationFailed):
+      // Compare only by case; underlying Error? is not Equatable
+      return true
+    case let (.keyNotFound(a), .keyNotFound(b)):
+      return a == b
+    case (.publicKeyEncodingFailed, .publicKeyEncodingFailed):
+      return true
+    case (.unsupportedAlgorithm, .unsupportedAlgorithm):
+      return true
+    case (.payloadEncodingFailed, .payloadEncodingFailed):
+      return true
+    default:
+      return false
+    }
+  }
+}
+enum SecureStorageStamperError: Error, Equatable {
+  case keychainError(OSStatus)
+  case privateKeyNotFound(publicKeyHex: String)
+  case stringEncodingFailed
+  case payloadEncodingFailed
 }

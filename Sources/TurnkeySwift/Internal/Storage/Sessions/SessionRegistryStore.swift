@@ -1,11 +1,11 @@
 import Foundation
+import TurnkeyStamper
 
 /// Stores a list of all active session keys.
 /// Used to track and manage multiple JWT-backed sessions, and to purge expired ones.
 enum SessionRegistryStore: CollectionStore {
     
     private static let storeKey = Constants.Storage.sessionRegistryKey
-    private static let secureAccount = Constants.Storage.secureAccount
     private static let q = DispatchQueue(label: "sessionKeys", attributes: .concurrent)
     
     static func add(_ sessionKey: String) throws {
@@ -37,11 +37,11 @@ enum SessionRegistryStore: CollectionStore {
             let selectedSessionKey = try? SelectedSessionStore.load()
 
             for sessionKey in sessionKeys {
-                if let sess = try JwtSessionStore.load(key: sessionKey) {
-                    if Date(timeIntervalSince1970: sess.exp) <= Date() {
+                if let stored = try JwtSessionStore.load(key: sessionKey) {
+                    if Date(timeIntervalSince1970: stored.decoded.exp) <= Date() {
                         JwtSessionStore.delete(key: sessionKey)
                         try AutoRefreshStore.remove(for: sessionKey)
-                        try KeyPairStore.delete(for: sess.publicKey)
+                        try Stamper.deleteOnDeviceKeyPair(publicKeyHex: stored.decoded.publicKey)
                         try remove(sessionKey)
                         
                         // if we just removed the selected session we clear the SelectedSessionStore

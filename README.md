@@ -25,6 +25,12 @@ You can find it at:
 
 **Path:** `Examples/swift-demo-wallet`
 
-For setup instructions, refer to the [demo app README](./Examples/swift-demo-wallet/README.md).
+For setup instructions, refer to the [Demo App README](./Examples/swift-demo-wallet/README.md).
+
+---
+
+## Development
+
+Code generation for types and client methods is handled by custom Swift executables in the [`Scripts/`](./Scripts) directory. See the [Scripts README](./Scripts/README.md) for details.
 
 ---

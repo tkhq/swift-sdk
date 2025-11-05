@@ -1,5 +1,6 @@
 import AuthenticationServices
 import Foundation
+import TurnkeyTypes
 
 public struct PasskeyUser {
   public let id: String
@@ -25,7 +26,7 @@ public struct RelyingParty {
 
 public struct PasskeyRegistrationResult: Codable {
   public let challenge: String
-  public let attestation: Attestation
+  public let attestation: v1Attestation
 }
 
 /// Indicates whether the current platform version supports passkeys.

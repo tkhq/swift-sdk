@@ -1,8 +1,9 @@
 import SwiftUI
+import TurnkeySwift
 
 struct OtpView: View {
     @EnvironmentObject private var coordinator: NavigationCoordinator
-    @EnvironmentObject private var auth: AuthContext
+    @EnvironmentObject private var turnkey: TurnkeyContext
     @EnvironmentObject private var toast: ToastContext
     
     @Environment(\.dismiss) private var dismiss
@@ -11,14 +12,15 @@ struct OtpView: View {
     
     let otpId: String
     let contact: String
-    let publicKey: String
+    let otpType: OtpType
+    let onComplete: (String) async throws -> Void
     
     private var otpCode: String {
         otpDigits.joined()
     }
     
     private var isEmail: Bool {
-        contact.contains("@")
+        otpType == .email
     }
     
     var body: some View {
@@ -81,14 +83,8 @@ struct OtpView: View {
     private func handleContinue() {
         Task {
             do {
-                let filterType: AuthContext.OtpType = isEmail ? .email : .sms
-                try await auth.verifyOtp(
-                    otpId: otpId,
-                    otpCode: otpCode,
-                    filterType: filterType,
-                    contact: contact,
-                    publicKey: publicKey
-                )
+                try await onComplete(otpCode)
+                dismiss()
             } catch {
                 toast.show(message: "Invalid code. Please try again.", type: .error)
             }
