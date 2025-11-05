@@ -56,15 +56,15 @@ extension TurnkeyContext {
         try JwtSessionStore.save(stored, key: sessionKey)
         try SessionRegistryStore.add(sessionKey)
 
-        let exists = try Stamper.existsOnDeviceKeyPair(publicKeyHex: stored.publicKey)
+        let exists = try Stamper.existsOnDeviceKeyPair(publicKeyHex: stored.decoded.publicKey)
         if !exists { throw TurnkeySwiftError.keyNotFound }
-        try PendingKeysStore.remove(stored.publicKey)
+        try PendingKeysStore.remove(stored.decoded.publicKey)
 
         if let duration = refreshedSessionTTLSeconds {
             try AutoRefreshStore.set(durationSeconds: duration, for: sessionKey)
         }
         
-        scheduleExpiryTimer(for: sessionKey, expTimestamp: stored.exp)
+        scheduleExpiryTimer(for: sessionKey, expTimestamp: stored.decoded.exp)
     }
     
     /// Removes stored session data from disk.
