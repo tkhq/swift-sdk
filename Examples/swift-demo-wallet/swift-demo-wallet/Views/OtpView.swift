@@ -82,7 +82,7 @@ struct OtpView: View {
         Task {
             do {
                 let otpType: OtpType = isEmail ? .email : .sms
-                _ = try await turnkey.completeOtp(
+                try await turnkey.completeOtp(
                     otpId: otpId,
                     otpCode: otpCode,
                     contact: contact,

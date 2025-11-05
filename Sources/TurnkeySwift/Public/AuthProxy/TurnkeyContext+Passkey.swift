@@ -24,6 +24,7 @@ extension TurnkeyContext {
     /// - Throws:
     ///   - `TurnkeySwiftError.invalidConfiguration` if `rpId` or `organizationId` is missing.
     ///   - `TurnkeySwiftError.failedToLoginWithPasskey` if the login or stamping process fails.
+    @discardableResult
     public func loginWithPasskey(
         anchor: ASPresentationAnchor,
         publicKey: String? = nil,
@@ -89,7 +90,7 @@ extension TurnkeyContext {
     ///   - `TurnkeySwiftError.missingAuthProxyConfiguration` if the Auth Proxy client is not initialized.
     ///   - `TurnkeySwiftError.invalidConfiguration` if `rpId` is missing.
     ///   - `TurnkeySwiftError.failedToSignUpWithPasskey` if signup or stamping fails.
-    @available(iOS 16.0, macOS 13.0, *)
+    @discardableResult
     public func signUpWithPasskey(
         anchor: ASPresentationAnchor,
         passkeyDisplayName: String? = nil,

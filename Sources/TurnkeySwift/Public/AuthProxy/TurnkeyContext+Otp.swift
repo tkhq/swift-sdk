@@ -81,6 +81,7 @@ extension TurnkeyContext {
     /// - Throws:
     ///   - `TurnkeySwiftError.missingAuthProxyConfiguration` if the Auth Proxy client is not configured.
     ///   - `TurnkeySwiftError.failedToLoginWithOtp` if the login request fails.
+    @discardableResult
     public func loginWithOtp(
         verificationToken: String,
         publicKey: String?,
@@ -129,6 +130,7 @@ extension TurnkeyContext {
     /// - Throws:
     ///   - `TurnkeySwiftError.missingAuthProxyConfiguration` if the Auth Proxy client is not configured.
     ///   - `TurnkeySwiftError.failedToSignUpWithOtp` if signup fails.
+    @discardableResult
     public func signUpWithOtp(
         verificationToken: String,
         contact: String,
@@ -205,6 +207,7 @@ extension TurnkeyContext {
     /// - Throws:
     ///   - `TurnkeySwiftError.missingAuthProxyConfiguration` if the Auth Proxy client is not configured.
     ///   - `TurnkeySwiftError.failedToCompleteOtp` if the authentication flow fails.
+    @discardableResult
     public func completeOtp(
         otpId: String,
         otpCode: String,

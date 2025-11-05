@@ -187,7 +187,7 @@ struct AuthView: View {
             }
             
             do {
-                _ = try await turnkey.loginWithPasskey(anchor: anchor)
+                try await turnkey.loginWithPasskey(anchor: anchor)
             } catch {
                 let message = formatError(error, fallback: "Failed to log in with passkey")
                 print("[AuthView] Passkey login error: \(message)")
@@ -204,7 +204,7 @@ struct AuthView: View {
             }
             
             do {
-                _ = try await turnkey.signUpWithPasskey(anchor: anchor)
+                try await turnkey.signUpWithPasskey(anchor: anchor)
             } catch {
                 let message = formatError(error, fallback: "Failed to sign up with passkey")
                 print("[AuthView] Passkey signup error: \(message)")

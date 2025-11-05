@@ -134,6 +134,7 @@ extension TurnkeyContext {
     ///   - `TurnkeySwiftError.invalidSession` if no active session is found.
     ///   - `TurnkeySwiftError.invalidResponse` if the API response is malformed.
     ///   - `TurnkeySwiftError.failedToImportWallet` if the import operation fails.
+    @discardableResult
     public func importWallet(
         walletName: String,
         mnemonic: String,

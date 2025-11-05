@@ -23,6 +23,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     ///
     /// - Throws: `TurnkeySwiftError.missingAuthProxyConfiguration` if no client is configured,
     ///           or `TurnkeySwiftError.failedToLoginWithOAuth` if login fails.
+    @discardableResult
     internal func loginWithOAuth(
         oidcToken: String,
         publicKey: String,
@@ -68,6 +69,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     ///
     /// - Throws: `TurnkeySwiftError.missingAuthProxyConfiguration` if no client is configured,
     ///           or `TurnkeySwiftError.failedToSignUpWithOAuth` if signup or login fails.
+    @discardableResult
     internal func signUpWithOAuth(
         oidcToken: String,
         publicKey: String,
@@ -89,8 +91,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
             merged.oauthProviders = oauthProviders
             
             let signupBody = buildSignUpBody(createSubOrgParams: merged)
-            let res = try await client.proxySignup(signupBody)
-            _ = res.organizationId
+            _ = try await client.proxySignup(signupBody)
             
             // after signing up we login
             return try await loginWithOAuth(
@@ -121,6 +122,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     ///
     /// - Throws: `TurnkeySwiftError.missingAuthProxyConfiguration` if no client is configured,
     ///           or `TurnkeySwiftError.failedToCompleteOAuth` if the operation fails.
+    @discardableResult
     public func completeOAuth(
         oidcToken: String,
         publicKey: String,
@@ -225,7 +227,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         
         // since theres no onOAuthSuccess then we handle auth for them
         // via the authProxy
-        _ = try await completeOAuth(
+        try await completeOAuth(
             oidcToken: oidcToken,
             publicKey: publicKey,
             providerName: "google",
@@ -292,7 +294,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         
         // since theres no onOAuthSuccess then we handle auth for them
         // via the authProxy
-        _ = try await completeOAuth(
+        try await completeOAuth(
             oidcToken: oidcToken,
             publicKey: publicKey,
             providerName: "apple",
@@ -402,7 +404,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         
         // since theres no onOAuthSuccess then we handle auth for them
         // via the authProxy
-        _ = try await completeOAuth(
+        try await completeOAuth(
             oidcToken: oidcToken,
             publicKey: publicKey,
             providerName: "discord",
@@ -513,7 +515,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         
         // since theres no onOAuthSuccess then we handle auth for them
         // via the authProxy
-        _ = try await completeOAuth(
+        try await completeOAuth(
             oidcToken: oidcToken,
             publicKey: publicKey,
             providerName: "twitter",
