@@ -51,24 +51,24 @@ extension TurnkeyContext {
         return url
     }
     
-    /// Runs an OAuth session and retrieves an OIDC token.
+    /// Runs an OAuth session and retrieves the OIDC token.
     ///
-    /// Opens a system browser using `ASWebAuthenticationSession` to complete an OAuth flow.
-    /// Returns the `id_token` (OIDC token) and optional session key upon successful authentication.
+    /// Opens a system browser using `ASWebAuthenticationSession` to complete an OAuth flow,
+    /// then extracts and returns the `id_token` (OIDC token) from the redirect URL upon successful authentication.
     ///
     /// - Parameters:
-    ///   - provider: The OAuth provider name.
-    ///   - clientId: The client identifier for the provider.
-    ///   - scheme: The callback scheme used for the redirect.
+    ///   - provider: The OAuth provider name (e.g., `"google"`, `"discord"`).
+    ///   - clientId: The OAuth client ID associated with the provider.
+    ///   - scheme: The callback scheme used for redirect handling.
     ///   - anchor: The presentation anchor for the authentication session.
-    ///   - nonce: A unique nonce used for verification.
-    ///   - additionalState: Optional additional state key–value pairs.
+    ///   - nonce: A unique nonce value used to validate the OAuth response.
+    ///   - additionalState: Optional additional state parameters appended to the OAuth request.
     ///
-    /// - Returns: An `OAuthCallbackParams` object containing the OIDC token and optional session key.
+    /// - Returns: The OIDC token (`id_token`) returned by the OAuth provider.
     ///
     /// - Throws:
-    ///   - `TurnkeySwiftError.failedToRetrieveOAuthCredential` if the OAuth flow fails.
-    ///   - `TurnkeySwiftError.oauthMissingIDToken` if the callback lacks an `id_token`.
+    ///   - `TurnkeySwiftError.failedToRetrieveOAuthCredential` if the OAuth flow fails or is cancelled.
+    ///   - `TurnkeySwiftError.oauthMissingIDToken` if the redirect URL does not include an `id_token`.
     internal func runOAuthSession(
         provider: String,
         clientId: String,
@@ -76,7 +76,7 @@ extension TurnkeyContext {
         anchor: ASPresentationAnchor,
         nonce: String,
         additionalState: [String: String]? = nil
-    ) async throws -> OAuthCallbackParams {
+    ) async throws -> String {
         self.oauthAnchor = anchor
         let settings = try getOAuthProviderSettings(provider: provider)
         let url = try buildOAuthURL(
@@ -104,8 +104,7 @@ extension TurnkeyContext {
                     continuation.resume(throwing: TurnkeySwiftError.oauthMissingIDToken)
                     return
                 }
-                let sessionKey = comps.queryItems?.first(where: { $0.name == "sessionKey" })?.value
-                continuation.resume(returning: OAuthCallbackParams(oidcToken: idToken, sessionKey: sessionKey))
+                continuation.resume(returning: idToken)
             }
             session.presentationContextProvider = self
             session.prefersEphemeralWebBrowserSession = false

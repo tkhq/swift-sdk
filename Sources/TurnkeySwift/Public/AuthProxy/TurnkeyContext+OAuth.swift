@@ -173,6 +173,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     /// - Parameters:
     ///   - anchor: The presentation anchor for the OAuth web session.
     ///   - clientId: Optional Google OAuth client ID override.
+    ///   - sessionKey: Optional session key returned from the OAuth redirect.
     ///   - additionalState: Optional key-value pairs appended to the OAuth request state.
     ///   - onOAuthSuccess: Optional callback invoked with the OIDC token and public key before auto-login.
     ///
@@ -183,6 +184,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     public func handleGoogleOAuth(
         anchor: ASPresentationAnchor,
         clientId: String? = nil,
+        sessionKey: String? = nil,
         additionalState: [String: String]? = nil,
         onOAuthSuccess: (@Sendable (OAuthSuccess) -> Void)? = nil
     ) async throws {
@@ -205,7 +207,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         }
         
         // we start OAuth flow in the system browser and get an oidcToken
-        let oauth = try await runOAuthSession(
+        let oidcToken = try await runOAuthSession(
             provider: "google",
             clientId: clientId,
             scheme: scheme,
@@ -217,17 +219,17 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         // if onOAuthSuccess was passed in then we run the callback
         // and then return early
         if let callback = onOAuthSuccess {
-            callback(.init(oidcToken: oauth.oidcToken, providerName: "google", publicKey: publicKey))
+            callback(.init(oidcToken: oidcToken, providerName: "google", publicKey: publicKey))
             return
         }
         
         // since theres no onOAuthSuccess then we handle auth for them
         // via the authProxy
         _ = try await completeOAuth(
-            oidcToken: oauth.oidcToken,
+            oidcToken: oidcToken,
             publicKey: publicKey,
             providerName: "google",
-            sessionKey: oauth.sessionKey
+            sessionKey: sessionKey
         )
     }
     
@@ -239,6 +241,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     /// - Parameters:
     ///   - anchor: The presentation anchor for the OAuth web session.
     ///   - clientId: Optional Apple OAuth client ID override.
+    ///   - sessionKey: Optional session key returned from the OAuth redirect.
     ///   - additionalState: Optional key-value pairs appended to the OAuth request state.
     ///   - onOAuthSuccess: Optional callback invoked with the OIDC token and public key before auto-login.
     ///
@@ -249,6 +252,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     public func handleAppleOAuth(
         anchor: ASPresentationAnchor,
         clientId: String? = nil,
+        sessionKey: String? = nil,
         additionalState: [String: String]? = nil,
         onOAuthSuccess: (@Sendable (OAuthSuccess) -> Void)? = nil
     ) async throws {
@@ -270,7 +274,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         }
         
         // we start OAuth flow in the system browser and get an oidcToken
-        let oauth = try await runOAuthSession(
+        let oidcToken = try await runOAuthSession(
             provider: "apple",
             clientId: clientId,
             scheme: scheme,
@@ -282,17 +286,17 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         // if onOAuthSuccess was passed in then we run the callback
         // and then return early
         if let callback = onOAuthSuccess {
-            callback(.init(oidcToken: oauth.oidcToken, providerName: "apple", publicKey: publicKey))
+            callback(.init(oidcToken: oidcToken, providerName: "apple", publicKey: publicKey))
             return
         }
         
         // since theres no onOAuthSuccess then we handle auth for them
         // via the authProxy
         _ = try await completeOAuth(
-            oidcToken: oauth.oidcToken,
+            oidcToken: oidcToken,
             publicKey: publicKey,
             providerName: "apple",
-            sessionKey: oauth.sessionKey
+            sessionKey: sessionKey
         )
     }
     
@@ -305,6 +309,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     /// - Parameters:
     ///   - anchor: The presentation anchor for the OAuth web session.
     ///   - clientId: Optional Discord OAuth client ID override.
+    ///   - sessionKey: Optional session key returned from the OAuth redirect.
     ///   - additionalState: Optional key-value pairs appended to the OAuth request state.
     ///   - onOAuthSuccess: Optional callback invoked with the OIDC token and public key before auto-login.
     ///
@@ -316,6 +321,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     public func handleDiscordOAuth(
         anchor: ASPresentationAnchor,
         clientId: String? = nil,
+        sessionKey: String? = nil,
         additionalState: [String: String]? = nil,
         onOAuthSuccess: (@Sendable (OAuthSuccess) -> Void)? = nil
     ) async throws {
@@ -399,7 +405,8 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         _ = try await completeOAuth(
             oidcToken: oidcToken,
             publicKey: publicKey,
-            providerName: "discord"
+            providerName: "discord",
+            sessionKey: sessionKey
         )
     }
     
@@ -412,6 +419,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     /// - Parameters:
     ///   - anchor: The presentation anchor for the OAuth web session.
     ///   - clientId: Optional X OAuth client ID override.
+    ///   - sessionKey: Optional session key returned from the OAuth redirect.
     ///   - sessionKey: Optional session storage key for the resulting session.
     ///   - additionalState: Optional key-value pairs appended to the OAuth request state.
     ///   - onOAuthSuccess: Optional callback invoked with the OIDC token and public key before auto-login.
@@ -508,7 +516,8 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
         _ = try await completeOAuth(
             oidcToken: oidcToken,
             publicKey: publicKey,
-            providerName: "twitter"
+            providerName: "twitter",
+            sessionKey: sessionKey
         )
     }
     
