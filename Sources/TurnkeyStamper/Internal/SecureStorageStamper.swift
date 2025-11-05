@@ -16,7 +16,12 @@ import TurnkeyCrypto
 /// non-default attributes or an access control policy, use the config-based overloads of
 /// `listKeyPairs`, `clearKeyPairs`, `deleteKeyPair`, and `stamp` to ensure lookups and auth UI
 /// behave as intended. If you use the defaults, the no-config methods are sufficient.
-enum SecureStorageStamper {
+///
+/// Unlike `SecureEnclaveStamper`, this stamper supports importing external key pairs via
+/// `importKeyPair` methods.
+enum SecureStorageStamper: KeyPairStamper {
+  typealias Config = SecureStorageConfig
+  
   private static let account = "TurnkeySecureStorageStamper"
   private static let label = "TurnkeyApiKeyPair"
 
@@ -153,23 +158,8 @@ enum SecureStorageStamper {
     }
   }
 
-  static func createKeyPair(
-    externalKeyPair: (publicKey: String, privateKey: String)? = nil
-  ) throws -> String {
-    let privateKeyHex: String
-    let publicKeyHex: String
-
-    if let provided = externalKeyPair {
-      privateKeyHex = provided.privateKey
-      publicKeyHex = provided.publicKey
-    } else {
-      let keyPair = TurnkeyCrypto.generateP256KeyPair()
-      privateKeyHex = keyPair.privateKey
-      publicKeyHex = keyPair.publicKeyCompressed
-    }
-
-    try savePrivateKey(privateKeyHex, for: publicKeyHex, config: SecureStorageConfig())
-    return publicKeyHex
+  static func createKeyPair() throws -> String {
+    return try createKeyPair(config: SecureStorageConfig())
   }
 
   static func createKeyPair(config: SecureStorageConfig) throws -> String {
@@ -180,7 +170,24 @@ enum SecureStorageStamper {
     return publicKeyHex
   }
 
-  static func createKeyPair(
+  /// Import an external key pair into Secure Storage with default configuration.
+  ///
+  /// - Parameter externalKeyPair: A tuple containing the public key (compressed hex) and private key (hex).
+  /// - Returns: The public key (compressed hex) that was imported.
+  static func importKeyPair(
+    externalKeyPair: (publicKey: String, privateKey: String)
+  ) throws -> String {
+    try savePrivateKey(externalKeyPair.privateKey, for: externalKeyPair.publicKey, config: SecureStorageConfig())
+    return externalKeyPair.publicKey
+  }
+
+  /// Import an external key pair into Secure Storage with custom configuration.
+  ///
+  /// - Parameters:
+  ///   - externalKeyPair: A tuple containing the public key (compressed hex) and private key (hex).
+  ///   - config: Configuration for keychain storage (accessibility, access control, etc.).
+  /// - Returns: The public key (compressed hex) that was imported.
+  static func importKeyPair(
     externalKeyPair: (publicKey: String, privateKey: String),
     config: SecureStorageConfig
   ) throws -> String {

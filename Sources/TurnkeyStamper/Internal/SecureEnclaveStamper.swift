@@ -12,7 +12,12 @@ import TurnkeyCrypto
 /// private key never leaves the enclave. Callers can control user-auth policy
 /// (e.g., none, user presence, or biometry) at key creation time via
 /// `SecureEnclaveConfig`.
-enum SecureEnclaveStamper {
+///
+/// Note: Secure Enclave does not support importing external keys. Keys must be
+/// generated inside the enclave.
+enum SecureEnclaveStamper: KeyPairStamper {
+  typealias Config = SecureEnclaveConfig
+  
   private static let label = "TurnkeyApiKeyPair"
 
   struct SecureEnclaveConfig: Sendable {
@@ -79,12 +84,7 @@ enum SecureEnclaveStamper {
     }
   }
 
-  static func createKeyPair(
-    externalKeyPair: (publicKey: String, privateKey: String)? = nil
-  ) throws -> String {
-    if externalKeyPair != nil {
-      throw SecureEnclaveStamperError.externalKeyImportNotSupported
-    }
+  static func createKeyPair() throws -> String {
     return try createKeyPair(config: SecureEnclaveConfig())
   }
 

@@ -89,7 +89,6 @@ enum SecureEnclaveStamperError: Error, Equatable {
   case publicKeyEncodingFailed
   case unsupportedAlgorithm
   case payloadEncodingFailed
-  case externalKeyImportNotSupported
 }
 
 extension SecureEnclaveStamperError {
@@ -109,8 +108,6 @@ extension SecureEnclaveStamperError {
     case (.unsupportedAlgorithm, .unsupportedAlgorithm):
       return true
     case (.payloadEncodingFailed, .payloadEncodingFailed):
-      return true
-    case (.externalKeyImportNotSupported, .externalKeyImportNotSupported):
       return true
     default:
       return false
