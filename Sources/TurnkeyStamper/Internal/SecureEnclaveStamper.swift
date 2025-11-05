@@ -3,43 +3,8 @@ import Foundation
 import CoreFoundation
 import Security
 import TurnkeyEncoding
+import TurnkeyCrypto
 
-enum SecureEnclaveStamperError: Error, Equatable {
-  case secureEnclaveUnavailable
-  case keychainError(OSStatus)
-  case keyGenerationFailed(Error?)
-  case keyNotFound(publicKeyHex: String)
-  case publicKeyEncodingFailed
-  case unsupportedAlgorithm
-  case payloadEncodingFailed
-  case externalKeyImportNotSupported
-}
-
-extension SecureEnclaveStamperError {
-  static func == (lhs: SecureEnclaveStamperError, rhs: SecureEnclaveStamperError) -> Bool {
-    switch (lhs, rhs) {
-    case (.secureEnclaveUnavailable, .secureEnclaveUnavailable):
-      return true
-    case let (.keychainError(a), .keychainError(b)):
-      return a == b
-    case (.keyGenerationFailed, .keyGenerationFailed):
-      // Compare only by case; underlying Error? is not Equatable
-      return true
-    case let (.keyNotFound(a), .keyNotFound(b)):
-      return a == b
-    case (.publicKeyEncodingFailed, .publicKeyEncodingFailed):
-      return true
-    case (.unsupportedAlgorithm, .unsupportedAlgorithm):
-      return true
-    case (.payloadEncodingFailed, .payloadEncodingFailed):
-      return true
-    case (.externalKeyImportNotSupported, .externalKeyImportNotSupported):
-      return true
-    default:
-      return false
-    }
-  }
-}
 
 /// A Secure Enclave–backed stamper for generating and using P-256 keys inside the device TEE.
 ///
@@ -50,7 +15,7 @@ extension SecureEnclaveStamperError {
 enum SecureEnclaveStamper {
   private static let label = "TurnkeyApiKeyPair"
 
-  struct SecureEnclaveConfig {
+  struct SecureEnclaveConfig: Sendable {
     enum AuthPolicy {
       case none
       case userPresence
@@ -101,7 +66,7 @@ enum SecureEnclaveStamper {
     var publicKeys: [String] = []
     publicKeys.reserveCapacity(keys.count)
     for priv in keys {
-      if let hex = try? compressedPublicKeyHex(fromPrivateKey: priv) {
+      if let hex = try? TurnkeyCrypto.getPublicKey(fromPrivateKey: priv) {
         publicKeys.append(hex)
       }
     }
@@ -156,7 +121,7 @@ enum SecureEnclaveStamper {
     }
 
     // Derive compressed public key hex for return and indexing.
-    let publicKeyHex = try compressedPublicKeyHex(fromPrivateKey: privateKey)
+    let publicKeyHex = try TurnkeyCrypto.getPublicKey(fromPrivateKey: privateKey)
 
     // Best-effort: set applicationTag to the compressed public key hex for faster lookups later.
     if let tagData = publicKeyHex.data(using: .utf8) {
@@ -289,24 +254,7 @@ enum SecureEnclaveStamper {
     }
   }
 
-  private static func compressedPublicKeyHex(fromPrivateKey privateKey: SecKey) throws -> String {
-    guard let publicKey = SecKeyCopyPublicKey(privateKey) else {
-      throw SecureEnclaveStamperError.publicKeyEncodingFailed
-    }
-
-    var error: Unmanaged<CFError>?
-    guard let pubData = SecKeyCopyExternalRepresentation(publicKey, &error) as Data? else {
-      throw SecureEnclaveStamperError.keyGenerationFailed(error?.takeRetainedValue())
-    }
-
-    let cryptoPub: P256.Signing.PublicKey
-    do {
-      cryptoPub = try P256.Signing.PublicKey(x963Representation: pubData)
-    } catch {
-      throw SecureEnclaveStamperError.publicKeyEncodingFailed
-    }
-    return cryptoPub.compressedRepresentation.toHexString()
-  }
+  
 
   private static func findPrivateKey(publicKeyHex: String) throws -> SecKey? {
     // First, try by application tag if we were able to set it.
@@ -350,13 +298,13 @@ enum SecureEnclaveStamper {
 
     if let keys = result as? [SecKey] {
       for priv in keys {
-        if let hex = try? compressedPublicKeyHex(fromPrivateKey: priv), hex == publicKeyHex {
+        if let hex = try? TurnkeyCrypto.getPublicKey(fromPrivateKey: priv), hex == publicKeyHex {
           return priv
         }
       }
     } else if let r = result, CFGetTypeID(r) == SecKeyGetTypeID() {
       let single = r as! SecKey
-      if let hex = try? compressedPublicKeyHex(fromPrivateKey: single), hex == publicKeyHex {
+      if let hex = try? TurnkeyCrypto.getPublicKey(fromPrivateKey: single), hex == publicKeyHex {
         return single
       }
     }

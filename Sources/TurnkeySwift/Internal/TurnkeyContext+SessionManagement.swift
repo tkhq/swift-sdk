@@ -29,24 +29,24 @@ extension TurnkeyContext {
     /// Persists all storage-level artefacts for a session, schedules its expiry
     /// timer, and (optionally) registers the session for auto-refresh.
     func persistSession(
-        dto: TurnkeySession,
+        stored: TurnkeySession,
         jwt: String,
         sessionKey: String,
         refreshedSessionTTLSeconds: String? = nil
     ) throws {
-        let stored = StoredSession(decoded: dto, jwt: jwt)
+        let stored = StoredSession(decoded: stored, jwt: jwt)
         try JwtSessionStore.save(stored, key: sessionKey)
         try SessionRegistryStore.add(sessionKey)
 
-        let exists = try Stamper.existsOnDeviceKeyPair(publicKeyHex: dto.publicKey)
+        let exists = try Stamper.existsOnDeviceKeyPair(publicKeyHex: stored.publicKey)
         if !exists { throw TurnkeySwiftError.keyNotFound }
-        try PendingKeysStore.remove(dto.publicKey)
+        try PendingKeysStore.remove(stored.publicKey)
 
         if let duration = refreshedSessionTTLSeconds {
             try AutoRefreshStore.set(durationSeconds: duration, for: sessionKey)
         }
         
-        scheduleExpiryTimer(for: sessionKey, expTimestamp: dto.exp)
+        scheduleExpiryTimer(for: sessionKey, expTimestamp: stored.exp)
     }
 
     /// Removes *only* the stored artefacts for a session (no UI / in-memory reset).
@@ -61,8 +61,8 @@ extension TurnkeyContext {
         expiryTasks[sessionKey]?.cancel()
         expiryTasks.removeValue(forKey: sessionKey)
         
-        if let dto = try? JwtSessionStore.load(key: sessionKey) {
-            try? Stamper.deleteOnDeviceKeyPair(publicKeyHex: dto.decoded.publicKey)
+        if let stored = try? JwtSessionStore.load(key: sessionKey) {
+            try? Stamper.deleteOnDeviceKeyPair(publicKeyHex: stored.decoded.publicKey)
         }
 
         JwtSessionStore.delete(key: sessionKey)

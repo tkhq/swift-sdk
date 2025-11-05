@@ -3,13 +3,7 @@ import Foundation
 import Security
 import LocalAuthentication
 import TurnkeyEncoding
-
-enum SecureStorageStamperError: Error, Equatable {
-  case keychainError(OSStatus)
-  case privateKeyNotFound(publicKeyHex: String)
-  case stringEncodingFailed
-  case payloadEncodingFailed
-}
+import TurnkeyCrypto
 
 /// A Keychain-backed stamper that stores private keys in the iOS Keychain as Generic Password entries with:
 /// - service = public key (hex, compressed)
@@ -35,7 +29,7 @@ enum SecureStorageStamper {
   /// - `biometryReuseWindowSeconds`: `0` (no reuse window)
   /// - `synchronizable`: `false` (do not sync via iCloud Keychain)
   /// - `accessGroup`: `nil` (no shared access group)
-  struct SecureStorageConfig {
+  struct SecureStorageConfig: Sendable {
     enum Accessibility {
       case whenUnlockedThisDeviceOnly
       case afterFirstUnlockThisDeviceOnly
@@ -169,9 +163,9 @@ enum SecureStorageStamper {
       privateKeyHex = provided.privateKey
       publicKeyHex = provided.publicKey
     } else {
-      let priv = P256.Signing.PrivateKey()
-      privateKeyHex = priv.rawRepresentation.toHexString()
-      publicKeyHex = priv.publicKey.compressedRepresentation.toHexString()
+      let keyPair = TurnkeyCrypto.generateP256KeyPair()
+      privateKeyHex = keyPair.privateKey
+      publicKeyHex = keyPair.publicKeyCompressed
     }
 
     try savePrivateKey(privateKeyHex, for: publicKeyHex, config: SecureStorageConfig())
@@ -179,9 +173,9 @@ enum SecureStorageStamper {
   }
 
   static func createKeyPair(config: SecureStorageConfig) throws -> String {
-    let priv = P256.Signing.PrivateKey()
-    let privateKeyHex = priv.rawRepresentation.toHexString()
-    let publicKeyHex = priv.publicKey.compressedRepresentation.toHexString()
+    let keyPair = TurnkeyCrypto.generateP256KeyPair()
+    let privateKeyHex = keyPair.privateKey
+    let publicKeyHex = keyPair.publicKeyCompressed
     try savePrivateKey(privateKeyHex, for: publicKeyHex, config: config)
     return publicKeyHex
   }
@@ -210,6 +204,7 @@ enum SecureStorageStamper {
 
   /// Delete a specific key using the provided config to match how it was stored (e.g., access group,
   /// iCloud Keychain). Use when you stored with non-default attributes.
+  /// Note: Does not throw if the key isn't found (treat as success).
   static func deleteKeyPair(publicKeyHex: String, config: SecureStorageConfig) throws {
     var query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
@@ -221,6 +216,7 @@ enum SecureStorageStamper {
     }
 
     let status = SecItemDelete(query as CFDictionary)
+    
     if status == errSecItemNotFound || status == errSecSuccess {
       return
     }
@@ -348,9 +344,9 @@ enum SecureStorageStamper {
         let seconds = max(0, min(10, cfg.biometryReuseWindowSeconds))
         c.touchIDAuthenticationAllowableReuseDuration = TimeInterval(seconds)
       }
+      if let prompt = cfg.authPrompt { c.localizedReason = prompt }
       ctx = c
       query[kSecUseAuthenticationContext as String] = c
-      if let prompt = cfg.authPrompt { query[kSecUseOperationPrompt as String] = prompt }
     }
 
     var result: CFTypeRef?
