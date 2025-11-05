@@ -6,7 +6,6 @@ import TurnkeyStamper
 enum SessionRegistryStore: CollectionStore {
     
     private static let storeKey = Constants.Storage.sessionRegistryKey
-    private static let secureAccount = Constants.Storage.secureAccount
     private static let q = DispatchQueue(label: "sessionKeys", attributes: .concurrent)
     
     static func add(_ sessionKey: String) throws {

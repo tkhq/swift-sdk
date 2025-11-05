@@ -25,8 +25,6 @@ struct AuthView: View {
                         .multilineTextAlignment(.center)
                         .padding(.vertical, 8)
                     
-                    OrSeparator(label: "Or continue with")
-
                     HStack(spacing: 12) {
                         SocialIconButton(image: Image(systemName: "applelogo"), action: handleLoginWithApple)
                         SocialIconButton(image: Image("google-icon"), action: handleLoginWithGoogle)

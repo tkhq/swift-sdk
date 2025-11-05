@@ -1,10 +1,10 @@
 import Foundation
+import TurnkeyStamper
 
 /// Tracks generated but unused public keys along with their expiration timestamps.
 /// This is used to clean up stale key material that was never used to establish a session.
 enum PendingKeysStore {
     private static let storeKey = Constants.Storage.pendingKeysStoreKey
-    private static let secureAccount = Constants.Storage.secureAccount
     private static let q = DispatchQueue(label: "pendingKeys", attributes: .concurrent)
     
     static func add(_ pub: String, ttlHours: Double = 1) throws {
@@ -32,7 +32,7 @@ enum PendingKeysStore {
         let now = Date().timeIntervalSince1970
         for (pub, expiry) in all() where expiry < now {
             do {
-                try SecureStore.delete(service: pub, account: secureAccount)
+                try Stamper.deleteOnDeviceKeyPair(publicKeyHex: pub)
                 try remove(pub)
             } catch {
                 print("PendingKeysStore purge error for \(pub): \(error)")

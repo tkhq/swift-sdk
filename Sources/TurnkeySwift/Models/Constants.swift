@@ -8,7 +8,6 @@ public enum Constants {
   }
 
   public enum Storage {
-    public static let secureAccount = "p256-private"
     public static let selectedSessionKey = "com.turnkey.sdk.selectedSession"
     public static let sessionRegistryKey = "com.turnkey.sdk.sessionKeys"
     public static let pendingKeysStoreKey = "com.turnkey.sdk.pendingList"
