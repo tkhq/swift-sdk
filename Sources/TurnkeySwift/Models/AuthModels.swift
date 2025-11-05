@@ -18,11 +18,6 @@ public struct OAuthSuccess: Sendable {
     public let publicKey: String
 }
 
-public struct OAuthCallbackParams: Sendable {
-    public let oidcToken: String
-    public let sessionKey: String?
-}
-
 public struct CreateSubOrgParams: Codable, Sendable {
     /// Name of the user
     public var userName: String?

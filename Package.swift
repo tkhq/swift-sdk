@@ -30,6 +30,7 @@ let package = Package(
         .target(
             name: "TurnkeyCrypto",
             dependencies: [
+                "TurnkeyEncoding",
                 .product(name: "Base58Check", package: "Base58Check")
             ]
         ),
