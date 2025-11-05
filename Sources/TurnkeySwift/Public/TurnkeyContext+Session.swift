@@ -94,10 +94,7 @@ extension TurnkeyContext {
             if selectedSessionKey == nil {
                 try? SelectedSessionStore.save(resolvedSessionKey)
                 
-                let cli = try TurnkeyClient(
-                    apiPublicKey: stored.publicKey,
-                    baseUrl: apiUrl
-                )
+                let cli = try makeClientWithStamper(apiPublicKey: stored.publicKey)
                 
                 // Create and set session state
                 let session = Session(
@@ -147,10 +144,7 @@ extension TurnkeyContext {
             let stored = storedJwtSession.decoded
             let jwt = storedJwtSession.jwt
         
-            let client = try TurnkeyClient(
-                apiPublicKey: stored.publicKey,
-                baseUrl: apiUrl
-            )
+            let client = try makeClientWithStamper(apiPublicKey: stored.publicKey)
             
             let session = Session(
                 exp: stored.exp,
@@ -283,10 +277,7 @@ extension TurnkeyContext {
             // if this was the selected session we update client and session state
             if targetSessionKey == selectedSessionKey {
 
-                let newClient = try TurnkeyClient(
-                    apiPublicKey: stored.publicKey,
-                    baseUrl: apiUrl
-                )
+                let newClient = try makeClientWithStamper(apiPublicKey: stored.publicKey)
                 
                 let newSession = Session(
                     exp: stored.exp,

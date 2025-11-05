@@ -12,13 +12,15 @@ struct OtpView: View {
     
     let otpId: String
     let contact: String
+    let otpType: OtpType
+    let onComplete: (String) async throws -> Void
     
     private var otpCode: String {
         otpDigits.joined()
     }
     
     private var isEmail: Bool {
-        contact.contains("@")
+        otpType == .email
     }
     
     var body: some View {
@@ -81,13 +83,8 @@ struct OtpView: View {
     private func handleContinue() {
         Task {
             do {
-                let otpType: OtpType = isEmail ? .email : .sms
-                try await turnkey.completeOtp(
-                    otpId: otpId,
-                    otpCode: otpCode,
-                    contact: contact,
-                    otpType: otpType
-                )                 
+                try await onComplete(otpCode)
+                dismiss()
             } catch {
                 toast.show(message: "Invalid code. Please try again.", type: .error)
             }

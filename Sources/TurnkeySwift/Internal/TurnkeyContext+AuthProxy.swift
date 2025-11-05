@@ -217,6 +217,31 @@ extension TurnkeyContext {
         }
     }
     
+    /// Creates a TurnkeyClient with stamper and optional auth proxy configuration.
+    ///
+    /// If auth proxy is configured, creates a client that can handle both authenticated
+    /// requests (via stamper) and auth proxy requests. Otherwise, creates a client with
+    /// only stamper configuration.
+    ///
+    /// - Parameter apiPublicKey: The hex-encoded API public key whose private key is stored on-device.
+    /// - Returns: A configured TurnkeyClient.
+    /// - Throws: An error if the private key corresponding to the public key is not found.
+    internal func makeClientWithStamper(apiPublicKey: String) throws -> TurnkeyClient {
+        if let authProxyConfigId = self.authProxyConfigId {
+            return try TurnkeyClient(
+                apiPublicKey: apiPublicKey,
+                authProxyConfigId: authProxyConfigId,
+                baseUrl: apiUrl,
+                authProxyUrl: authProxyUrl
+            )
+        } else {
+            return try TurnkeyClient(
+                apiPublicKey: apiPublicKey,
+                baseUrl: apiUrl
+            )
+        }
+    }
+    
     /// Resolves the session expiration duration in seconds.
     ///
     /// Determines the expiration time based on the provided value, runtime configuration,
