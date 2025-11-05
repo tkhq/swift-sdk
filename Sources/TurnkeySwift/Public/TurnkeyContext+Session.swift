@@ -58,9 +58,9 @@ extension TurnkeyContext {
             if let _ = try JwtSessionStore.load(key: resolvedSessionKey) {
                 throw TurnkeySwiftError.keyAlreadyExists
             }
-            
-            let dto = try JWTDecoder.decode(jwt, as: TurnkeySession.self)
-            
+                        
+            let stored = try JWTDecoder.decode(jwt, as: TurnkeySession.self)
+                       
             // determine if auto-refresh should be enabled and how to set the TTL
             // - auto-refresh is enabled if either:
             //     (a) `refreshedSessionTTLSeconds` is explicitly provided, OR
@@ -77,7 +77,7 @@ extension TurnkeyContext {
             var ttlToStore: String? = refreshedSessionTTLSeconds
             if ttlToStore == nil {
                 if runtimeConfig?.auth.autoRefreshSession == true {
-                    let exp = dto.exp
+                    let exp = stored.exp
                     let now = Date().timeIntervalSince1970
                     let ttl = max(0, exp - now)
                     ttlToStore = String(Int(ttl))
@@ -85,7 +85,7 @@ extension TurnkeyContext {
             }
             
             try persistSession(
-                dto: dto,
+                stored: stored,
                 jwt: jwt,
                 sessionKey: resolvedSessionKey,
                 refreshedSessionTTLSeconds: ttlToStore
@@ -95,17 +95,17 @@ extension TurnkeyContext {
                 try? SelectedSessionStore.save(resolvedSessionKey)
                 
                 let cli = try TurnkeyClient(
-                    apiPublicKey: dto.publicKey,
+                    apiPublicKey: stored.publicKey,
                     baseUrl: apiUrl
                 )
                 
                 // Create and set session state
                 let session = Session(
-                    exp: dto.exp,
-                    publicKey: dto.publicKey,
-                    sessionType: dto.sessionType,
-                    userId: dto.userId,
-                    organizationId: dto.organizationId,
+                    exp: stored.exp,
+                    publicKey: stored.publicKey,
+                    sessionType: stored.sessionType,
+                    userId: stored.userId,
+                    organizationId: stored.organizationId,
                     token: jwt
                 )
                 
@@ -140,24 +140,24 @@ extension TurnkeyContext {
     ///   - `TurnkeySwiftError.failedToSetSelectedSession` if the operation fails.
     public func setActiveSession(sessionKey: String) async throws -> TurnkeyClient {
         do {
-            guard let stored = try JwtSessionStore.load(key: sessionKey) else {
+            guard let storedJwtSession = try JwtSessionStore.load(key: sessionKey) else {
                 throw TurnkeySwiftError.keyNotFound
             }
             
-            let dto = stored.decoded
-            let jwt = stored.jwt
+            let stored = storedJwtSession.decoded
+            let jwt = storedJwtSession.jwt
         
             let client = try TurnkeyClient(
-                apiPublicKey: dto.publicKey,
+                apiPublicKey: stored.publicKey,
                 baseUrl: apiUrl
             )
             
             let session = Session(
-                exp: dto.exp,
-                publicKey: dto.publicKey,
-                sessionType: dto.sessionType,
-                userId: dto.userId,
-                organizationId: dto.organizationId,
+                exp: stored.exp,
+                publicKey: stored.publicKey,
+                sessionType: stored.sessionType,
+                userId: stored.userId,
+                organizationId: stored.organizationId,
                 token: jwt
             )
             
@@ -244,17 +244,17 @@ extension TurnkeyContext {
         } else {
             // refreshing a background session
             
-            guard let stored = try JwtSessionStore.load(key: targetSessionKey) else {
+            guard let storedJwtSession = try JwtSessionStore.load(key: targetSessionKey) else {
                 throw TurnkeySwiftError.keyNotFound
             }
             
-            let dto = stored.decoded
+            let stored = storedJwtSession.decoded
 
             clientToUse = try TurnkeyClient(
-                apiPublicKey: dto.publicKey,
+                apiPublicKey: stored.publicKey,
                 baseUrl: apiUrl
             )
-            orgId = dto.organizationId
+            orgId = stored.organizationId
         }
         
         let newPublicKey = try createKeyPair()
@@ -271,10 +271,10 @@ extension TurnkeyContext {
             // we purge old key material but preserve the auto-refresh metadata stored
             try purgeStoredSession(for: targetSessionKey, keepAutoRefresh: true)
             
-            let dto = try JWTDecoder.decode(jwt, as: TurnkeySession.self)
+            let stored = try JWTDecoder.decode(jwt, as: TurnkeySession.self)
             let nextDuration = AutoRefreshStore.durationSeconds(for: targetSessionKey)
             try persistSession(
-                dto: dto,
+                stored: stored,
                 jwt: jwt,
                 sessionKey: targetSessionKey,
                 refreshedSessionTTLSeconds: nextDuration
@@ -284,16 +284,16 @@ extension TurnkeyContext {
             if targetSessionKey == selectedSessionKey {
 
                 let newClient = try TurnkeyClient(
-                    apiPublicKey: dto.publicKey,
+                    apiPublicKey: stored.publicKey,
                     baseUrl: apiUrl
                 )
                 
                 let newSession = Session(
-                    exp: dto.exp,
-                    publicKey: dto.publicKey,
-                    sessionType: dto.sessionType,
-                    userId: dto.userId,
-                    organizationId: dto.organizationId,
+                    exp: stored.exp,
+                    publicKey: stored.publicKey,
+                    sessionType: stored.sessionType,
+                    userId: stored.userId,
+                    organizationId: stored.organizationId,
                     token: jwt
                 )
                 
