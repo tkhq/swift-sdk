@@ -248,7 +248,15 @@ Each session schedules a timer to automatically clear itself 5 seconds before JW
 
 ## Demo App
 
-A sample SwiftUI demo app is included in the repository to showcase usage.
+A complete SwiftUI demo wallet app is included in the repository at [`Examples/swift-demo-wallet`](../../Examples/swift-demo-wallet). It showcases:
+
+* Passkey and OTP authentication
+* Session management
+* Wallet creation and import
+* Transaction signing
+* User profile management
+
+See the [demo app README](../../Examples/swift-demo-wallet/README.md) for setup instructions.
 
 ---
 

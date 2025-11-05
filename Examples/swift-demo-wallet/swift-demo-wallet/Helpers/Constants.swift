@@ -5,18 +5,17 @@ import TurnkeyTypes
 enum Constants {
 
   enum App {
-    static let appName = "Swift Demo Wallet App"
-    static let rpId = "passkeyapp.tkhqlabs.xyz"
+    static let rpId = "<your_rp_id>"
     static let scheme = "swift-demo-wallet"
-    static let backendBaseUrl = "http://localhost:3000"
   }
 
   enum Turnkey {
-    static let organizationId = "cd473579-efee-4cb1-8a23-734bd1b4be31" // "7533b2e3-01f2-4573-98c3-2c8bee816cb6"
-    static let sessionDuration = "900"
-    static let apiUrl = "https://api.turnkey.com" // "http://localhost:8081"
-    static let authProxyUrl = "https://authproxy.turnkey.com" // http://localhost:8090"
-    static let authProxyConfigId = "544e423d-f5c9-4dfb-947e-8cf726e3922e" // 5889b4b6-ec95-42ca-8551-660e9d50ed09"
+    static let organizationId = "<your_organization_id>"
+    static let apiUrl = "https://api.turnkey.com" 
+
+    static let authProxyUrl = "https://authproxy.turnkey.com"
+    static let authProxyConfigId = "<your_auth_proxy_config_id>"
+    
     static let defaultEthereumAccounts: [v1WalletAccountParams] = [
       v1WalletAccountParams(
         addressFormat: v1AddressFormat.address_format_ethereum,
@@ -33,18 +32,18 @@ enum Constants {
   }
 
   enum Google {
-    static let clientId = "776352896366-07enngvt22l7cnq1ctf5a9ddcm1pv1sc.apps.googleusercontent.com"
+    static let clientId = "<your_google_client_id>"
   }
 
   enum Apple {
-    static let clientId = "withreactnativewalletkit" // Fill with your Apple Services ID (client ID)
+    static let clientId = "<your_apple_client_id>"
   }
 
   enum X {
-    static let clientId = "d1dFWkNfVk1kdG12SlUxZ3k3NG86MTpjaQ"
+    static let clientId = "<your_x_client_id>"
   }
 
   enum Discord {
-    static let clientId = "1422294103890067536"
+    static let clientId = "<your_discord_client_id>"
   }
 }
