@@ -348,7 +348,8 @@ enum SecureStorageStamper: KeyPairStamper {
     if let cfg = config {
       let c = LAContext()
       if #available(iOS 13.0, *) {
-        let seconds = max(0, min(10, cfg.biometryReuseWindowSeconds))
+        let maxAllowed = Int(LATouchIDAuthenticationMaximumAllowableReuseDuration)
+        let seconds = max(0, min(maxAllowed, cfg.biometryReuseWindowSeconds))
         c.touchIDAuthenticationAllowableReuseDuration = TimeInterval(seconds)
       }
       if let prompt = cfg.authPrompt { c.localizedReason = prompt }
