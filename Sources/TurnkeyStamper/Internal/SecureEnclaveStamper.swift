@@ -272,7 +272,8 @@ enum SecureEnclaveStamper: KeyPairStamper {
       var tagResult: CFTypeRef?
       let tagStatus = SecItemCopyMatching(tagQuery as CFDictionary, &tagResult)
       if tagStatus == errSecSuccess, let r = tagResult, CFGetTypeID(r) == SecKeyGetTypeID() {
-        return r as! SecKey
+        // Safe: Type ID check confirms this is a SecKey
+        return (r as! SecKey)
       }
     }
 

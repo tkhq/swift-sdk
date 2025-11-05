@@ -76,7 +76,7 @@ enum SecureStorageStamper: KeyPairStamper {
   // MARK: - Public API
 
   static func listKeyPairs() throws -> [String] {
-    var query: [String: Any] = [
+    let query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
       kSecAttrLabel as String: label,
       kSecAttrSynchronizable as String: kSecAttrSynchronizableAny,
@@ -196,7 +196,7 @@ enum SecureStorageStamper: KeyPairStamper {
   }
 
   static func deleteKeyPair(publicKeyHex: String) throws {
-    var query: [String: Any] = [
+    let query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
       kSecAttrService as String: publicKeyHex,
       kSecAttrAccount as String: account,
@@ -344,7 +344,6 @@ enum SecureStorageStamper: KeyPairStamper {
       query[kSecAttrAccessGroup as String] = group
     }
 
-    var ctx: LAContext?
     if let cfg = config {
       let c = LAContext()
       if #available(iOS 13.0, *) {
@@ -353,7 +352,6 @@ enum SecureStorageStamper: KeyPairStamper {
         c.touchIDAuthenticationAllowableReuseDuration = TimeInterval(seconds)
       }
       if let prompt = cfg.authPrompt { c.localizedReason = prompt }
-      ctx = c
       query[kSecUseAuthenticationContext as String] = c
     }
 
