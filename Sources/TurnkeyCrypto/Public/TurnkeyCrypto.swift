@@ -28,6 +28,31 @@ public struct TurnkeyCrypto {
     )
   }
 
+  /// Derives the compressed public key (hex) from a Secure Enclave `SecKey` private key.
+  ///
+  /// - Parameter privateKey: A `SecKey` referencing a P-256 private key (e.g., in Secure Enclave).
+  /// - Returns: The compressed public key as a hex string.
+  /// - Throws: `CryptoError.invalidPublicKey` if the public key cannot be derived or encoded.
+  public static func getPublicKey(fromPrivateKey privateKey: SecKey) throws -> String {
+    guard let publicKey = SecKeyCopyPublicKey(privateKey) else {
+      throw CryptoError.invalidPublicKey
+    }
+
+    var externalError: Unmanaged<CFError>?
+    guard let pubData = SecKeyCopyExternalRepresentation(publicKey, &externalError) as Data? else {
+      throw CryptoError.invalidPublicKey
+    }
+
+    let cryptoPublicKey: P256.Signing.PublicKey
+    do {
+      cryptoPublicKey = try P256.Signing.PublicKey(x963Representation: pubData)
+    } catch {
+      throw CryptoError.invalidPublicKey
+    }
+
+    return cryptoPublicKey.compressedRepresentation.toHexString()
+  }
+
   /// Decrypts a credential bundle using the provided ephemeral private key.
   ///
   /// - Parameters:

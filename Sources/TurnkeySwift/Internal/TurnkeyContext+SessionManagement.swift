@@ -1,5 +1,6 @@
 import Foundation
 import TurnkeyTypes
+import TurnkeyStamper
 
 extension TurnkeyContext {
     
@@ -46,24 +47,24 @@ extension TurnkeyContext {
     ///   - `TurnkeySwiftError.keyNotFound` if the private key for the session’s public key is missing.
     ///   - Any error thrown during session persistence or store updates.
     func persistSession(
-        dto: TurnkeySession,
+        stored: TurnkeySession,
         jwt: String,
         sessionKey: String,
         refreshedSessionTTLSeconds: String? = nil
     ) throws {
-        let stored = StoredSession(decoded: dto, jwt: jwt)
+        let stored = StoredSession(decoded: stored, jwt: jwt)
         try JwtSessionStore.save(stored, key: sessionKey)
         try SessionRegistryStore.add(sessionKey)
-        
-        let priv = try KeyPairStore.getPrivateHex(for: dto.publicKey)
-        if priv.isEmpty { throw TurnkeySwiftError.keyNotFound }
-        try PendingKeysStore.remove(dto.publicKey)
-        
+
+        let exists = try Stamper.existsOnDeviceKeyPair(publicKeyHex: stored.publicKey)
+        if !exists { throw TurnkeySwiftError.keyNotFound }
+        try PendingKeysStore.remove(stored.publicKey)
+
         if let duration = refreshedSessionTTLSeconds {
             try AutoRefreshStore.set(durationSeconds: duration, for: sessionKey)
         }
         
-        scheduleExpiryTimer(for: sessionKey, expTimestamp: dto.exp)
+        scheduleExpiryTimer(for: sessionKey, expTimestamp: stored.exp)
     }
     
     /// Removes stored session data from disk.
@@ -85,7 +86,7 @@ extension TurnkeyContext {
         expiryTasks.removeValue(forKey: sessionKey)
         
         if let stored = try? JwtSessionStore.load(key: sessionKey) {
-            try? KeyPairStore.delete(for: stored.decoded.publicKey)
+            try? Stamper.deleteOnDeviceKeyPair(publicKeyHex: stored.decoded.publicKey)
         }
         
         JwtSessionStore.delete(key: sessionKey)

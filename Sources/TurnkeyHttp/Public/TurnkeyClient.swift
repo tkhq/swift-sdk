@@ -63,6 +63,28 @@ public struct TurnkeyClient {
     )
   }
 
+  /// Initializes a `TurnkeyClient` using an API public key whose private key is stored on-device.
+  ///
+  /// This selects Secure Enclave if available, otherwise Secure Storage. It validates that the
+  /// private key corresponding to `apiPublicKey` is already present in the selected backend.
+  ///
+  /// - Parameters:
+  ///   - apiPublicKey: The hex-encoded API public key (compressed) whose private key is stored on-device.
+  ///   - baseUrl: Optional base URL (defaults to Turnkey production).
+  ///   - activityPoller: Optional activity polling configuration.
+  public init(
+    apiPublicKey: String,
+    baseUrl: String = TurnkeyClient.baseURLString,
+    activityPoller: ActivityPollerConfig = ActivityPollerConfig()
+  ) throws {
+    let stamper = try Stamper(apiPublicKey: apiPublicKey)
+    self.init(
+      baseUrl: baseUrl,
+      stamper: stamper,
+      activityPoller: activityPoller
+    )
+  }
+
   /// Initializes a `TurnkeyClient` with passkey authentication for stamping requests.
   ///
   /// - Parameters:
@@ -113,6 +135,31 @@ public struct TurnkeyClient {
     authProxyUrl: String = TurnkeyClient.authProxyBaseURLString
   ) {
     let stamper = Stamper(apiPublicKey: apiPublicKey, apiPrivateKey: apiPrivateKey)
+    self.init(
+      baseUrl: baseUrl,
+      authProxyUrl: authProxyUrl,
+      authProxyConfigId: authProxyConfigId,
+      stamper: stamper
+    )
+  }
+
+  /// Initializes a `TurnkeyClient` with on-device private key (by public key) and Auth Proxy.
+  ///
+  /// This selects Secure Enclave if available, otherwise Secure Storage. It validates that the
+  /// private key corresponding to `apiPublicKey` is already present in the selected backend.
+  ///
+  /// - Parameters:
+  ///   - apiPublicKey: The hex-encoded API public key (compressed) whose private key is stored on-device.
+  ///   - authProxyConfigId: The Auth Proxy config ID to include in requests.
+  ///   - baseUrl: Optional base URL (defaults to Turnkey production).
+  ///   - authProxyUrl: Optional Auth Proxy URL (defaults to Turnkey production).
+  public init(
+    apiPublicKey: String,
+    authProxyConfigId: String,
+    baseUrl: String = TurnkeyClient.baseURLString,
+    authProxyUrl: String = TurnkeyClient.authProxyBaseURLString
+  ) throws {
+    let stamper = try Stamper(apiPublicKey: apiPublicKey)
     self.init(
       baseUrl: baseUrl,
       authProxyUrl: authProxyUrl,

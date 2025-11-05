@@ -34,7 +34,7 @@ let package = Package(
             ]
         ),
         .target(name: "TurnkeyPasskeys", dependencies: ["TurnkeyEncoding", "TurnkeyCrypto", "TurnkeyTypes"]),
-        .target(name: "TurnkeyStamper", dependencies: ["TurnkeyPasskeys"]),
+        .target(name: "TurnkeyStamper", dependencies: ["TurnkeyPasskeys", "TurnkeyCrypto"]),
         .target(
             name: "TurnkeySwift",
             dependencies: [

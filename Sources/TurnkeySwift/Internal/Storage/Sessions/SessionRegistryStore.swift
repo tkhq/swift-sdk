@@ -1,4 +1,5 @@
 import Foundation
+import TurnkeyStamper
 
 /// Stores a list of all active session keys.
 /// Used to track and manage multiple JWT-backed sessions, and to purge expired ones.
@@ -41,7 +42,7 @@ enum SessionRegistryStore: CollectionStore {
                     if Date(timeIntervalSince1970: stored.decoded.exp) <= Date() {
                         JwtSessionStore.delete(key: sessionKey)
                         try AutoRefreshStore.remove(for: sessionKey)
-                        try KeyPairStore.delete(for: stored.decoded.publicKey)
+                        try Stamper.deleteOnDeviceKeyPair(publicKeyHex: stored.decoded.publicKey)
                         try remove(sessionKey)
                         
                         // if we just removed the selected session we clear the SelectedSessionStore
