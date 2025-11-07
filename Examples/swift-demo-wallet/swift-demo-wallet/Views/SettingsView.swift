@@ -126,7 +126,7 @@ struct SettingsView: View {
         guard let updateType = updateType else { return }
         
         let verifyResult = try await turnkey.verifyOtp(otpId: otpId, otpCode: otpCode)
-        let verificationToken = verifyResult.credentialBundle
+        let verificationToken = verifyResult.verificationToken
         
         switch updateType {
         case .email:

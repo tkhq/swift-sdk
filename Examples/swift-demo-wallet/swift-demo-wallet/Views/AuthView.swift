@@ -15,64 +15,84 @@ struct AuthView: View {
     @State private var error: String? = nil
     
     var body: some View {
-        VStack {
-            Spacer()
-            
-            VStack(spacing: 24) {
-                VStack(spacing: 16) {
-                    Text("Log in or sign up")
-                        .font(.title3.bold())
-                        .multilineTextAlignment(.center)
-                        .padding(.vertical, 8)
-                    
-                    HStack(spacing: 12) {
-                        SocialIconButton(image: Image(systemName: "applelogo"), action: handleLoginWithApple)
-                        SocialIconButton(image: Image("google-icon"), action: handleLoginWithGoogle)
-                        SocialIconButton(image: Image("x-icon"), action: handleLoginWithX)
-                        SocialIconButton(image: Image("discord-icon"), action: handleLoginWithDiscord)
-                    }
-                    .frame(height: 48)
+        ZStack {
+            VStack {
+                Spacer()
+                
+                VStack(spacing: 24) {
+                    VStack(spacing: 16) {
+                        Text("Log in or sign up")
+                            .font(.title3.bold())
+                            .multilineTextAlignment(.center)
+                            .padding(.vertical, 8)
+                        
+                        HStack(spacing: 12) {
+                            SocialIconButton(image: Image(systemName: "applelogo"), action: handleLoginWithApple)
+                            SocialIconButton(image: Image("google-icon"), action: handleLoginWithGoogle)
+                            SocialIconButton(image: Image("x-icon"), action: handleLoginWithX)
+                            SocialIconButton(image: Image("discord-icon"), action: handleLoginWithDiscord)
+                        }
+                        .frame(height: 48)
 
-                    OrSeparator()
-                    
-                    EmailInputView(email: $email)
-                    
-                    LightGrayButton(
-                        title: "Continue",
-                        action: handleContinueWithEmail,
-                        isDisabled: !isValidEmail(email)
-                    )
-                    
-                    OrSeparator()
-                    
-                    PhoneInputView(
-                        selectedCountry: $selectedCountry,
-                        phoneNumber: $phone
-                    )
-                    
-                    LightGrayButton(
-                        title: "Continue",
-                        action: handleContinueWithPhone,
-                        isDisabled: !isValidPhone(phone, region: selectedCountry)
-                    )
-                    
-                    OrSeparator()
-                    
-                    Button("Log in with passkey", action: handleLoginWithPasskey)
-                        .buttonStyle(BlackBorderButton())
-                    
-                    Button("Sign up with passkey", action: handleSignUpWithPasskey)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.blue)
+                        OrSeparator()
+                        
+                        EmailInputView(email: $email)
+                        
+                        LightGrayButton(
+                            title: "Continue",
+                            action: handleContinueWithEmail,
+                            isDisabled: !isValidEmail(email)
+                        )
+                        
+                        OrSeparator()
+                        
+                        PhoneInputView(
+                            selectedCountry: $selectedCountry,
+                            phoneNumber: $phone
+                        )
+                        
+                        LightGrayButton(
+                            title: "Continue",
+                            action: handleContinueWithPhone,
+                            isDisabled: !isValidPhone(phone, region: selectedCountry)
+                        )
+                        
+                        OrSeparator()
+                        
+                        Button("Log in with passkey", action: handleLoginWithPasskey)
+                            .buttonStyle(BlackBorderButton())
+                        
+                        Button("Sign up with passkey", action: handleSignUpWithPasskey)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.blue)
+                    }
+                    .padding(20)
+                    .background(Color.white)
+                    .cornerRadius(16)
+                    .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 4)
+                    .padding(.horizontal, 20)
                 }
-                .padding(20)
-                .background(Color.white)
-                .cornerRadius(16)
-                .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 4)
-                .padding(.horizontal, 20)
+                
+                Spacer()
             }
             
-            Spacer()
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    Button(action: { coordinator.push(AuthRoute.keyManager) }) {
+                        Image(systemName: "key.fill")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(width: 40, height: 40)
+                            .background(Color.blue)
+                            .clipShape(Circle())
+                            .shadow(color: .black.opacity(0.2), radius: 6, x: 0, y: 4)
+                    }
+                }
+                .padding(.trailing, 24)
+                .padding(.bottom, 24)
+            }
         }
         .background(Color.gray.opacity(0.05).ignoresSafeArea())
         .onChange(of: error) {

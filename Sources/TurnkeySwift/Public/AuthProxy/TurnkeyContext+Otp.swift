@@ -48,8 +48,7 @@ extension TurnkeyContext {
     /// - Throws:
     ///   - `TurnkeySwiftError.missingAuthProxyConfiguration` if the Auth Proxy client is not configured.
     ///   - `TurnkeySwiftError.failedToVerifyOtp` if the verification request fails.
-    public func verifyOtp(otpId: String, otpCode: String) async throws -> VerifyOtpResult {
-        
+    public func verifyOtp(otpId: String, otpCode: String, publicKey: String? = nil) async throws -> VerifyOtpResult {
         guard let client = client else {
             throw TurnkeySwiftError.missingAuthProxyConfiguration
         }
@@ -57,10 +56,11 @@ extension TurnkeyContext {
         do {
             let resp = try await client.proxyVerifyOtp(ProxyTVerifyOtpBody(
                 otpCode: otpCode,
-                otpId: otpId
+                otpId: otpId,
+                publicKey: publicKey
             ))
             
-            return VerifyOtpResult(credentialBundle: resp.verificationToken)
+            return VerifyOtpResult(verificationToken: resp.verificationToken)
         } catch {
             throw TurnkeySwiftError.failedToVerifyOtp(underlying: error)
         }
@@ -225,7 +225,7 @@ extension TurnkeyContext {
         do {
             // we verify the otp code
             let verifyResult = try await verifyOtp(otpId: otpId, otpCode: otpCode)
-            let verificationToken = verifyResult.credentialBundle
+            let verificationToken = verifyResult.verificationToken
             
             // we check if org already exists
             let response = try await client.proxyGetAccount(ProxyTGetAccountBody(

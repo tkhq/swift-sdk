@@ -20,7 +20,7 @@ public struct InitOtpResult: Codable, Sendable {
 }
 
 public struct VerifyOtpResult: Codable, Sendable {
-    public let credentialBundle: String
+    public let verificationToken: String
 }
 
 public struct CompleteOtpResult: Codable {
