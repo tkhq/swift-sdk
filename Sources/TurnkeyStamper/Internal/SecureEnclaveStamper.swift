@@ -90,10 +90,6 @@ enum SecureEnclaveStamper: KeyPairStamper {
     let jsonData = try JSONSerialization.data(withJSONObject: stamp, options: [])
     return jsonData.base64URLEncodedString()
   }
-
-  // MARK: - Helpers
-
-  // MARK: - Helpers
 }
 
 

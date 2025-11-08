@@ -30,7 +30,7 @@ public final class EnclaveManager {
 
   // MARK: - Constants
 
-  private static let defaultLabel = "TurnkeyEnclaveManager"
+  public static let defaultLabel = "TurnkeyEnclaveManager"
 
   // MARK: - Instance
 
