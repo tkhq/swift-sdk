@@ -230,7 +230,13 @@ enum SecureStorageStamper: KeyPairStamper {
     throw SecureStorageStamperError.keychainError(status)
   }
 
-  static func stamp(
+  /// Sign an arbitrary payload with the private key stored in Secure Storage.
+  ///
+  /// - Parameters:
+  ///   - payload: Raw string payload to sign.
+  ///   - publicKeyHex: Compressed public key hex identifying the key.
+  /// - Returns: DER-encoded ECDSA signature as a hex string.
+  static func sign(
     payload: String,
     publicKeyHex: String
   ) throws -> String {
@@ -238,17 +244,48 @@ enum SecureStorageStamper: KeyPairStamper {
       throw SecureStorageStamperError.payloadEncodingFailed
     }
     let digest = SHA256.hash(data: payloadData)
-
     guard let privateKeyHex = try getPrivateKey(publicKeyHex: publicKeyHex, config: nil) else {
       throw SecureStorageStamperError.privateKeyNotFound(publicKeyHex: publicKeyHex)
     }
-
-    let stamp = try ApiKeyStamper.stamp(
+    return try ApiKeyStamper.sign(
       payload: digest,
-      publicKeyHex: publicKeyHex,
       privateKeyHex: privateKeyHex
     )
-    return stamp
+  }
+
+  /// Sign an arbitrary payload with the private key stored in Secure Storage using a specific configuration.
+  ///
+  /// Use this when keys were stored with non-default attributes (e.g., access group, access control).
+  static func sign(
+    payload: String,
+    publicKeyHex: String,
+    config: SecureStorageConfig
+  ) throws -> String {
+    guard let payloadData = payload.data(using: .utf8) else {
+      throw SecureStorageStamperError.payloadEncodingFailed
+    }
+    let digest = SHA256.hash(data: payloadData)
+    guard let privateKeyHex = try getPrivateKey(publicKeyHex: publicKeyHex, config: config) else {
+      throw SecureStorageStamperError.privateKeyNotFound(publicKeyHex: publicKeyHex)
+    }
+    return try ApiKeyStamper.sign(
+      payload: digest,
+      privateKeyHex: privateKeyHex
+    )
+  }
+
+  static func stamp(
+    payload: String,
+    publicKeyHex: String
+  ) throws -> String {
+    let signatureHex = try sign(payload: payload, publicKeyHex: publicKeyHex)
+    let stamp: [String: Any] = [
+      "publicKey": publicKeyHex,
+      "scheme": "SIGNATURE_SCHEME_TK_API_P256",
+      "signature": signatureHex,
+    ]
+    let jsonData = try JSONSerialization.data(withJSONObject: stamp, options: [])
+    return jsonData.base64URLEncodedString()
   }
 
   /// Generate a stamp while honoring access control and scoping (e.g., access group, iCloud). If the
@@ -259,21 +296,14 @@ enum SecureStorageStamper: KeyPairStamper {
     publicKeyHex: String,
     config: SecureStorageConfig
   ) throws -> String {
-    guard let payloadData = payload.data(using: .utf8) else {
-      throw SecureStorageStamperError.payloadEncodingFailed
-    }
-    let digest = SHA256.hash(data: payloadData)
-
-    guard let privateKeyHex = try getPrivateKey(publicKeyHex: publicKeyHex, config: config) else {
-      throw SecureStorageStamperError.privateKeyNotFound(publicKeyHex: publicKeyHex)
-    }
-
-    let stamp = try ApiKeyStamper.stamp(
-      payload: digest,
-      publicKeyHex: publicKeyHex,
-      privateKeyHex: privateKeyHex
-    )
-    return stamp
+    let signatureHex = try sign(payload: payload, publicKeyHex: publicKeyHex, config: config)
+    let stamp: [String: Any] = [
+      "publicKey": publicKeyHex,
+      "scheme": "SIGNATURE_SCHEME_TK_API_P256",
+      "signature": signatureHex,
+    ]
+    let jsonData = try JSONSerialization.data(withJSONObject: stamp, options: [])
+    return jsonData.base64URLEncodedString()
   }
 
   // MARK: - Keychain helpers

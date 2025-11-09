@@ -245,6 +245,52 @@ public class Stamper {
 
     throw StampError.missingCredentials
   }
+
+  /// Signs the given payload and returns only the signature (DER-encoded ECDSA in hex).
+  ///
+  /// - Parameter payload: The raw string payload to sign.
+  /// - Returns: Signature as a hex string.
+  /// - Throws: `StampError` if credentials are missing, invalid, or if passkey mode is used.
+  public func sign(payload: String) async throws -> String {
+    guard let payloadData = payload.data(using: .utf8) else {
+      throw StampError.invalidPayload
+    }
+    let payloadHash = SHA256.hash(data: payloadData)
+
+    // Route based on configured mode first
+    if let mode = self.mode {
+      switch mode {
+      case let .apiKey(_, priv):
+        return try ApiKeyStamper.sign(payload: payloadHash, privateKeyHex: priv)
+      case .passkey:
+        throw StampError.signNotSupportedForPasskey
+      case let .secureEnclave(publicKey):
+        return try SecureEnclaveStamper.sign(payload: payload, publicKeyHex: publicKey)
+      case let .secureStorage(publicKey):
+        if case let .secureStorage(cfg) = self.configuration {
+          return try SecureStorageStamper.sign(
+            payload: payload,
+            publicKeyHex: publicKey,
+            config: Self.mapSecureStorageConfig(cfg)
+          )
+        } else {
+          return try SecureStorageStamper.sign(
+            payload: payload,
+            publicKeyHex: publicKey
+          )
+        }
+      }
+    }
+
+    // Backward compatibility: derive from legacy properties if possible
+    if let _ = apiPublicKey, let priv = apiPrivateKey {
+      return try ApiKeyStamper.sign(payload: payloadHash, privateKeyHex: priv)
+    }
+    if passkeyManager != nil {
+      throw StampError.signNotSupportedForPasskey
+    }
+    throw StampError.missingCredentials
+  }
 }
 
 // MARK: - Config mappers

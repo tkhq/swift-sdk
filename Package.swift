@@ -45,6 +45,10 @@ let package = Package(
                 "TurnkeyPasskeys",
                 "TurnkeyEncoding",
             ]),
+        .testTarget(
+            name: "TurnkeyStamperTests",
+            dependencies: ["TurnkeyStamper", "TurnkeyCrypto"]
+        ),
 
     ]
 )

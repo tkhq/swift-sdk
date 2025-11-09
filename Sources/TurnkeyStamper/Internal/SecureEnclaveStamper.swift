@@ -71,7 +71,13 @@ enum SecureEnclaveStamper: KeyPairStamper {
     try EnclaveManager.deleteKeyPair(publicKeyHex: publicKeyHex, label: label)
   }
 
-  static func stamp(
+  /// Sign an arbitrary payload with the Secure Enclave private key associated with `publicKeyHex`.
+  ///
+  /// - Parameters:
+  ///   - payload: Raw string payload to sign.
+  ///   - publicKeyHex: Compressed public key hex identifying the Secure Enclave key.
+  /// - Returns: DER-encoded ECDSA signature as a hex string.
+  static func sign(
     payload: String,
     publicKeyHex: String
   ) throws -> String {
@@ -80,7 +86,14 @@ enum SecureEnclaveStamper: KeyPairStamper {
     }
     let manager = try EnclaveManager(publicKeyHex: publicKeyHex, label: label)
     let signature = try manager.sign(message: payloadData, algorithm: .ecdsaSignatureDigestX962SHA256)
-    let signatureHex = signature.toHexString()
+    return signature.toHexString()
+  }
+
+  static func stamp(
+    payload: String,
+    publicKeyHex: String
+  ) throws -> String {
+    let signatureHex = try sign(payload: payload, publicKeyHex: publicKeyHex)
     let stamp: [String: Any] = [
       "publicKey": publicKeyHex,
       "scheme": "SIGNATURE_SCHEME_TK_API_P256",

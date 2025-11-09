@@ -1,4 +1,4 @@
-.PHONY: build types clients codegen format clean
+.PHONY: build types clients codegen format clean test test-modern test-stamper
 
 # Build the codegen executables
 build:
@@ -28,5 +28,15 @@ format:
 # Clean build artifacts
 clean:
 	@rm -rf .build 2>/dev/null || true
+
+# Run all SwiftPM tests
+test:
+	@echo "🧪 Running all tests..."
+	@cd .. && swift test --parallel
+
+# Run only TurnkeyStamper tests
+test-stamper:
+	@echo "🧪 Running TurnkeyStamper tests..."
+	@cd .. && swift test --parallel --filter TurnkeyStamperTests
 
 .DEFAULT_GOAL := codegen
