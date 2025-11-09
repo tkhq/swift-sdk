@@ -28,7 +28,7 @@ public struct TurnkeyClient {
   internal let stamper: Stamper?
   internal let activityPoller: ActivityPollerConfig
 
-  internal init(
+  public init(
     baseUrl: String = TurnkeyClient.baseURLString,
     authProxyUrl: String? = nil,
     authProxyConfigId: String? = nil,
