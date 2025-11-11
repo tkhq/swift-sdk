@@ -4,6 +4,7 @@ import CoreFoundation
 import Security
 import TurnkeyEncoding
 import TurnkeyCrypto
+import TurnkeyKeyManager
 
 
 /// A Secure Enclave–backed stamper for generating and using P-256 keys inside the device TEE.
