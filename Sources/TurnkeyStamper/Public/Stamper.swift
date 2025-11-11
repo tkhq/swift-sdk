@@ -17,6 +17,14 @@ public class Stamper {
   private let passkeyManager: PasskeyStamper?
   private var configuration: StamperConfiguration? = nil
   
+  /// ECDSA signature output format.
+  public enum SignatureFormat {
+    /// ASN.1/DER-encoded ECDSA signature (X9.62). Default used for stamps.
+    case der
+    /// Raw 64-byte R||S big-endian concatenation. Required by some API fields like clientSignature.
+    case raw
+  }
+  
   // Selected stamping backend
   private enum StampingMode {
     case apiKey(pub: String, priv: String)
@@ -270,12 +278,14 @@ public class Stamper {
     throw StampError.missingCredentials
   }
 
-  /// Signs the given payload and returns only the signature (DER-encoded ECDSA in hex).
+  /// Signs the given payload and returns only the signature as hex.
   ///
-  /// - Parameter payload: The raw string payload to sign.
-  /// - Returns: Signature as a hex string.
+  /// - Parameters:
+  ///   - payload: The raw string payload to sign.
+  ///   - format: Desired signature format. Defaults to `.der`. Use `.raw` for fields like clientSignature.
+  /// - Returns: Signature as a hex string in the requested format.
   /// - Throws: `StampError` if credentials are missing, invalid, or if passkey mode is used.
-  public func sign(payload: String) async throws -> String {
+  public func sign(payload: String, format: SignatureFormat = .der) async throws -> String {
     guard let payloadData = payload.data(using: .utf8) else {
       throw StampError.invalidPayload
     }
@@ -285,22 +295,24 @@ public class Stamper {
     if let mode = self.mode {
       switch mode {
       case let .apiKey(_, priv):
-        return try ApiKeyStamper.sign(payload: payloadHash, privateKeyHex: priv)
+        return try ApiKeyStamper.sign(payload: payloadHash, privateKeyHex: priv, format: format)
       case .passkey:
         throw StampError.signNotSupportedForPasskey
       case let .secureEnclave(publicKey):
-        return try SecureEnclaveStamper.sign(payload: payload, publicKeyHex: publicKey)
+        return try SecureEnclaveStamper.sign(payload: payload, publicKeyHex: publicKey, format: format)
       case let .secureStorage(publicKey):
         if case let .secureStorage(cfg) = self.configuration {
           return try SecureStorageStamper.sign(
             payload: payload,
             publicKeyHex: publicKey,
-            config: Self.mapSecureStorageConfig(cfg)
+            config: Self.mapSecureStorageConfig(cfg),
+            format: format
           )
         } else {
           return try SecureStorageStamper.sign(
             payload: payload,
-            publicKeyHex: publicKey
+            publicKeyHex: publicKey,
+            format: format
           )
         }
       }
@@ -308,7 +320,7 @@ public class Stamper {
 
     // Backward compatibility: derive from legacy properties if possible
     if let _ = apiPublicKey, let priv = apiPrivateKey {
-      return try ApiKeyStamper.sign(payload: payloadHash, privateKeyHex: priv)
+      return try ApiKeyStamper.sign(payload: payloadHash, privateKeyHex: priv, format: format)
     }
     if passkeyManager != nil {
       throw StampError.signNotSupportedForPasskey

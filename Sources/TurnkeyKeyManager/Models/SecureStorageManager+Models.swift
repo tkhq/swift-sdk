@@ -2,13 +2,13 @@ import Foundation
 
 public extension SecureStorageManager {
   struct Config: Sendable {
-    public enum Accessibility {
+    public enum Accessibility: Sendable {
       case whenUnlockedThisDeviceOnly
       case afterFirstUnlockThisDeviceOnly
       case whenPasscodeSetThisDeviceOnly
     }
 
-    public enum AccessControlPolicy {
+    public enum AccessControlPolicy: Sendable {
       case none
       case userPresence
       case biometryAny

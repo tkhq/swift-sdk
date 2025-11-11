@@ -77,17 +77,25 @@ enum SecureEnclaveStamper: KeyPairStamper {
   /// - Parameters:
   ///   - payload: Raw string payload to sign.
   ///   - publicKeyHex: Compressed public key hex identifying the Secure Enclave key.
-  /// - Returns: DER-encoded ECDSA signature as a hex string.
+  ///   - format: Desired signature format. Defaults to `.der`.
+  /// - Returns: ECDSA signature as a hex string in the requested format.
   static func sign(
     payload: String,
-    publicKeyHex: String
+    publicKeyHex: String,
+    format: Stamper.SignatureFormat = .der
   ) throws -> String {
     guard let payloadData = payload.data(using: .utf8) else {
       throw SecureEnclaveStamperError.payloadEncodingFailed
     }
     let manager = try EnclaveManager(publicKeyHex: publicKeyHex, label: label)
-    let signature = try manager.sign(message: payloadData, algorithm: .ecdsaSignatureDigestX962SHA256)
-    return signature.toHexString()
+    let derSignature = try manager.sign(message: payloadData, algorithm: .ecdsaSignatureDigestX962SHA256)
+    switch format {
+    case .der:
+      return derSignature.toHexString()
+    case .raw:
+      let raw = try derToRawRS(derSignature)
+      return raw.toHexString()
+    }
   }
 
   static func stamp(
@@ -106,4 +114,60 @@ enum SecureEnclaveStamper: KeyPairStamper {
   }
 }
 
-
+// MARK: - DER helpers
+private extension SecureEnclaveStamper {
+  /// Convert an ASN.1 DER-encoded ECDSA signature into raw 64-byte R||S.
+  static func derToRawRS(_ der: Data) throws -> Data {
+    // Basic ASN.1 parsing for: SEQUENCE { INTEGER r, INTEGER s }
+    var idx = 0
+    func readByte() throws -> UInt8 {
+      guard idx < der.count else { throw SecureEnclaveStamperError.unsupportedAlgorithm }
+      let b = der[idx]
+      idx += 1
+      return b
+    }
+    func readLength() throws -> Int {
+      let first = try readByte()
+      if first & 0x80 == 0 {
+        return Int(first)
+      }
+      let count = Int(first & 0x7f)
+      guard count > 0, idx + count <= der.count else { throw SecureEnclaveStamperError.unsupportedAlgorithm }
+      var value = 0
+      for _ in 0..<count {
+        value = (value << 8) | Int(try readByte())
+      }
+      return value
+    }
+    func readBytes(_ len: Int) throws -> Data {
+      guard len >= 0, idx + len <= der.count else { throw SecureEnclaveStamperError.unsupportedAlgorithm }
+      let out = der.subdata(in: idx..<(idx + len))
+      idx += len
+      return out
+    }
+    func normalizeTo32(_ integer: Data) throws -> Data {
+      var i = integer
+      // Strip leading zero padding
+      while i.count > 0 && i.first == 0x00 {
+        i.removeFirst()
+      }
+      guard i.count <= 32 else { throw SecureEnclaveStamperError.unsupportedAlgorithm }
+      if i.count < 32 {
+        return Data(repeating: 0, count: 32 - i.count) + i
+      }
+      return i
+    }
+    // Sequence
+    guard try readByte() == 0x30 else { throw SecureEnclaveStamperError.unsupportedAlgorithm }
+    _ = try readLength()
+    // R
+    guard try readByte() == 0x02 else { throw SecureEnclaveStamperError.unsupportedAlgorithm }
+    let rLen = try readLength()
+    let r = try normalizeTo32(try readBytes(rLen))
+    // S
+    guard try readByte() == 0x02 else { throw SecureEnclaveStamperError.unsupportedAlgorithm }
+    let sLen = try readLength()
+    let s = try normalizeTo32(try readBytes(sLen))
+    return r + s
+  }
+}

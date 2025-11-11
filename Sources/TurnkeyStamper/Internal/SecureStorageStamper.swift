@@ -110,10 +110,12 @@ enum SecureStorageStamper: KeyPairStamper {
   /// - Parameters:
   ///   - payload: Raw string payload to sign.
   ///   - publicKeyHex: Compressed public key hex identifying the key.
-  /// - Returns: DER-encoded ECDSA signature as a hex string.
+  ///   - format: Desired signature format. Defaults to `.der`.
+  /// - Returns: ECDSA signature as a hex string in the requested format.
   static func sign(
     payload: String,
-    publicKeyHex: String
+    publicKeyHex: String,
+    format: Stamper.SignatureFormat = .der
   ) throws -> String {
     guard let payloadData = payload.data(using: .utf8) else {
       throw SecureStorageStamperError.payloadEncodingFailed
@@ -124,17 +126,25 @@ enum SecureStorageStamper: KeyPairStamper {
     }
     return try ApiKeyStamper.sign(
       payload: digest,
-      privateKeyHex: privateKeyHex
+      privateKeyHex: privateKeyHex,
+      format: format
     )
   }
 
   /// Sign an arbitrary payload with the private key stored in Secure Storage using a specific configuration.
   ///
   /// Use this when keys were stored with non-default attributes (e.g., access group, access control).
+  /// - Parameters:
+  ///   - payload: Raw string payload to sign.
+  ///   - publicKeyHex: Compressed public key hex identifying the key.
+  ///   - config: Storage configuration to match how the key was stored.
+  ///   - format: Desired signature format. Defaults to `.der`.
+  /// - Returns: ECDSA signature as a hex string in the requested format.
   static func sign(
     payload: String,
     publicKeyHex: String,
-    config: SecureStorageConfig
+    config: SecureStorageConfig,
+    format: Stamper.SignatureFormat = .der
   ) throws -> String {
     guard let payloadData = payload.data(using: .utf8) else {
       throw SecureStorageStamperError.payloadEncodingFailed
@@ -145,7 +155,8 @@ enum SecureStorageStamper: KeyPairStamper {
     }
     return try ApiKeyStamper.sign(
       payload: digest,
-      privateKeyHex: privateKeyHex
+      privateKeyHex: privateKeyHex,
+      format: format
     )
   }
 
