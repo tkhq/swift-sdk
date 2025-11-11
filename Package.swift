@@ -9,6 +9,7 @@ let package = Package(
         .library(name: "TurnkeyTypes", targets: ["TurnkeyTypes"]),
         .library(name: "TurnkeyHttp", targets: ["TurnkeyHttp"]),
         .library(name: "TurnkeyCrypto", targets: ["TurnkeyCrypto"]),
+        .library(name: "TurnkeyKeyManager", targets: ["TurnkeyKeyManager"]),
         .library(name: "TurnkeyPasskeys", targets: ["TurnkeyPasskeys"]),
         .library(name: "TurnkeyStamper", targets: ["TurnkeyStamper"]),
         .library(name: "TurnkeySwift", targets: ["TurnkeySwift"]),
@@ -34,8 +35,14 @@ let package = Package(
                 .product(name: "Base58Check", package: "Base58Check")
             ]
         ),
+        .target(
+            name: "TurnkeyKeyManager",
+            dependencies: [
+                "TurnkeyCrypto"
+            ]
+        ),
         .target(name: "TurnkeyPasskeys", dependencies: ["TurnkeyEncoding", "TurnkeyCrypto", "TurnkeyTypes"]),
-        .target(name: "TurnkeyStamper", dependencies: ["TurnkeyPasskeys", "TurnkeyCrypto"]),
+        .target(name: "TurnkeyStamper", dependencies: ["TurnkeyPasskeys", "TurnkeyCrypto", "TurnkeyKeyManager"]),
         .target(
             name: "TurnkeySwift",
             dependencies: [
@@ -44,6 +51,7 @@ let package = Package(
                 "TurnkeyCrypto",
                 "TurnkeyPasskeys",
                 "TurnkeyEncoding",
+                "TurnkeyKeyManager",
             ]),
         .testTarget(
             name: "TurnkeyStamperTests",
