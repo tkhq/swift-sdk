@@ -75,24 +75,6 @@ struct AuthView: View {
                 
                 Spacer()
             }
-            
-            VStack {
-                Spacer()
-                HStack {
-                    Spacer()
-                    Button(action: { coordinator.push(AuthRoute.keyManager) }) {
-                        Image(systemName: "key.fill")
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundColor(.white)
-                            .frame(width: 40, height: 40)
-                            .background(Color.blue)
-                            .clipShape(Circle())
-                            .shadow(color: .black.opacity(0.2), radius: 6, x: 0, y: 4)
-                    }
-                }
-                .padding(.trailing, 24)
-                .padding(.bottom, 24)
-            }
         }
         .background(Color.gray.opacity(0.05).ignoresSafeArea())
         .onChange(of: error) {

@@ -233,7 +233,7 @@
 			packageReferences = (
 				8DB100732DD7ED0800885C8F /* XCRemoteSwiftPackageReference "PhoneNumberKit" */,
 				8D6F180A2DE65C73006FEDA2 /* XCRemoteSwiftPackageReference "CryptoSwift" */,
-				8D6F19852DE7A3B9006FEDA2 /* XCLocalSwiftPackageReference "../../../swift-sdk" */,
+				1EFC74972EC13D1F0096E229 /* XCLocalSwiftPackageReference "../../../swift-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 8DB1003B2DD7E3D400885C8F /* Products */;
@@ -448,6 +448,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -482,6 +483,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -610,7 +612,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		8D6F19852DE7A3B9006FEDA2 /* XCLocalSwiftPackageReference "../../../swift-sdk" */ = {
+		1EFC74972EC13D1F0096E229 /* XCLocalSwiftPackageReference "../../../swift-sdk" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = "../../../swift-sdk";
 		};

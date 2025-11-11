@@ -5,16 +5,16 @@ import TurnkeyTypes
 enum Constants {
 
   enum App {
-    static let rpId = "<your_rp_id>"
+    static let rpId = "passkeyapp.tkhqlabs.xyz"
     static let scheme = "swift-demo-wallet"
   }
 
   enum Turnkey {
-    static let organizationId = "<your_organization_id>"
+    static let organizationId = "cd473579-efee-4cb1-8a23-734bd1b4be31"
     static let apiUrl = "https://api.turnkey.com" 
 
     static let authProxyUrl = "https://authproxy.turnkey.com"
-    static let authProxyConfigId = "<your_auth_proxy_config_id>"
+    static let authProxyConfigId = "544e423d-f5c9-4dfb-947e-8cf726e3922e"
     
     static let defaultEthereumAccounts: [v1WalletAccountParams] = [
       v1WalletAccountParams(

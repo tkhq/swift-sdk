@@ -3,7 +3,6 @@ import TurnkeySwift
 
 enum AuthRoute: Hashable {
     case otp(otpId: String, contact: String, otpType: OtpType)
-    case keyManager
 }
 
 enum MainRoute: Hashable {
@@ -30,8 +29,6 @@ struct AuthFlow: View {
                                 otpType: otpType
                             )
                         }
-                    case .keyManager:
-                        KeyManagerView()
                     }
                 }
         }
