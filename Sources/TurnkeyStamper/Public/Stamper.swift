@@ -26,6 +26,30 @@ public class Stamper {
   }
   private let mode: StampingMode?
 
+  /// The public key used by this stamper, if available.
+  ///
+  /// Returns the compressed public key hex string for API key and on-device modes.
+  /// Returns `nil` for passkey-based stampers, where a reusable public key is not exposed.
+  public var publicKeyHex: String? {
+    if let mode = self.mode {
+      switch mode {
+      case let .apiKey(pub, _):
+        return pub
+      case .passkey:
+        return nil
+      case let .secureEnclave(publicKey):
+        return publicKey
+      case let .secureStorage(publicKey):
+        return publicKey
+      }
+    }
+    // Backward compatibility for legacy initializers
+    if let pub = self.apiPublicKey {
+      return pub
+    }
+    return nil
+  }
+
   public init() {
     self.apiPublicKey = nil
     self.apiPrivateKey = nil
