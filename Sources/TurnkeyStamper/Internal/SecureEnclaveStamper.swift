@@ -118,56 +118,10 @@ enum SecureEnclaveStamper: KeyPairStamper {
 private extension SecureEnclaveStamper {
   /// Convert an ASN.1 DER-encoded ECDSA signature into raw 64-byte R||S.
   static func derToRawRS(_ der: Data) throws -> Data {
-    // Basic ASN.1 parsing for: SEQUENCE { INTEGER r, INTEGER s }
-    var idx = 0
-    func readByte() throws -> UInt8 {
-      guard idx < der.count else { throw SecureEnclaveStamperError.unsupportedAlgorithm }
-      let b = der[idx]
-      idx += 1
-      return b
+    do {
+      return try P256.Signing.ECDSASignature(derRepresentation: der).rawRepresentation
+    } catch {
+      throw SecureEnclaveStamperError.unsupportedAlgorithm
     }
-    func readLength() throws -> Int {
-      let first = try readByte()
-      if first & 0x80 == 0 {
-        return Int(first)
-      }
-      let count = Int(first & 0x7f)
-      guard count > 0, idx + count <= der.count else { throw SecureEnclaveStamperError.unsupportedAlgorithm }
-      var value = 0
-      for _ in 0..<count {
-        value = (value << 8) | Int(try readByte())
-      }
-      return value
-    }
-    func readBytes(_ len: Int) throws -> Data {
-      guard len >= 0, idx + len <= der.count else { throw SecureEnclaveStamperError.unsupportedAlgorithm }
-      let out = der.subdata(in: idx..<(idx + len))
-      idx += len
-      return out
-    }
-    func normalizeTo32(_ integer: Data) throws -> Data {
-      var i = integer
-      // Strip leading zero padding
-      while i.count > 0 && i.first == 0x00 {
-        i.removeFirst()
-      }
-      guard i.count <= 32 else { throw SecureEnclaveStamperError.unsupportedAlgorithm }
-      if i.count < 32 {
-        return Data(repeating: 0, count: 32 - i.count) + i
-      }
-      return i
-    }
-    // Sequence
-    guard try readByte() == 0x30 else { throw SecureEnclaveStamperError.unsupportedAlgorithm }
-    _ = try readLength()
-    // R
-    guard try readByte() == 0x02 else { throw SecureEnclaveStamperError.unsupportedAlgorithm }
-    let rLen = try readLength()
-    let r = try normalizeTo32(try readBytes(rLen))
-    // S
-    guard try readByte() == 0x02 else { throw SecureEnclaveStamperError.unsupportedAlgorithm }
-    let sLen = try readLength()
-    let s = try normalizeTo32(try readBytes(sLen))
-    return r + s
   }
 }

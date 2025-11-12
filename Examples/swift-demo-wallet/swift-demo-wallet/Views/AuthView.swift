@@ -15,66 +15,64 @@ struct AuthView: View {
     @State private var error: String? = nil
     
     var body: some View {
-        ZStack {
-            VStack {
-                Spacer()
-                
-                VStack(spacing: 24) {
-                    VStack(spacing: 16) {
-                        Text("Log in or sign up")
-                            .font(.title3.bold())
-                            .multilineTextAlignment(.center)
-                            .padding(.vertical, 8)
-                        
-                        HStack(spacing: 12) {
-                            SocialIconButton(image: Image(systemName: "applelogo"), action: handleLoginWithApple)
-                            SocialIconButton(image: Image("google-icon"), action: handleLoginWithGoogle)
-                            SocialIconButton(image: Image("x-icon"), action: handleLoginWithX)
-                            SocialIconButton(image: Image("discord-icon"), action: handleLoginWithDiscord)
-                        }
-                        .frame(height: 48)
-
-                        OrSeparator()
-                        
-                        EmailInputView(email: $email)
-                        
-                        LightGrayButton(
-                            title: "Continue",
-                            action: handleContinueWithEmail,
-                            isDisabled: !isValidEmail(email)
-                        )
-                        
-                        OrSeparator()
-                        
-                        PhoneInputView(
-                            selectedCountry: $selectedCountry,
-                            phoneNumber: $phone
-                        )
-                        
-                        LightGrayButton(
-                            title: "Continue",
-                            action: handleContinueWithPhone,
-                            isDisabled: !isValidPhone(phone, region: selectedCountry)
-                        )
-                        
-                        OrSeparator()
-                        
-                        Button("Log in with passkey", action: handleLoginWithPasskey)
-                            .buttonStyle(BlackBorderButton())
-                        
-                        Button("Sign up with passkey", action: handleSignUpWithPasskey)
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(.blue)
+        VStack {
+            Spacer()
+            
+            VStack(spacing: 24) {
+                VStack(spacing: 16) {
+                    Text("Log in or sign up")
+                        .font(.title3.bold())
+                        .multilineTextAlignment(.center)
+                        .padding(.vertical, 8)
+                    
+                    HStack(spacing: 12) {
+                        SocialIconButton(image: Image(systemName: "applelogo"), action: handleLoginWithApple)
+                        SocialIconButton(image: Image("google-icon"), action: handleLoginWithGoogle)
+                        SocialIconButton(image: Image("x-icon"), action: handleLoginWithX)
+                        SocialIconButton(image: Image("discord-icon"), action: handleLoginWithDiscord)
                     }
-                    .padding(20)
-                    .background(Color.white)
-                    .cornerRadius(16)
-                    .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 4)
-                    .padding(.horizontal, 20)
+                    .frame(height: 48)
+
+                    OrSeparator()
+                    
+                    EmailInputView(email: $email)
+                    
+                    LightGrayButton(
+                        title: "Continue",
+                        action: handleContinueWithEmail,
+                        isDisabled: !isValidEmail(email)
+                    )
+                    
+                    OrSeparator()
+                    
+                    PhoneInputView(
+                        selectedCountry: $selectedCountry,
+                        phoneNumber: $phone
+                    )
+                    
+                    LightGrayButton(
+                        title: "Continue",
+                        action: handleContinueWithPhone,
+                        isDisabled: !isValidPhone(phone, region: selectedCountry)
+                    )
+                    
+                    OrSeparator()
+                    
+                    Button("Log in with passkey", action: handleLoginWithPasskey)
+                        .buttonStyle(BlackBorderButton())
+                    
+                    Button("Sign up with passkey", action: handleSignUpWithPasskey)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.blue)
                 }
-                
-                Spacer()
+                .padding(20)
+                .background(Color.white)
+                .cornerRadius(16)
+                .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 4)
+                .padding(.horizontal, 20)
             }
+            
+            Spacer()
         }
         .background(Color.gray.opacity(0.05).ignoresSafeArea())
         .onChange(of: error) {
