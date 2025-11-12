@@ -3,6 +3,7 @@ import TurnkeyTypes
 import TurnkeyCrypto
 import TurnkeyHttp
 import TurnkeyStamper
+import TurnkeyKeyManager
 
 extension TurnkeyContext {
     
@@ -297,6 +298,36 @@ extension TurnkeyContext {
         } catch {
             throw TurnkeySwiftError.failedToRefreshSession(underlying: error)
         }
+    }
+    
+    /// Signs arbitrary bytes using the currently active session's on-device key.
+    ///
+    /// Uses the session's API public key to locate the corresponding on-device private key
+    /// under the `TurnkeyApiKeyPair` label and produces a DER-encoded ECDSA signature.
+    ///
+    /// - Parameter message: The message bytes to sign.
+    /// - Returns: DER-encoded ECDSA signature.
+    /// - Throws:
+    ///   - `TurnkeySwiftError.invalidSession` if no active session is selected.
+    ///   - `TurnkeySwiftError.failedToSignPayload` if the key is not found or signing fails.
+    public func signWithSession(message: Data) throws -> Data {
+        guard authState == .authenticated, let currentSession = self.session else {
+            throw TurnkeySwiftError.invalidSession
+        }
+        
+        do {
+            let manager = try EnclaveManager(publicKeyHex: currentSession.publicKey, label: "TurnkeyApiKeyPair")
+            return try manager.sign(message: message)
+        } catch {
+            throw TurnkeySwiftError.failedToSignPayload(underlying: error)
+        }
+    }
+    
+    /// Returns the currently active session, if any.
+    ///
+    /// - Returns: The active `Session` or `nil` if no session is selected.
+    public func getActiveSession() -> Session? {
+        return self.session
     }
     
 }

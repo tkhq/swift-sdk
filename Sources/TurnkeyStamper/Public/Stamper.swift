@@ -15,6 +15,15 @@ public class Stamper {
   private let apiPrivateKey: String?
   private let presentationAnchor: ASPresentationAnchor?
   private let passkeyManager: PasskeyStamper?
+  private var configuration: StamperConfiguration? = nil
+  
+  /// ECDSA signature output format.
+  public enum SignatureFormat {
+    /// ASN.1/DER-encoded ECDSA signature (X9.62). Default used for stamps.
+    case der
+    /// Raw 64-byte R||S big-endian concatenation. Required by some API fields like clientSignature.
+    case raw
+  }
   
   // Selected stamping backend
   private enum StampingMode {
@@ -24,6 +33,30 @@ public class Stamper {
     case secureStorage(publicKey: String)
   }
   private let mode: StampingMode?
+
+  /// The public key used by this stamper, if available.
+  ///
+  /// Returns the compressed public key hex string for API key and on-device modes.
+  /// Returns `nil` for passkey-based stampers, where a reusable public key is not exposed.
+  public var publicKeyHex: String? {
+    if let mode = self.mode {
+      switch mode {
+      case let .apiKey(pub, _):
+        return pub
+      case .passkey:
+        return nil
+      case let .secureEnclave(publicKey):
+        return publicKey
+      case let .secureStorage(publicKey):
+        return publicKey
+      }
+    }
+    // Backward compatibility for legacy initializers
+    if let pub = self.apiPublicKey {
+      return pub
+    }
+    return nil
+  }
 
   public init() {
     self.apiPublicKey = nil
@@ -57,6 +90,14 @@ public class Stamper {
     self.presentationAnchor = presentationAnchor
     self.passkeyManager = PasskeyStamper(rpId: rpId, presentationAnchor: presentationAnchor)
     self.mode = .passkey(manager: self.passkeyManager!)
+  }
+
+  /// Initializes the stamper using a passkey configuration.
+  ///
+  /// - Parameter config: Passkey stamper configuration.
+  public convenience init(config: PasskeyStamperConfig) {
+    self.init(rpId: config.rpId, presentationAnchor: config.presentationAnchor)
+    self.configuration = .passkey(config)
   }
 
   /// Initializes the stamper for on-device key signing using only a public key, with a selectable backend.
@@ -106,6 +147,65 @@ public class Stamper {
     }
   }
 
+  /// Initializes the stamper using an API key pair configuration.
+  ///
+  /// - Parameter config: API key stamper configuration.
+  public convenience init(config: ApiKeyStamperConfig) {
+    self.init(apiPublicKey: config.apiPublicKey, apiPrivateKey: config.apiPrivateKey)
+    self.configuration = .apiKey(config)
+  }
+
+  /// Initializes the stamper by creating a new on-device key pair in Secure Enclave with the provided configuration.
+  ///
+  /// - Parameter config: Secure Enclave key creation configuration.
+  /// - Throws: `StampError.secureEnclaveUnavailable` if enclave unsupported; underlying errors on key creation or initialization.
+  public convenience init(config: SecureEnclaveStamperConfig) throws {
+    guard SecureEnclaveStamper.isSupported() else { throw StampError.secureEnclaveUnavailable }
+    let internalConfig = Self.mapSecureEnclaveConfig(config)
+    let publicKey = try SecureEnclaveStamper.createKeyPair(config: internalConfig)
+    try self.init(apiPublicKey: publicKey, onDevicePreference: .secureEnclave)
+    self.configuration = .secureEnclave(config)
+  }
+
+  /// Initializes the stamper by creating a new on-device key pair in Secure Storage with the provided configuration.
+  ///
+  /// - Parameter config: Secure Storage (Keychain) key creation configuration.
+  /// - Throws: Underlying errors on key creation or initialization.
+  public convenience init(config: SecureStorageStamperConfig) throws {
+    let internalConfig = Self.mapSecureStorageConfig(config)
+    let publicKey = try SecureStorageStamper.createKeyPair(config: internalConfig)
+    try self.init(apiPublicKey: publicKey, onDevicePreference: .secureStorage)
+    self.configuration = .secureStorage(config)
+  }
+
+  /// Initializes the stamper by creating a new on-device key pair using the preferred backend.
+  ///
+  /// - Parameter onDevicePreference: `.auto` prefers Secure Enclave when supported; otherwise Secure Storage.
+  /// - Throws: `StampError.secureEnclaveUnavailable` when `.secureEnclave` selected but unsupported; underlying errors otherwise.
+  public convenience init(onDevicePreference: OnDeviceStamperPreference = .auto) throws {
+    let selected: OnDeviceStamperPreference =
+      onDevicePreference == .auto
+      ? (SecureEnclaveStamper.isSupported() ? .secureEnclave : .secureStorage)
+      : onDevicePreference
+
+    switch selected {
+    case .secureEnclave, .auto:
+      if SecureEnclaveStamper.isSupported() {
+        let pub = try SecureEnclaveStamper.createKeyPair()
+        try self.init(apiPublicKey: pub, onDevicePreference: .secureEnclave)
+        self.configuration = .secureEnclave(SecureEnclaveStamperConfig())
+      } else if selected == .secureEnclave {
+        throw StampError.secureEnclaveUnavailable
+      } else {
+        fallthrough
+      }
+    case .secureStorage:
+      let pub = try SecureStorageStamper.createKeyPair()
+      try self.init(apiPublicKey: pub, onDevicePreference: .secureStorage)
+      self.configuration = .secureStorage(SecureStorageStamperConfig())
+    }
+  }
+
   /// Initializes the stamper for hardware/software-stored private key signing using only a public key.
   ///
   /// Selection rules:
@@ -148,9 +248,18 @@ public class Stamper {
           payload: payload, publicKeyHex: publicKey)
         return ("X-Stamp", stamp)
       case let .secureStorage(publicKey):
-        let stamp = try SecureStorageStamper.stamp(
-          payload: payload, publicKeyHex: publicKey)
-        return ("X-Stamp", stamp)
+        if case let .secureStorage(cfg) = self.configuration {
+          let stamp = try SecureStorageStamper.stamp(
+            payload: payload,
+            publicKeyHex: publicKey,
+            config: Self.mapSecureStorageConfig(cfg)
+          )
+          return ("X-Stamp", stamp)
+        } else {
+          let stamp = try SecureStorageStamper.stamp(
+            payload: payload, publicKeyHex: publicKey)
+          return ("X-Stamp", stamp)
+        }
       }
     }
 
@@ -167,6 +276,97 @@ public class Stamper {
     }
 
     throw StampError.missingCredentials
+  }
+
+  /// Signs the given payload and returns only the signature as hex.
+  ///
+  /// - Parameters:
+  ///   - payload: The raw string payload to sign.
+  ///   - format: Desired signature format. Defaults to `.der`. Use `.raw` for fields like clientSignature.
+  /// - Returns: Signature as a hex string in the requested format.
+  /// - Throws: `StampError` if credentials are missing, invalid, or if passkey mode is used.
+  public func sign(payload: String, format: SignatureFormat = .der) async throws -> String {
+    guard let payloadData = payload.data(using: .utf8) else {
+      throw StampError.invalidPayload
+    }
+    let payloadHash = SHA256.hash(data: payloadData)
+
+    // Route based on configured mode first
+    if let mode = self.mode {
+      switch mode {
+      case let .apiKey(_, priv):
+        return try ApiKeyStamper.sign(payload: payloadHash, privateKeyHex: priv, format: format)
+      case .passkey:
+        throw StampError.signNotSupportedForPasskey
+      case let .secureEnclave(publicKey):
+        return try SecureEnclaveStamper.sign(payload: payload, publicKeyHex: publicKey, format: format)
+      case let .secureStorage(publicKey):
+        if case let .secureStorage(cfg) = self.configuration {
+          return try SecureStorageStamper.sign(
+            payload: payload,
+            publicKeyHex: publicKey,
+            config: Self.mapSecureStorageConfig(cfg),
+            format: format
+          )
+        } else {
+          return try SecureStorageStamper.sign(
+            payload: payload,
+            publicKeyHex: publicKey,
+            format: format
+          )
+        }
+      }
+    }
+
+    // Backward compatibility: derive from legacy properties if possible
+    if let _ = apiPublicKey, let priv = apiPrivateKey {
+      return try ApiKeyStamper.sign(payload: payloadHash, privateKeyHex: priv, format: format)
+    }
+    if passkeyManager != nil {
+      throw StampError.signNotSupportedForPasskey
+    }
+    throw StampError.missingCredentials
+  }
+}
+
+// MARK: - Config mappers
+private extension Stamper {
+  static func mapSecureEnclaveConfig(_ config: SecureEnclaveStamperConfig) -> SecureEnclaveStamper.SecureEnclaveConfig {
+    let mappedPolicy: SecureEnclaveStamper.SecureEnclaveConfig.AuthPolicy
+    switch config.authPolicy {
+    case .none: mappedPolicy = .none
+    case .userPresence: mappedPolicy = .userPresence
+    case .biometryAny: mappedPolicy = .biometryAny
+    case .biometryCurrentSet: mappedPolicy = .biometryCurrentSet
+    }
+    return SecureEnclaveStamper.SecureEnclaveConfig(authPolicy: mappedPolicy)
+  }
+
+  static func mapSecureStorageConfig(_ config: SecureStorageStamperConfig) -> SecureStorageStamper.SecureStorageConfig {
+    let accessibility: SecureStorageStamper.SecureStorageConfig.Accessibility
+    switch config.accessibility {
+    case .whenUnlockedThisDeviceOnly: accessibility = .whenUnlockedThisDeviceOnly
+    case .afterFirstUnlockThisDeviceOnly: accessibility = .afterFirstUnlockThisDeviceOnly
+    case .whenPasscodeSetThisDeviceOnly: accessibility = .whenPasscodeSetThisDeviceOnly
+    }
+
+    let acp: SecureStorageStamper.SecureStorageConfig.AccessControlPolicy
+    switch config.accessControlPolicy {
+    case .none: acp = .none
+    case .userPresence: acp = .userPresence
+    case .biometryAny: acp = .biometryAny
+    case .biometryCurrentSet: acp = .biometryCurrentSet
+    case .devicePasscode: acp = .devicePasscode
+    }
+
+    return SecureStorageStamper.SecureStorageConfig(
+      accessibility: accessibility,
+      accessControlPolicy: acp,
+      authPrompt: config.authPrompt,
+      biometryReuseWindowSeconds: config.biometryReuseWindowSeconds,
+      synchronizable: config.synchronizable,
+      accessGroup: config.accessGroup
+    )
   }
 }
 

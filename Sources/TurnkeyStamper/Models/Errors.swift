@@ -56,6 +56,7 @@ public enum StampError: Error {
   case invalidPayload
   case secureEnclaveUnavailable
   case keyNotFound(publicKeyHex: String)
+  case signNotSupportedForPasskey
 
   public var localizedDescription: String {
     switch self {
@@ -77,6 +78,8 @@ public enum StampError: Error {
       return "Secure Enclave is not available on this device."
     case .keyNotFound(let publicKeyHex):
       return "No private key found for public key: \(publicKeyHex)"
+    case .signNotSupportedForPasskey:
+      return "Generic sign is not supported for passkeys. Use stamp()."
     }
   }
 }
