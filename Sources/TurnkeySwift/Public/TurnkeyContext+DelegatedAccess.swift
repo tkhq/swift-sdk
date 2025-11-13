@@ -2,53 +2,16 @@ import Foundation
 import TurnkeyTypes
 import TurnkeyHttp
 
-public struct CreateP256ApiKeyUserParams: Sendable {
-    public var userName: String?
-    public var apiKeyName: String?
-    
-    public init(userName: String? = nil, apiKeyName: String? = nil) {
-        self.userName = userName
-        self.apiKeyName = apiKeyName
-    }
-}
-
-public struct FetchOrCreatePolicyResultItem: Codable, Sendable {
-    public let policyId: String
-    public let policyName: String
-    public let effect: v1Effect
-    public let condition: String?
-    public let consensus: String?
-    public let notes: String?
-    
-    public init(
-        policyId: String,
-        policyName: String,
-        effect: v1Effect,
-        condition: String? = nil,
-        consensus: String? = nil,
-        notes: String? = nil
-    ) {
-        self.policyId = policyId
-        self.policyName = policyName
-        self.effect = effect
-        self.condition = condition
-        self.consensus = consensus
-        self.notes = notes
-    }
-}
-
 extension TurnkeyContext {
     
     /// Fetches an existing user by P-256 API key public key, or creates a new one if none exists.
     ///
     /// - Parameters:
-    ///   - publicKey: The P-256 public key to use for lookup and creation.
-    ///   - createParams: Optional params to customize created user/api key names.
+    ///   - params: Params containing the P-256 public key and desired user/api key names.
     ///   - organizationId: Optional organization override. Defaults to active session org.
     /// - Returns: The existing or newly created `v1User`.
     public func fetchOrCreateP256ApiKeyUser(
-        publicKey: String,
-        createParams: CreateP256ApiKeyUserParams? = nil,
+        params: CreateP256ApiKeyUserParams,
         organizationId: String? = nil
     ) async throws -> v1User {
         guard
@@ -56,11 +19,6 @@ extension TurnkeyContext {
             let client = client
         else {
             throw TurnkeySwiftError.invalidSession
-        }
-        
-        let trimmedPublicKey = publicKey.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedPublicKey.isEmpty else {
-            throw TurnkeySwiftError.invalidConfiguration("'publicKey' is required and cannot be empty.")
         }
         
         let orgId = organizationId ?? self.session?.organizationId
@@ -72,7 +30,7 @@ extension TurnkeyContext {
         let usersResp = try await client.getUsers(TGetUsersBody(organizationId: orgId))
         if let existing = usersResp.users.first(where: { user in
             user.apiKeys.contains(where: { apiKey in
-                apiKey.credential.publicKey == trimmedPublicKey &&
+                apiKey.credential.publicKey == params.publicKey &&
                 apiKey.credential.type == .credential_type_api_key_p256
             })
         }) {
@@ -80,14 +38,14 @@ extension TurnkeyContext {
         }
         
         // not found, create a new user with this API key
-        let userName = (createParams?.userName?.trimmingCharacters(in: .whitespacesAndNewlines)).flatMap { $0.isEmpty ? nil : $0 } ?? "Public Key User"
-        let apiKeyName = (createParams?.apiKeyName?.trimmingCharacters(in: .whitespacesAndNewlines)).flatMap { $0.isEmpty ? nil : $0 } ?? "public-key-user-\(trimmedPublicKey)"
+        let userName = params.userName.isEmpty ? "Public Key User" : params.userName
+        let apiKeyName = params.apiKeyName.isEmpty ? "public-key-user-\(params.publicKey)" : params.apiKeyName
         
         let apiKeyParams = v1ApiKeyParamsV2(
             apiKeyName: apiKeyName,
             curveType: .api_key_curve_p256,
             expirationSeconds: nil,
-            publicKey: trimmedPublicKey
+            publicKey: params.publicKey
         )
         
         let createParamsV3 = v1UserParamsV3(
@@ -118,14 +76,28 @@ extension TurnkeyContext {
     
     /// Fetches each requested policy if it exists, or creates it if it does not.
     ///
+    /// This function is idempotent:
+    /// - Multiple calls with the same `policies` will not create duplicates.
+    /// - For every policy in the request:
+    ///   - If it already exists, it is returned with its `policyId`.
+    ///   - If it does not exist, it is created and returned with its new `policyId`.
+    ///
     /// - Parameters:
     ///   - policies: The list of policies to fetch or create.
-    ///   - organizationId: Optional organization override. Defaults to active session org.
-    /// - Returns: Array of result items containing policyId and original fields.
+    ///   - organizationId: Optional organization override. Defaults to the current session's `organizationId`.
+    /// - Returns: An array of items where each contains:
+    ///   - `policyId`: The unique identifier of the policy.
+    ///   - `policyName`: Human-readable name of the policy.
+    ///   - `effect`: The instruction to DENY or ALLOW an activity.
+    ///   - `condition`: Optional condition expression that triggers the effect.
+    ///   - `consensus`: Optional consensus expression that triggers the effect.
+    ///   - `notes`: Optional developer notes or description for the policy.
+    /// - Throws: If there is no active session, if the input is invalid,
+    ///           if fetching existing policies fails, or if creating policies fails.
     public func fetchOrCreatePolicies(
         policies: [v1CreatePolicyIntentV3],
         organizationId: String? = nil
-    ) async throws -> [FetchOrCreatePolicyResultItem] {
+    ) async throws -> [Policy] {
         guard
             authState == .authenticated,
             let client = client
@@ -150,7 +122,7 @@ extension TurnkeyContext {
             existingBySignature[policySignature(p)] = p.policyId
         }
         
-        var alreadyExisting: [FetchOrCreatePolicyResultItem] = []
+        var alreadyExisting: [Policy] = []
         var missing: [v1CreatePolicyIntentV3] = []
         
         for intent in policies {
@@ -185,7 +157,7 @@ extension TurnkeyContext {
             throw TurnkeySwiftError.invalidResponse
         }
         
-        let newlyCreated: [FetchOrCreatePolicyResultItem] = zip(missing, createdIds).map { (intent, policyId) in
+        let newlyCreated: [Policy] = zip(missing, createdIds).map { (intent, policyId) in
             .init(
                 policyId: policyId,
                 policyName: intent.policyName,
