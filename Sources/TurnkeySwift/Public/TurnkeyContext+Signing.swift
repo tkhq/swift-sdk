@@ -156,4 +156,73 @@ extension TurnkeyContext {
             throw TurnkeySwiftError.failedToSignPayload(underlying: error)
         }
     }
+    
+    /// Signs a transaction using the specified wallet account.
+    ///
+    /// Delegates to the string-based overload using `account.address`.
+    ///
+    /// - Parameters:
+    ///   - signWith: The wallet account to use for signing.
+    ///   - unsignedTransaction: The raw unsigned transaction payload (chain-canonical encoding).
+    ///   - type: The transaction type (e.g. `.transaction_type_ethereum`, `.transaction_type_solana`).
+    ///
+    /// - Returns: The signed transaction string.
+    ///
+    /// - Throws:
+    ///   - `TurnkeySwiftError.invalidSession` if no active session is found.
+    ///   - `TurnkeySwiftError.failedToSignPayload` if signing fails.
+    public func signTransaction(
+        signWith account: WalletAccount,
+        unsignedTransaction: String,
+        type: v1TransactionType
+    ) async throws -> String {
+        return try await signTransaction(
+            signWith: account.address,
+            unsignedTransaction: unsignedTransaction,
+            type: type
+        )
+    }
+    
+    /// Signs a transaction using the specified address or key identifier.
+    ///
+    /// Uses the active session to request a signed transaction from the Turnkey API.
+    /// Note: For Ethereum, the returned signed transaction string may or may not include a `0x` prefix.
+    /// Consumers should prepend `0x` when required by their transport if absent.
+    ///
+    /// - Parameters:
+    ///   - signWith: Wallet account address, private key address, or key identifier to sign with.
+    ///   - unsignedTransaction: The raw unsigned transaction payload (chain-canonical encoding).
+    ///   - type: The transaction type (e.g. `.transaction_type_ethereum`, `.transaction_type_solana`).
+    ///
+    /// - Returns: The signed transaction string.
+    ///
+    /// - Throws:
+    ///   - `TurnkeySwiftError.invalidSession` if no active session is found.
+    ///   - `TurnkeySwiftError.failedToSignPayload` if signing fails.
+    public func signTransaction(
+        signWith: String,
+        unsignedTransaction: String,
+        type: v1TransactionType
+    ) async throws -> String {
+        guard
+            authState == .authenticated,
+            let client = client,
+            let sessionKey = selectedSessionKey,
+            let stored = try JwtSessionStore.load(key: sessionKey)
+        else {
+            throw TurnkeySwiftError.invalidSession
+        }
+        
+        do {
+            let resp = try await client.signTransaction(TSignTransactionBody(
+                organizationId: stored.decoded.organizationId,
+                signWith: signWith,
+                type: type,
+                unsignedTransaction: unsignedTransaction
+            ))
+            return resp.signedTransaction
+        } catch {
+            throw TurnkeySwiftError.failedToSignPayload(underlying: error)
+        }
+    }
 }
