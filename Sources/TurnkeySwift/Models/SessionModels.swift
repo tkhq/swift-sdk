@@ -12,7 +12,7 @@ public enum SessionType: String, Codable {
     case readOnly = "SESSION_TYPE_READ_ONLY"
 }
 
-// this is what the jwt returned by Turnkey decodes to
+// this is what the session jwt returned by Turnkey decodes to
 public struct TurnkeySession: Codable, Equatable {
     public let exp: TimeInterval
     public let publicKey: String
@@ -48,6 +48,22 @@ public struct Session: Codable, Equatable, Identifiable {
         case userId = "user_id"
         case organizationId = "organization_id"
         case token
+    }
+}
+// this is the verificationToken jwt returned by Turnkey decodes to
+public struct VerificationToken: Codable, Equatable {
+    public let contact: String
+    public let exp: TimeInterval
+    public let id: String
+    public let publicKey: String?
+    public let verificationType: String
+    
+    enum CodingKeys: String, CodingKey {
+        case contact
+        case exp
+        case id
+        case publicKey = "public_key"
+        case verificationType = "verification_type"
     }
 }
 
