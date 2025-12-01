@@ -987,43 +987,8 @@ public struct v1ClientSignature: Codable, Sendable {
   }
 }
 
-public struct v1ClientSignatureLoginPayload: Codable, Sendable {
-  /// Unique identifier for the verification token
-  public let tokenId: String
-  /// Login usage payload containing authentication information
-  public let usage: v1LoginUsagePayload
-
-  public init(
-    tokenId: String,
-    usage: v1LoginUsagePayload
-  ) {
-    self.tokenId = tokenId
-    self.usage = usage
-  }
-}
-
 public enum v1ClientSignatureScheme: String, Codable, Sendable {
   case client_signature_scheme_api_p256 = "CLIENT_SIGNATURE_SCHEME_API_P256"
-}
-
-public struct v1ClientSignatureSignupPayload: Codable, Sendable {
-  /// Unique identifier for the verification token
-  public let tokenId: String
-  /// Signup usage payload containing user information
-  public let usage: v1SignupUsagePayload
-
-  public init(
-    tokenId: String,
-    usage: v1SignupUsagePayload
-  ) {
-    self.tokenId = tokenId
-    self.usage = usage
-  }
-}
-
-public enum v1ClientSignatureUsageType: String, Codable, Sendable {
-  case client_signature_usage_type_signup = "CLIENT_SIGNATURE_USAGE_TYPE_SIGNUP"
-  case client_signature_usage_type_login = "CLIENT_SIGNATURE_USAGE_TYPE_LOGIN"
 }
 
 public struct v1Config: Codable, Sendable {
@@ -6194,18 +6159,14 @@ public struct v1ListUserTagsResponse: Codable, Sendable {
   }
 }
 
-public struct v1LoginUsagePayload: Codable, Sendable {
+public struct v1LoginUsage: Codable, Sendable {
   /// Public key for authentication
   public let publicKey: String
-  /// Type of client signature usage
-  public let type: v1ClientSignatureUsageType
 
   public init(
-    publicKey: String,
-    type: v1ClientSignatureUsageType
+    publicKey: String
   ) {
     self.publicKey = publicKey
-    self.type = type
   }
 }
 
@@ -6222,18 +6183,15 @@ public enum v1MnemonicLanguage: String, Codable, Sendable {
 }
 
 public struct v1NOOPCodegenAnchorResponse: Codable, Sendable {
-  public let loginPayloadExample: v1ClientSignatureLoginPayload?
-  public let signupPayloadExample: v1ClientSignatureSignupPayload?
   public let stamp: v1WebAuthnStamp
+  public let tokenUsage: v1TokenUsage?
 
   public init(
-    loginPayloadExample: v1ClientSignatureLoginPayload? = nil,
-    signupPayloadExample: v1ClientSignatureSignupPayload? = nil,
-    stamp: v1WebAuthnStamp
+    stamp: v1WebAuthnStamp,
+    tokenUsage: v1TokenUsage? = nil
   ) {
-    self.loginPayloadExample = loginPayloadExample
-    self.signupPayloadExample = signupPayloadExample
     self.stamp = stamp
+    self.tokenUsage = tokenUsage
   }
 }
 
@@ -7724,29 +7682,25 @@ public struct v1SignTransactionResult: Codable, Sendable {
   }
 }
 
-public struct v1SignupUsagePayload: Codable, Sendable {
+public struct v1SignupUsage: Codable, Sendable {
   public let apiKeys: [v1ApiKeyParamsV2]?
   public let authenticators: [v1AuthenticatorParamsV2]?
   public let email: String?
   public let oauthProviders: [v1OauthProviderParams]?
   public let phoneNumber: String?
-  /// Type of client signature usage
-  public let type: v1ClientSignatureUsageType
 
   public init(
     apiKeys: [v1ApiKeyParamsV2]? = nil,
     authenticators: [v1AuthenticatorParamsV2]? = nil,
     email: String? = nil,
     oauthProviders: [v1OauthProviderParams]? = nil,
-    phoneNumber: String? = nil,
-    type: v1ClientSignatureUsageType
+    phoneNumber: String? = nil
   ) {
     self.apiKeys = apiKeys
     self.authenticators = authenticators
     self.email = email
     self.oauthProviders = oauthProviders
     self.phoneNumber = phoneNumber
-    self.type = type
   }
 }
 
@@ -7878,6 +7832,27 @@ public struct v1TestRateLimitsRequest: Codable, Sendable {
 
 public struct v1TestRateLimitsResponse: Codable, Sendable {
   public init() {}
+}
+
+public struct v1TokenUsage: Codable, Sendable {
+  public let login: v1LoginUsage?
+  public let signup: v1SignupUsage?
+  /// Unique identifier for the verification token
+  public let tokenId: String
+  /// Type of token usage
+  public let type: v1UsageType
+
+  public init(
+    login: v1LoginUsage? = nil,
+    signup: v1SignupUsage? = nil,
+    tokenId: String,
+    type: v1UsageType
+  ) {
+    self.login = login
+    self.signup = signup
+    self.tokenId = tokenId
+    self.type = type
+  }
 }
 
 public enum v1TransactionType: String, Codable, Sendable {
@@ -8640,6 +8615,11 @@ public struct v1UpdateWalletResult: Codable, Sendable {
   ) {
     self.walletId = walletId
   }
+}
+
+public enum v1UsageType: String, Codable, Sendable {
+  case usage_type_signup = "USAGE_TYPE_SIGNUP"
+  case usage_type_login = "USAGE_TYPE_LOGIN"
 }
 
 public struct v1User: Codable, Sendable {

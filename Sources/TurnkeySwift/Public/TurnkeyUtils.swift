@@ -34,8 +34,8 @@ public enum ClientSignature {
         // otherwise we default to the publicKey that lives inside the verificationToken
         let resolvedSessionPublicKey = sessionPublicKey ?? verificationPublicKey
 
-        let usage = v1LoginUsagePayload(publicKey: resolvedSessionPublicKey, type: .client_signature_usage_type_login)
-        let payload = v1ClientSignatureLoginPayload(tokenId: decoded.id, usage: usage)
+        let usage = v1LoginUsage(publicKey: resolvedSessionPublicKey )
+        let payload = v1TokenUsage( login: usage, tokenId: decoded.id, type: .usage_type_login)
 
         let encoder = JSONEncoder()
         let data = try encoder.encode(payload)
@@ -72,16 +72,15 @@ public enum ClientSignature {
             )
         }
 
-        let usage = v1SignupUsagePayload(
+        let usage = v1SignupUsage(
             apiKeys: apiKeys,
             authenticators: authenticators,
             email: email,
             oauthProviders: oauthProviders,
             phoneNumber: phoneNumber,
-            type: .client_signature_usage_type_signup
         )
 
-        let payload = v1ClientSignatureSignupPayload(tokenId: decoded.id, usage: usage)
+        let payload = v1TokenUsage(signup: usage, tokenId: decoded.id, type: .usage_type_signup)
 
         let encoder = JSONEncoder()
         let data = try encoder.encode(payload)

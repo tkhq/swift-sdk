@@ -4756,44 +4756,9 @@
       },
       "required": ["publicKey", "scheme", "message", "signature"]
     },
-    "v1ClientSignatureLoginPayload": {
-      "type": "object",
-      "properties": {
-        "tokenId": {
-          "type": "string",
-          "description": "Unique identifier for the verification token"
-        },
-        "usage": {
-          "$ref": "#/definitions/v1LoginUsagePayload",
-          "description": "Login usage payload containing authentication information"
-        }
-      },
-      "required": ["tokenId", "usage"]
-    },
     "v1ClientSignatureScheme": {
       "type": "string",
       "enum": ["CLIENT_SIGNATURE_SCHEME_API_P256"]
-    },
-    "v1ClientSignatureSignupPayload": {
-      "type": "object",
-      "properties": {
-        "tokenId": {
-          "type": "string",
-          "description": "Unique identifier for the verification token"
-        },
-        "usage": {
-          "$ref": "#/definitions/v1SignupUsagePayload",
-          "description": "Signup usage payload containing user information"
-        }
-      },
-      "required": ["tokenId", "usage"]
-    },
-    "v1ClientSignatureUsageType": {
-      "type": "string",
-      "enum": [
-        "CLIENT_SIGNATURE_USAGE_TYPE_SIGNUP",
-        "CLIENT_SIGNATURE_USAGE_TYPE_LOGIN"
-      ]
     },
     "v1Config": {
       "type": "object",
@@ -10179,19 +10144,15 @@
       },
       "required": ["userTags"]
     },
-    "v1LoginUsagePayload": {
+    "v1LoginUsage": {
       "type": "object",
       "properties": {
-        "type": {
-          "$ref": "#/definitions/v1ClientSignatureUsageType",
-          "description": "Type of client signature usage"
-        },
         "publicKey": {
           "type": "string",
           "description": "Public key for authentication"
         }
       },
-      "required": ["type", "publicKey"]
+      "required": ["publicKey"]
     },
     "v1MnemonicLanguage": {
       "type": "string",
@@ -10213,11 +10174,8 @@
         "stamp": {
           "$ref": "#/definitions/v1WebAuthnStamp"
         },
-        "signupPayloadExample": {
-          "$ref": "#/definitions/v1ClientSignatureSignupPayload"
-        },
-        "loginPayloadExample": {
-          "$ref": "#/definitions/v1ClientSignatureLoginPayload"
+        "tokenUsage": {
+          "$ref": "#/definitions/v1TokenUsage"
         }
       },
       "required": ["stamp"]
@@ -11816,13 +11774,9 @@
       },
       "required": ["signedTransaction"]
     },
-    "v1SignupUsagePayload": {
+    "v1SignupUsage": {
       "type": "object",
       "properties": {
-        "type": {
-          "$ref": "#/definitions/v1ClientSignatureUsageType",
-          "description": "Type of client signature usage"
-        },
         "email": {
           "type": "string"
         },
@@ -11850,8 +11804,7 @@
             "$ref": "#/definitions/v1OauthProviderParams"
           }
         }
-      },
-      "required": ["type"]
+      }
     },
     "v1SimpleClientExtensionResults": {
       "type": "object",
@@ -11974,6 +11927,26 @@
     },
     "v1TestRateLimitsResponse": {
       "type": "object"
+    },
+    "v1TokenUsage": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "#/definitions/v1UsageType",
+          "description": "Type of token usage"
+        },
+        "tokenId": {
+          "type": "string",
+          "description": "Unique identifier for the verification token"
+        },
+        "signup": {
+          "$ref": "#/definitions/v1SignupUsage"
+        },
+        "login": {
+          "$ref": "#/definitions/v1LoginUsage"
+        }
+      },
+      "required": ["type", "tokenId"]
     },
     "v1TransactionType": {
       "type": "string",
@@ -12750,6 +12723,10 @@
         }
       },
       "required": ["walletId"]
+    },
+    "v1UsageType": {
+      "type": "string",
+      "enum": ["USAGE_TYPE_SIGNUP", "USAGE_TYPE_LOGIN"]
     },
     "v1User": {
       "type": "object",
