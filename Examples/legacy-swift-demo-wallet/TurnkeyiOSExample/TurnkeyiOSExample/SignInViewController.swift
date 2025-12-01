@@ -8,6 +8,8 @@
 import AuthenticationServices
 import os
 import UIKit
+import SwiftUI
+import TurnkeySwift
 
 class SignInViewController: UIViewController {
     @IBOutlet var emailLabel: UILabel!
@@ -31,13 +33,6 @@ class SignInViewController: UIViewController {
         ) { _ in
             self.initEmailAuth()
         }
-
-        //        signInErrorObserver = NotificationCenter.default.addObserver(forName: .ModalSignInSheetCanceled, object: nil, queue: nil) { _ in
-        //            self.showSignInForm()
-        //        }
-
-        //        guard let window = self.view.window else { fatalError("The view was not in the app's view hierarchy!") }
-        //        (UIApplication.shared.delegate as? AppDelegate)?.accountManager.signIn(anchor: window, preferImmediatelyAvailableCredentials: true)
     }
 
     override func viewDidDisappear(_ animated: Bool) {
@@ -75,22 +70,14 @@ class SignInViewController: UIViewController {
             return
         }
         Logger().log("signIn: email provided: \(email)")
-        guard let window = view.window else {
-            fatalError("The view was not in the app's view hierarchy!")
-        }
-
-        // Using Task to handle the asynchronous signIn method
-        Task {
-            do {
-                try await (UIApplication.shared.delegate as? AppDelegate)?.accountManager.signInEmailAuth(
-                    email: email, anchor: window)
-            } catch {
-                // Handle errors that might be thrown by the signIn method
-                DispatchQueue.main.async {
-                    // Ensure UI updates are on the main thread
-                    Logger().log("Failed to sign in: \(error)")
-                }
-            }
+        // Present the backend-driven OTP login flow (no Auth Proxy)
+        let otp = OtpLoginView(contact: email, baseURL: Constants.backendAuthUrl)
+            .environmentObject(TurnkeyContext.shared)
+        let hosting = UIHostingController(rootView: otp)
+        if let nav = self.navigationController {
+            nav.pushViewController(hosting, animated: true)
+        } else {
+            present(hosting, animated: true)
         }
     }
 
@@ -118,15 +105,6 @@ class SignInViewController: UIViewController {
             }
         }
     }
-
-    //    func showSignInForm() {
-    //        emailLabel.isHidden = false
-    //        emailField.isHidden = false
-    //
-    //        guard let window = self.view.window else { fatalError("The view was not in the app's view hierarchy!") }
-    //        (UIApplication.shared.delegate as? AppDelegate)?.accountManager.signIn(anchor: window, preferImmediatelyAvailableCredentials: <#T##Bool#>)
-    ////        (UIApplication.shared.delegate as? AppDelegate)?.accountManager.beginAutoFillAssistedPasskeySignIn(anchor: window)
-    //    }
 
     func didFinishSignIn() {
         view.window?.rootViewController = UIStoryboard(name: "Main", bundle: nil)

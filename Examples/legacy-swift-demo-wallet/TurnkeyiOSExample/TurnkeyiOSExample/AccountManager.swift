@@ -8,11 +8,8 @@
 import AuthenticationServices
 import Foundation
 import os
-import Shared
 import SwiftData
-import TurnkeySDK
-
-typealias AuthResult = TurnkeyClient.AuthResult
+import TurnkeySwift
 
 extension NSNotification.Name {
     static let UserSignedIn = Notification.Name("UserSignedInNotification")
@@ -27,17 +24,14 @@ extension NSNotification.Name {
 
 class AccountManager: NSObject, ASAuthorizationControllerPresentationContextProviding,
     ASAuthorizationControllerDelegate {
-    let domain = "turnkey-nextjs-demo-weld.vercel.app"
-    let parentOrgId = "70189536-9086-4810-a9f0-990d4e7cd622"
     var authenticationAnchor: ASPresentationAnchor?
     var isPerformingModalRequest = false
-    private var passkeyRegistration: PasskeyManager?
     private var currentEmail: String?
+    private var registrationEmail: String?
+    private var registrationChallenge: Data?
     private var modelContext: ModelContext {
         return AppDelegate.userModelContext
     }
-    // Stores the authenticated TurnkeyClient instance after a successful passkey login
-    var loggedInClient: TurnkeyClient?
 
     override init() {
         super.init()
@@ -68,34 +62,11 @@ class AccountManager: NSObject, ASAuthorizationControllerPresentationContextProv
     }
 
     func signIn(email: String, anchor: ASPresentationAnchor) async {
-        let turnkeyClient = TurnkeyClient(rpId: domain, presentationAnchor: anchor)
-
-
         do {
-             print("Calling login")
-            // Perform passkey-based login which creates / resumes a session and returns an authenticated client
-            let loggedInClient = try await turnkeyClient.login(
-                organizationId: parentOrgId
-            )
+            print("Calling login")
+            // Perform passkey-based login using TurnkeyContext (stores session on success)
+            try await TurnkeyContext.shared.loginWithPasskey(anchor: anchor)
             print("After calling login")
-
-            // Persist the authenticated client for future API calls
-            self.loggedInClient = loggedInClient
-
-            // Optional sanity-check: call whoami to confirm identity
-            do {
-                let whoamiResponse = try await loggedInClient.getWhoami(organizationId: "d1643ea9-e787-4301-875c-5514bd386a7b")
-                switch whoamiResponse {
-                case let .ok(resp):
-                    if case let .json(body) = resp.body {
-                        print("Logged in as: \(body.username)")
-                    }
-                case let .undocumented(status, _):
-                    print("Whoami returned undocumented status code: \(status)")
-                }
-            } catch {
-                print("Whoami request failed: \(error)")
-            }
 
             // Notify listeners that sign-in completed
             DispatchQueue.main.async {
@@ -108,74 +79,16 @@ class AccountManager: NSObject, ASAuthorizationControllerPresentationContextProv
         isPerformingModalRequest = true
     }
 
-    /// A closure that verifies an encrypted bundle.
-    /// This closure is set when the `emailAuth` method is called and is used to verify
-    /// the encrypted bundle received during the email authentication process.
-    /// It takes a `String` representing the encrypted bundle and returns an `AuthResult` asynchronously.
-    private var verifyClosure: ((String) async throws -> AuthResult)?
-
-    func signInEmailAuth(email: String, anchor: ASPresentationAnchor) async {
-        // For email auth we need to proxy the request to a backend that can stamp it
-        let proxyURL = "http://localhost:3000/api/email-auth"
-        // We create a proxied instance of the Turnkey Client that can proxy requests to the backend
-        let turnkeyClient = TurnkeyClient(proxyURL: proxyURL)
-
-        do {
-
-        let (output, verify) = try await turnkeyClient.emailAuth(
-                organizationId: parentOrgId,
-                email: email,
-                apiKeyName: "test-api-key-swift-sdk",
-                expirationSeconds: "3600",
-                emailCustomization: Components.Schemas.EmailCustomizationParams(),
-                invalidateExisting: false
-            )
-
-            // Store the verify closure for later use
-            self.verifyClosure = verify
-
-            // Assert the response
-            switch output {
-            case let .ok(response):
-                switch response.body {
-                case let .json(emailAuthResponse):
-                    print(emailAuthResponse.activity.organizationId)
-                    DispatchQueue.main.async {
-                        self.initEmailAuth()
-                    }
-                }
-            case let .undocumented(statusCode, undocumentedPayload):
-                // Handle the undocumented response
-                if let body = undocumentedPayload.body {
-                    let bodyString = try await String(collecting: body, upTo: .max)
-                    print("Undocumented response body: \(bodyString)")
-                }
-                print("Undocumented response: \(statusCode)")
-            }
-        } catch {
-            print("Error occurred: \(error)")
-        }
-    }
-
     func verifyEncryptedBundle(bundle: String) async {
-        do {
-            // Use the stored verify closure
-            if let verify = verifyClosure {
-                let authResult = try await verify(bundle)
-                print("Verification successful: \(authResult)")
-            } else {
-                print("Verify closure is not set.")
-            }
-        } catch {
-            print("Error occurred during verification: \(error)")
-        }
+        // Email auth via proxy has been removed in favor of backend-driven flows.
+        print("verifyEncryptedBundle is no longer supported; use your backend to verify and return a session token, then store it via TurnkeyContext.shared.storeSession(jwt:).")
     }
 
     func beginAutoFillAssistedPasskeySignIn(anchor: ASPresentationAnchor) {
         authenticationAnchor = anchor
 
         let publicKeyCredentialProvider = ASAuthorizationPlatformPublicKeyCredentialProvider(
-            relyingPartyIdentifier: domain)
+            relyingPartyIdentifier: Constants.domain)
 
         // Fetch the challenge from the server. The challenge needs to be unique for each request.
         let challenge = Data()
@@ -189,116 +102,79 @@ class AccountManager: NSObject, ASAuthorizationControllerPresentationContextProv
         authController.performAutoFillAssistedRequests()
     }
 
+    private struct AttestationPayload: Codable {
+        let credentialId: String
+        let clientDataJson: String
+        let attestationObject: String
+        let transports: [String]?
+    }
+    private struct PasskeyPayload: Codable {
+        let challenge: String
+        let attestation: AttestationPayload
+    }
+    private struct CreateSubOrgRequestBody: Codable {
+        let email: String?
+        let phone: String?
+        let passkey: PasskeyPayload?
+    }
+    private struct CreateSubOrgResponse: Codable { let subOrganizationId: String }
+
+    private func base64URLEncode(_ data: Data) -> String {
+        var encoded = data.base64EncodedString()
+        encoded = encoded.replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
+        return encoded
+    }
+
+    private func base64URLDecode(_ string: String) -> Data? {
+        var s = string.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
+        let padding = (4 - s.count % 4) % 4
+        s += String(repeating: "=", count: padding)
+        return Data(base64Encoded: s)
+    }
+
+    private func startPasskeyRegistration(email: String, anchor: ASPresentationAnchor) async {
+        do {
+            self.registrationEmail = email
+            self.authenticationAnchor = anchor
+            // 1) Generate a registration challenge on-device (base64url)
+            let randomBytes = (0..<32).map { _ in UInt8.random(in: 0...255) }
+            let challengeData = Data(randomBytes)
+            self.registrationChallenge = challengeData
+
+            // 2) Create passkey registration request
+            let provider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: Constants.domain)
+            let userId = UUID().uuidString.data(using: .utf8) ?? Data()
+            let request = provider.createCredentialRegistrationRequest(
+                challenge: challengeData,
+                name: email,
+                userID: userId
+            )
+            let controller = ASAuthorizationController(authorizationRequests: [request])
+            controller.delegate = self
+            controller.presentationContextProvider = self
+            controller.performRequests()
+        } catch {
+            print("Failed to start passkey registration: \(error)")
+            self.isPerformingModalRequest = false
+        }
+    }
+
     func signUp(email: String, anchor: ASPresentationAnchor) {
         authenticationAnchor = anchor
         SessionManager.shared.setCurrentUser(user: User(email: email))
-
-        passkeyRegistration = PasskeyManager(rpId: domain, presentationAnchor: anchor)
-        passkeyRegistration?.registerPasskey(email: email)
         print("\(email) signup")
         isPerformingModalRequest = true
-    }
-
-    func sendCreateSubOrgRequest(passkeyRegistrationResult: PasskeyRegistrationResult, email: String) async throws -> Components.Schemas.CreateSubOrganizationResultV4? {
-//        guard let email else {
-//            throw NSError(domain: "AccountManagerError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Email not set"])
-//        }
-
-        // For email auth we need to proxy the request to a backend that can stamp it
-        let proxyURL = "http://localhost:3000/api/sign-up"
-
-        // Create an instance of TurnkeyClient
-        let client = TurnkeyClient(proxyURL: proxyURL)
-
-        let attestation: Components.Schemas.Attestation = .init(credentialId: passkeyRegistrationResult.attestation.credentialId, clientDataJson: passkeyRegistrationResult.attestation.clientDataJson, attestationObject: passkeyRegistrationResult.attestation.attestationObject, transports: [.AUTHENTICATOR_TRANSPORT_BLE])
-
-        // Define the test input
-        let subOrganizationName = "Test Sub Organization"
-        let rootUsers: [Components.Schemas.RootUserParamsV4] = [
-            .init(
-                userName: "user1",
-                userEmail: email,
-                apiKeys: [],
-                authenticators: [
-                    .init(authenticatorName: "Tuide - Simulator", challenge: passkeyRegistrationResult.challenge, attestation: attestation),
-                ], oauthProviders: []
-            ),
-        ]
-        let rootQuorumThreshold: Int32 = 1
-        let wallet: Components.Schemas.WalletParams = .init(
-            walletName: "Test Wallet",
-            accounts: [
-                .init(
-                    curve: .CURVE_SECP256K1,
-                    pathFormat: .PATH_FORMAT_BIP32,
-                    path: "m/44'/60'/0'/0/0",
-                    addressFormat: .ADDRESS_FORMAT_ETHEREUM
-                ),
-            ]
-        )
-        let disableEmailRecovery = false
-        let disableEmailAuth = false
-
-        // Call the createSubOrganization method on the TurnkeyClient instance
-        let output = try await client.createSubOrganization(
-            organizationId: parentOrgId,
-            subOrganizationName: subOrganizationName,
-            rootUsers: rootUsers,
-            rootQuorumThreshold: rootQuorumThreshold,
-            wallet: wallet,
-            disableEmailRecovery: disableEmailRecovery,
-            disableEmailAuth: disableEmailAuth,
-            disableSmsAuth: false,
-            disableOtpEmailAuth: false
-        )
-
-        // Assert the response
-        switch output {
-        case let .ok(response):
-            switch response.body {
-            case let .json(activityResponse):
-                let result = activityResponse.activity.result.createSubOrganizationResultV4
-                return result
-                // Print the activity as JSON
-                //           let encoder = JSONEncoder()
-                //           encoder.outputFormatting = .prettyPrinted
-                //           let jsonData = try encoder.encode(activityResponse.activity.result)
-                //           if let jsonString = String(data: jsonData, encoding: .utf8) {
-                //             print(jsonString)
-                //           }
-            }
-        case let .undocumented(statusCode, undocumentedPayload):
-            // Handle the undocumented response
-            if let body = undocumentedPayload.body {
-                // Convert the HTTPBody to a string
-                let bodyString = try await String(collecting: body, upTo: .max)
-                print("Undocumented response body: \(bodyString)")
-            }
-            print("Undocumented response: \(statusCode)")
+        Task {
+            await startPasskeyRegistration(email: email, anchor: anchor)
         }
-        return nil
     }
 
     @objc private func handlePasskeyRegistrationCompleted(_ notification: Notification) {
-        guard let result = notification.userInfo?["result"] as? PasskeyRegistrationResult else {
-            return
-        }
-
         Task {
-            let user = SessionManager.shared.getCurrentUser()
-            guard let email = user?.email else {
-                print("no email")
-                return
-            }
-            let result = try await sendCreateSubOrgRequest(passkeyRegistrationResult: result, email: email)
-            
-            user?.walletAddress = result?.wallet?.addresses[0]
-            user?.subOrgId = result?.subOrganizationId
-            if(user != nil) {
-                modelContext.insert(user!)
-                try modelContext.save()
-            }
-            
+            print("Passkey registration completed notification received.")
+
             DispatchQueue.main.async {
                 self.didFinishSignIn()
             }
@@ -306,12 +182,8 @@ class AccountManager: NSObject, ASAuthorizationControllerPresentationContextProv
     }
 
     @objc private func handlePasskeyRegistrationFailed(_ notification: Notification) {
-        guard let error = notification.userInfo?["error"] as? PasskeyRegistrationError else {
-            return
-        }
-
-        // Handle passkey registration failure
-        // ...
+        let error = notification.userInfo?["error"] ?? "Unknown error"
+        print("Passkey registration failed: \(error)")
 
         isPerformingModalRequest = false
     }
@@ -331,13 +203,58 @@ class AccountManager: NSObject, ASAuthorizationControllerPresentationContextProv
         switch authorization.credential {
         case let credentialRegistration as ASAuthorizationPlatformPublicKeyCredentialRegistration:
             logger.log("A new passkey was registered: \(credentialRegistration)")
-            // Verify the attestationObject and clientDataJSON with your service.
-            // The attestationObject contains the user's new public key to store and use for subsequent sign-ins.
-            // let attestationObject = credentialRegistration.rawAttestationObject
-            // let clientDataJSON = credentialRegistration.rawClientDataJSON
-
-            // After the server verifies the registration and creates the user account, sign in the user with the new account.
-            didFinishSignIn()
+            // Send attestation to backend /signup
+            Task {
+                do {
+                    guard let email = self.registrationEmail,
+                          let challenge = self.registrationChallenge else {
+                        throw NSError(domain: "Signup", code: 3, userInfo: [NSLocalizedDescriptionKey: "Missing registration context"])
+                    }
+                    let attestation = AttestationPayload(
+                        credentialId: base64URLEncode(credentialRegistration.credentialID),
+                        clientDataJson: base64URLEncode(credentialRegistration.rawClientDataJSON),
+                        attestationObject: base64URLEncode(credentialRegistration.rawAttestationObject ?? Data()),
+                        transports: nil
+                    )
+                    let body = CreateSubOrgRequestBody(
+                        email: email,
+                        phone: nil,
+                        passkey: PasskeyPayload(
+                            challenge: base64URLEncode(challenge),
+                            attestation: attestation
+                        )
+                    )
+                    guard let url = URL(string: "\(Constants.backendAuthUrl)/auth/createSubOrg") else {
+                        throw NSError(domain: "Signup", code: 4, userInfo: [NSLocalizedDescriptionKey: "Invalid createSubOrg URL"])
+                    }
+                    var req = URLRequest(url: url)
+                    req.httpMethod = "POST"
+                    req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                    req.httpBody = try JSONEncoder().encode(body)
+                    let (data, resp) = try await URLSession.shared.data(for: req)
+                    if let http = resp as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
+                        let bodyText = String(data: data, encoding: .utf8) ?? "<non-utf8 body>"
+                        throw NSError(domain: "Signup", code: http.statusCode, userInfo: [NSLocalizedDescriptionKey: "createSubOrg failed (\(http.statusCode)): \(bodyText)"])
+                    }
+                    // Try decoding expected response; if it fails, surface raw body to aid debugging
+                    do {
+                        _ = try JSONDecoder().decode(CreateSubOrgResponse.self, from: data)
+                    } catch {
+                        let bodyText = String(data: data, encoding: .utf8) ?? "<non-utf8 body>"
+                        throw NSError(domain: "Signup", code: 5, userInfo: [NSLocalizedDescriptionKey: "Unexpected createSubOrg response: \(bodyText)"])
+                    }
+                    // Server does not return a session; log in with passkey now
+                    if let anchor = self.authenticationAnchor {
+                        try await TurnkeyContext.shared.loginWithPasskey(anchor: anchor)
+                    }
+                    DispatchQueue.main.async {
+                        self.didFinishSignIn()
+                    }
+                } catch {
+                    print("Signup (attestation upload) failed: \(error)")
+                    self.isPerformingModalRequest = false
+                }
+            }
         case let credentialAssertion as ASAuthorizationPlatformPublicKeyCredentialAssertion:
             logger.log("A passkey was used to sign in: \(credentialAssertion)")
 

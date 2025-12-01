@@ -8,9 +8,8 @@
 import Foundation
 import SwiftData
 import UIKit
-import Web3Core
-import web3swift
-import TurnkeySDK
+//import Web3Core
+//import web3swift
 
 class SendTransactionViewController: UIViewController {
     // Domain constant no longer needed here; use authenticated client from AccountManager
@@ -71,27 +70,20 @@ class SendTransactionViewController: UIViewController {
             return
         }
         
-        // Retrieve the authenticated client that was stored after login
-        guard let turnkeyClient = (UIApplication.shared.delegate as? AppDelegate)?
-            .accountManager.loggedInClient else {
-            print("No authenticated Turnkey client found – user must log in first")
-            return
-        }
-        
-        let web3 = try await Web3.new(url, network: Networks.Custom(networkID: 11155111))
-        let address = EthereumAddress(walletAddress)!
+//        let web3 = try await Web3.new(url, network: Networks.Custom(networkID: 11155111))
+//        let address = EthereumAddress(walletAddress)!
 //        var transaction: CodableTransaction = .emptyTransaction
 //        transaction.from = address ?? transaction.sender // `sender` one is if you have private key of your wallet address, so public key e.g. your wallet address could be interpreted
 //        transaction.value = 0
 //        transaction.gasLimitPolicy =  .manual(78423)
 //        transaction.gasPricePolicy = .manual(20000000000)
-        var transaction = CodableTransaction(
-            to: address,
-            nonce: 9, value: 1000000000000000000, data: Data(),
-            gasLimit: 21000, gasPrice: 20000000000,
-            // FIXME: Return parameters here
-            v: 0, r: 0, s: 0)
-        
-        try await web3.eth.send(transaction)
+//        var transaction = CodableTransaction(
+//            to: address,
+//            nonce: 9, value: 1000000000000000000, data: Data(),
+//            gasLimit: 21000, gasPrice: 20000000000,
+//            // FIXME: Return parameters here
+//            v: 0, r: 0, s: 0)
+//        
+//        try await web3.eth.send(transaction)
     }
 }

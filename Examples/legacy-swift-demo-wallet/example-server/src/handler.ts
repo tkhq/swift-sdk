@@ -1,7 +1,7 @@
-import { Request } from "express";
-import dotenv from "dotenv";
-import { DEFAULT_ETHEREUM_ACCOUNTS, Turnkey } from "@turnkey/sdk-server";
-import { decodeJwt } from "./util.js";
+import { Request } from 'express';
+import dotenv from 'dotenv';
+import { DEFAULT_ETHEREUM_ACCOUNTS, Turnkey } from '@turnkey/sdk-server';
+import { decodeJwt } from './util.js';
 import {
   GetSubOrgIdParams,
   GetSubOrgIdResponse,
@@ -13,15 +13,15 @@ import {
   VerifyOtpResponse,
   VerifyOtpParams,
   SendOtpResponse,
-} from "./types.js";
+} from './types.js';
 
 dotenv.config();
 
 export const turnkeyConfig = {
-  apiBaseUrl: process.env.TURNKEY_API_URL ?? "",
-  defaultOrganizationId: process.env.TURNKEY_ORGANIZATION_ID ?? "",
-  apiPublicKey: process.env.TURNKEY_API_PUBLIC_KEY ?? "",
-  apiPrivateKey: process.env.TURNKEY_API_PRIVATE_KEY ?? "",
+  apiBaseUrl: process.env.TURNKEY_API_URL ?? '',
+  defaultOrganizationId: process.env.TURNKEY_ORGANIZATION_ID ?? '',
+  apiPublicKey: process.env.TURNKEY_API_PUBLIC_KEY ?? '',
+  apiPrivateKey: process.env.TURNKEY_API_PRIVATE_KEY ?? '',
 };
 
 const turnkey = new Turnkey(turnkeyConfig).apiClient();
@@ -48,7 +48,7 @@ export async function sendOtp(
   const sendOtpResponse = await turnkey.initOtp({
     otpType: otpType,
     contact: contact,
-    smsCustomization: { template: "Your Turnkey Demo OTP is {{.OtpCode}}" },
+    smsCustomization: { template: 'Your Turnkey Demo OTP is {{.OtpCode}}' },
     otpLength: 6,
     userIdentifier,
   });
@@ -105,12 +105,20 @@ export async function createSubOrg(
 ): Promise<CreateSubOrgResponse> {
   const { email, phone, passkey, oauth, apiKeys } = req.body;
 
+  console.log(passkey);
   const authenticators = passkey
     ? [
         {
-          authenticatorName: "Passkey",
+          authenticatorName: 'Passkey',
           challenge: passkey.challenge,
-          attestation: passkey.attestation,
+          attestation: {
+            credentialId: passkey.attestation.credentialId,
+            clientDataJson: passkey.attestation.clientDataJson,
+            attestationObject: passkey.attestation.attestationObject,
+            transports: passkey.attestation.transports ?? [
+              'AUTHENTICATOR_TRANSPORT_INTERNAL',
+            ],
+          },
         },
       ]
     : [];
@@ -135,7 +143,7 @@ export async function createSubOrg(
 
   const userPhoneNumber = phone;
   const subOrganizationName = `Sub Org - ${email || phone}`;
-  const userName = email ? email.split("@")[0] || email : "";
+  const userName = email ? email.split('@')[0] || email : '';
 
   const result = await turnkey.createSubOrganization({
     organizationId: turnkeyConfig.defaultOrganizationId,
@@ -152,7 +160,7 @@ export async function createSubOrg(
     ],
     rootQuorumThreshold: 1,
     wallet: {
-      walletName: "Default Wallet",
+      walletName: 'Default Wallet',
       accounts: DEFAULT_ETHEREUM_ACCOUNTS,
     },
   });

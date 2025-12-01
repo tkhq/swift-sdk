@@ -1,5 +1,5 @@
 import SwiftUI
-import TurnkeySDK
+import TurnkeySwift
 import AuthenticationServices
 
 struct LoginView: View {
@@ -7,19 +7,7 @@ struct LoginView: View {
     @EnvironmentObject private var sessionManager: SessionManager
     
     init() {
-        // Fetch shared accountManager clients for preview / runtime use
-        let accountManager = (UIApplication.shared.delegate as? AppDelegate)?.accountManager
-        let proxyClient = TurnkeyClient(proxyURL: "http://localhost:3000/proxy")
-        let passkeyClient = accountManager?.loggedInClient ?? TurnkeyClient(
-            rpId: "com.example.domain",
-            presentationAnchor: ASPresentationAnchor()
-        )
-        
-        let vm = LoginViewModel(
-            proxyClient: proxyClient,
-            passkeyClient: passkeyClient,
-            sessionManager: SessionManager()
-        )
+        let vm = LoginViewModel(sessionManager: SessionManager())
         _viewModel = StateObject(wrappedValue: vm)
     }
     
@@ -70,7 +58,7 @@ struct LoginView: View {
                 // Login button
                 Button {
                     Task {
-                        await viewModel.authenticate()
+                        await viewModel.authenticate(anchor: defaultAnchor())
                     }
                 } label: {
                     if viewModel.isLoading {
@@ -103,6 +91,17 @@ struct LoginView: View {
         }
     }
 }
+
+#if canImport(UIKit)
+private func defaultAnchor() -> ASPresentationAnchor? {
+    UIApplication.shared
+        .connectedScenes
+        .compactMap { $0 as? UIWindowScene }
+        .first(where: { $0.activationState == .foregroundActive })?
+        .windows
+        .first(where: { $0.isKeyWindow })
+}
+#endif
 
 #Preview {
     return LoginView()

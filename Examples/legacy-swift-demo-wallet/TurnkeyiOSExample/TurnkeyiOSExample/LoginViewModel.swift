@@ -1,5 +1,5 @@
 import Foundation
-import TurnkeySDK
+import TurnkeySwift
 import SwiftUI
 import AuthenticationServices
 import Combine
@@ -39,28 +39,42 @@ final class LoginViewModel: ObservableObject {
     /// Error message to display
     @Published var errorMessage: String?
     
-    /// Proxy client for email lookup
-    private let proxyClient: TurnkeyClient
-    
-    /// Passkey client for authentication
-    private let passkeyClient: TurnkeyClient
+    /// Injectable passkey login for testing/decoupling
+    typealias PasskeyLogin = (_ anchor: ASPresentationAnchor?) async throws -> Void
+    private let passkeyLogin: PasskeyLogin
+    typealias GetSubOrgIds = (_ email: String) async throws -> GetSubOrgIdsResponse
+    private let fetchSubOrgIds: GetSubOrgIds
     
     /// Session manager to store authenticated client
     var sessionManager: SessionManager
     
     /// Initialize with required dependencies
     /// - Parameters:
-    ///   - proxyClient: Client for proxy operations
-    ///   - passkeyClient: Client for passkey authentication
     ///   - sessionManager: Session manager to store authenticated client
-    init(proxyClient: TurnkeyClient, passkeyClient: TurnkeyClient, sessionManager: SessionManager) {
-        self.proxyClient = proxyClient
-        self.passkeyClient = passkeyClient
+    ///   - passkeyLogin: Optional injected login closure (defaults to TurnkeyContext.loginWithPasskey)
+    init(sessionManager: SessionManager, passkeyLogin: PasskeyLogin? = nil, fetchSubOrgIds: GetSubOrgIds? = nil) {
         self.sessionManager = sessionManager
+        self.passkeyLogin = passkeyLogin ?? { anchor in
+            guard let anchor else { return }
+            try await TurnkeyContext.shared.loginWithPasskey(anchor: anchor)
+        }
+        self.fetchSubOrgIds = fetchSubOrgIds ?? { email in
+            // Default network implementation
+            guard let url = URL(string: "http://localhost:3000/proxy/sub-org-ids?filterType=EMAIL&filterValue=\(email)") else {
+                throw LoginError.networkError(NSError(domain: "LoginViewModel", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]))
+            }
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
+                throw LoginError.networkError(NSError(domain: "LoginViewModel", code: 2, userInfo: [NSLocalizedDescriptionKey: "Server returned an error"]))
+            }
+            return try JSONDecoder().decode(GetSubOrgIdsResponse.self, from: data)
+        }
     }
     
     /// Authenticate the user
-    func authenticate() async {
+    func authenticate(anchor: ASPresentationAnchor?) async {
         // Reset error message
         errorMessage = nil
         
@@ -69,18 +83,15 @@ final class LoginViewModel: ObservableObject {
         
         do {
             // 1. Look up sub-org IDs via proxy
-            let response = try await getSubOrgIds(email: email)
+            let response = try await fetchSubOrgIds(email)
             
             // 2. Check if any organizations were found
-            guard let organizationId = response.organizationIds.first else {
+            guard let _ = response.organizationIds.first else {
                 throw LoginError.noAccount
             }
             
-            // 3. Perform passkey login
-            let loggedInClient = try await passkeyClient.login(organizationId: organizationId)
-            
-            // 4. Save the authenticated client to session
-            sessionManager.client = loggedInClient
+            // 3. Perform passkey login (stores session internally)
+            try await passkeyLogin(anchor)
             
         } catch let error as LoginError {
             // Handle known login errors
@@ -94,31 +105,4 @@ final class LoginViewModel: ObservableObject {
         isLoading = false
     }
     
-    /// Get sub-organization IDs for an email
-    /// - Parameter email: User's email address
-    /// - Returns: Response with matching organization IDs
-    private func getSubOrgIds(email: String) async throws -> GetSubOrgIdsResponse {
-        // This would typically call the proxy client's getSubOrgIds method
-        // For now, we'll simulate the API call
-        
-        // Create URL for the request
-        guard let url = URL(string: "http://localhost:3000/proxy/sub-org-ids?filterType=EMAIL&filterValue=\(email)") else {
-            throw LoginError.networkError(NSError(domain: "LoginViewModel", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid URL"]))
-        }
-        
-        // Create and configure the request
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        
-        // Perform the request
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
-        // Check for valid response
-        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-            throw LoginError.networkError(NSError(domain: "LoginViewModel", code: 2, userInfo: [NSLocalizedDescriptionKey: "Server returned an error"]))
-        }
-        
-        // Decode the response
-        return try JSONDecoder().decode(GetSubOrgIdsResponse.self, from: data)
-    }
 }

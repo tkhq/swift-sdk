@@ -6,7 +6,7 @@
 //
 
 import SwiftData
-import TurnkeySDK
+import TurnkeySwift
 import UIKit
 
 @main
@@ -25,6 +25,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         } catch {
             fatalError("Failed to initialize the model container: \(error)")
         }
+
+        // Configure Turnkey (no Auth Proxy)
+        TurnkeyContext.configure(TurnkeyConfig(
+            rpId: Constants.domain,
+            organizationId: Constants.organizationId
+        ))
 
         return true
     }

@@ -1,8 +1,9 @@
 import SwiftUI
-import TurnkeySDK
+import TurnkeySwift
 
 struct HomeView: View {
     @EnvironmentObject private var sessionManager: SessionManager
+    @EnvironmentObject private var turnkey: TurnkeyContext
     
     var body: some View {
         NavigationView {
@@ -33,11 +34,17 @@ struct HomeView: View {
                     HStack {
                         Text("Status:")
                             .fontWeight(.semibold)
-                        Text("Authenticated")
-                            .foregroundColor(.green)
+                        switch turnkey.authState {
+                        case .authenticated:
+                            Text("Authenticated").foregroundColor(.green)
+                        case .loading:
+                            Text("Loading").foregroundColor(.orange)
+                        default:
+                            Text("Not authenticated").foregroundColor(.red)
+                        }
                     }
                     
-                    if let client = sessionManager.client {
+                    if turnkey.client != nil {
                         Text("Client is initialized and ready to use")
                             .font(.caption)
                             .foregroundColor(.secondary)

@@ -12,21 +12,22 @@
 		1E2780322BCA349400AE790C /* TurnkeyiOSExampleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E2780312BCA349400AE790C /* TurnkeyiOSExampleTests.swift */; };
 		1E27803C2BCA349400AE790C /* TurnkeyiOSExampleUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E27803B2BCA349400AE790C /* TurnkeyiOSExampleUITests.swift */; };
 		1E27803E2BCA349400AE790C /* TurnkeyiOSExampleUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E27803D2BCA349400AE790C /* TurnkeyiOSExampleUITestsLaunchTests.swift */; };
-		1E2E1DF82DBAB4A400035E88 /* TurnkeySDK in Frameworks */ = {isa = PBXBuildFile; productRef = 1E2E1DF72DBAB4A400035E88 /* TurnkeySDK */; };
 		1E37D5932BD2D77C00962F0D /* AccountManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E37D5922BD2D77C00962F0D /* AccountManager.swift */; };
 		1E37D59A2BD2FFDD00962F0D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1E37D5992BD2FFDD00962F0D /* LaunchScreen.storyboard */; };
 		1E37D59E2BD3004D00962F0D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1E37D59D2BD3004D00962F0D /* Main.storyboard */; };
-		1E4CD78B2BE2CF180097E2CB /* TurnkeySDK in Frameworks */ = {isa = PBXBuildFile; productRef = 1E4CD78A2BE2CF180097E2CB /* TurnkeySDK */; };
 		1E4FCBCA2BCB71820042A4B2 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E4FCBC92BCB71820042A4B2 /* AppDelegate.swift */; };
 		1E4FCBCC2BCDCA6C0042A4B2 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E4FCBCB2BCDCA6C0042A4B2 /* SceneDelegate.swift */; };
 		1E4FCBD02BCDCAB80042A4B2 /* UserHomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E4FCBCF2BCDCAB80042A4B2 /* UserHomeViewController.swift */; };
 		1E4FCBD22BCDCAD00042A4B2 /* SignInViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E4FCBD12BCDCAD00042A4B2 /* SignInViewController.swift */; };
 		1E81BE842BDC2755006A9A0A /* EmailAuthViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E81BE832BDC2755006A9A0A /* EmailAuthViewController.swift */; };
+		1E96300C2ED54AA80099B69B /* TurnkeySwift in Frameworks */ = {isa = PBXBuildFile; productRef = 1E96300B2ED54AA80099B69B /* TurnkeySwift */; };
+		1E96300E2ED54AEA0099B69B /* TurnkeySwift in Frameworks */ = {isa = PBXBuildFile; productRef = 1E96300D2ED54AEA0099B69B /* TurnkeySwift */; };
 		1EA966772DD7BD8E001450E8 /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EA966762DD7BD8E001450E8 /* SessionManager.swift */; };
-		1EABCB2A2BE468B00037DD52 /* web3swift in Frameworks */ = {isa = PBXBuildFile; productRef = 1EABCB292BE468B00037DD52 /* web3swift */; };
 		1EABCB2C2BE491790037DD52 /* UserManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EABCB2B2BE491790037DD52 /* UserManager.swift */; };
 		1EABCB2F2BE498A50037DD52 /* UserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EABCB2E2BE498A50037DD52 /* UserModel.swift */; };
 		1EABCB6F2BE56B4F0037DD52 /* SendTransactionViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EABCB6E2BE56B4F0037DD52 /* SendTransactionViewController.swift */; };
+		1EABCDE22F00000100AAAAAA /* OtpLoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EABCDE12F00000100AAAAAA /* OtpLoginView.swift */; };
+		1EFFF0022F00020000AAAAAA /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EFFF0012F00020000AAAAAA /* Constants.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -69,6 +70,8 @@
 		1EABCB2B2BE491790037DD52 /* UserManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManager.swift; sourceTree = "<group>"; };
 		1EABCB2E2BE498A50037DD52 /* UserModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserModel.swift; sourceTree = "<group>"; };
 		1EABCB6E2BE56B4F0037DD52 /* SendTransactionViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendTransactionViewController.swift; sourceTree = "<group>"; };
+		1EABCDE12F00000100AAAAAA /* OtpLoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OtpLoginView.swift; sourceTree = "<group>"; };
+		1EFFF0012F00020000AAAAAA /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -76,9 +79,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1E4CD78B2BE2CF180097E2CB /* TurnkeySDK in Frameworks */,
-				1EABCB2A2BE468B00037DD52 /* web3swift in Frameworks */,
-				1E2E1DF82DBAB4A400035E88 /* TurnkeySDK in Frameworks */,
+				1E96300E2ED54AEA0099B69B /* TurnkeySwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -86,6 +87,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1E96300C2ED54AA80099B69B /* TurnkeySwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -105,6 +107,7 @@
 				1E27801F2BCA349300AE790C /* TurnkeyiOSExample */,
 				1E2780302BCA349400AE790C /* TurnkeyiOSExampleTests */,
 				1E27803A2BCA349400AE790C /* TurnkeyiOSExampleUITests */,
+				1E96300A2ED54AA80099B69B /* Frameworks */,
 				1E27801E2BCA349300AE790C /* Products */,
 			);
 			sourceTree = "<group>";
@@ -133,6 +136,8 @@
 				1E4FCBCF2BCDCAB80042A4B2 /* UserHomeViewController.swift */,
 				1E4FCBD12BCDCAD00042A4B2 /* SignInViewController.swift */,
 				1E37D5922BD2D77C00962F0D /* AccountManager.swift */,
+				1EABCDE12F00000100AAAAAA /* OtpLoginView.swift */,
+				1EFFF0012F00020000AAAAAA /* Constants.swift */,
 				1E37D5992BD2FFDD00962F0D /* LaunchScreen.storyboard */,
 				1E37D59D2BD3004D00962F0D /* Main.storyboard */,
 				1E81BE832BDC2755006A9A0A /* EmailAuthViewController.swift */,
@@ -168,6 +173,13 @@
 			path = TurnkeyiOSExampleUITests;
 			sourceTree = "<group>";
 		};
+		1E96300A2ED54AA80099B69B /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		1EABCB2D2BE498930037DD52 /* Models */ = {
 			isa = PBXGroup;
 			children = (
@@ -192,9 +204,7 @@
 			);
 			name = TurnkeyiOSExample;
 			packageProductDependencies = (
-				1E4CD78A2BE2CF180097E2CB /* TurnkeySDK */,
-				1EABCB292BE468B00037DD52 /* web3swift */,
-				1E2E1DF72DBAB4A400035E88 /* TurnkeySDK */,
+				1E96300D2ED54AEA0099B69B /* TurnkeySwift */,
 			);
 			productName = TurnkeyiOSExample;
 			productReference = 1E27801D2BCA349300AE790C /* TurnkeyiOSExample.app */;
@@ -269,8 +279,7 @@
 			);
 			mainGroup = 1E2780142BCA349300AE790C;
 			packageReferences = (
-				1EABCB282BE468B00037DD52 /* XCRemoteSwiftPackageReference "web3swift" */,
-				1E2E1DF92DBAB4F500035E88 /* XCLocalSwiftPackageReference "../../../swift-sdk" */,
+				1E9630092ED538260099B69B /* XCLocalSwiftPackageReference "../../../../swift-sdk" */,
 			);
 			productRefGroup = 1E27801E2BCA349300AE790C /* Products */;
 			projectDirPath = "";
@@ -321,6 +330,8 @@
 				1EABCB2F2BE498A50037DD52 /* UserModel.swift in Sources */,
 				1EABCB2C2BE491790037DD52 /* UserManager.swift in Sources */,
 				1E37D5932BD2D77C00962F0D /* AccountManager.swift in Sources */,
+				1EABCDE22F00000100AAAAAA /* OtpLoginView.swift in Sources */,
+				1EFFF0022F00020000AAAAAA /* Constants.swift in Sources */,
 				1E4FCBCA2BCB71820042A4B2 /* AppDelegate.swift in Sources */,
 				1EABCB6F2BE56B4F0037DD52 /* SendTransactionViewController.swift in Sources */,
 				1E4FCBD22BCDCAD00042A4B2 /* SignInViewController.swift in Sources */,
@@ -504,7 +515,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = turnkey.io.TurnkeyiOSExample;
+				PRODUCT_BUNDLE_IDENTIFIER = xyz.tkhqlabs.passkeyapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -535,7 +546,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = turnkey.io.TurnkeyiOSExample;
+				PRODUCT_BUNDLE_IDENTIFIER = xyz.tkhqlabs.passkeyapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -657,36 +668,22 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		1E2E1DF92DBAB4F500035E88 /* XCLocalSwiftPackageReference "../../../swift-sdk" */ = {
+		1E9630092ED538260099B69B /* XCLocalSwiftPackageReference "../../../../swift-sdk" */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = "../../../swift-sdk";
+			relativePath = "../../../../swift-sdk";
 		};
 /* End XCLocalSwiftPackageReference section */
 
-/* Begin XCRemoteSwiftPackageReference section */
-		1EABCB282BE468B00037DD52 /* XCRemoteSwiftPackageReference "web3swift" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/web3swift-team/web3swift.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 3.2.1;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
 /* Begin XCSwiftPackageProductDependency section */
-		1E2E1DF72DBAB4A400035E88 /* TurnkeySDK */ = {
+		1E96300B2ED54AA80099B69B /* TurnkeySwift */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = TurnkeySDK;
+			package = 1E9630092ED538260099B69B /* XCLocalSwiftPackageReference "../../../../swift-sdk" */;
+			productName = TurnkeySwift;
 		};
-		1E4CD78A2BE2CF180097E2CB /* TurnkeySDK */ = {
+		1E96300D2ED54AEA0099B69B /* TurnkeySwift */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = TurnkeySDK;
-		};
-		1EABCB292BE468B00037DD52 /* web3swift */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1EABCB282BE468B00037DD52 /* XCRemoteSwiftPackageReference "web3swift" */;
-			productName = web3swift;
+			package = 1E9630092ED538260099B69B /* XCLocalSwiftPackageReference "../../../../swift-sdk" */;
+			productName = TurnkeySwift;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -7,8 +7,8 @@
 
 
 import UIKit
-import Web3Core
-import web3swift
+//import Web3Core
+//import web3swift
 import SwiftData
 
 class UserHomeViewController: UIViewController {
@@ -36,17 +36,17 @@ class UserHomeViewController: UIViewController {
                 }
 
                 // Validate wallet address before proceeding to avoid runtime crash
-                guard !walletAddress.isEmpty, let ethAddress = EthereumAddress(walletAddress) else {
-                    print("Invalid or missing wallet address; skipping balance fetch")
-                    return
-                }
-
-                let web3 = try await Web3.new(url, network: Networks.Custom(networkID: 11155111))
-                let balance = try await web3.eth.getBalance(for: ethAddress)
-                let balString = Utilities.formatToPrecision(balance, units: .ether, formattingDecimals: 3)
-                print(balString)
+//                guard !walletAddress.isEmpty, let ethAddress = EthereumAddress(walletAddress) else {
+//                    print("Invalid or missing wallet address; skipping balance fetch")
+//                    return
+//                }
+//
+//                let web3 = try await Web3.new(url, network: Networks.Custom(networkID: 11155111))
+//                let balance = try await web3.eth.getBalance(for: ethAddress)
+//                let balString = Utilities.formatToPrecision(balance, units: .ether, formattingDecimals: 3)
+//                
                 DispatchQueue.main.async {
-                    self.balanceLabel.text = balString
+                    self.balanceLabel.text = ""
                 }
 
             } catch {
