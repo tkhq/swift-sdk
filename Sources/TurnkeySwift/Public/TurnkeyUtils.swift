@@ -10,6 +10,11 @@ public func decodeVerificationToken(_ verificationToken: String) throws -> Verif
     return try JWTDecoder.decode(verificationToken, as: VerificationToken.self)
 }
 
+/// Used for building client signature payloads used in OTP authentication flows.
+///
+/// Client signatures provide two security guarantees:
+/// 1. Only the owner of the public key in the verification token's claim can use the token
+/// 2. The intent hasn't been tampered with and was directly approved by the key owner
 public enum ClientSignature {
     /// Creates a client signature payload for login
     ///
