@@ -22,12 +22,19 @@ struct AuthFlow: View {
                     switch route {
                     case let .otp(id, contact, otpType):
                         OtpView(otpId: id, contact: contact, otpType: otpType) { otpCode in
-                            try await turnkey.completeOtp(
-                                otpId: id,
-                                otpCode: otpCode,
-                                contact: contact,
-                                otpType: otpType
-                            )
+                            Task {
+                                do {
+                                    try await turnkey.completeOtp(
+                                        otpId: id,
+                                        otpCode: otpCode,
+                                        contact: contact,
+                                        otpType: otpType
+                                    )
+                                } catch {
+                                    let message = formatError(error, fallback: "Failed to complete OTP")
+                                    print("[AppView] complete OTP failed: \(message)")
+                                }
+                            }
                         }
                     }
                 }

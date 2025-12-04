@@ -1,9 +1,11 @@
-import Foundation
 import AuthenticationServices
-import TurnkeyTypes
+import Foundation
 import TurnkeyHttp
+import TurnkeyStamper
+import TurnkeyTypes
 
 extension TurnkeyContext {
+
     /// Initiates an OTP flow for the given contact and type.
     ///
     /// Sends an OTP to the specified contact using the configured Auth Proxy.
@@ -18,23 +20,24 @@ extension TurnkeyContext {
     ///   - `TurnkeySwiftError.missingAuthProxyConfiguration` if the Auth Proxy client is not configured.
     ///   - `TurnkeySwiftError.failedToInitOtp` if the OTP initiation request fails.
     public func initOtp(contact: String, otpType: OtpType) async throws -> InitOtpResult {
-        
+
         guard let client = client else {
             throw TurnkeySwiftError.missingAuthProxyConfiguration
         }
-        
+
         do {
-            let resp = try await client.proxyInitOtp(ProxyTInitOtpBody(
-                contact: contact,
-                otpType: otpType.rawValue
-            ))
-            
+            let resp = try await client.proxyInitOtp(
+                ProxyTInitOtpBody(
+                    contact: contact,
+                    otpType: otpType.rawValue
+                ))
+
             return InitOtpResult(otpId: resp.otpId)
         } catch {
             throw TurnkeySwiftError.failedToInitOtp(underlying: error)
         }
     }
-    
+
     /// Verifies a user-provided OTP code for a given OTP request.
     ///
     /// Validates the provided code and returns a verification token for subsequent login or signup.
@@ -48,24 +51,29 @@ extension TurnkeyContext {
     /// - Throws:
     ///   - `TurnkeySwiftError.missingAuthProxyConfiguration` if the Auth Proxy client is not configured.
     ///   - `TurnkeySwiftError.failedToVerifyOtp` if the verification request fails.
-    public func verifyOtp(otpId: String, otpCode: String, publicKey: String? = nil) async throws -> VerifyOtpResult {
+    public func verifyOtp(otpId: String, otpCode: String, publicKey: String? = nil) async throws
+        -> VerifyOtpResult
+    {
         guard let client = client else {
             throw TurnkeySwiftError.missingAuthProxyConfiguration
         }
-        
+
         do {
-            let resp = try await client.proxyVerifyOtp(ProxyTVerifyOtpBody(
-                otpCode: otpCode,
-                otpId: otpId,
-                publicKey: publicKey
-            ))
-            
+            let resolvedPublicKey = try publicKey ?? createKeyPair()
+
+            let resp = try await client.proxyVerifyOtp(
+                ProxyTVerifyOtpBody(
+                    otpCode: otpCode,
+                    otpId: otpId,
+                    publicKey: resolvedPublicKey
+                ))
+
             return VerifyOtpResult(verificationToken: resp.verificationToken)
         } catch {
             throw TurnkeySwiftError.failedToVerifyOtp(underlying: error)
         }
     }
-    
+
     /// Logs in an existing user using a previously verified OTP.
     ///
     /// Exchanges the verification token for a new session and stores it in the session registry.
@@ -92,27 +100,41 @@ extension TurnkeyContext {
         guard let client = client else {
             throw TurnkeySwiftError.missingAuthProxyConfiguration
         }
-        
+
+        let sessionPublicKey = try publicKey ?? createKeyPair()
+
         do {
-            let resolvedPublicKey = try publicKey ?? createKeyPair()
-            
-            let response = try await client.proxyOtpLogin(ProxyTOtpLoginBody(
-                invalidateExisting: invalidateExisting,
-                organizationId: organizationId,
-                publicKey: resolvedPublicKey,
-                verificationToken: verificationToken
-            ))
-            
+            let (message, clientSignaturePublicKey) = try ClientSignature.forLogin(
+                verificationToken: verificationToken,
+                sessionPublicKey: sessionPublicKey
+            )
+
+            let stamper = try Stamper(apiPublicKey: clientSignaturePublicKey)
+            let signature = try await stamper.sign(
+                payload: message,
+                format: .raw
+            )
+
+            let clientSignature = v1ClientSignature(message: message, publicKey: clientSignaturePublicKey, scheme: .client_signature_scheme_api_p256, signature: signature)
+            let response = try await client.proxyOtpLogin(
+                ProxyTOtpLoginBody(
+                    clientSignature: clientSignature,
+                    invalidateExisting: invalidateExisting,
+                    organizationId: organizationId,
+                    publicKey: sessionPublicKey,
+                    verificationToken: verificationToken
+                ))
+
             let session = response.session
-            
+
             try await storeSession(jwt: session, sessionKey: sessionKey)
-            
+
             return BaseAuthResult(session: session)
         } catch {
             throw TurnkeySwiftError.failedToLoginWithOtp(underlying: error)
         }
     }
-    
+
     /// Signs up a new user using an OTP-based flow.
     ///
     /// Creates a new sub-organization and user using the verified OTP, then performs automatic login.
@@ -133,6 +155,7 @@ extension TurnkeyContext {
     @discardableResult
     public func signUpWithOtp(
         verificationToken: String,
+        publicKey: String? = nil,
         contact: String,
         otpType: OtpType,
         createSubOrgParams: CreateSubOrgParams? = nil,
@@ -142,11 +165,8 @@ extension TurnkeyContext {
         guard let client = client else {
             throw TurnkeySwiftError.missingAuthProxyConfiguration
         }
-        
+
         do {
-            // generate the keypair up front
-            let publicKey = try createKeyPair()
-            
             // merge userEmail / userPhoneNumber into params
             var mergedParams = createSubOrgParams ?? CreateSubOrgParams()
             mergedParams.verificationToken = verificationToken
@@ -155,25 +175,46 @@ extension TurnkeyContext {
             } else {
                 mergedParams.userPhoneNumber = contact
             }
-            
-            // we always include at least one API key
-            // for the one tap signup
-            let newApiKey = CreateSubOrgParams.ApiKey(
-                apiKeyName: "api-key-\(Int(Date().timeIntervalSince1970))",
-                publicKey: publicKey,
-                curveType: .api_key_curve_p256,
-                expirationSeconds: nil
+
+            // we build the body without client signature first
+            var signupBody = buildSignUpBody(createSubOrgParams: mergedParams)
+
+            let (message, clientSignaturePublicKey) = try ClientSignature.forSignup(
+                verificationToken: verificationToken,
+                email: signupBody.userEmail,
+                phoneNumber: signupBody.userPhoneNumber,
+                apiKeys: signupBody.apiKeys,
+                authenticators: signupBody.authenticators,
+                oauthProviders: signupBody.oauthProviders
             )
+
+            let stamper = try Stamper(apiPublicKey: clientSignaturePublicKey)
+            let signature = try await stamper.sign(
+                payload: message,
+                format: .raw
+            )
+
+            let clientSignature = v1ClientSignature(message: message, publicKey: clientSignaturePublicKey, scheme: .client_signature_scheme_api_p256, signature: signature)
             
-            // Append to existing apiKeys or create new array if nil
-            mergedParams.apiKeys = (mergedParams.apiKeys ?? []) + [newApiKey]
-            
-            // build body and call proxySignup
-            let signupBody = buildSignUpBody(createSubOrgParams: mergedParams)
+            // then we add the client signature to the signup body
+            signupBody = ProxyTSignupBody(
+                apiKeys: signupBody.apiKeys,
+                authenticators: signupBody.authenticators,
+                clientSignature: clientSignature,
+                oauthProviders: signupBody.oauthProviders,
+                organizationName: signupBody.organizationName,
+                userEmail: signupBody.userEmail,
+                userName: signupBody.userName,
+                userPhoneNumber: signupBody.userPhoneNumber,
+                userTag: signupBody.userTag,
+                verificationToken: signupBody.verificationToken,
+                wallet: signupBody.wallet
+            )
+
             let response = try await client.proxySignup(signupBody)
-            
+
             let organizationId = response.organizationId
-            
+
             return try await loginWithOtp(
                 verificationToken: verificationToken,
                 publicKey: publicKey,
@@ -181,12 +222,12 @@ extension TurnkeyContext {
                 invalidateExisting: invalidateExisting,
                 sessionKey: sessionKey
             )
-            
+
         } catch {
             throw TurnkeySwiftError.failedToSignUpWithOtp(underlying: error)
         }
     }
-    
+
     /// Completes a full OTP-based authentication flow (login or signup).
     ///
     /// Determines whether the user already exists and performs the appropriate action:
@@ -221,21 +262,23 @@ extension TurnkeyContext {
         guard let client = client else {
             throw TurnkeySwiftError.missingAuthProxyConfiguration
         }
-        
+
         do {
             // we verify the otp code
             let verifyResult = try await verifyOtp(otpId: otpId, otpCode: otpCode)
             let verificationToken = verifyResult.verificationToken
-            
+
             // we check if org already exists
-            let response = try await client.proxyGetAccount(ProxyTGetAccountBody(
-                filterType: otpType == .email ? "EMAIL" : "PHONE_NUMBER",
-                filterValue: contact,
-                verificationToken: verificationToken
-            ))
-            
+            let response = try await client.proxyGetAccount(
+                ProxyTGetAccountBody(
+                    filterType: otpType == .email ? "EMAIL" : "PHONE_NUMBER",
+                    filterValue: contact,
+                    verificationToken: verificationToken
+                ))
+
             if let organizationId = response.organizationId,
-               !organizationId.isEmpty {
+                !organizationId.isEmpty
+            {
                 // there is an existing org so we login
                 let loginResp = try await loginWithOtp(
                     verificationToken: verificationToken,
@@ -244,7 +287,7 @@ extension TurnkeyContext {
                     invalidateExisting: invalidateExisting,
                     sessionKey: sessionKey
                 )
-                
+
                 return CompleteOtpResult(
                     session: loginResp.session,
                     verificationToken: verificationToken,
@@ -260,7 +303,7 @@ extension TurnkeyContext {
                     invalidateExisting: invalidateExisting,
                     sessionKey: sessionKey
                 )
-                
+
                 return CompleteOtpResult(
                     session: signUpResp.session,
                     verificationToken: verificationToken,
@@ -271,5 +314,5 @@ extension TurnkeyContext {
             throw TurnkeySwiftError.failedToCompleteOtp(underlying: error)
         }
     }
-    
+
 }

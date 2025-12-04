@@ -53,6 +53,12 @@ extension TurnkeyClient {
     return try await request("/public/v1/query/get_boot_proof", body: input)
   }
 
+  /// Get gas usage and limits.
+  /// Get gas usage and gas limits for either the parent organization or a sub-organization.
+  public func getGasUsage(_ input: TGetGasUsageBody) async throws -> TGetGasUsageResponse {
+    return try await request("/public/v1/query/get_gas_usage", body: input)
+  }
+
   /// Get the latest boot proof for an app
   /// Get the latest boot proof for a given enclave app name.
   public func getLatestBootProof(_ input: TGetLatestBootProofBody) async throws
@@ -75,6 +81,14 @@ extension TurnkeyClient {
     -> TGetOauthProvidersResponse
   {
     return try await request("/public/v1/query/get_oauth_providers", body: input)
+  }
+
+  /// Get On Ramp transaction status
+  /// Get the status of an on ramp transaction.
+  public func getOnRampTransactionStatus(_ input: TGetOnRampTransactionStatusBody) async throws
+    -> TGetOnRampTransactionStatusResponse
+  {
+    return try await request("/public/v1/query/get_onramp_transaction_status", body: input)
   }
 
   /// Get organization
@@ -113,6 +127,14 @@ extension TurnkeyClient {
     return try await request("/public/v1/query/get_private_key", body: input)
   }
 
+  /// Get send transaction status
+  /// Get the status of a send transaction request.
+  public func getSendTransactionStatus(_ input: TGetSendTransactionStatusBody) async throws
+    -> TGetSendTransactionStatusResponse
+  {
+    return try await request("/public/v1/query/get_send_transaction_status", body: input)
+  }
+
   /// Get smart contract interface
   /// Get details about a smart contract interface.
   public func getSmartContractInterface(_ input: TGetSmartContractInterfaceBody) async throws
@@ -149,10 +171,18 @@ extension TurnkeyClient {
     return try await request("/public/v1/query/list_activities", body: input)
   }
 
-  /// List app proofs for an activity
-  /// List the app proofs for the given activity.
+  /// List App Proofs for an activity
+  /// List the App Proofs for the given activity.
   public func getAppProofs(_ input: TGetAppProofsBody) async throws -> TGetAppProofsResponse {
     return try await request("/public/v1/query/list_app_proofs", body: input)
+  }
+
+  /// List Fiat On Ramp Credentials
+  /// List all fiat on ramp provider credentials within an organization.
+  public func listFiatOnRampCredentials(_ input: TListFiatOnRampCredentialsBody) async throws
+    -> TListFiatOnRampCredentialsResponse
+  {
+    return try await request("/public/v1/query/list_fiat_on_ramp_credentials", body: input)
   }
 
   /// List OAuth 2.0 Credentials
@@ -279,6 +309,17 @@ extension TurnkeyClient {
       "/public/v1/submit/create_authenticators", body: input,
       activityType: "ACTIVITY_TYPE_CREATE_AUTHENTICATORS_V2",
       resultKey: "createAuthenticatorsResult")
+  }
+
+  /// Create a Fiat On Ramp Credential
+  /// Create a fiat on ramp provider credential
+  public func createFiatOnRampCredential(_ input: TCreateFiatOnRampCredentialBody) async throws
+    -> TCreateFiatOnRampCredentialResponse
+  {
+    return try await activity(
+      "/public/v1/submit/create_fiat_on_ramp_credential", body: input,
+      activityType: "ACTIVITY_TYPE_CREATE_FIAT_ON_RAMP_CREDENTIAL",
+      resultKey: "createFiatOnRampCredentialResult")
   }
 
   /// Create invitations
@@ -444,6 +485,17 @@ extension TurnkeyClient {
       activityType: "ACTIVITY_TYPE_DELETE_AUTHENTICATORS", resultKey: "deleteAuthenticatorsResult")
   }
 
+  /// Delete a Fiat On Ramp Credential
+  /// Delete a fiat on ramp provider credential
+  public func deleteFiatOnRampCredential(_ input: TDeleteFiatOnRampCredentialBody) async throws
+    -> TDeleteFiatOnRampCredentialResponse
+  {
+    return try await activity(
+      "/public/v1/submit/delete_fiat_on_ramp_credential", body: input,
+      activityType: "ACTIVITY_TYPE_DELETE_FIAT_ON_RAMP_CREDENTIAL",
+      resultKey: "deleteFiatOnRampCredentialResult")
+  }
+
   /// Delete invitation
   /// Delete an existing invitation.
   public func deleteInvitation(_ input: TDeleteInvitationBody) async throws
@@ -574,6 +626,27 @@ extension TurnkeyClient {
     return try await activity(
       "/public/v1/submit/email_auth", body: input, activityType: "ACTIVITY_TYPE_EMAIL_AUTH_V2",
       resultKey: "emailAuthResult")
+  }
+
+  /// Submit a raw transaction for broadcasting.
+  /// Submit a raw transaction (serialized and signed) for broadcasting to the network.
+  public func ethSendRawTransaction(_ input: TEthSendRawTransactionBody) async throws
+    -> TEthSendRawTransactionResponse
+  {
+    return try await activity(
+      "/public/v1/submit/eth_send_raw_transaction", body: input,
+      activityType: "ACTIVITY_TYPE_ETH_SEND_RAW_TRANSACTION",
+      resultKey: "ethSendRawTransactionResult")
+  }
+
+  /// Submit a transaction intent for broadcasting.
+  /// Submit a transaction intent describing a transaction you would like to broadcast.
+  public func ethSendTransaction(_ input: TEthSendTransactionBody) async throws
+    -> TEthSendTransactionResponse
+  {
+    return try await activity(
+      "/public/v1/submit/eth_send_transaction", body: input,
+      activityType: "ACTIVITY_TYPE_ETH_SEND_TRANSACTION", resultKey: "ethSendTransactionResult")
   }
 
   /// Export private key
@@ -792,6 +865,17 @@ extension TurnkeyClient {
     return try await activity(
       "/public/v1/submit/stamp_login", body: input, activityType: "ACTIVITY_TYPE_STAMP_LOGIN",
       resultKey: "stampLoginResult")
+  }
+
+  /// Update a Fiat On Ramp Credential
+  /// Update a fiat on ramp provider credential
+  public func updateFiatOnRampCredential(_ input: TUpdateFiatOnRampCredentialBody) async throws
+    -> TUpdateFiatOnRampCredentialResponse
+  {
+    return try await activity(
+      "/public/v1/submit/update_fiat_on_ramp_credential", body: input,
+      activityType: "ACTIVITY_TYPE_UPDATE_FIAT_ON_RAMP_CREDENTIAL",
+      resultKey: "updateFiatOnRampCredentialResult")
   }
 
   /// Update an OAuth 2.0 Credential

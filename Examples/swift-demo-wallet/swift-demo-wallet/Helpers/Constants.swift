@@ -11,7 +11,7 @@ enum Constants {
 
   enum Turnkey {
     static let organizationId = "<your_organization_id>"
-    static let apiUrl = "https://api.turnkey.com" 
+    static let apiUrl = "https://api.turnkey.com"
 
     static let authProxyUrl = "https://authproxy.turnkey.com"
     static let authProxyConfigId = "<your_auth_proxy_config_id>"

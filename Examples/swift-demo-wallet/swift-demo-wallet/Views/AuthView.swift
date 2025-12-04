@@ -223,16 +223,6 @@ struct AuthView: View {
             .windows
             .first(where: { $0.isKeyWindow })
     }
-
-    private func formatError(_ error: Error, fallback: String) -> String {
-        if let turnkeyError = error.turnkeyRequestError {
-            return "\(fallback): \(turnkeyError.fullMessage)"
-        }
-        if let localized = (error as? LocalizedError)?.errorDescription {
-            return "\(fallback): \(localized)"
-        }
-        return "\(fallback): \(String(describing: error))"
-    }
     
     private struct OrSeparator: View {
         var label: String = "OR"
