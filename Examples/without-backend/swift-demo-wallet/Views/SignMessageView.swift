@@ -1,8 +1,8 @@
 import SwiftUI
-import TurnkeyTypes
+import TurnkeyEncoding
 import TurnkeyHttp
 import TurnkeySwift
-import TurnkeyEncoding
+import TurnkeyTypes
 
 struct SignMessageView: View {
     let walletAddress: String

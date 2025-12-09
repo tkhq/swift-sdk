@@ -16,4 +16,3 @@ struct EmailInputView: View {
             .autocorrectionDisabled()
     }
 }
-

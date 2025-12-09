@@ -8,13 +8,13 @@ struct WalletCardView: View {
     let balanceETH: Double
     let onExport: (String) -> Void
     let onSign: (String) -> Void
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(walletName)
                     .font(.system(size: 20, weight: .semibold))
-                
+
                 HStack(spacing: 4) {
                     Text(truncateAddress(address))
                         .font(.system(size: 12))
@@ -24,7 +24,7 @@ struct WalletCardView: View {
                         .foregroundColor(.gray)
                 }
             }
-            
+
             VStack(alignment: .leading, spacing: 2) {
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text(String(format: "%.2f ETH", balanceUSD))
@@ -33,15 +33,15 @@ struct WalletCardView: View {
                         .font(.system(size: 16))
                         .foregroundColor(.gray)
                 }
-                
+
                 Text(String(format: "%.2f ETH", balanceETH))
                     .font(.caption)
                     .foregroundColor(.gray)
             }
-            
+
             HStack(spacing: 8) {
                 ActionButton(title: "Sign", action: { onSign(address) })
-                ActionButton(title: "Export", action: {onExport(walletId)})
+                ActionButton(title: "Export", action: { onExport(walletId) })
             }
         }
         .padding()
@@ -54,7 +54,7 @@ struct WalletCardView: View {
         )
         .shadow(color: .black.opacity(0.02), radius: 2, x: 0, y: 1)
     }
-    
+
     private func truncateAddress(_ address: String) -> String {
         guard address.count > 10 else { return address }
         let prefix = address.prefix(6)
@@ -66,7 +66,7 @@ struct WalletCardView: View {
 private struct ActionButton: View {
     let title: String
     let action: () -> Void
-    
+
     var body: some View {
         Button(title, action: action)
             .font(.system(size: 14, weight: .medium))
@@ -80,4 +80,3 @@ private struct ActionButton: View {
             )
     }
 }
-

@@ -2,7 +2,7 @@ import SwiftUI
 import TurnkeySwift
 
 enum AuthRoute: Hashable {
-    case otp(otpId: String, contact: String, otpType: OtpType)
+    case otp(otpId: String, contact: String, otpType: OtpType, publicKey: String)
 }
 
 enum MainRoute: Hashable {
@@ -14,27 +14,22 @@ enum MainRoute: Hashable {
 struct AuthFlow: View {
     @StateObject private var nav = NavigationCoordinator()
     @EnvironmentObject private var turnkey: TurnkeyContext
-    
+    @EnvironmentObject private var auth: AuthContext
+
     var body: some View {
         NavigationStack(path: $nav.path) {
             AuthView()
                 .navigationDestination(for: AuthRoute.self) { route in
                     switch route {
-                    case let .otp(id, contact, otpType):
+                    case let .otp(id, contact, otpType, publicKey):
                         OtpView(otpId: id, contact: contact, otpType: otpType) { otpCode in
-                            Task {
-                                do {
-                                    try await turnkey.completeOtp(
-                                        otpId: id,
-                                        otpCode: otpCode,
-                                        contact: contact,
-                                        otpType: otpType
-                                    )
-                                } catch {
-                                    let message = formatError(error, fallback: "Failed to complete OTP")
-                                    print("[AppView] complete OTP failed: \(message)")
-                                }
-                            }
+                            try await auth.completeOtp(
+                                otpId: id,
+                                otpCode: otpCode,
+                                otpType: otpType,
+                                contact: contact,
+                                publicKey: publicKey
+                            )
                         }
                     }
                 }
@@ -45,7 +40,7 @@ struct AuthFlow: View {
 
 struct MainFlow: View {
     @StateObject private var nav = NavigationCoordinator()
-    
+
     var body: some View {
         NavigationStack(path: $nav.path) {
             DashboardView()
@@ -67,10 +62,10 @@ struct MainFlow: View {
 
 struct AppView: View {
     @EnvironmentObject private var turnkey: TurnkeyContext
-    @EnvironmentObject private var toast:  ToastContext
-    
+    @EnvironmentObject private var toast: ToastContext
+
     @State private var hasLoaded = false
-    
+
     var body: some View {
         ZStack(alignment: .top) {
             Group {
@@ -81,25 +76,25 @@ struct AppView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .background(Color.red)
                         .transition(.opacity)
-                    
+
                 case .unAuthenticated:
                     AuthFlow()
                         .transition(.asymmetric(
                             insertion: .move(edge: .leading),
-                            removal:   .move(edge: .leading)
+                            removal: .move(edge: .leading)
                         ))
                         .onAppear { hasLoaded = true }
-                    
+
                 case .authenticated:
                     MainFlow()
                         .transition(.asymmetric(
                             insertion: .move(edge: .trailing),
-                            removal:   .move(edge: .trailing)
+                            removal: .move(edge: .trailing)
                         ))
                         .onAppear { hasLoaded = true }
                 }
             }
-            
+
             // add toast overlay
             if toast.isVisible {
                 ToastView(message: toast.message, type: toast.type)

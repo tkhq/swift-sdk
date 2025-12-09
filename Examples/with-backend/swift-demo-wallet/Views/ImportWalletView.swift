@@ -4,9 +4,8 @@ import TurnkeySwift
 
 struct ImportWalletView: View {
     @EnvironmentObject private var coordinator: NavigationCoordinator
-    @EnvironmentObject private var turnkey: TurnkeyContext    
+    @EnvironmentObject private var turnkey: TurnkeyContext
     @EnvironmentObject private var toast: ToastContext
-
 
     @State private var walletName = ""
     @State private var seedPhrase = ""

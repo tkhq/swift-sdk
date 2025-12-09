@@ -8,7 +8,6 @@
 import XCTest
 
 final class swift_sdk_demo_walletUITestsLaunchTests: XCTestCase {
-
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true
     }

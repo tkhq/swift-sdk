@@ -1,78 +1,127 @@
-# Swift Demo Wallet
+# Swift Demo Wallet (with Backend)
 
-A minimal iOS/macOS application demonstrating how to build an embedded wallet experience using Turnkey infrastructure and Auth Proxy.
+A minimal iOS/macOS application demonstrating how to build an embedded wallet experience using Turnkey infrastructure with a backend server.
 
 ## What this demo shows
 
 A high-level summary of the user experience and what you can see on screen:
 
-- **Authentication**: Log in with passkeys, OTP (email/SMS), or OAuth (Google, Apple, Discord, X)
+- **Authentication**: Log in/sign up with passkeys, OTP (email/SMS), or OAuth (Google)
 - **Session Management**: Automatic session handling with secure key storage in Secure Enclave
 - **Wallet Operations**: Create, import, and export wallets with mnemonic phrases
 - **Message Signing**: Sign messages and raw payloads with wallet accounts
 - **User Management**: Update email/phone and view wallet details
 
+## Architecture
+
+This example uses a backend server to handle authentication and session creation with Turnkey:
+- **Swift App**: Handles UI, session management, and uses Turnkey sessions for signing and wallet operations
+- **Node.js Backend**: An example server that manages authentication flows (OTP, OAuth, passkey sub-organization creation) and creates Turnkey sessions
+
 ## Getting started
 
 ### 1/ Cloning the example
 
-Make sure you have Xcode 15+ installed.
+Make sure you have Xcode 15+ and Node.js 18+ installed.
 
 ```bash
 git clone https://github.com/tkhq/swift-sdk
-cd swift-sdk/Examples/swift-demo-wallet
+cd swift-sdk/Examples/with-backend
 ```
 
 ### 2/ Setting up Turnkey
 
-1. Set up your Turnkey organization and account. You'll need your **parent organization ID**.
-2. Enable **Auth Proxy** from your Turnkey dashboard:
-   - Choose the user auth methods (Email OTP, SMS OTP, OAuth providers)
-   - Configure redirect URLs for OAuth (if using)
-   - Copy your **Auth Proxy Config ID** for the next step
-3. (Optional) For passkey authentication, set up your **RP ID** domain with associated domains
+1. Create a Turnkey organization at [dashboard.turnkey.com](https://dashboard.turnkey.com)
+2. Create an API key pair for your backend server
+3. Note your **organization ID**, **API public key**, and **API private key**
 
-### 3/ Configure Constants
+### 3/ Configure and run the backend server
 
-Edit `swift-demo-wallet/Helpers/Constants.swift` and add your values:
+Navigate to the backend directory:
+
+```bash
+cd example-server
+```
+
+Copy the example environment file and edit it with your Turnkey credentials:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and add your Turnkey credentials from step 2:
+
+```bash
+PORT="3000"
+
+TURNKEY_API_URL="https://api.turnkey.com"
+TURNKEY_ORGANIZATION_ID="<your_organization_id>"
+
+TURNKEY_API_PUBLIC_KEY="<your_api_public_key>"  
+TURNKEY_API_PRIVATE_KEY="<your_api_private_key>"
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start the server:
+
+```bash
+npm run start
+```
+
+You should see:
+```
+✅ Server running on http://localhost:3000
+```
+
+### 4/ Configure the Swift app
+
+Edit `swift-demo-wallet/Helpers/Constants.swift` and update the values:
 
 ```swift
 enum Constants {
     enum App {
         static let appName = "Swift Demo Wallet App"
-        static let rpId = "<your_rp_id>"  // required for passkeys
+        static let rpId = "<your_rp_id>"  // required for passkeys (e.g., "passkeyapp.example.com")
+        static let scheme = "swift-demo-wallet"  // URL scheme for OAuth redirects
+        static let backendBaseUrl = "http://localhost:3000"  // Your backend server URL
     }
 
     enum Turnkey {
         static let organizationId = "<your_organization_id>"
+        static let sessionDuration = "900"  // Session duration in seconds (15 minutes)
         static let apiUrl = "https://api.turnkey.com"
         
-        // Auth Proxy Configuration
-        static let authProxyUrl = "https://auth.turnkey.com"
-        static let authProxyConfigId = "<your_auth_proxy_config_id>"
-
-        // Default accounts to create when using the "Create Wallet" button
-        // Customize this array to create wallets with different curves, paths, or address formats
-        static let defaultEthereumAccounts: [Components.Schemas.WalletAccountParams] = [
-            Components.Schemas.WalletAccountParams(
-                curve: .CURVE_SECP256K1,
-                pathFormat: .PATH_FORMAT_BIP32,
+        // Default accounts created with new wallets
+        static let defaultEthereumAccounts: [v1WalletAccountParams] = [
+            v1WalletAccountParams(
+                addressFormat: v1AddressFormat.address_format_ethereum,
+                curve: v1Curve.curve_secp256k1,
                 path: "m/44'/60'/0'/0/0",
-                addressFormat: .ADDRESS_FORMAT_ETHEREUM
+                pathFormat: v1PathFormat.path_format_bip32
             )
         ]
     }
 
     enum Ethereum {
         static let rpcURL = "https://rpc.sepolia.org"
-        static let coingeckoURL = "https://api.coingecko.com"
+        static let coingeckoURL = "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"
+    }
+
+    enum Google {
+        static let clientId = "<your_google_oauth_client_id>"  // Optional: for Google OAuth
     }
 }
 ```
 
-### 4/ Running the demo
+### 5/ Running the demo
 
-Open `swift-demo-wallet.xcodeproj` in Xcode and run the app on your device or simulator.
+1. Open `swift-demo-wallet.xcodeproj` in Xcode
+2. Run the app on your device or simulator
 
 ---
 
@@ -81,5 +130,6 @@ Open `swift-demo-wallet.xcodeproj` in Xcode and run the app on your device or si
 - iOS 17+ / macOS 14.0+
 - Swift 5.9+
 - Xcode 15+
+- Node.js 18+
 
 ---

@@ -14,7 +14,7 @@ enum MainRoute: Hashable {
 struct AuthFlow: View {
     @StateObject private var nav = NavigationCoordinator()
     @EnvironmentObject private var turnkey: TurnkeyContext
-    
+
     var body: some View {
         NavigationStack(path: $nav.path) {
             AuthView()
@@ -45,7 +45,7 @@ struct AuthFlow: View {
 
 struct MainFlow: View {
     @StateObject private var nav = NavigationCoordinator()
-    
+
     var body: some View {
         NavigationStack(path: $nav.path) {
             DashboardView()
@@ -67,10 +67,10 @@ struct MainFlow: View {
 
 struct AppView: View {
     @EnvironmentObject private var turnkey: TurnkeyContext
-    @EnvironmentObject private var toast:  ToastContext
-    
+    @EnvironmentObject private var toast: ToastContext
+
     @State private var hasLoaded = false
-    
+
     var body: some View {
         ZStack(alignment: .top) {
             Group {
@@ -81,25 +81,25 @@ struct AppView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .background(Color.red)
                         .transition(.opacity)
-                    
+
                 case .unAuthenticated:
                     AuthFlow()
                         .transition(.asymmetric(
                             insertion: .move(edge: .leading),
-                            removal:   .move(edge: .leading)
+                            removal: .move(edge: .leading)
                         ))
                         .onAppear { hasLoaded = true }
-                    
+
                 case .authenticated:
                     MainFlow()
                         .transition(.asymmetric(
                             insertion: .move(edge: .trailing),
-                            removal:   .move(edge: .trailing)
+                            removal: .move(edge: .trailing)
                         ))
                         .onAppear { hasLoaded = true }
                 }
             }
-            
+
             // add toast overlay
             if toast.isVisible {
                 ToastView(message: toast.message, type: toast.type)

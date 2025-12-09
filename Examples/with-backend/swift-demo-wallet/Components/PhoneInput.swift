@@ -1,37 +1,35 @@
-import SwiftUI
 import PhoneNumberKit
+import SwiftUI
 
 let unsupportedCountryCodes: Set<String> = [
-    "AF", "IQ", "SY", "SD", "IR", "KP", "CU", "RW", "VA"
+    "AF", "IQ", "SY", "SD", "IR", "KP", "CU", "RW", "VA",
 ]
 
 let allowedCountryCodes: [String] = Locale.Region.isoRegions
     .map(\.identifier)
     .filter {
         !unsupportedCountryCodes.contains($0) &&
-        
-        // this excludes non-country regions
-        phoneKit.countryCode(for: $0) != nil &&
-        
-        // this excludes "world"
-        phoneKit.countryCode(for: $0) != 979
+
+            // this excludes non-country regions
+            phoneKit.countryCode(for: $0) != nil &&
+
+            // this excludes "world"
+            phoneKit.countryCode(for: $0) != 979
     }
     .sorted()
 
 func flag(for countryCode: String) -> String {
     countryCode
         .unicodeScalars
-        .compactMap { UnicodeScalar(127397 + $0.value) }
+        .compactMap { UnicodeScalar(127_397 + $0.value) }
         .map(String.init)
         .joined()
 }
-
 
 func callingCode(for region: String) -> String {
     guard let code = phoneKit.countryCode(for: region) else { return "" }
     return String(code)
 }
-
 
 struct PhoneInputView: View {
     @Binding var selectedCountry: String
@@ -46,7 +44,7 @@ struct PhoneInputView: View {
                 HStack(spacing: 4) {
                     Text(flag(for: selectedCountry))
                         .font(.system(size: 20))
-                    
+
                     Text("+\(callingCode(for: selectedCountry))")
                         .font(.system(size: 16))
                     Image(systemName: "chevron.down")
@@ -93,9 +91,9 @@ struct CountryPickerView: View {
                     HStack {
                         Text("\(flag(for: code)) \(Locale.current.localizedString(forRegionCode: code) ?? code)")
                             .foregroundColor(.black)
-                        
+
                         Spacer()
-                        
+
                         if code == selected {
                             Image(systemName: "checkmark")
                                 .foregroundColor(.green)
@@ -117,8 +115,5 @@ struct CountryPickerView: View {
             }
             .searchable(text: $searchText)
         }
-
     }
 }
-
-

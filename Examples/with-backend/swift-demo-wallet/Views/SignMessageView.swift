@@ -1,8 +1,8 @@
 import SwiftUI
-import TurnkeyTypes
+import TurnkeyEncoding
 import TurnkeyHttp
 import TurnkeySwift
-import TurnkeyEncoding
+import TurnkeyTypes
 
 struct SignMessageView: View {
     let walletAddress: String
@@ -94,7 +94,8 @@ struct SignMessageView: View {
                     signatureV = result.v
                 }
             } catch {
-                toast.show(message: "Failed to sign message", type: .error)
+                let errorMessage = formatError(error, fallback: "Failed to sign message")
+                toast.show(message: errorMessage, type: .error)
             }
         }
     }

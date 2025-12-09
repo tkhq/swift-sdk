@@ -6,7 +6,7 @@ A minimal iOS/macOS application demonstrating how to build an embedded wallet ex
 
 A high-level summary of the user experience and what you can see on screen:
 
-- **Authentication**: Log in with passkeys, OTP (email/SMS), or OAuth (Google, Apple, Discord, X)
+- **Authentication**: Log in/sign up with passkeys, OTP (email/SMS), or OAuth (Google, Apple, Discord, X)
 - **Session Management**: Automatic session handling with secure key storage in Secure Enclave
 - **Wallet Operations**: Create, import, and export wallets with mnemonic phrases
 - **Message Signing**: Sign messages and raw payloads with wallet accounts

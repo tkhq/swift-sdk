@@ -1,6 +1,6 @@
 import SwiftUI
-import TurnkeySwift
 import TurnkeyHttp
+import TurnkeySwift
 
 struct DashboardView: View {
     @EnvironmentObject private var coordinator: NavigationCoordinator
@@ -10,32 +10,29 @@ struct DashboardView: View {
     @State private var balances: [String: Double] = [:]
     @State private var ethPriceUSD: Double = 0
     @State private var exportedSeedPhrase: String? = nil
-    
-    
+
     @State private var showProfileMenu = false
     @State private var showWalletMenu = false
-    
+
     @State private var showCreateWalletSheet = false
     @State private var showExportWalletSheet = false
-    
+
     var body: some View {
         ZStack {
             VStack(spacing: 0) {
-                
                 DashboardHeader(
                     showProfileMenu: $showProfileMenu,
                     onSettings: handleSettingsPressed,
                     onLogout: handleLogoutPressed
                 )
-                
+
                 ScrollView {
                     VStack(spacing: 0) {
                         ForEach(turnkey.wallets, id: \.id) { wallet in
                             let address = wallet.accounts.first?.address ?? ""
                             let balance = balances[address] ?? 0
                             let balanceUSD = balance * ethPriceUSD
-                            
-                            
+
                             WalletCardView(
                                 walletId: wallet.id,
                                 walletName: wallet.walletName,
@@ -63,12 +60,11 @@ struct DashboardView: View {
                                 }
                             }
                         }
-                        
+
                         Color.clear.frame(height: 44)
-                        
                     }
                 }
-                
+
                 Spacer()
             }
             .task {
@@ -79,19 +75,19 @@ struct DashboardView: View {
                     // so we fail silently and default to 0
                 }
             }
-            
+
             WalletActionMenu(
                 showWalletMenu: $showWalletMenu,
                 onCreate: handleCreateWalletPressed,
                 onImport: handleImportWalletPressed
             )
-            
+
             OverlaySheet(isShowing: $showCreateWalletSheet) {
                 CreateWalletSheet(isShowing: $showCreateWalletSheet) { name in
                     handleCreateWallet(name: name)
                 }
             }
-            
+
             if let phrase = exportedSeedPhrase {
                 OverlaySheet(isShowing: $showExportWalletSheet) {
                     ExportWalletSheet(
@@ -105,31 +101,30 @@ struct DashboardView: View {
             }
         }
     }
-    
+
     private func runAfterClosingMenus(_ action: @escaping () -> Void) {
         // close any open menus
         showProfileMenu = false
         showWalletMenu = false
-        
+
         // we defer execution until after state updates settle
         DispatchQueue.main.async {
             action()
         }
     }
-    
-    
+
     private func handleSettingsPressed() {
         runAfterClosingMenus {
             coordinator.push(MainRoute.settings)
         }
     }
-    
+
     private func handleLogoutPressed() {
         runAfterClosingMenus {
             turnkey.clearSession()
         }
     }
-    
+
     private func handleExportPressed(walletId: String) {
         Task {
             do {
@@ -145,13 +140,13 @@ struct DashboardView: View {
             }
         }
     }
-    
+
     private func handleSignMessagePressed(walletAddress: String) {
         runAfterClosingMenus {
             coordinator.push(MainRoute.signMessage(walletAddress: walletAddress))
         }
     }
-    
+
     private func handleCreateWalletPressed() {
         runAfterClosingMenus {
             withAnimation {
@@ -159,13 +154,13 @@ struct DashboardView: View {
             }
         }
     }
-    
+
     private func handleImportWalletPressed() {
         runAfterClosingMenus {
             coordinator.push(MainRoute.importWallet)
         }
     }
-    
+
     private func handleCreateWallet(name: String) {
         Task {
             do {
@@ -178,23 +173,22 @@ struct DashboardView: View {
             }
         }
     }
-    
 }
 
 struct DashboardHeader: View {
     @Binding var showProfileMenu: Bool
     var onSettings: () -> Void
     var onLogout: () -> Void
-    
+
     var body: some View {
         VStack(spacing: 0) {
             HStack {
                 Text("Demo Wallet")
                     .font(.headline)
                     .foregroundColor(.white)
-                
+
                 Spacer()
-                
+
                 Button {
                     withAnimation {
                         showProfileMenu.toggle()
@@ -209,11 +203,11 @@ struct DashboardHeader: View {
             .padding(.horizontal)
             .padding(.vertical, 16)
             .background(Color.black)
-            
+
             if showProfileMenu {
                 HStack {
                     Spacer()
-                    
+
                     VStack(spacing: 0) {
                         Button(action: onSettings) {
                             HStack {
@@ -223,9 +217,9 @@ struct DashboardHeader: View {
                             .padding()
                             .font(.system(size: 12))
                         }
-                        
+
                         Divider()
-                        
+
                         Button(role: .destructive, action: onLogout) {
                             HStack {
                                 Image(systemName: "arrow.right.square")
@@ -248,16 +242,15 @@ struct DashboardHeader: View {
     }
 }
 
-
 struct WalletActionMenu: View {
     @Binding var showWalletMenu: Bool
     let onCreate: () -> Void
     let onImport: () -> Void
-    
+
     var body: some View {
         VStack {
             Spacer()
-            
+
             if showWalletMenu {
                 VStack(spacing: 4) {
                     Button(action: {
@@ -274,7 +267,7 @@ struct WalletActionMenu: View {
                         .cornerRadius(10)
                         .shadow(radius: 4)
                     }
-                    
+
                     Button(action: onImport) {
                         HStack {
                             Image(systemName: "tray.and.arrow.up")
@@ -289,7 +282,7 @@ struct WalletActionMenu: View {
                 }
                 .padding(.bottom, 10)
             }
-            
+
             Button(action: {
                 showWalletMenu.toggle()
             }) {
@@ -309,12 +302,12 @@ struct WalletActionMenu: View {
 struct OverlaySheet<Content: View>: View {
     @Binding var isShowing: Bool
     let content: Content
-    
+
     init(isShowing: Binding<Bool>, @ViewBuilder content: () -> Content) {
-        self._isShowing = isShowing
+        _isShowing = isShowing
         self.content = content()
     }
-    
+
     var body: some View {
         if isShowing {
             ZStack {
@@ -323,7 +316,7 @@ struct OverlaySheet<Content: View>: View {
                     .blur(radius: 10)
                     .transition(.opacity)
                     .zIndex(1)
-                
+
                 content
                     .frame(maxWidth: .infinity)
                     .padding()
@@ -337,18 +330,18 @@ struct OverlaySheet<Content: View>: View {
 struct CreateWalletSheet: View {
     @Binding var isShowing: Bool
     var onCreate: (String) -> Void
-    
+
     @State private var walletName = ""
-    
+
     var body: some View {
         VStack(spacing: 20) {
             Text("Enter Wallet Name")
                 .font(.headline)
-            
+
             TextField("", text: $walletName)
                 .textFieldStyle(.roundedBorder)
                 .padding(.horizontal)
-            
+
             HStack(spacing: 16) {
                 Button("Cancel") { isShowing = false }
                     .font(.system(size: 16))
@@ -356,7 +349,7 @@ struct CreateWalletSheet: View {
                     .padding(.vertical, 12)
                     .background(Color(.systemGray5))
                     .cornerRadius(10)
-                
+
                 Button("Create") {
                     onCreate(walletName)
                     isShowing = false
@@ -378,24 +371,22 @@ struct CreateWalletSheet: View {
     }
 }
 
-
 struct ExportWalletSheet: View {
     @Binding var isShowing: Bool
     let seedPhrase: String
     let onDismiss: () -> Void
-    
-    
+
     var body: some View {
         VStack(spacing: 20) {
             Text("Seed Phrase")
                 .font(.headline)
-            
+
             VStack(alignment: .leading, spacing: 8) {
                 Text(seedPhrase)
                     .font(.system(size: 14))
                     .foregroundColor(.black)
                     .fixedSize(horizontal: false, vertical: true)
-                
+
                 HStack {
                     Spacer()
                     Button {
@@ -411,7 +402,7 @@ struct ExportWalletSheet: View {
             .background(Color(.systemGray6))
             .cornerRadius(10)
             .padding(.horizontal)
-            
+
             Button("Done") {
                 isShowing = false
                 onDismiss()

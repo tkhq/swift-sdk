@@ -5,7 +5,7 @@ import TurnkeySwift
 struct DemoWalletApp: App {
     @StateObject private var turnkey: TurnkeyContext
     @StateObject private var toast = ToastContext()
-    
+
     init() {
         let config = TurnkeyConfig(
             apiUrl: Constants.Turnkey.apiUrl,
@@ -26,11 +26,11 @@ struct DemoWalletApp: App {
             )
         )
         TurnkeyContext.configure(config)
-        
+
         let turnkey = TurnkeyContext.shared
         _turnkey = StateObject(wrappedValue: turnkey)
     }
-    
+
     var body: some Scene {
         WindowGroup {
             AppView()
