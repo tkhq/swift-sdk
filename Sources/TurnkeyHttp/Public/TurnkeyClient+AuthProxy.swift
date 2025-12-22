@@ -55,7 +55,7 @@ extension TurnkeyClient {
 
   /// Get WalletKit Config
   /// Get wallet kit settings and feature toggles for the calling organization.
-  public func proxyGetWalletKitConfig(_ input: ProxyTGetWalletKitConfigBody) async throws
+  public func proxyGetWalletKitConfig(_ input: ProxyTGetWalletKitConfigBody = .init()) async throws
     -> ProxyTGetWalletKitConfigResponse
   {
     return try await authProxyRequest("/v1/wallet_kit_config", body: input)

@@ -55,7 +55,8 @@ extension TurnkeyClient {
 
   /// Get gas usage and limits.
   /// Get gas usage and gas limits for either the parent organization or a sub-organization.
-  public func getGasUsage(_ input: TGetGasUsageBody) async throws -> TGetGasUsageResponse {
+  public func getGasUsage(_ input: TGetGasUsageBody = .init()) async throws -> TGetGasUsageResponse
+  {
     return try await request("/public/v1/query/get_gas_usage", body: input)
   }
 
@@ -77,7 +78,7 @@ extension TurnkeyClient {
 
   /// Get Oauth providers
   /// Get details about Oauth providers for a user.
-  public func getOauthProviders(_ input: TGetOauthProvidersBody) async throws
+  public func getOauthProviders(_ input: TGetOauthProvidersBody = .init()) async throws
     -> TGetOauthProvidersResponse
   {
     return try await request("/public/v1/query/get_oauth_providers", body: input)
@@ -101,7 +102,7 @@ extension TurnkeyClient {
 
   /// Get configs
   /// Get quorum settings and features for an organization.
-  public func getOrganizationConfigs(_ input: TGetOrganizationConfigsBody) async throws
+  public func getOrganizationConfigs(_ input: TGetOrganizationConfigsBody = .init()) async throws
     -> TGetOrganizationConfigsResponse
   {
     return try await request("/public/v1/query/get_organization_configs", body: input)
@@ -179,15 +180,15 @@ extension TurnkeyClient {
 
   /// List Fiat On Ramp Credentials
   /// List all fiat on ramp provider credentials within an organization.
-  public func listFiatOnRampCredentials(_ input: TListFiatOnRampCredentialsBody) async throws
-    -> TListFiatOnRampCredentialsResponse
+  public func listFiatOnRampCredentials(_ input: TListFiatOnRampCredentialsBody = .init())
+    async throws -> TListFiatOnRampCredentialsResponse
   {
     return try await request("/public/v1/query/list_fiat_on_ramp_credentials", body: input)
   }
 
   /// List OAuth 2.0 Credentials
   /// List all OAuth 2.0 credentials within an organization.
-  public func listOauth2Credentials(_ input: TListOauth2CredentialsBody) async throws
+  public func listOauth2Credentials(_ input: TListOauth2CredentialsBody = .init()) async throws
     -> TListOauth2CredentialsResponse
   {
     return try await request("/public/v1/query/list_oauth2_credentials", body: input)
@@ -202,7 +203,7 @@ extension TurnkeyClient {
 
   /// List private key tags
   /// List all private key tags within an organization.
-  public func listPrivateKeyTags(_ input: TListPrivateKeyTagsBody) async throws
+  public func listPrivateKeyTags(_ input: TListPrivateKeyTagsBody = .init()) async throws
     -> TListPrivateKeyTagsResponse
   {
     return try await request("/public/v1/query/list_private_key_tags", body: input)
@@ -218,8 +219,8 @@ extension TurnkeyClient {
 
   /// List smart contract interfaces
   /// List all smart contract interfaces within an organization.
-  public func getSmartContractInterfaces(_ input: TGetSmartContractInterfacesBody) async throws
-    -> TGetSmartContractInterfacesResponse
+  public func getSmartContractInterfaces(_ input: TGetSmartContractInterfacesBody = .init())
+    async throws -> TGetSmartContractInterfacesResponse
   {
     return try await request("/public/v1/query/list_smart_contract_interfaces", body: input)
   }
@@ -234,7 +235,9 @@ extension TurnkeyClient {
 
   /// List user tags
   /// List all user tags within an organization.
-  public func listUserTags(_ input: TListUserTagsBody) async throws -> TListUserTagsResponse {
+  public func listUserTags(_ input: TListUserTagsBody = .init()) async throws
+    -> TListUserTagsResponse
+  {
     return try await request("/public/v1/query/list_user_tags", body: input)
   }
 
@@ -246,7 +249,7 @@ extension TurnkeyClient {
 
   /// Get verified sub-organizations
   /// Get all email or phone verified suborg IDs associated given a parent org ID.
-  public func getVerifiedSubOrgIds(_ input: TGetVerifiedSubOrgIdsBody) async throws
+  public func getVerifiedSubOrgIds(_ input: TGetVerifiedSubOrgIdsBody = .init()) async throws
     -> TGetVerifiedSubOrgIdsResponse
   {
     return try await request("/public/v1/query/list_verified_suborgs", body: input)
@@ -254,7 +257,7 @@ extension TurnkeyClient {
 
   /// List wallets accounts
   /// List all accounts within a wallet.
-  public func getWalletAccounts(_ input: TGetWalletAccountsBody) async throws
+  public func getWalletAccounts(_ input: TGetWalletAccountsBody = .init()) async throws
     -> TGetWalletAccountsResponse
   {
     return try await request("/public/v1/query/list_wallet_accounts", body: input)

@@ -15,18 +15,4 @@ public enum CodegenConfig {
         "ACTIVITY_TYPE_UPDATE_POLICY": "ACTIVITY_TYPE_UPDATE_POLICY_V2",
         "ACTIVITY_TYPE_INIT_OTP_AUTH": "ACTIVITY_TYPE_INIT_OTP_AUTH_V2",
     ]
-
-    public static let methodsWithOnlyOptionalParameters = [
-        "tGetActivities",
-        "tGetApiKeys",
-        "tGetOrganization",
-        "tGetPolicies",
-        "tGetPrivateKeys",
-        "tGetSubOrgIds",
-        "tGetUsers",
-        "tGetWallets",
-        "tGetWhoami",
-        "tListPrivateKeys",
-        "tListUserTags",
-    ]
 }

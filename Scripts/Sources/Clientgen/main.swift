@@ -21,20 +21,6 @@ let AUTHPROXY_OUTPUT_PATH = CURRENT_DIR
 // Import constants from Internal module
 let VERSIONED_ACTIVITY_TYPES = CodegenConfig.versionedActivityTypes
 
-// Methods that have only optional parameters (client method names without 't' prefix)
-let METHODS_WITH_ONLY_OPTIONAL_PARAMETERS = [
-    "getActivities",
-    "getApiKeys",
-    "getOrganization",
-    "getPolicies",
-    "getPrivateKeys",
-    "getSubOrgIds",
-    "getUsers",
-    "getWallets",
-    "getWhoami",
-    "listPrivateKeys",
-]
-
 // MARK: - Swagger Models
 
 struct SwaggerSpec: Codable {
@@ -160,6 +146,18 @@ func methodTypeFromMethodName(_ methodName: String) -> String {
     return "activity"
 }
 
+// Determine if a method should have a default parameter based on the request body definition
+func shouldHaveDefaultParam(methodType: String, bodyDef: SwaggerSpec.Definition) -> Bool {
+    let requiredProps = bodyDef.required ?? []
+    let sdkInjectedFields: Set<String> = methodType == "activity" 
+        ? ["organizationId", "timestampMs"] 
+        : ["organizationId"]
+    
+    // If all required fields are SDK-injected, the method can have a default param
+    let userRequiredFields = requiredProps.filter { !sdkInjectedFields.contains($0) }
+    return userRequiredFields.isEmpty
+}
+
 // Helper that extracts latest versions (matching JS extractLatestVersions)
 func extractLatestVersions(definitions: [String: SwaggerSpec.Definition]) -> [String: VersionInfo] {
     var latestVersions: [String: VersionInfo] = [:]
@@ -237,6 +235,13 @@ func generatePublicClientFile(swagger: SwaggerSpec) -> String {
         let inputType = "T\(operationNameWithoutNamespace)Body"
         let responseType = "T\(operationNameWithoutNamespace)Response"
         
+        // Check if method should have default parameter by inspecting the body definition
+        let bodyDefName = "v1\(operationNameWithoutNamespace)Request"
+        let hasOptionalParams = swagger.definitions[bodyDefName].map { 
+            shouldHaveDefaultParam(methodType: methodType, bodyDef: $0) 
+        } ?? false
+        let defaultParam = hasOptionalParams ? " = .init()" : ""
+        
         // Add method documentation
         if let summary = operation.summary {
             output += "\n    /// \(summary)\n"
@@ -244,9 +249,6 @@ func generatePublicClientFile(swagger: SwaggerSpec) -> String {
         if let description = operation.description {
             output += "    /// \(description)\n"
         }
-        
-        let hasOptionalParams = METHODS_WITH_ONLY_OPTIONAL_PARAMETERS.contains(methodName)
-        let defaultParam = hasOptionalParams ? " = .init()" : ""
         
         if methodType == "query" {
             // Query method
@@ -325,6 +327,13 @@ func generateAuthProxyClientFile(swagger: SwaggerSpec) -> String {
         let inputType = "ProxyT\(operationNameWithoutNamespace)Body"
         let responseType = "ProxyT\(operationNameWithoutNamespace)Response"
         
+        // Check if method should have default parameter by inspecting the body definition
+        let bodyDefName = "v1\(operationNameWithoutNamespace)Request"
+        let hasOptionalParams = swagger.definitions[bodyDefName].map { 
+            shouldHaveDefaultParam(methodType: "query", bodyDef: $0) 
+        } ?? false
+        let defaultParam = hasOptionalParams ? " = .init()" : ""
+        
         // Add method documentation
         if let summary = operation.summary {
             output += "\n    /// \(summary)\n"
@@ -332,9 +341,6 @@ func generateAuthProxyClientFile(swagger: SwaggerSpec) -> String {
         if let description = operation.description {
             output += "    /// \(description)\n"
         }
-        
-        let hasOptionalParams = METHODS_WITH_ONLY_OPTIONAL_PARAMETERS.contains(methodName)
-        let defaultParam = hasOptionalParams ? " = .init()" : ""
         
         output += """
             func \(methodName)(_ input: \(inputType)\(defaultParam)) async throws -> \(responseType) {
