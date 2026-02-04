@@ -45,6 +45,7 @@ extension TurnkeyClient {
     request.httpBody = jsonData
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
     request.setValue(stampHeaderValue, forHTTPHeaderField: stampHeaderName)
+    request.setValue("turnkey-swift/\(sdkVersion)", forHTTPHeaderField: "X-Client-Version")
 
     // Execute request
     let (data, response) = try await URLSession.shared.data(for: request)
@@ -125,6 +126,7 @@ extension TurnkeyClient {
       request.httpBody = jsonData
       request.setValue("application/json", forHTTPHeaderField: "Content-Type")
       request.setValue(stampHeaderValue, forHTTPHeaderField: stampHeaderName)
+      request.setValue("turnkey-swift/\(sdkVersion)", forHTTPHeaderField: "X-Client-Version")
 
       let (data, response) = try await URLSession.shared.data(for: request)
 
@@ -167,6 +169,7 @@ extension TurnkeyClient {
     request.httpBody = jsonData
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
     request.setValue(stampHeaderValue, forHTTPHeaderField: stampHeaderName)
+    request.setValue("turnkey-swift/\(sdkVersion)", forHTTPHeaderField: "X-Client-Version")
 
     let (data, response) = try await URLSession.shared.data(for: request)
 
