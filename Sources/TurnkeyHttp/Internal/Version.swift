@@ -1,3 +1,3 @@
 // Auto-generated from the root VERSION file.
 
-let sdkVersion = "3.2.0"
+let sdkVersion = "3.2.1"
