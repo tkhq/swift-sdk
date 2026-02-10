@@ -601,6 +601,11 @@ public enum v1ActivityType: String, Codable, Sendable {
   case activity_type_init_user_email_recovery_v2 = "ACTIVITY_TYPE_INIT_USER_EMAIL_RECOVERY_V2"
   case activity_type_init_otp_auth_v3 = "ACTIVITY_TYPE_INIT_OTP_AUTH_V3"
   case activity_type_init_otp_v2 = "ACTIVITY_TYPE_INIT_OTP_V2"
+  case activity_type_upsert_gas_usage_config = "ACTIVITY_TYPE_UPSERT_GAS_USAGE_CONFIG"
+  case activity_type_create_tvc_app = "ACTIVITY_TYPE_CREATE_TVC_APP"
+  case activity_type_create_tvc_deployment = "ACTIVITY_TYPE_CREATE_TVC_DEPLOYMENT"
+  case activity_type_create_tvc_manifest_approvals = "ACTIVITY_TYPE_CREATE_TVC_MANIFEST_APPROVALS"
+  case activity_type_sol_send_transaction = "ACTIVITY_TYPE_SOL_SEND_TRANSACTION"
 }
 
 public enum v1AddressFormat: String, Codable, Sendable {
@@ -778,6 +783,48 @@ public struct v1ApproveActivityRequest: Codable, Sendable {
     self.parameters = parameters
     self.timestampMs = timestampMs
     self.type = type
+  }
+}
+
+public struct v1AssetBalance: Codable, Sendable {
+  /// The balance in atomic units
+  public let balance: String?
+  /// The caip-19 asset identifier
+  public let caip19: String?
+  /// The number of decimals this asset uses
+  public let decimals: Int?
+  /// Normalized balance values for display purposes only. Do not do any arithmetic or calculations with these, as the results could be imprecise. Use the balance field instead.
+  public let display: v1AssetBalanceDisplay?
+  /// The asset symbol
+  public let symbol: String?
+
+  public init(
+    balance: String? = nil,
+    caip19: String? = nil,
+    decimals: Int? = nil,
+    display: v1AssetBalanceDisplay? = nil,
+    symbol: String? = nil
+  ) {
+    self.balance = balance
+    self.caip19 = caip19
+    self.decimals = decimals
+    self.display = display
+    self.symbol = symbol
+  }
+}
+
+public struct v1AssetBalanceDisplay: Codable, Sendable {
+  /// Normalized crypto value for display purposes only. Do not do any arithmetic or calculations with these, as the results could be imprecise.
+  public let crypto: String?
+  /// USD value for display purposes only. Do not do any arithmetic or calculations with these, as the results could be imprecise.
+  public let usd: String?
+
+  public init(
+    crypto: String? = nil,
+    usd: String? = nil
+  ) {
+    self.crypto = crypto
+    self.usd = usd
   }
 }
 
@@ -1212,6 +1259,7 @@ public struct v1CreateFiatOnRampCredentialIntent: Codable, Sendable {
 }
 
 public struct v1CreateFiatOnRampCredentialRequest: Codable, Sendable {
+  public let generateAppProofs: Bool?
   /// Unique identifier for a given Organization.
   public let organizationId: String
   public let parameters: v1CreateFiatOnRampCredentialIntent
@@ -1220,11 +1268,13 @@ public struct v1CreateFiatOnRampCredentialRequest: Codable, Sendable {
   public let type: String
 
   public init(
+    generateAppProofs: Bool? = nil,
     organizationId: String,
     parameters: v1CreateFiatOnRampCredentialIntent,
     timestampMs: String,
     type: String
   ) {
+    self.generateAppProofs = generateAppProofs
     self.organizationId = organizationId
     self.parameters = parameters
     self.timestampMs = timestampMs
@@ -1547,7 +1597,8 @@ public struct v1CreatePolicyIntentV3: Codable, Sendable {
   public let consensus: String?
   /// The instruction to DENY or ALLOW an activity.
   public let effect: v1Effect
-  public let notes: String?
+  /// Notes for a Policy.
+  public let notes: String
   /// Human-readable name for a Policy.
   public let policyName: String
 
@@ -1555,7 +1606,7 @@ public struct v1CreatePolicyIntentV3: Codable, Sendable {
     condition: String? = nil,
     consensus: String? = nil,
     effect: v1Effect,
-    notes: String? = nil,
+    notes: String,
     policyName: String
   ) {
     self.condition = condition
@@ -1925,7 +1976,7 @@ public struct v1CreateSmartContractInterfaceIntent: Codable, Sendable {
   public let notes: String?
   /// Corresponding contract address or program ID
   public let smartContractAddress: String
-  /// ABI/IDL as a JSON string
+  /// ABI/IDL as a JSON string. Limited to 400kb
   public let smartContractInterface: String
   public let type: v1SmartContractInterfaceType
 
@@ -2294,6 +2345,215 @@ public struct v1CreateSubOrganizationResultV7: Codable, Sendable {
   }
 }
 
+public struct v1CreateTvcAppIntent: Codable, Sendable {
+  /// Enables external connectivity for this TVC app. Default if not provided: false.
+  public let externalConnectivity: Bool?
+  /// Unique identifier for an existing TVC operator set to use as the Manifest Set for this TVC application. If left empty, a new Manifest Set configuration is required
+  public let manifestSetId: String?
+  /// Configuration to create a new TVC operator set, used as the Manifest Set for this TVC application. If left empty, a Manifest Set ID is required
+  public let manifestSetParams: v1TvcOperatorSetParams?
+  /// The name of the new TVC application
+  public let name: String
+  /// Quorum public key to use for this application
+  public let quorumPublicKey: String
+  /// Unique identifier for an existing TVC operator set to use as the Share Set for this TVC application. If left empty, a new Share Set configuration is required
+  public let shareSetId: String?
+  /// Configuration to create a new TVC operator set, used as the Share Set for this TVC application. If left empty, a Share Set ID is required
+  public let shareSetParams: v1TvcOperatorSetParams?
+
+  public init(
+    externalConnectivity: Bool? = nil,
+    manifestSetId: String? = nil,
+    manifestSetParams: v1TvcOperatorSetParams? = nil,
+    name: String,
+    quorumPublicKey: String,
+    shareSetId: String? = nil,
+    shareSetParams: v1TvcOperatorSetParams? = nil
+  ) {
+    self.externalConnectivity = externalConnectivity
+    self.manifestSetId = manifestSetId
+    self.manifestSetParams = manifestSetParams
+    self.name = name
+    self.quorumPublicKey = quorumPublicKey
+    self.shareSetId = shareSetId
+    self.shareSetParams = shareSetParams
+  }
+}
+
+public struct v1CreateTvcAppRequest: Codable, Sendable {
+  /// Unique identifier for a given Organization.
+  public let organizationId: String
+  public let parameters: v1CreateTvcAppIntent
+  /// Timestamp (in milliseconds) of the request, used to verify liveness of user requests.
+  public let timestampMs: String
+  public let type: String
+
+  public init(
+    organizationId: String,
+    parameters: v1CreateTvcAppIntent,
+    timestampMs: String,
+    type: String
+  ) {
+    self.organizationId = organizationId
+    self.parameters = parameters
+    self.timestampMs = timestampMs
+    self.type = type
+  }
+}
+
+public struct v1CreateTvcAppResult: Codable, Sendable {
+  /// The unique identifier for the TVC application
+  public let appId: String
+  /// The unique identifier for the TVC manifest set
+  public let manifestSetId: String
+  /// The unique identifier(s) of the manifest set operators
+  public let manifestSetOperatorIds: [String]
+  /// The required number of approvals for the manifest set
+  public let manifestSetThreshold: Int
+
+  public init(
+    appId: String,
+    manifestSetId: String,
+    manifestSetOperatorIds: [String],
+    manifestSetThreshold: Int
+  ) {
+    self.appId = appId
+    self.manifestSetId = manifestSetId
+    self.manifestSetOperatorIds = manifestSetOperatorIds
+    self.manifestSetThreshold = manifestSetThreshold
+  }
+}
+
+public struct v1CreateTvcDeploymentIntent: Codable, Sendable {
+  /// The unique identifier of the to-be-deployed TVC application
+  public let appId: String
+  /// Digest of the pivot binary in the pivot container. This value will be inserted in the QOS manifest to ensure application integrity.
+  public let expectedPivotDigest: String
+  /// Arguments to pass to the host binary at startup. Encoded as a list of strings, for example ["--foo", "bar"]
+  public let hostArgs: [String]
+  /// URL of the container containing the host binary
+  public let hostContainerImageUrl: String
+  /// Location of the binary inside the host container
+  public let hostPath: String
+  /// Optional nonce to ensure uniqueness of the deployment manifest. If not provided, it defaults to the current Unix timestamp in seconds.
+  public let nonce: Int?
+  /// Arguments to pass to the pivot binary at startup. Encoded as a list of strings, for example ["--foo", "bar"]
+  public let pivotArgs: [String]
+  /// URL of the container containing the pivot binary
+  public let pivotContainerImageUrl: String
+  /// Location of the binary in the pivot container
+  public let pivotPath: String
+  /// The QuorumOS version to use to deploy this application
+  public let qosVersion: String
+
+  public init(
+    appId: String,
+    expectedPivotDigest: String,
+    hostArgs: [String],
+    hostContainerImageUrl: String,
+    hostPath: String,
+    nonce: Int? = nil,
+    pivotArgs: [String],
+    pivotContainerImageUrl: String,
+    pivotPath: String,
+    qosVersion: String
+  ) {
+    self.appId = appId
+    self.expectedPivotDigest = expectedPivotDigest
+    self.hostArgs = hostArgs
+    self.hostContainerImageUrl = hostContainerImageUrl
+    self.hostPath = hostPath
+    self.nonce = nonce
+    self.pivotArgs = pivotArgs
+    self.pivotContainerImageUrl = pivotContainerImageUrl
+    self.pivotPath = pivotPath
+    self.qosVersion = qosVersion
+  }
+}
+
+public struct v1CreateTvcDeploymentRequest: Codable, Sendable {
+  /// Unique identifier for a given Organization.
+  public let organizationId: String
+  public let parameters: v1CreateTvcDeploymentIntent
+  /// Timestamp (in milliseconds) of the request, used to verify liveness of user requests.
+  public let timestampMs: String
+  public let type: String
+
+  public init(
+    organizationId: String,
+    parameters: v1CreateTvcDeploymentIntent,
+    timestampMs: String,
+    type: String
+  ) {
+    self.organizationId = organizationId
+    self.parameters = parameters
+    self.timestampMs = timestampMs
+    self.type = type
+  }
+}
+
+public struct v1CreateTvcDeploymentResult: Codable, Sendable {
+  /// The unique identifier for the TVC deployment
+  public let deploymentId: String
+  /// The unique identifier for the TVC manifest
+  public let manifestId: String
+
+  public init(
+    deploymentId: String,
+    manifestId: String
+  ) {
+    self.deploymentId = deploymentId
+    self.manifestId = manifestId
+  }
+}
+
+public struct v1CreateTvcManifestApprovalsIntent: Codable, Sendable {
+  /// List of manifest approvals
+  public let approvals: [v1TvcManifestApproval]
+  /// Unique identifier of the TVC deployment to approve
+  public let manifestId: String
+
+  public init(
+    approvals: [v1TvcManifestApproval],
+    manifestId: String
+  ) {
+    self.approvals = approvals
+    self.manifestId = manifestId
+  }
+}
+
+public struct v1CreateTvcManifestApprovalsRequest: Codable, Sendable {
+  /// Unique identifier for a given Organization.
+  public let organizationId: String
+  public let parameters: v1CreateTvcManifestApprovalsIntent
+  /// Timestamp (in milliseconds) of the request, used to verify liveness of user requests.
+  public let timestampMs: String
+  public let type: String
+
+  public init(
+    organizationId: String,
+    parameters: v1CreateTvcManifestApprovalsIntent,
+    timestampMs: String,
+    type: String
+  ) {
+    self.organizationId = organizationId
+    self.parameters = parameters
+    self.timestampMs = timestampMs
+    self.type = type
+  }
+}
+
+public struct v1CreateTvcManifestApprovalsResult: Codable, Sendable {
+  /// The unique identifier(s) for the manifest approvals
+  public let approvalIds: [String]
+
+  public init(
+    approvalIds: [String]
+  ) {
+    self.approvalIds = approvalIds
+  }
+}
+
 public struct v1CreateUserTagIntent: Codable, Sendable {
   /// A list of User IDs.
   public let userIds: [String]
@@ -2554,6 +2814,22 @@ public enum v1CredentialType: String, Codable, Sendable {
 public enum v1Curve: String, Codable, Sendable {
   case curve_secp256k1 = "CURVE_SECP256K1"
   case curve_ed25519 = "CURVE_ED25519"
+  case curve_p256 = "CURVE_P256"
+}
+
+public struct v1CustomRevertError: Codable, Sendable {
+  /// The name of the custom error.
+  public let errorName: String?
+  /// The decoded parameters as a JSON object.
+  public let paramsJson: String?
+
+  public init(
+    errorName: String? = nil,
+    paramsJson: String? = nil
+  ) {
+    self.errorName = errorName
+    self.paramsJson = paramsJson
+  }
 }
 
 public struct v1DeleteApiKeysIntent: Codable, Sendable {
@@ -2668,6 +2944,7 @@ public struct v1DeleteFiatOnRampCredentialIntent: Codable, Sendable {
 }
 
 public struct v1DeleteFiatOnRampCredentialRequest: Codable, Sendable {
+  public let generateAppProofs: Bool?
   /// Unique identifier for a given Organization.
   public let organizationId: String
   public let parameters: v1DeleteFiatOnRampCredentialIntent
@@ -2676,11 +2953,13 @@ public struct v1DeleteFiatOnRampCredentialRequest: Codable, Sendable {
   public let type: String
 
   public init(
+    generateAppProofs: Bool? = nil,
     organizationId: String,
     parameters: v1DeleteFiatOnRampCredentialIntent,
     timestampMs: String,
     type: String
   ) {
+    self.generateAppProofs = generateAppProofs
     self.organizationId = organizationId
     self.parameters = parameters
     self.timestampMs = timestampMs
@@ -3378,6 +3657,33 @@ public enum v1Effect: String, Codable, Sendable {
   case effect_deny = "EFFECT_DENY"
 }
 
+public struct v1EmailAuthCustomizationParams: Codable, Sendable {
+  /// The name of the application. This field is required and will be used in email notifications if an email template is not provided.
+  public let appName: String
+  /// A URL pointing to a logo in PNG format. Note this logo will be resized to fit into 340px x 124px.
+  public let logoUrl: String?
+  /// A template for the URL to be used in a magic link button, e.g. `https://dapp.xyz/%s`. The auth bundle will be interpolated into the `%s`.
+  public let magicLinkTemplate: String?
+  /// Unique identifier for a given Email Template. If not specified, the default is the most recent Email Template.
+  public let templateId: String?
+  /// JSON object containing key/value pairs to be used with custom templates.
+  public let templateVariables: String?
+
+  public init(
+    appName: String,
+    logoUrl: String? = nil,
+    magicLinkTemplate: String? = nil,
+    templateId: String? = nil,
+    templateVariables: String? = nil
+  ) {
+    self.appName = appName
+    self.logoUrl = logoUrl
+    self.magicLinkTemplate = magicLinkTemplate
+    self.templateId = templateId
+    self.templateVariables = templateVariables
+  }
+}
+
 public struct v1EmailAuthIntent: Codable, Sendable {
   /// Optional human-readable name for an API Key. If none provided, default to Email Auth - <Timestamp>
   public let apiKeyName: String?
@@ -3467,12 +3773,10 @@ public struct v1EmailAuthIntentV2: Codable, Sendable {
 public struct v1EmailAuthIntentV3: Codable, Sendable {
   /// Optional human-readable name for an API Key. If none provided, default to Email Auth - <Timestamp>
   public let apiKeyName: String?
-  /// The name of the application.
-  public let appName: String
   /// Email of the authenticating user.
   public let email: String
-  /// Optional parameters for customizing emails. If not provided, the default email will be used.
-  public let emailCustomization: v1EmailCustomizationParams?
+  /// Parameters for customizing emails. If not provided, the default email will be used. Note that app_name is required.
+  public let emailCustomization: v1EmailAuthCustomizationParams
   /// Expiration window (in seconds) indicating how long the API key is valid for. If not provided, a default of 15 minutes will be used.
   public let expirationSeconds: String?
   /// Invalidate all other previously generated Email Auth API keys
@@ -3488,9 +3792,8 @@ public struct v1EmailAuthIntentV3: Codable, Sendable {
 
   public init(
     apiKeyName: String? = nil,
-    appName: String,
     email: String,
-    emailCustomization: v1EmailCustomizationParams? = nil,
+    emailCustomization: v1EmailAuthCustomizationParams,
     expirationSeconds: String? = nil,
     invalidateExisting: Bool? = nil,
     replyToEmailAddress: String? = nil,
@@ -3499,7 +3802,6 @@ public struct v1EmailAuthIntentV3: Codable, Sendable {
     targetPublicKey: String
   ) {
     self.apiKeyName = apiKeyName
-    self.appName = appName
     self.email = email
     self.emailCustomization = emailCustomization
     self.expirationSeconds = expirationSeconds
@@ -3570,6 +3872,29 @@ public struct v1EmailCustomizationParams: Codable, Sendable {
     templateVariables: String? = nil
   ) {
     self.appName = appName
+    self.logoUrl = logoUrl
+    self.magicLinkTemplate = magicLinkTemplate
+    self.templateId = templateId
+    self.templateVariables = templateVariables
+  }
+}
+
+public struct v1EmailCustomizationParamsV2: Codable, Sendable {
+  /// A URL pointing to a logo in PNG format. Note this logo will be resized to fit into 340px x 124px.
+  public let logoUrl: String?
+  /// A template for the URL to be used in a magic link button, e.g. `https://dapp.xyz/%s`. The auth bundle will be interpolated into the `%s`.
+  public let magicLinkTemplate: String?
+  /// Unique identifier for a given Email Template. If not specified, the default is the most recent Email Template.
+  public let templateId: String?
+  /// JSON object containing key/value pairs to be used with custom templates.
+  public let templateVariables: String?
+
+  public init(
+    logoUrl: String? = nil,
+    magicLinkTemplate: String? = nil,
+    templateId: String? = nil,
+    templateVariables: String? = nil
+  ) {
     self.logoUrl = logoUrl
     self.magicLinkTemplate = magicLinkTemplate
     self.templateId = templateId
@@ -3651,6 +3976,8 @@ public struct v1EthSendTransactionIntent: Codable, Sendable {
   public let from: String
   /// Maximum amount of gas to use for this transaction, for EIP-1559 transactions.
   public let gasLimit: String?
+  /// The gas station delegate contract nonce. Only used when sponsor=true. Include this if you want maximal security posture.
+  public let gasStationNonce: String?
   /// Maximum total fee per gas unit (base fee + priority fee) in wei. Required for non-sponsored (EIP-1559) transactions. Not used for sponsored transactions.
   public let maxFeePerGas: String?
   /// Maximum priority fee (tip) per gas unit in wei. Required for non-sponsored (EIP-1559) transactions. Not used for sponsored transactions.
@@ -3669,6 +3996,7 @@ public struct v1EthSendTransactionIntent: Codable, Sendable {
     data: String? = nil,
     from: String,
     gasLimit: String? = nil,
+    gasStationNonce: String? = nil,
     maxFeePerGas: String? = nil,
     maxPriorityFeePerGas: String? = nil,
     nonce: String? = nil,
@@ -3680,6 +4008,7 @@ public struct v1EthSendTransactionIntent: Codable, Sendable {
     self.data = data
     self.from = from
     self.gasLimit = gasLimit
+    self.gasStationNonce = gasStationNonce
     self.maxFeePerGas = maxFeePerGas
     self.maxPriorityFeePerGas = maxPriorityFeePerGas
     self.nonce = nonce
@@ -3690,6 +4019,7 @@ public struct v1EthSendTransactionIntent: Codable, Sendable {
 }
 
 public struct v1EthSendTransactionRequest: Codable, Sendable {
+  public let generateAppProofs: Bool?
   /// Unique identifier for a given Organization.
   public let organizationId: String
   public let parameters: v1EthSendTransactionIntent
@@ -3698,11 +4028,13 @@ public struct v1EthSendTransactionRequest: Codable, Sendable {
   public let type: String
 
   public init(
+    generateAppProofs: Bool? = nil,
     organizationId: String,
     parameters: v1EthSendTransactionIntent,
     timestampMs: String,
     type: String
   ) {
+    self.generateAppProofs = generateAppProofs
     self.organizationId = organizationId
     self.parameters = parameters
     self.timestampMs = timestampMs
@@ -3711,7 +4043,7 @@ public struct v1EthSendTransactionRequest: Codable, Sendable {
 }
 
 public struct v1EthSendTransactionResult: Codable, Sendable {
-  /// The send_transaction_status ID associated with the transaction submission for sponsored transactions
+  /// The send_transaction_status ID associated with the transaction submission
   public let sendTransactionStatusId: String
 
   public init(
@@ -4170,32 +4502,6 @@ public struct v1GetAppProofsResponse: Codable, Sendable {
   }
 }
 
-public struct v1GetAttestationDocumentRequest: Codable, Sendable {
-  /// The enclave type, one of: ump, notarizer, signer, evm-parser.
-  public let enclaveType: String
-  /// Unique identifier for a given organization.
-  public let organizationId: String
-
-  public init(
-    enclaveType: String,
-    organizationId: String
-  ) {
-    self.enclaveType = enclaveType
-    self.organizationId = organizationId
-  }
-}
-
-public struct v1GetAttestationDocumentResponse: Codable, Sendable {
-  /// Raw (CBOR-encoded) attestation document.
-  public let attestationDocument: String
-
-  public init(
-    attestationDocument: String
-  ) {
-    self.attestationDocument = attestationDocument
-  }
-}
-
 public struct v1GetAuthenticatorRequest: Codable, Sendable {
   /// Unique identifier for a given authenticator.
   public let authenticatorId: String
@@ -4305,6 +4611,48 @@ public struct v1GetLatestBootProofRequest: Codable, Sendable {
   ) {
     self.appName = appName
     self.organizationId = organizationId
+  }
+}
+
+public struct v1GetNoncesRequest: Codable, Sendable {
+  /// The Ethereum address to query nonces for.
+  public let address: String
+  /// The network identifier in CAIP-2 format (e.g., 'eip155:1' for Ethereum mainnet).
+  public let caip2: String
+  /// Whether to fetch the gas station nonce used for sponsored transactions.
+  public let gasStationNonce: Bool?
+  /// Whether to fetch the standard on-chain nonce.
+  public let nonce: Bool?
+  /// Unique identifier for a given Organization.
+  public let organizationId: String
+
+  public init(
+    address: String,
+    caip2: String,
+    gasStationNonce: Bool? = nil,
+    nonce: Bool? = nil,
+    organizationId: String
+  ) {
+    self.address = address
+    self.caip2 = caip2
+    self.gasStationNonce = gasStationNonce
+    self.nonce = nonce
+    self.organizationId = organizationId
+  }
+}
+
+public struct v1GetNoncesResponse: Codable, Sendable {
+  /// The gas station nonce for sponsored transactions, if requested.
+  public let gasStationNonce: String?
+  /// The standard on-chain nonce for the address, if requested.
+  public let nonce: String?
+
+  public init(
+    gasStationNonce: String? = nil,
+    nonce: String? = nil
+  ) {
+    self.gasStationNonce = gasStationNonce
+    self.nonce = nonce
   }
 }
 
@@ -4570,6 +4918,8 @@ public struct v1GetSendTransactionStatusRequest: Codable, Sendable {
 }
 
 public struct v1GetSendTransactionStatusResponse: Codable, Sendable {
+  /// Structured error information including revert details, if available.
+  public let error: v1TxError?
   /// Ethereum-specific transaction status.
   public let eth: v1EthSendTransactionStatus?
   /// The error encountered when broadcasting or confirming the transaction, if any.
@@ -4578,10 +4928,12 @@ public struct v1GetSendTransactionStatusResponse: Codable, Sendable {
   public let txStatus: String
 
   public init(
+    error: v1TxError? = nil,
     eth: v1EthSendTransactionStatus? = nil,
     txError: String? = nil,
     txStatus: String
   ) {
+    self.error = error
     self.eth = eth
     self.txError = txError
     self.txStatus = txStatus
@@ -4667,6 +5019,106 @@ public struct v1GetSubOrgIdsResponse: Codable, Sendable {
     organizationIds: [String]
   ) {
     self.organizationIds = organizationIds
+  }
+}
+
+public struct v1GetTvcAppDeploymentsRequest: Codable, Sendable {
+  /// Unique identifier for a given TVC App.
+  public let appId: String
+  /// Unique identifier for a given organization.
+  public let organizationId: String
+
+  public init(
+    appId: String,
+    organizationId: String
+  ) {
+    self.appId = appId
+    self.organizationId = organizationId
+  }
+}
+
+public struct v1GetTvcAppDeploymentsResponse: Codable, Sendable {
+  /// List of deployments for this TVC App
+  public let tvcDeployments: [v1TvcDeployment]
+
+  public init(
+    tvcDeployments: [v1TvcDeployment]
+  ) {
+    self.tvcDeployments = tvcDeployments
+  }
+}
+
+public struct v1GetTvcAppRequest: Codable, Sendable {
+  /// Unique identifier for a given organization.
+  public let organizationId: String
+  /// Unique identifier for a given TVC App.
+  public let tvcAppId: String
+
+  public init(
+    organizationId: String,
+    tvcAppId: String
+  ) {
+    self.organizationId = organizationId
+    self.tvcAppId = tvcAppId
+  }
+}
+
+public struct v1GetTvcAppResponse: Codable, Sendable {
+  /// Details about a single TVC App
+  public let tvcApp: v1TvcApp
+
+  public init(
+    tvcApp: v1TvcApp
+  ) {
+    self.tvcApp = tvcApp
+  }
+}
+
+public struct v1GetTvcAppsRequest: Codable, Sendable {
+  /// Unique identifier for a given organization.
+  public let organizationId: String
+
+  public init(
+    organizationId: String
+  ) {
+    self.organizationId = organizationId
+  }
+}
+
+public struct v1GetTvcAppsResponse: Codable, Sendable {
+  /// A list of TVC Apps.
+  public let tvcApps: [v1TvcApp]
+
+  public init(
+    tvcApps: [v1TvcApp]
+  ) {
+    self.tvcApps = tvcApps
+  }
+}
+
+public struct v1GetTvcDeploymentRequest: Codable, Sendable {
+  /// Unique identifier for a given TVC Deployment.
+  public let deploymentId: String
+  /// Unique identifier for a given organization.
+  public let organizationId: String
+
+  public init(
+    deploymentId: String,
+    organizationId: String
+  ) {
+    self.deploymentId = deploymentId
+    self.organizationId = organizationId
+  }
+}
+
+public struct v1GetTvcDeploymentResponse: Codable, Sendable {
+  /// Details about a single TVC Deployment
+  public let tvcDeployment: v1TvcDeployment
+
+  public init(
+    tvcDeployment: v1TvcDeployment
+  ) {
+    self.tvcDeployment = tvcDeployment
   }
 }
 
@@ -4817,6 +5269,36 @@ public struct v1GetWalletAccountsResponse: Codable, Sendable {
     accounts: [v1WalletAccount]
   ) {
     self.accounts = accounts
+  }
+}
+
+public struct v1GetWalletAddressBalancesRequest: Codable, Sendable {
+  /// Address corresponding to a wallet account.
+  public let address: String
+  /// The network identifier in CAIP-2 format (e.g., 'eip155:1' for Ethereum mainnet).
+  public let caip2: String
+  /// Unique identifier for a given organization.
+  public let organizationId: String
+
+  public init(
+    address: String,
+    caip2: String,
+    organizationId: String
+  ) {
+    self.address = address
+    self.caip2 = caip2
+    self.organizationId = organizationId
+  }
+}
+
+public struct v1GetWalletAddressBalancesResponse: Codable, Sendable {
+  /// List of asset balances
+  public let balances: [v1AssetBalance]?
+
+  public init(
+    balances: [v1AssetBalance]? = nil
+  ) {
+    self.balances = balances
   }
 }
 
@@ -5279,7 +5761,7 @@ public struct v1InitOtpAuthIntentV2: Codable, Sendable {
   public let sendFromEmailAddress: String?
   /// Optional custom sender name for use with sendFromEmailAddress; if left empty, will default to 'Notifications'
   public let sendFromEmailSenderName: String?
-  /// Optional parameters for customizing SMS message. If not provided, the default sms message will be used.
+  /// Optional parameters for customizing SMS message. If not provided, the default SMS message will be used.
   public let smsCustomization: v1SmsCustomizationParams?
   /// Optional client-generated user identifier to enable per-user rate limiting for SMS auth. We recommend using a hash of the client-side IP address.
   public let userIdentifier: String?
@@ -5312,15 +5794,17 @@ public struct v1InitOtpAuthIntentV2: Codable, Sendable {
 public struct v1InitOtpAuthIntentV3: Codable, Sendable {
   /// Optional flag to specify if the OTP code should be alphanumeric (Crockford’s Base32). Default = true
   public let alphanumeric: Bool?
-  /// The name of the application.
+  /// The name of the application. This field is required and will be used in email notifications if an email template is not provided.
   public let appName: String
   /// Email or phone number to send the OTP code to
   public let contact: String
   /// Optional parameters for customizing emails. If not provided, the default email will be used.
-  public let emailCustomization: v1EmailCustomizationParams?
+  public let emailCustomization: v1EmailCustomizationParamsV2?
+  /// Expiration window (in seconds) indicating how long the OTP is valid for. If not provided, a default of 5 minutes will be used. Maximum value is 600 seconds (10 minutes)
+  public let expirationSeconds: String?
   /// Optional length of the OTP code. Default = 9
   public let otpLength: Int?
-  /// Enum to specifiy whether to send OTP via SMS or email
+  /// Whether to send OTP via SMS or email. Possible values: OTP_TYPE_SMS, OTP_TYPE_EMAIL
   public let otpType: String
   /// Optional custom email address to use as reply-to
   public let replyToEmailAddress: String?
@@ -5328,7 +5812,7 @@ public struct v1InitOtpAuthIntentV3: Codable, Sendable {
   public let sendFromEmailAddress: String?
   /// Optional custom sender name for use with sendFromEmailAddress; if left empty, will default to 'Notifications'
   public let sendFromEmailSenderName: String?
-  /// Optional parameters for customizing SMS message. If not provided, the default sms message will be used.
+  /// Optional parameters for customizing SMS message. If not provided, the default SMS message will be used.
   public let smsCustomization: v1SmsCustomizationParams?
   /// Optional client-generated user identifier to enable per-user rate limiting for SMS auth. We recommend using a hash of the client-side IP address.
   public let userIdentifier: String?
@@ -5337,7 +5821,8 @@ public struct v1InitOtpAuthIntentV3: Codable, Sendable {
     alphanumeric: Bool? = nil,
     appName: String,
     contact: String,
-    emailCustomization: v1EmailCustomizationParams? = nil,
+    emailCustomization: v1EmailCustomizationParamsV2? = nil,
+    expirationSeconds: String? = nil,
     otpLength: Int? = nil,
     otpType: String,
     replyToEmailAddress: String? = nil,
@@ -5350,6 +5835,7 @@ public struct v1InitOtpAuthIntentV3: Codable, Sendable {
     self.appName = appName
     self.contact = contact
     self.emailCustomization = emailCustomization
+    self.expirationSeconds = expirationSeconds
     self.otpLength = otpLength
     self.otpType = otpType
     self.replyToEmailAddress = replyToEmailAddress
@@ -5460,12 +5946,12 @@ public struct v1InitOtpIntent: Codable, Sendable {
 public struct v1InitOtpIntentV2: Codable, Sendable {
   /// Optional flag to specify if the OTP code should be alphanumeric (Crockford’s Base32). Default = true
   public let alphanumeric: Bool?
-  /// The name of the application.
+  /// The name of the application. This field is required and will be used in email notifications if an email template is not provided.
   public let appName: String
   /// Email or phone number to send the OTP code to
   public let contact: String
   /// Optional parameters for customizing emails. If not provided, the default email will be used.
-  public let emailCustomization: v1EmailCustomizationParams?
+  public let emailCustomization: v1EmailCustomizationParamsV2?
   /// Expiration window (in seconds) indicating how long the OTP is valid for. If not provided, a default of 5 minutes will be used. Maximum value is 600 seconds (10 minutes)
   public let expirationSeconds: String?
   /// Optional length of the OTP code. Default = 9
@@ -5478,7 +5964,7 @@ public struct v1InitOtpIntentV2: Codable, Sendable {
   public let sendFromEmailAddress: String?
   /// Optional custom sender name for use with sendFromEmailAddress; if left empty, will default to 'Notifications'
   public let sendFromEmailSenderName: String?
-  /// Optional parameters for customizing SMS message. If not provided, the default sms message will be used.
+  /// Optional parameters for customizing SMS message. If not provided, the default SMS message will be used.
   public let smsCustomization: v1SmsCustomizationParams?
   /// Optional client-generated user identifier to enable per-user rate limiting for SMS auth. We recommend using a hash of the client-side IP address.
   public let userIdentifier: String?
@@ -5487,7 +5973,7 @@ public struct v1InitOtpIntentV2: Codable, Sendable {
     alphanumeric: Bool? = nil,
     appName: String,
     contact: String,
-    emailCustomization: v1EmailCustomizationParams? = nil,
+    emailCustomization: v1EmailCustomizationParamsV2? = nil,
     expirationSeconds: String? = nil,
     otpLength: Int? = nil,
     otpType: String,
@@ -5583,12 +6069,10 @@ public struct v1InitUserEmailRecoveryIntent: Codable, Sendable {
 }
 
 public struct v1InitUserEmailRecoveryIntentV2: Codable, Sendable {
-  /// The name of the application.
-  public let appName: String
   /// Email of the user starting recovery
   public let email: String
-  /// Optional parameters for customizing emails. If not provided, the default email will be used.
-  public let emailCustomization: v1EmailCustomizationParams?
+  /// Parameters for customizing emails. If not provided, the default email will be used. Note that `app_name` is required.
+  public let emailCustomization: v1EmailAuthCustomizationParams
   /// Expiration window (in seconds) indicating how long the recovery credential is valid for. If not provided, a default of 15 minutes will be used.
   public let expirationSeconds: String?
   /// Optional custom email address to use as reply-to
@@ -5601,16 +6085,14 @@ public struct v1InitUserEmailRecoveryIntentV2: Codable, Sendable {
   public let targetPublicKey: String
 
   public init(
-    appName: String,
     email: String,
-    emailCustomization: v1EmailCustomizationParams? = nil,
+    emailCustomization: v1EmailAuthCustomizationParams,
     expirationSeconds: String? = nil,
     replyToEmailAddress: String? = nil,
     sendFromEmailAddress: String? = nil,
     sendFromEmailSenderName: String? = nil,
     targetPublicKey: String
   ) {
-    self.appName = appName
     self.email = email
     self.emailCustomization = emailCustomization
     self.expirationSeconds = expirationSeconds
@@ -5690,6 +6172,9 @@ public struct v1Intent: Codable, Sendable {
   public let createSubOrganizationIntentV5: v1CreateSubOrganizationIntentV5?
   public let createSubOrganizationIntentV6: v1CreateSubOrganizationIntentV6?
   public let createSubOrganizationIntentV7: v1CreateSubOrganizationIntentV7?
+  public let createTvcAppIntent: v1CreateTvcAppIntent?
+  public let createTvcDeploymentIntent: v1CreateTvcDeploymentIntent?
+  public let createTvcManifestApprovalsIntent: v1CreateTvcManifestApprovalsIntent?
   public let createUserTagIntent: v1CreateUserTagIntent?
   public let createUsersIntent: v1CreateUsersIntent?
   public let createUsersIntentV2: v1CreateUsersIntentV2?
@@ -5753,6 +6238,7 @@ public struct v1Intent: Codable, Sendable {
   public let signRawPayloadsIntent: v1SignRawPayloadsIntent?
   public let signTransactionIntent: v1SignTransactionIntent?
   public let signTransactionIntentV2: v1SignTransactionIntentV2?
+  public let solSendTransactionIntent: v1SolSendTransactionIntent?
   public let stampLoginIntent: v1StampLoginIntent?
   public let updateAllowedOriginsIntent: v1UpdateAllowedOriginsIntent?
   public let updateAuthProxyConfigIntent: v1UpdateAuthProxyConfigIntent?
@@ -5768,6 +6254,7 @@ public struct v1Intent: Codable, Sendable {
   public let updateUserPhoneNumberIntent: v1UpdateUserPhoneNumberIntent?
   public let updateUserTagIntent: v1UpdateUserTagIntent?
   public let updateWalletIntent: v1UpdateWalletIntent?
+  public let upsertGasUsageConfigIntent: v1UpsertGasUsageConfigIntent?
   public let verifyOtpIntent: v1VerifyOtpIntent?
 
   public init(
@@ -5804,6 +6291,9 @@ public struct v1Intent: Codable, Sendable {
     createSubOrganizationIntentV5: v1CreateSubOrganizationIntentV5? = nil,
     createSubOrganizationIntentV6: v1CreateSubOrganizationIntentV6? = nil,
     createSubOrganizationIntentV7: v1CreateSubOrganizationIntentV7? = nil,
+    createTvcAppIntent: v1CreateTvcAppIntent? = nil,
+    createTvcDeploymentIntent: v1CreateTvcDeploymentIntent? = nil,
+    createTvcManifestApprovalsIntent: v1CreateTvcManifestApprovalsIntent? = nil,
     createUserTagIntent: v1CreateUserTagIntent? = nil,
     createUsersIntent: v1CreateUsersIntent? = nil,
     createUsersIntentV2: v1CreateUsersIntentV2? = nil,
@@ -5867,6 +6357,7 @@ public struct v1Intent: Codable, Sendable {
     signRawPayloadsIntent: v1SignRawPayloadsIntent? = nil,
     signTransactionIntent: v1SignTransactionIntent? = nil,
     signTransactionIntentV2: v1SignTransactionIntentV2? = nil,
+    solSendTransactionIntent: v1SolSendTransactionIntent? = nil,
     stampLoginIntent: v1StampLoginIntent? = nil,
     updateAllowedOriginsIntent: v1UpdateAllowedOriginsIntent? = nil,
     updateAuthProxyConfigIntent: v1UpdateAuthProxyConfigIntent? = nil,
@@ -5882,6 +6373,7 @@ public struct v1Intent: Codable, Sendable {
     updateUserPhoneNumberIntent: v1UpdateUserPhoneNumberIntent? = nil,
     updateUserTagIntent: v1UpdateUserTagIntent? = nil,
     updateWalletIntent: v1UpdateWalletIntent? = nil,
+    upsertGasUsageConfigIntent: v1UpsertGasUsageConfigIntent? = nil,
     verifyOtpIntent: v1VerifyOtpIntent? = nil
   ) {
     self.acceptInvitationIntent = acceptInvitationIntent
@@ -5917,6 +6409,9 @@ public struct v1Intent: Codable, Sendable {
     self.createSubOrganizationIntentV5 = createSubOrganizationIntentV5
     self.createSubOrganizationIntentV6 = createSubOrganizationIntentV6
     self.createSubOrganizationIntentV7 = createSubOrganizationIntentV7
+    self.createTvcAppIntent = createTvcAppIntent
+    self.createTvcDeploymentIntent = createTvcDeploymentIntent
+    self.createTvcManifestApprovalsIntent = createTvcManifestApprovalsIntent
     self.createUserTagIntent = createUserTagIntent
     self.createUsersIntent = createUsersIntent
     self.createUsersIntentV2 = createUsersIntentV2
@@ -5980,6 +6475,7 @@ public struct v1Intent: Codable, Sendable {
     self.signRawPayloadsIntent = signRawPayloadsIntent
     self.signTransactionIntent = signTransactionIntent
     self.signTransactionIntentV2 = signTransactionIntentV2
+    self.solSendTransactionIntent = solSendTransactionIntent
     self.stampLoginIntent = stampLoginIntent
     self.updateAllowedOriginsIntent = updateAllowedOriginsIntent
     self.updateAuthProxyConfigIntent = updateAuthProxyConfigIntent
@@ -5995,6 +6491,7 @@ public struct v1Intent: Codable, Sendable {
     self.updateUserPhoneNumberIntent = updateUserPhoneNumberIntent
     self.updateUserTagIntent = updateUserTagIntent
     self.updateWalletIntent = updateWalletIntent
+    self.upsertGasUsageConfigIntent = upsertGasUsageConfigIntent
     self.verifyOtpIntent = verifyOtpIntent
   }
 }
@@ -6192,6 +6689,25 @@ public struct v1NOOPCodegenAnchorResponse: Codable, Sendable {
   ) {
     self.stamp = stamp
     self.tokenUsage = tokenUsage
+  }
+}
+
+public struct v1NativeRevertError: Codable, Sendable {
+  /// The error message for Error(string) reverts.
+  public let message: String?
+  /// The type of native error: 'error_string', 'panic', or 'execution_reverted'.
+  public let nativeType: String?
+  /// The panic code for Panic(uint256) reverts.
+  public let panicCode: String?
+
+  public init(
+    message: String? = nil,
+    nativeType: String? = nil,
+    panicCode: String? = nil
+  ) {
+    self.message = message
+    self.nativeType = nativeType
+    self.panicCode = panicCode
   }
 }
 
@@ -6897,6 +7413,14 @@ public struct v1RecoverUserResult: Codable, Sendable {
   }
 }
 
+public struct v1RefreshFeatureFlagsRequest: Codable, Sendable {
+  public init() {}
+}
+
+public struct v1RefreshFeatureFlagsResponse: Codable, Sendable {
+  public init() {}
+}
+
 public struct v1RejectActivityIntent: Codable, Sendable {
   /// An artifact verifying a User's action.
   public let fingerprint: String
@@ -7004,6 +7528,9 @@ public struct v1Result: Codable, Sendable {
   public let createSubOrganizationResultV5: v1CreateSubOrganizationResultV5?
   public let createSubOrganizationResultV6: v1CreateSubOrganizationResultV6?
   public let createSubOrganizationResultV7: v1CreateSubOrganizationResultV7?
+  public let createTvcAppResult: v1CreateTvcAppResult?
+  public let createTvcDeploymentResult: v1CreateTvcDeploymentResult?
+  public let createTvcManifestApprovalsResult: v1CreateTvcManifestApprovalsResult?
   public let createUserTagResult: v1CreateUserTagResult?
   public let createUsersResult: v1CreateUsersResult?
   public let createWalletAccountsResult: v1CreateWalletAccountsResult?
@@ -7056,6 +7583,7 @@ public struct v1Result: Codable, Sendable {
   public let signRawPayloadResult: v1SignRawPayloadResult?
   public let signRawPayloadsResult: v1SignRawPayloadsResult?
   public let signTransactionResult: v1SignTransactionResult?
+  public let solSendTransactionResult: v1SolSendTransactionResult?
   public let stampLoginResult: v1StampLoginResult?
   public let updateAllowedOriginsResult: v1UpdateAllowedOriginsResult?
   public let updateAuthProxyConfigResult: v1UpdateAuthProxyConfigResult?
@@ -7071,6 +7599,7 @@ public struct v1Result: Codable, Sendable {
   public let updateUserResult: v1UpdateUserResult?
   public let updateUserTagResult: v1UpdateUserTagResult?
   public let updateWalletResult: v1UpdateWalletResult?
+  public let upsertGasUsageConfigResult: v1UpsertGasUsageConfigResult?
   public let verifyOtpResult: v1VerifyOtpResult?
 
   public init(
@@ -7099,6 +7628,9 @@ public struct v1Result: Codable, Sendable {
     createSubOrganizationResultV5: v1CreateSubOrganizationResultV5? = nil,
     createSubOrganizationResultV6: v1CreateSubOrganizationResultV6? = nil,
     createSubOrganizationResultV7: v1CreateSubOrganizationResultV7? = nil,
+    createTvcAppResult: v1CreateTvcAppResult? = nil,
+    createTvcDeploymentResult: v1CreateTvcDeploymentResult? = nil,
+    createTvcManifestApprovalsResult: v1CreateTvcManifestApprovalsResult? = nil,
     createUserTagResult: v1CreateUserTagResult? = nil,
     createUsersResult: v1CreateUsersResult? = nil,
     createWalletAccountsResult: v1CreateWalletAccountsResult? = nil,
@@ -7151,6 +7683,7 @@ public struct v1Result: Codable, Sendable {
     signRawPayloadResult: v1SignRawPayloadResult? = nil,
     signRawPayloadsResult: v1SignRawPayloadsResult? = nil,
     signTransactionResult: v1SignTransactionResult? = nil,
+    solSendTransactionResult: v1SolSendTransactionResult? = nil,
     stampLoginResult: v1StampLoginResult? = nil,
     updateAllowedOriginsResult: v1UpdateAllowedOriginsResult? = nil,
     updateAuthProxyConfigResult: v1UpdateAuthProxyConfigResult? = nil,
@@ -7166,6 +7699,7 @@ public struct v1Result: Codable, Sendable {
     updateUserResult: v1UpdateUserResult? = nil,
     updateUserTagResult: v1UpdateUserTagResult? = nil,
     updateWalletResult: v1UpdateWalletResult? = nil,
+    upsertGasUsageConfigResult: v1UpsertGasUsageConfigResult? = nil,
     verifyOtpResult: v1VerifyOtpResult? = nil
   ) {
     self.acceptInvitationResult = acceptInvitationResult
@@ -7193,6 +7727,9 @@ public struct v1Result: Codable, Sendable {
     self.createSubOrganizationResultV5 = createSubOrganizationResultV5
     self.createSubOrganizationResultV6 = createSubOrganizationResultV6
     self.createSubOrganizationResultV7 = createSubOrganizationResultV7
+    self.createTvcAppResult = createTvcAppResult
+    self.createTvcDeploymentResult = createTvcDeploymentResult
+    self.createTvcManifestApprovalsResult = createTvcManifestApprovalsResult
     self.createUserTagResult = createUserTagResult
     self.createUsersResult = createUsersResult
     self.createWalletAccountsResult = createWalletAccountsResult
@@ -7245,6 +7782,7 @@ public struct v1Result: Codable, Sendable {
     self.signRawPayloadResult = signRawPayloadResult
     self.signRawPayloadsResult = signRawPayloadsResult
     self.signTransactionResult = signTransactionResult
+    self.solSendTransactionResult = solSendTransactionResult
     self.stampLoginResult = stampLoginResult
     self.updateAllowedOriginsResult = updateAllowedOriginsResult
     self.updateAuthProxyConfigResult = updateAuthProxyConfigResult
@@ -7260,7 +7798,39 @@ public struct v1Result: Codable, Sendable {
     self.updateUserResult = updateUserResult
     self.updateUserTagResult = updateUserTagResult
     self.updateWalletResult = updateWalletResult
+    self.upsertGasUsageConfigResult = upsertGasUsageConfigResult
     self.verifyOtpResult = verifyOtpResult
+  }
+}
+
+public struct v1RevertChainEntry: Codable, Sendable {
+  /// The contract address where the revert occurred.
+  public let address: String?
+  /// Details for custom contract errors.
+  public let custom: v1CustomRevertError?
+  /// Human-readable message describing this revert.
+  public let displayMessage: String?
+  /// Type of error: 'unknown', 'native', or 'custom'.
+  public let errorType: String?
+  /// Details for native Solidity errors (Error, Panic, execution reverted).
+  public let native: v1NativeRevertError?
+  /// Details for unknown error types.
+  public let unknown: v1UnknownRevertError?
+
+  public init(
+    address: String? = nil,
+    custom: v1CustomRevertError? = nil,
+    displayMessage: String? = nil,
+    errorType: String? = nil,
+    native: v1NativeRevertError? = nil,
+    unknown: v1UnknownRevertError? = nil
+  ) {
+    self.address = address
+    self.custom = custom
+    self.displayMessage = displayMessage
+    self.errorType = errorType
+    self.native = native
+    self.unknown = unknown
   }
 }
 
@@ -7752,6 +8322,68 @@ public struct v1SmsCustomizationParams: Codable, Sendable {
   }
 }
 
+public struct v1SolSendTransactionIntent: Codable, Sendable {
+  /// CAIP-2 chain ID (e.g., 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp' for Solana mainnet).
+  public let caip2: String
+  /// user-provided blockhash for replay protection / deadline control. If omitted and sponsor=true, we fetch a fresh blockhash during execution
+  public let recentBlockhash: String?
+  /// A wallet or private key address to sign with. This does not support private key IDs.
+  public let signWith: String
+  /// Whether to sponsor this transaction via Gas Station.
+  public let sponsor: Bool?
+  /// Base64-encoded serialized unsigned Solana transaction
+  public let unsignedTransaction: String
+
+  public init(
+    caip2: String,
+    recentBlockhash: String? = nil,
+    signWith: String,
+    sponsor: Bool? = nil,
+    unsignedTransaction: String
+  ) {
+    self.caip2 = caip2
+    self.recentBlockhash = recentBlockhash
+    self.signWith = signWith
+    self.sponsor = sponsor
+    self.unsignedTransaction = unsignedTransaction
+  }
+}
+
+public struct v1SolSendTransactionRequest: Codable, Sendable {
+  public let generateAppProofs: Bool?
+  /// Unique identifier for a given Organization.
+  public let organizationId: String
+  public let parameters: v1SolSendTransactionIntent
+  /// Timestamp (in milliseconds) of the request, used to verify liveness of user requests.
+  public let timestampMs: String
+  public let type: String
+
+  public init(
+    generateAppProofs: Bool? = nil,
+    organizationId: String,
+    parameters: v1SolSendTransactionIntent,
+    timestampMs: String,
+    type: String
+  ) {
+    self.generateAppProofs = generateAppProofs
+    self.organizationId = organizationId
+    self.parameters = parameters
+    self.timestampMs = timestampMs
+    self.type = type
+  }
+}
+
+public struct v1SolSendTransactionResult: Codable, Sendable {
+  /// The send_transaction_status ID associated with the transaction submission
+  public let sendTransactionStatusId: String
+
+  public init(
+    sendTransactionStatusId: String
+  ) {
+    self.sendTransactionStatusId = sendTransactionStatusId
+  }
+}
+
 public struct v1StampLoginIntent: Codable, Sendable {
   /// Expiration window (in seconds) indicating how long the Session is valid for. If not provided, a default of 15 minutes will be used.
   public let expirationSeconds: String?
@@ -7860,6 +8492,335 @@ public enum v1TransactionType: String, Codable, Sendable {
   case transaction_type_solana = "TRANSACTION_TYPE_SOLANA"
   case transaction_type_tron = "TRANSACTION_TYPE_TRON"
   case transaction_type_bitcoin = "TRANSACTION_TYPE_BITCOIN"
+  case transaction_type_tempo = "TRANSACTION_TYPE_TEMPO"
+}
+
+public struct v1TvcApp: Codable, Sendable {
+  public let createdAt: externaldatav1Timestamp
+  /// Whether or not this TVC App has external connectivity enabled.
+  public let externalConnectivity: Bool
+  /// Unique Identifier for this TVC App.
+  public let id: String
+  /// Manifest Set (people who can approve manifests)
+  public let manifestSet: v1TvcOperatorSet
+  /// Name for this TVC App.
+  public let name: String
+  /// Unique Identifier of the Organization for this TVC App
+  public let organizationId: String
+  /// Public key for the Quorum Key associated with this TVC App
+  public let quorumPublicKey: String
+  /// Share Set (people who have a share of the Quorum Key)
+  public let shareSet: v1TvcOperatorSet
+  public let updatedAt: externaldatav1Timestamp
+
+  public init(
+    createdAt: externaldatav1Timestamp,
+    externalConnectivity: Bool,
+    id: String,
+    manifestSet: v1TvcOperatorSet,
+    name: String,
+    organizationId: String,
+    quorumPublicKey: String,
+    shareSet: v1TvcOperatorSet,
+    updatedAt: externaldatav1Timestamp
+  ) {
+    self.createdAt = createdAt
+    self.externalConnectivity = externalConnectivity
+    self.id = id
+    self.manifestSet = manifestSet
+    self.name = name
+    self.organizationId = organizationId
+    self.quorumPublicKey = quorumPublicKey
+    self.shareSet = shareSet
+    self.updatedAt = updatedAt
+  }
+}
+
+public struct v1TvcContainerSpec: Codable, Sendable {
+  /// The arguments to pass to the executable.
+  public let args: [String]
+  /// The URL for this container image.
+  public let containerUrl: String
+  /// Whether or not this container requires a pull secret to access.
+  public let hasPullSecret: Bool
+  /// The path (in-container) to the executable binary.
+  public let path: String
+
+  public init(
+    args: [String],
+    containerUrl: String,
+    hasPullSecret: Bool,
+    path: String
+  ) {
+    self.args = args
+    self.containerUrl = containerUrl
+    self.hasPullSecret = hasPullSecret
+    self.path = path
+  }
+}
+
+public struct v1TvcDeployment: Codable, Sendable {
+  /// Unique Identifier of the TVC App for this deployment
+  public let appId: String
+  public let createdAt: externaldatav1Timestamp
+  /// The pivot container spec for this deployment
+  public let hostContainer: v1TvcContainerSpec
+  /// Unique Identifier for this TVC Deployment.
+  public let id: String
+  /// The manifest used for this deployment
+  public let manifest: v1TvcManifest
+  /// List of operator approvals for this manifest
+  public let manifestApprovals: [v1TvcOperatorApproval]
+  /// Set of TVC operators who can approve this deployment
+  public let manifestSet: v1TvcOperatorSet
+  /// Unique Identifier of the Organization for this TVC Deployment
+  public let organizationId: String
+  /// The pivot container spec for this deployment
+  public let pivotContainer: v1TvcContainerSpec
+  /// QOS Version used for this deployment
+  public let qosVersion: String
+  /// Set of TVC operators who have a share of the Quorum Key
+  public let shareSet: v1TvcOperatorSet
+  /// Current stage for this deployment
+  public let stage: v1TvcDeploymentStage
+  public let updatedAt: externaldatav1Timestamp
+
+  public init(
+    appId: String,
+    createdAt: externaldatav1Timestamp,
+    hostContainer: v1TvcContainerSpec,
+    id: String,
+    manifest: v1TvcManifest,
+    manifestApprovals: [v1TvcOperatorApproval],
+    manifestSet: v1TvcOperatorSet,
+    organizationId: String,
+    pivotContainer: v1TvcContainerSpec,
+    qosVersion: String,
+    shareSet: v1TvcOperatorSet,
+    stage: v1TvcDeploymentStage,
+    updatedAt: externaldatav1Timestamp
+  ) {
+    self.appId = appId
+    self.createdAt = createdAt
+    self.hostContainer = hostContainer
+    self.id = id
+    self.manifest = manifest
+    self.manifestApprovals = manifestApprovals
+    self.manifestSet = manifestSet
+    self.organizationId = organizationId
+    self.pivotContainer = pivotContainer
+    self.qosVersion = qosVersion
+    self.shareSet = shareSet
+    self.stage = stage
+    self.updatedAt = updatedAt
+  }
+}
+
+public enum v1TvcDeploymentStage: String, Codable, Sendable {
+  case tvc_deployment_stage_approve = "TVC_DEPLOYMENT_STAGE_APPROVE"
+  case tvc_deployment_stage_provision = "TVC_DEPLOYMENT_STAGE_PROVISION"
+  case tvc_deployment_stage_live = "TVC_DEPLOYMENT_STAGE_LIVE"
+  case tvc_deployment_stage_delete = "TVC_DEPLOYMENT_STAGE_DELETE"
+}
+
+public struct v1TvcManifest: Codable, Sendable {
+  public let createdAt: externaldatav1Timestamp
+  /// Unique Identifier for this TVC Manifest.
+  public let id: String
+  /// The manifest content (raw UTF-8 JSON bytes)
+  public let manifest: String
+  public let updatedAt: externaldatav1Timestamp
+
+  public init(
+    createdAt: externaldatav1Timestamp,
+    id: String,
+    manifest: String,
+    updatedAt: externaldatav1Timestamp
+  ) {
+    self.createdAt = createdAt
+    self.id = id
+    self.manifest = manifest
+    self.updatedAt = updatedAt
+  }
+}
+
+public struct v1TvcManifestApproval: Codable, Sendable {
+  /// Unique identifier of the operator providing this approval
+  public let operatorId: String
+  /// Signature from the operator approving the manifest
+  public let signature: String
+
+  public init(
+    operatorId: String,
+    signature: String
+  ) {
+    self.operatorId = operatorId
+    self.signature = signature
+  }
+}
+
+public struct v1TvcOperator: Codable, Sendable {
+  public let createdAt: externaldatav1Timestamp
+  /// Unique Identifier for this TVC Operator.
+  public let id: String
+  /// Name of this TVC Operator.
+  public let name: String
+  /// Public key for this TVC Operator.
+  public let publicKey: String
+  public let updatedAt: externaldatav1Timestamp
+
+  public init(
+    createdAt: externaldatav1Timestamp,
+    id: String,
+    name: String,
+    publicKey: String,
+    updatedAt: externaldatav1Timestamp
+  ) {
+    self.createdAt = createdAt
+    self.id = id
+    self.name = name
+    self.publicKey = publicKey
+    self.updatedAt = updatedAt
+  }
+}
+
+public struct v1TvcOperatorApproval: Codable, Sendable {
+  /// Signature of the operator over the deployment manifest
+  public let approval: String
+  public let createdAt: externaldatav1Timestamp
+  /// Unique ID for this approval
+  public let id: String
+  /// Unique Identifier of the TVC Manifest being approved
+  public let manifestId: String
+  /// The TVC Operator who made this approval
+  public let _operator: v1TvcOperator
+  public let updatedAt: externaldatav1Timestamp
+
+  public init(
+    _operator: v1TvcOperator,
+    approval: String,
+    createdAt: externaldatav1Timestamp,
+    id: String,
+    manifestId: String,
+    updatedAt: externaldatav1Timestamp
+  ) {
+    self._operator = _operator
+    self.approval = approval
+    self.createdAt = createdAt
+    self.id = id
+    self.manifestId = manifestId
+    self.updatedAt = updatedAt
+  }
+
+  private enum CodingKeys: String, CodingKey {
+    case approval = "approval"
+    case createdAt = "createdAt"
+    case id = "id"
+    case manifestId = "manifestId"
+    case _operator = "operator"
+    case updatedAt = "updatedAt"
+  }
+}
+
+public struct v1TvcOperatorParams: Codable, Sendable {
+  /// The name for this new operator
+  public let name: String
+  /// Public key for this operator
+  public let publicKey: String
+
+  public init(
+    name: String,
+    publicKey: String
+  ) {
+    self.name = name
+    self.publicKey = publicKey
+  }
+}
+
+public struct v1TvcOperatorSet: Codable, Sendable {
+  public let createdAt: externaldatav1Timestamp
+  /// Unique Identifier for this TVC Operator Set.
+  public let id: String
+  /// Name of this TVC Operator Set.
+  public let name: String
+  /// List of TVC Operators in this set
+  public let operators: [v1TvcOperator]
+  /// Unique Identifier of the Organization for this TVC Operator Set
+  public let organizationId: String
+  /// Threshold number of operators required for quorum.
+  public let threshold: Int
+  public let updatedAt: externaldatav1Timestamp
+
+  public init(
+    createdAt: externaldatav1Timestamp,
+    id: String,
+    name: String,
+    operators: [v1TvcOperator],
+    organizationId: String,
+    threshold: Int,
+    updatedAt: externaldatav1Timestamp
+  ) {
+    self.createdAt = createdAt
+    self.id = id
+    self.name = name
+    self.operators = operators
+    self.organizationId = organizationId
+    self.threshold = threshold
+    self.updatedAt = updatedAt
+  }
+}
+
+public struct v1TvcOperatorSetParams: Codable, Sendable {
+  /// Existing operators to use as part of this new operator set
+  public let existingOperatorIds: [String]?
+  /// Short description for this new operator set
+  public let name: String
+  /// Operators to create as part of this new operator set
+  public let newOperators: [v1TvcOperatorParams]?
+  /// The threshold of operators needed to reach consensus in this new Operator Set
+  public let threshold: Int
+
+  public init(
+    existingOperatorIds: [String]? = nil,
+    name: String,
+    newOperators: [v1TvcOperatorParams]? = nil,
+    threshold: Int
+  ) {
+    self.existingOperatorIds = existingOperatorIds
+    self.name = name
+    self.newOperators = newOperators
+    self.threshold = threshold
+  }
+}
+
+public struct v1TxError: Codable, Sendable {
+  /// Human-readable error message describing what went wrong.
+  public let message: String?
+  /// Chain of revert errors from nested contract calls, ordered from outermost to innermost.
+  public let revertChain: [v1RevertChainEntry]?
+
+  public init(
+    message: String? = nil,
+    revertChain: [v1RevertChainEntry]? = nil
+  ) {
+    self.message = message
+    self.revertChain = revertChain
+  }
+}
+
+public struct v1UnknownRevertError: Codable, Sendable {
+  /// The raw error data, hex-encoded.
+  public let data: String?
+  /// The 4-byte error selector, if available.
+  public let selector: String?
+
+  public init(
+    data: String? = nil,
+    selector: String? = nil
+  ) {
+    self.data = data
+    self.selector = selector
+  }
 }
 
 public struct v1UpdateAllowedOriginsIntent: Codable, Sendable {
@@ -7991,6 +8952,7 @@ public struct v1UpdateFiatOnRampCredentialIntent: Codable, Sendable {
 }
 
 public struct v1UpdateFiatOnRampCredentialRequest: Codable, Sendable {
+  public let generateAppProofs: Bool?
   /// Unique identifier for a given Organization.
   public let organizationId: String
   public let parameters: v1UpdateFiatOnRampCredentialIntent
@@ -7999,11 +8961,13 @@ public struct v1UpdateFiatOnRampCredentialRequest: Codable, Sendable {
   public let type: String
 
   public init(
+    generateAppProofs: Bool? = nil,
     organizationId: String,
     parameters: v1UpdateFiatOnRampCredentialIntent,
     timestampMs: String,
     type: String
   ) {
+    self.generateAppProofs = generateAppProofs
     self.organizationId = organizationId
     self.parameters = parameters
     self.timestampMs = timestampMs
@@ -8617,6 +9581,40 @@ public struct v1UpdateWalletResult: Codable, Sendable {
   }
 }
 
+public struct v1UpsertGasUsageConfigIntent: Codable, Sendable {
+  /// Whether gas sponsorship is enabled for the organization.
+  public let enabled: Bool?
+  /// Gas sponsorship USD limit for the billing organization window.
+  public let orgWindowLimitUsd: String
+  /// Gas sponsorship USD limit for sub-organizations under the billing organization.
+  public let subOrgWindowLimitUsd: String
+  /// Rolling sponsorship window duration, expressed in minutes.
+  public let windowDurationMinutes: String
+
+  public init(
+    enabled: Bool? = nil,
+    orgWindowLimitUsd: String,
+    subOrgWindowLimitUsd: String,
+    windowDurationMinutes: String
+  ) {
+    self.enabled = enabled
+    self.orgWindowLimitUsd = orgWindowLimitUsd
+    self.subOrgWindowLimitUsd = subOrgWindowLimitUsd
+    self.windowDurationMinutes = windowDurationMinutes
+  }
+}
+
+public struct v1UpsertGasUsageConfigResult: Codable, Sendable {
+  /// Unique identifier for the gas usage configuration that was created or updated.
+  public let gasUsageConfigId: String
+
+  public init(
+    gasUsageConfigId: String
+  ) {
+    self.gasUsageConfigId = gasUsageConfigId
+  }
+}
+
 public enum v1UsageType: String, Codable, Sendable {
   case usage_type_signup = "USAGE_TYPE_SIGNUP"
   case usage_type_login = "USAGE_TYPE_LOGIN"
@@ -9150,41 +10148,6 @@ public struct TGetApiKeysInput: Codable, Sendable {
   }
 }
 
-// MARK: - TGetAttestationDocumentResponse
-
-public struct TGetAttestationDocumentResponse: Codable, Sendable {
-  /// Raw (CBOR-encoded) attestation document.
-  public let attestationDocument: String
-}
-
-// MARK: - TGetAttestationDocumentBody
-
-public struct TGetAttestationDocumentBody: Codable, Sendable {
-  public let organizationId: String?
-  /// The enclave type, one of: ump, notarizer, signer, evm-parser.
-  public let enclaveType: String
-
-  public init(
-    organizationId: String? = nil,
-    enclaveType: String
-  ) {
-    self.organizationId = organizationId
-    self.enclaveType = enclaveType
-  }
-}
-
-// MARK: - TGetAttestationDocumentInput
-
-public struct TGetAttestationDocumentInput: Codable, Sendable {
-  public let body: TGetAttestationDocumentBody
-
-  public init(
-    body: TGetAttestationDocumentBody
-  ) {
-    self.body = body
-  }
-}
-
 // MARK: - TGetAuthenticatorResponse
 
 public struct TGetAuthenticatorResponse: Codable, Sendable {
@@ -9353,6 +10316,55 @@ public struct TGetLatestBootProofInput: Codable, Sendable {
 
   public init(
     body: TGetLatestBootProofBody
+  ) {
+    self.body = body
+  }
+}
+
+// MARK: - TGetNoncesResponse
+
+public struct TGetNoncesResponse: Codable, Sendable {
+  /// The gas station nonce for sponsored transactions, if requested.
+  public let gasStationNonce: String?
+  /// The standard on-chain nonce for the address, if requested.
+  public let nonce: String?
+}
+
+// MARK: - TGetNoncesBody
+
+public struct TGetNoncesBody: Codable, Sendable {
+  public let organizationId: String?
+  /// The Ethereum address to query nonces for.
+  public let address: String
+  /// The network identifier in CAIP-2 format (e.g., 'eip155:1' for Ethereum mainnet).
+  public let caip2: String
+  /// Whether to fetch the gas station nonce used for sponsored transactions.
+  public let gasStationNonce: Bool?
+  /// Whether to fetch the standard on-chain nonce.
+  public let nonce: Bool?
+
+  public init(
+    organizationId: String? = nil,
+    address: String,
+    caip2: String,
+    gasStationNonce: Bool? = nil,
+    nonce: Bool? = nil
+  ) {
+    self.organizationId = organizationId
+    self.address = address
+    self.caip2 = caip2
+    self.gasStationNonce = gasStationNonce
+    self.nonce = nonce
+  }
+}
+
+// MARK: - TGetNoncesInput
+
+public struct TGetNoncesInput: Codable, Sendable {
+  public let body: TGetNoncesBody
+
+  public init(
+    body: TGetNoncesBody
   ) {
     self.body = body
   }
@@ -9635,6 +10647,8 @@ public struct TGetPrivateKeyInput: Codable, Sendable {
 // MARK: - TGetSendTransactionStatusResponse
 
 public struct TGetSendTransactionStatusResponse: Codable, Sendable {
+  /// Structured error information including revert details, if available.
+  public let error: v1TxError?
   /// Ethereum-specific transaction status.
   public let eth: v1EthSendTransactionStatus?
   /// The error encountered when broadcasting or confirming the transaction, if any.
@@ -9701,6 +10715,76 @@ public struct TGetSmartContractInterfaceInput: Codable, Sendable {
 
   public init(
     body: TGetSmartContractInterfaceBody
+  ) {
+    self.body = body
+  }
+}
+
+// MARK: - TGetTvcAppResponse
+
+public struct TGetTvcAppResponse: Codable, Sendable {
+  /// Details about a single TVC App
+  public let tvcApp: v1TvcApp
+}
+
+// MARK: - TGetTvcAppBody
+
+public struct TGetTvcAppBody: Codable, Sendable {
+  public let organizationId: String?
+  /// Unique identifier for a given TVC App.
+  public let tvcAppId: String
+
+  public init(
+    organizationId: String? = nil,
+    tvcAppId: String
+  ) {
+    self.organizationId = organizationId
+    self.tvcAppId = tvcAppId
+  }
+}
+
+// MARK: - TGetTvcAppInput
+
+public struct TGetTvcAppInput: Codable, Sendable {
+  public let body: TGetTvcAppBody
+
+  public init(
+    body: TGetTvcAppBody
+  ) {
+    self.body = body
+  }
+}
+
+// MARK: - TGetTvcDeploymentResponse
+
+public struct TGetTvcDeploymentResponse: Codable, Sendable {
+  /// Details about a single TVC Deployment
+  public let tvcDeployment: v1TvcDeployment
+}
+
+// MARK: - TGetTvcDeploymentBody
+
+public struct TGetTvcDeploymentBody: Codable, Sendable {
+  public let organizationId: String?
+  /// Unique identifier for a given TVC Deployment.
+  public let deploymentId: String
+
+  public init(
+    organizationId: String? = nil,
+    deploymentId: String
+  ) {
+    self.organizationId = organizationId
+    self.deploymentId = deploymentId
+  }
+}
+
+// MARK: - TGetTvcDeploymentInput
+
+public struct TGetTvcDeploymentInput: Codable, Sendable {
+  public let body: TGetTvcDeploymentBody
+
+  public init(
+    body: TGetTvcDeploymentBody
   ) {
     self.body = body
   }
@@ -9814,6 +10898,45 @@ public struct TGetWalletAccountInput: Codable, Sendable {
 
   public init(
     body: TGetWalletAccountBody
+  ) {
+    self.body = body
+  }
+}
+
+// MARK: - TGetWalletAddressBalancesResponse
+
+public struct TGetWalletAddressBalancesResponse: Codable, Sendable {
+  /// List of asset balances
+  public let balances: [v1AssetBalance]?
+}
+
+// MARK: - TGetWalletAddressBalancesBody
+
+public struct TGetWalletAddressBalancesBody: Codable, Sendable {
+  public let organizationId: String?
+  /// Address corresponding to a wallet account.
+  public let address: String
+  /// The network identifier in CAIP-2 format (e.g., 'eip155:1' for Ethereum mainnet).
+  public let caip2: String
+
+  public init(
+    organizationId: String? = nil,
+    address: String,
+    caip2: String
+  ) {
+    self.organizationId = organizationId
+    self.address = address
+    self.caip2 = caip2
+  }
+}
+
+// MARK: - TGetWalletAddressBalancesInput
+
+public struct TGetWalletAddressBalancesInput: Codable, Sendable {
+  public let body: TGetWalletAddressBalancesBody
+
+  public init(
+    body: TGetWalletAddressBalancesBody
   ) {
     self.body = body
   }
@@ -10118,6 +11241,72 @@ public struct TGetSubOrgIdsInput: Codable, Sendable {
 
   public init(
     body: TGetSubOrgIdsBody
+  ) {
+    self.body = body
+  }
+}
+
+// MARK: - TGetTvcAppDeploymentsResponse
+
+public struct TGetTvcAppDeploymentsResponse: Codable, Sendable {
+  /// List of deployments for this TVC App
+  public let tvcDeployments: [v1TvcDeployment]
+}
+
+// MARK: - TGetTvcAppDeploymentsBody
+
+public struct TGetTvcAppDeploymentsBody: Codable, Sendable {
+  public let organizationId: String?
+  /// Unique identifier for a given TVC App.
+  public let appId: String
+
+  public init(
+    organizationId: String? = nil,
+    appId: String
+  ) {
+    self.organizationId = organizationId
+    self.appId = appId
+  }
+}
+
+// MARK: - TGetTvcAppDeploymentsInput
+
+public struct TGetTvcAppDeploymentsInput: Codable, Sendable {
+  public let body: TGetTvcAppDeploymentsBody
+
+  public init(
+    body: TGetTvcAppDeploymentsBody
+  ) {
+    self.body = body
+  }
+}
+
+// MARK: - TGetTvcAppsResponse
+
+public struct TGetTvcAppsResponse: Codable, Sendable {
+  /// A list of TVC Apps.
+  public let tvcApps: [v1TvcApp]
+}
+
+// MARK: - TGetTvcAppsBody
+
+public struct TGetTvcAppsBody: Codable, Sendable {
+  public let organizationId: String?
+
+  public init(
+    organizationId: String? = nil
+  ) {
+    self.organizationId = organizationId
+  }
+}
+
+// MARK: - TGetTvcAppsInput
+
+public struct TGetTvcAppsInput: Codable, Sendable {
+  public let body: TGetTvcAppsBody
+
+  public init(
+    body: TGetTvcAppsBody
   ) {
     self.body = body
   }
@@ -10747,7 +11936,8 @@ public struct TCreatePolicyBody: Codable, Sendable {
   public let consensus: String?
   /// The instruction to DENY or ALLOW an activity.
   public let effect: v1Effect
-  public let notes: String?
+  /// Notes for a Policy.
+  public let notes: String
   /// Human-readable name for a Policy.
   public let policyName: String
 
@@ -10757,7 +11947,7 @@ public struct TCreatePolicyBody: Codable, Sendable {
     condition: String? = nil,
     consensus: String? = nil,
     effect: v1Effect,
-    notes: String? = nil,
+    notes: String,
     policyName: String
   ) {
     self.timestampMs = timestampMs
@@ -10995,7 +12185,7 @@ public struct TCreateSmartContractInterfaceBody: Codable, Sendable {
   public let notes: String?
   /// Corresponding contract address or program ID
   public let smartContractAddress: String
-  /// ABI/IDL as a JSON string
+  /// ABI/IDL as a JSON string. Limited to 400kb
   public let smartContractInterface: String
   public let type: v1SmartContractInterfaceType
 
@@ -11101,6 +12291,195 @@ public struct TCreateSubOrganizationInput: Codable, Sendable {
 
   public init(
     body: TCreateSubOrganizationBody
+  ) {
+    self.body = body
+  }
+}
+
+// MARK: - TCreateTvcAppResponse
+
+public struct TCreateTvcAppResponse: Codable, Sendable {
+  public let activity: v1Activity
+  /// The unique identifier for the TVC application
+  public let appId: String
+  /// The unique identifier for the TVC manifest set
+  public let manifestSetId: String
+  /// The unique identifier(s) of the manifest set operators
+  public let manifestSetOperatorIds: [String]
+  /// The required number of approvals for the manifest set
+  public let manifestSetThreshold: Int
+}
+
+// MARK: - TCreateTvcAppBody
+
+public struct TCreateTvcAppBody: Codable, Sendable {
+  public let timestampMs: String?
+  public let organizationId: String?
+  /// Enables external connectivity for this TVC app. Default if not provided: false.
+  public let externalConnectivity: Bool?
+  /// Unique identifier for an existing TVC operator set to use as the Manifest Set for this TVC application. If left empty, a new Manifest Set configuration is required
+  public let manifestSetId: String?
+  /// Configuration to create a new TVC operator set, used as the Manifest Set for this TVC application. If left empty, a Manifest Set ID is required
+  public let manifestSetParams: v1TvcOperatorSetParams?
+  /// The name of the new TVC application
+  public let name: String
+  /// Quorum public key to use for this application
+  public let quorumPublicKey: String
+  /// Unique identifier for an existing TVC operator set to use as the Share Set for this TVC application. If left empty, a new Share Set configuration is required
+  public let shareSetId: String?
+  /// Configuration to create a new TVC operator set, used as the Share Set for this TVC application. If left empty, a Share Set ID is required
+  public let shareSetParams: v1TvcOperatorSetParams?
+
+  public init(
+    timestampMs: String? = nil,
+    organizationId: String? = nil,
+    externalConnectivity: Bool? = nil,
+    manifestSetId: String? = nil,
+    manifestSetParams: v1TvcOperatorSetParams? = nil,
+    name: String,
+    quorumPublicKey: String,
+    shareSetId: String? = nil,
+    shareSetParams: v1TvcOperatorSetParams? = nil
+  ) {
+    self.timestampMs = timestampMs
+    self.organizationId = organizationId
+    self.externalConnectivity = externalConnectivity
+    self.manifestSetId = manifestSetId
+    self.manifestSetParams = manifestSetParams
+    self.name = name
+    self.quorumPublicKey = quorumPublicKey
+    self.shareSetId = shareSetId
+    self.shareSetParams = shareSetParams
+  }
+}
+
+// MARK: - TCreateTvcAppInput
+
+public struct TCreateTvcAppInput: Codable, Sendable {
+  public let body: TCreateTvcAppBody
+
+  public init(
+    body: TCreateTvcAppBody
+  ) {
+    self.body = body
+  }
+}
+
+// MARK: - TCreateTvcDeploymentResponse
+
+public struct TCreateTvcDeploymentResponse: Codable, Sendable {
+  public let activity: v1Activity
+  /// The unique identifier for the TVC deployment
+  public let deploymentId: String
+  /// The unique identifier for the TVC manifest
+  public let manifestId: String
+}
+
+// MARK: - TCreateTvcDeploymentBody
+
+public struct TCreateTvcDeploymentBody: Codable, Sendable {
+  public let timestampMs: String?
+  public let organizationId: String?
+  /// The unique identifier of the to-be-deployed TVC application
+  public let appId: String
+  /// Digest of the pivot binary in the pivot container. This value will be inserted in the QOS manifest to ensure application integrity.
+  public let expectedPivotDigest: String
+  /// Arguments to pass to the host binary at startup. Encoded as a list of strings, for example ["--foo", "bar"]
+  public let hostArgs: [String]
+  /// URL of the container containing the host binary
+  public let hostContainerImageUrl: String
+  /// Location of the binary inside the host container
+  public let hostPath: String
+  /// Optional nonce to ensure uniqueness of the deployment manifest. If not provided, it defaults to the current Unix timestamp in seconds.
+  public let nonce: Int?
+  /// Arguments to pass to the pivot binary at startup. Encoded as a list of strings, for example ["--foo", "bar"]
+  public let pivotArgs: [String]
+  /// URL of the container containing the pivot binary
+  public let pivotContainerImageUrl: String
+  /// Location of the binary in the pivot container
+  public let pivotPath: String
+  /// The QuorumOS version to use to deploy this application
+  public let qosVersion: String
+
+  public init(
+    timestampMs: String? = nil,
+    organizationId: String? = nil,
+    appId: String,
+    expectedPivotDigest: String,
+    hostArgs: [String],
+    hostContainerImageUrl: String,
+    hostPath: String,
+    nonce: Int? = nil,
+    pivotArgs: [String],
+    pivotContainerImageUrl: String,
+    pivotPath: String,
+    qosVersion: String
+  ) {
+    self.timestampMs = timestampMs
+    self.organizationId = organizationId
+    self.appId = appId
+    self.expectedPivotDigest = expectedPivotDigest
+    self.hostArgs = hostArgs
+    self.hostContainerImageUrl = hostContainerImageUrl
+    self.hostPath = hostPath
+    self.nonce = nonce
+    self.pivotArgs = pivotArgs
+    self.pivotContainerImageUrl = pivotContainerImageUrl
+    self.pivotPath = pivotPath
+    self.qosVersion = qosVersion
+  }
+}
+
+// MARK: - TCreateTvcDeploymentInput
+
+public struct TCreateTvcDeploymentInput: Codable, Sendable {
+  public let body: TCreateTvcDeploymentBody
+
+  public init(
+    body: TCreateTvcDeploymentBody
+  ) {
+    self.body = body
+  }
+}
+
+// MARK: - TCreateTvcManifestApprovalsResponse
+
+public struct TCreateTvcManifestApprovalsResponse: Codable, Sendable {
+  public let activity: v1Activity
+  /// The unique identifier(s) for the manifest approvals
+  public let approvalIds: [String]
+}
+
+// MARK: - TCreateTvcManifestApprovalsBody
+
+public struct TCreateTvcManifestApprovalsBody: Codable, Sendable {
+  public let timestampMs: String?
+  public let organizationId: String?
+  /// List of manifest approvals
+  public let approvals: [v1TvcManifestApproval]
+  /// Unique identifier of the TVC deployment to approve
+  public let manifestId: String
+
+  public init(
+    timestampMs: String? = nil,
+    organizationId: String? = nil,
+    approvals: [v1TvcManifestApproval],
+    manifestId: String
+  ) {
+    self.timestampMs = timestampMs
+    self.organizationId = organizationId
+    self.approvals = approvals
+    self.manifestId = manifestId
+  }
+}
+
+// MARK: - TCreateTvcManifestApprovalsInput
+
+public struct TCreateTvcManifestApprovalsInput: Codable, Sendable {
+  public let body: TCreateTvcManifestApprovalsBody
+
+  public init(
+    body: TCreateTvcManifestApprovalsBody
   ) {
     self.body = body
   }
@@ -11955,12 +13334,10 @@ public struct TEmailAuthBody: Codable, Sendable {
   public let organizationId: String?
   /// Optional human-readable name for an API Key. If none provided, default to Email Auth - <Timestamp>
   public let apiKeyName: String?
-  /// The name of the application.
-  public let appName: String
   /// Email of the authenticating user.
   public let email: String
-  /// Optional parameters for customizing emails. If not provided, the default email will be used.
-  public let emailCustomization: v1EmailCustomizationParams?
+  /// Parameters for customizing emails. If not provided, the default email will be used. Note that app_name is required.
+  public let emailCustomization: v1EmailAuthCustomizationParams
   /// Expiration window (in seconds) indicating how long the API key is valid for. If not provided, a default of 15 minutes will be used.
   public let expirationSeconds: String?
   /// Invalidate all other previously generated Email Auth API keys
@@ -11978,9 +13355,8 @@ public struct TEmailAuthBody: Codable, Sendable {
     timestampMs: String? = nil,
     organizationId: String? = nil,
     apiKeyName: String? = nil,
-    appName: String,
     email: String,
-    emailCustomization: v1EmailCustomizationParams? = nil,
+    emailCustomization: v1EmailAuthCustomizationParams,
     expirationSeconds: String? = nil,
     invalidateExisting: Bool? = nil,
     replyToEmailAddress: String? = nil,
@@ -11991,7 +13367,6 @@ public struct TEmailAuthBody: Codable, Sendable {
     self.timestampMs = timestampMs
     self.organizationId = organizationId
     self.apiKeyName = apiKeyName
-    self.appName = appName
     self.email = email
     self.emailCustomization = emailCustomization
     self.expirationSeconds = expirationSeconds
@@ -12062,7 +13437,7 @@ public struct TEthSendRawTransactionInput: Codable, Sendable {
 
 public struct TEthSendTransactionResponse: Codable, Sendable {
   public let activity: v1Activity
-  /// The send_transaction_status ID associated with the transaction submission for sponsored transactions
+  /// The send_transaction_status ID associated with the transaction submission
   public let sendTransactionStatusId: String
 }
 
@@ -12079,6 +13454,8 @@ public struct TEthSendTransactionBody: Codable, Sendable {
   public let from: String
   /// Maximum amount of gas to use for this transaction, for EIP-1559 transactions.
   public let gasLimit: String?
+  /// The gas station delegate contract nonce. Only used when sponsor=true. Include this if you want maximal security posture.
+  public let gasStationNonce: String?
   /// Maximum total fee per gas unit (base fee + priority fee) in wei. Required for non-sponsored (EIP-1559) transactions. Not used for sponsored transactions.
   public let maxFeePerGas: String?
   /// Maximum priority fee (tip) per gas unit in wei. Required for non-sponsored (EIP-1559) transactions. Not used for sponsored transactions.
@@ -12099,6 +13476,7 @@ public struct TEthSendTransactionBody: Codable, Sendable {
     data: String? = nil,
     from: String,
     gasLimit: String? = nil,
+    gasStationNonce: String? = nil,
     maxFeePerGas: String? = nil,
     maxPriorityFeePerGas: String? = nil,
     nonce: String? = nil,
@@ -12112,6 +13490,7 @@ public struct TEthSendTransactionBody: Codable, Sendable {
     self.data = data
     self.from = from
     self.gasLimit = gasLimit
+    self.gasStationNonce = gasStationNonce
     self.maxFeePerGas = maxFeePerGas
     self.maxPriorityFeePerGas = maxPriorityFeePerGas
     self.nonce = nonce
@@ -12558,12 +13937,12 @@ public struct TInitOtpBody: Codable, Sendable {
   public let organizationId: String?
   /// Optional flag to specify if the OTP code should be alphanumeric (Crockford’s Base32). Default = true
   public let alphanumeric: Bool?
-  /// The name of the application.
+  /// The name of the application. This field is required and will be used in email notifications if an email template is not provided.
   public let appName: String
   /// Email or phone number to send the OTP code to
   public let contact: String
   /// Optional parameters for customizing emails. If not provided, the default email will be used.
-  public let emailCustomization: v1EmailCustomizationParams?
+  public let emailCustomization: v1EmailCustomizationParamsV2?
   /// Expiration window (in seconds) indicating how long the OTP is valid for. If not provided, a default of 5 minutes will be used. Maximum value is 600 seconds (10 minutes)
   public let expirationSeconds: String?
   /// Optional length of the OTP code. Default = 9
@@ -12576,7 +13955,7 @@ public struct TInitOtpBody: Codable, Sendable {
   public let sendFromEmailAddress: String?
   /// Optional custom sender name for use with sendFromEmailAddress; if left empty, will default to 'Notifications'
   public let sendFromEmailSenderName: String?
-  /// Optional parameters for customizing SMS message. If not provided, the default sms message will be used.
+  /// Optional parameters for customizing SMS message. If not provided, the default SMS message will be used.
   public let smsCustomization: v1SmsCustomizationParams?
   /// Optional client-generated user identifier to enable per-user rate limiting for SMS auth. We recommend using a hash of the client-side IP address.
   public let userIdentifier: String?
@@ -12587,7 +13966,7 @@ public struct TInitOtpBody: Codable, Sendable {
     alphanumeric: Bool? = nil,
     appName: String,
     contact: String,
-    emailCustomization: v1EmailCustomizationParams? = nil,
+    emailCustomization: v1EmailCustomizationParamsV2? = nil,
     expirationSeconds: String? = nil,
     otpLength: Int? = nil,
     otpType: String,
@@ -12641,15 +14020,17 @@ public struct TInitOtpAuthBody: Codable, Sendable {
   public let organizationId: String?
   /// Optional flag to specify if the OTP code should be alphanumeric (Crockford’s Base32). Default = true
   public let alphanumeric: Bool?
-  /// The name of the application.
+  /// The name of the application. This field is required and will be used in email notifications if an email template is not provided.
   public let appName: String
   /// Email or phone number to send the OTP code to
   public let contact: String
   /// Optional parameters for customizing emails. If not provided, the default email will be used.
-  public let emailCustomization: v1EmailCustomizationParams?
+  public let emailCustomization: v1EmailCustomizationParamsV2?
+  /// Expiration window (in seconds) indicating how long the OTP is valid for. If not provided, a default of 5 minutes will be used. Maximum value is 600 seconds (10 minutes)
+  public let expirationSeconds: String?
   /// Optional length of the OTP code. Default = 9
   public let otpLength: Int?
-  /// Enum to specifiy whether to send OTP via SMS or email
+  /// Whether to send OTP via SMS or email. Possible values: OTP_TYPE_SMS, OTP_TYPE_EMAIL
   public let otpType: String
   /// Optional custom email address to use as reply-to
   public let replyToEmailAddress: String?
@@ -12657,7 +14038,7 @@ public struct TInitOtpAuthBody: Codable, Sendable {
   public let sendFromEmailAddress: String?
   /// Optional custom sender name for use with sendFromEmailAddress; if left empty, will default to 'Notifications'
   public let sendFromEmailSenderName: String?
-  /// Optional parameters for customizing SMS message. If not provided, the default sms message will be used.
+  /// Optional parameters for customizing SMS message. If not provided, the default SMS message will be used.
   public let smsCustomization: v1SmsCustomizationParams?
   /// Optional client-generated user identifier to enable per-user rate limiting for SMS auth. We recommend using a hash of the client-side IP address.
   public let userIdentifier: String?
@@ -12668,7 +14049,8 @@ public struct TInitOtpAuthBody: Codable, Sendable {
     alphanumeric: Bool? = nil,
     appName: String,
     contact: String,
-    emailCustomization: v1EmailCustomizationParams? = nil,
+    emailCustomization: v1EmailCustomizationParamsV2? = nil,
+    expirationSeconds: String? = nil,
     otpLength: Int? = nil,
     otpType: String,
     replyToEmailAddress: String? = nil,
@@ -12683,6 +14065,7 @@ public struct TInitOtpAuthBody: Codable, Sendable {
     self.appName = appName
     self.contact = contact
     self.emailCustomization = emailCustomization
+    self.expirationSeconds = expirationSeconds
     self.otpLength = otpLength
     self.otpType = otpType
     self.replyToEmailAddress = replyToEmailAddress
@@ -12718,12 +14101,10 @@ public struct TInitUserEmailRecoveryResponse: Codable, Sendable {
 public struct TInitUserEmailRecoveryBody: Codable, Sendable {
   public let timestampMs: String?
   public let organizationId: String?
-  /// The name of the application.
-  public let appName: String
   /// Email of the user starting recovery
   public let email: String
-  /// Optional parameters for customizing emails. If not provided, the default email will be used.
-  public let emailCustomization: v1EmailCustomizationParams?
+  /// Parameters for customizing emails. If not provided, the default email will be used. Note that `app_name` is required.
+  public let emailCustomization: v1EmailAuthCustomizationParams
   /// Expiration window (in seconds) indicating how long the recovery credential is valid for. If not provided, a default of 15 minutes will be used.
   public let expirationSeconds: String?
   /// Optional custom email address to use as reply-to
@@ -12738,9 +14119,8 @@ public struct TInitUserEmailRecoveryBody: Codable, Sendable {
   public init(
     timestampMs: String? = nil,
     organizationId: String? = nil,
-    appName: String,
     email: String,
-    emailCustomization: v1EmailCustomizationParams? = nil,
+    emailCustomization: v1EmailAuthCustomizationParams,
     expirationSeconds: String? = nil,
     replyToEmailAddress: String? = nil,
     sendFromEmailAddress: String? = nil,
@@ -12749,7 +14129,6 @@ public struct TInitUserEmailRecoveryBody: Codable, Sendable {
   ) {
     self.timestampMs = timestampMs
     self.organizationId = organizationId
-    self.appName = appName
     self.email = email
     self.emailCustomization = emailCustomization
     self.expirationSeconds = expirationSeconds
@@ -13366,6 +14745,61 @@ public struct TSignTransactionInput: Codable, Sendable {
 
   public init(
     body: TSignTransactionBody
+  ) {
+    self.body = body
+  }
+}
+
+// MARK: - TSolSendTransactionResponse
+
+public struct TSolSendTransactionResponse: Codable, Sendable {
+  public let activity: v1Activity
+  /// The send_transaction_status ID associated with the transaction submission
+  public let sendTransactionStatusId: String
+}
+
+// MARK: - TSolSendTransactionBody
+
+public struct TSolSendTransactionBody: Codable, Sendable {
+  public let timestampMs: String?
+  public let organizationId: String?
+  /// CAIP-2 chain ID (e.g., 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp' for Solana mainnet).
+  public let caip2: String
+  /// user-provided blockhash for replay protection / deadline control. If omitted and sponsor=true, we fetch a fresh blockhash during execution
+  public let recentBlockhash: String?
+  /// A wallet or private key address to sign with. This does not support private key IDs.
+  public let signWith: String
+  /// Whether to sponsor this transaction via Gas Station.
+  public let sponsor: Bool?
+  /// Base64-encoded serialized unsigned Solana transaction
+  public let unsignedTransaction: String
+
+  public init(
+    timestampMs: String? = nil,
+    organizationId: String? = nil,
+    caip2: String,
+    recentBlockhash: String? = nil,
+    signWith: String,
+    sponsor: Bool? = nil,
+    unsignedTransaction: String
+  ) {
+    self.timestampMs = timestampMs
+    self.organizationId = organizationId
+    self.caip2 = caip2
+    self.recentBlockhash = recentBlockhash
+    self.signWith = signWith
+    self.sponsor = sponsor
+    self.unsignedTransaction = unsignedTransaction
+  }
+}
+
+// MARK: - TSolSendTransactionInput
+
+public struct TSolSendTransactionInput: Codable, Sendable {
+  public let body: TSolSendTransactionBody
+
+  public init(
+    body: TSolSendTransactionBody
   ) {
     self.body = body
   }
@@ -14028,6 +15462,39 @@ public struct TNOOPCodegenAnchorBody: Codable, Sendable {
   public init() {}
 }
 
+// MARK: - TRefreshFeatureFlagsResponse
+
+public struct TRefreshFeatureFlagsResponse: Codable, Sendable {
+  public let activity: v1Activity
+}
+
+// MARK: - TRefreshFeatureFlagsBody
+
+public struct TRefreshFeatureFlagsBody: Codable, Sendable {
+  public let timestampMs: String?
+  public let organizationId: String?
+
+  public init(
+    timestampMs: String? = nil,
+    organizationId: String? = nil
+  ) {
+    self.timestampMs = timestampMs
+    self.organizationId = organizationId
+  }
+}
+
+// MARK: - TRefreshFeatureFlagsInput
+
+public struct TRefreshFeatureFlagsInput: Codable, Sendable {
+  public let body: TRefreshFeatureFlagsBody
+
+  public init(
+    body: TRefreshFeatureFlagsBody
+  ) {
+    self.body = body
+  }
+}
+
 // MARK: - TTestRateLimitsResponse
 
 public struct TTestRateLimitsResponse: Codable, Sendable {
@@ -14078,16 +15545,20 @@ public struct ProxyTGetAccountBody: Codable, Sendable {
   public let filterType: String
   /// The value of the filter to apply for the specified type. For example, a specific email or name string.
   public let filterValue: String
+  /// OIDC token to verify access to PII (email/phone number) when filter_type is 'EMAIL' or 'PHONE_NUMBER'. Needed for social linking when verification_token is not available.
+  public let oidcToken: String?
   /// Signed JWT containing a unique id, expiry, verification type, contact. Used to verify access to PII (email/phone number) when filter_type is 'EMAIL' or 'PHONE_NUMBER'.
   public let verificationToken: String?
 
   public init(
     filterType: String,
     filterValue: String,
+    oidcToken: String? = nil,
     verificationToken: String? = nil
   ) {
     self.filterType = filterType
     self.filterValue = filterValue
+    self.oidcToken = oidcToken
     self.verificationToken = verificationToken
   }
 }

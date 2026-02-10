@@ -23,14 +23,6 @@ extension TurnkeyClient {
     return try await request("/public/v1/query/get_api_keys", body: input)
   }
 
-  /// Attestation
-  /// Get the attestation document corresponding to an enclave.
-  public func getAttestationDocument(_ input: TGetAttestationDocumentBody) async throws
-    -> TGetAttestationDocumentResponse
-  {
-    return try await request("/public/v1/query/get_attestation", body: input)
-  }
-
   /// Get authenticator
   /// Get details about an authenticator.
   public func getAuthenticator(_ input: TGetAuthenticatorBody) async throws
@@ -65,6 +57,12 @@ extension TurnkeyClient {
     -> TGetLatestBootProofResponse
   {
     return try await request("/public/v1/query/get_latest_boot_proof", body: input)
+  }
+
+  /// Get nonces for an address.
+  /// Get nonce values for an address on a given network. Can fetch the standard on-chain nonce and/or the gas station nonce used for sponsored transactions.
+  public func getNonces(_ input: TGetNoncesBody) async throws -> TGetNoncesResponse {
+    return try await request("/public/v1/query/get_nonces", body: input)
   }
 
   /// Get OAuth 2.0 credential
@@ -143,6 +141,20 @@ extension TurnkeyClient {
     return try await request("/public/v1/query/get_smart_contract_interface", body: input)
   }
 
+  /// Get TVC App
+  /// Get details about a single TVC App
+  public func getTvcApp(_ input: TGetTvcAppBody) async throws -> TGetTvcAppResponse {
+    return try await request("/public/v1/query/get_tvc_app", body: input)
+  }
+
+  /// Get TVC Deployment
+  /// Get details about a single TVC Deployment
+  public func getTvcDeployment(_ input: TGetTvcDeploymentBody) async throws
+    -> TGetTvcDeploymentResponse
+  {
+    return try await request("/public/v1/query/get_tvc_deployment", body: input)
+  }
+
   /// Get user
   /// Get details about a user.
   public func getUser(_ input: TGetUserBody) async throws -> TGetUserResponse {
@@ -161,6 +173,14 @@ extension TurnkeyClient {
     -> TGetWalletAccountResponse
   {
     return try await request("/public/v1/query/get_wallet_account", body: input)
+  }
+
+  /// Get balances of supported assets for wallet account address
+  /// Get non-zero balances of supported assets for a single wallet account address on the specified network.
+  public func getWalletAddressBalances(_ input: TGetWalletAddressBalancesBody) async throws
+    -> TGetWalletAddressBalancesResponse
+  {
+    return try await request("/public/v1/query/get_wallet_address_balances", body: input)
   }
 
   /// List activities
@@ -230,6 +250,20 @@ extension TurnkeyClient {
     -> TGetSubOrgIdsResponse
   {
     return try await request("/public/v1/query/list_suborgs", body: input)
+  }
+
+  /// List TVC Deployments
+  /// List all deployments for a given TVC App
+  public func getTvcAppDeployments(_ input: TGetTvcAppDeploymentsBody) async throws
+    -> TGetTvcAppDeploymentsResponse
+  {
+    return try await request("/public/v1/query/list_tvc_app_deployments", body: input)
+  }
+
+  /// List TVC Apps
+  /// List all TVC Apps within an organization.
+  public func getTvcApps(_ input: TGetTvcAppsBody) async throws -> TGetTvcAppsResponse {
+    return try await request("/public/v1/query/list_tvc_apps", body: input)
   }
 
   /// List user tags
@@ -431,6 +465,35 @@ extension TurnkeyClient {
       "/public/v1/submit/create_sub_organization", body: input,
       activityType: "ACTIVITY_TYPE_CREATE_SUB_ORGANIZATION_V7",
       resultKey: "createSubOrganizationResultV7")
+  }
+
+  /// Create a TVC App
+  /// Create a new TVC application
+  public func createTvcApp(_ input: TCreateTvcAppBody) async throws -> TCreateTvcAppResponse {
+    return try await activity(
+      "/public/v1/submit/create_tvc_app", body: input, activityType: "ACTIVITY_TYPE_CREATE_TVC_APP",
+      resultKey: "createTvcAppResult")
+  }
+
+  /// Create a TVC Deployment
+  /// Create a new TVC Deployment
+  public func createTvcDeployment(_ input: TCreateTvcDeploymentBody) async throws
+    -> TCreateTvcDeploymentResponse
+  {
+    return try await activity(
+      "/public/v1/submit/create_tvc_deployment", body: input,
+      activityType: "ACTIVITY_TYPE_CREATE_TVC_DEPLOYMENT", resultKey: "createTvcDeploymentResult")
+  }
+
+  /// Create TVC Manifest Approvals
+  /// Post one or more manifest approvals for a TVC Manifest
+  public func createTvcManifestApprovals(_ input: TCreateTvcManifestApprovalsBody) async throws
+    -> TCreateTvcManifestApprovalsResponse
+  {
+    return try await activity(
+      "/public/v1/submit/create_tvc_manifest_approvals", body: input,
+      activityType: "ACTIVITY_TYPE_CREATE_TVC_MANIFEST_APPROVALS",
+      resultKey: "createTvcManifestApprovalsResult")
   }
 
   /// Create user tag
@@ -859,6 +922,16 @@ extension TurnkeyClient {
       activityType: "ACTIVITY_TYPE_SIGN_TRANSACTION_V2", resultKey: "signTransactionResult")
   }
 
+  /// Submit a transaction intent for broadcasting.
+  /// Submit a transaction intent describing a transaction you would like to broadcast.
+  public func solSendTransaction(_ input: TSolSendTransactionBody) async throws
+    -> TSolSendTransactionResponse
+  {
+    return try await activity(
+      "/public/v1/submit/sol_send_transaction", body: input,
+      activityType: "ACTIVITY_TYPE_SOL_SEND_TRANSACTION", resultKey: "solSendTransactionResult")
+  }
+
   /// Login with a stamp
   /// Create a session for a user through stamping client side (API key, wallet client, or passkey client).
   public func stampLogin(_ input: TStampLoginBody) async throws -> TStampLoginResponse {
@@ -976,6 +1049,16 @@ extension TurnkeyClient {
     return try await activity(
       "/public/v1/submit/verify_otp", body: input, activityType: "ACTIVITY_TYPE_VERIFY_OTP",
       resultKey: "verifyOtpResult")
+  }
+
+  /// Refresh feature flags
+  /// Refresh feature flags by triggering a DB read to flush the in-memory cache.
+  public func refreshFeatureFlags(_ input: TRefreshFeatureFlagsBody) async throws
+    -> TRefreshFeatureFlagsResponse
+  {
+    return try await activity(
+      "/tkhq/api/v1/refresh_feature_flags", body: input,
+      activityType: "ACTIVITY_TYPE_REFRESH_FEATURE_FLAGS", resultKey: "RefreshFeatureFlagsResult")
   }
 
   /// Test rate limit
