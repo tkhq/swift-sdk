@@ -45,7 +45,7 @@ extension TurnkeyClient {
     return try await request("/public/v1/query/get_boot_proof", body: input)
   }
 
-  /// Get gas usage and limits.
+  /// Get gas usage
   /// Get gas usage and gas limits for either the parent organization or a sub-organization.
   public func getGasUsage(_ input: TGetGasUsageBody) async throws -> TGetGasUsageResponse {
     return try await request("/public/v1/query/get_gas_usage", body: input)
@@ -59,7 +59,7 @@ extension TurnkeyClient {
     return try await request("/public/v1/query/get_latest_boot_proof", body: input)
   }
 
-  /// Get nonces for an address.
+  /// Get nonces
   /// Get nonce values for an address on a given network. Can fetch the standard on-chain nonce and/or the gas station nonce used for sponsored transactions.
   public func getNonces(_ input: TGetNoncesBody) async throws -> TGetNoncesResponse {
     return try await request("/public/v1/query/get_nonces", body: input)
@@ -175,8 +175,8 @@ extension TurnkeyClient {
     return try await request("/public/v1/query/get_wallet_account", body: input)
   }
 
-  /// Get balances of supported assets for wallet account address
-  /// Get non-zero balances of supported assets for a single wallet account address on the specified network.
+  /// Get balances
+  /// Get balances of supported assets for an address on the specified network. Only non-zero balances are returned. This feature is in beta - please contact support for access.
   public func getWalletAddressBalances(_ input: TGetWalletAddressBalancesBody) async throws
     -> TGetWalletAddressBalancesResponse
   {
@@ -250,6 +250,14 @@ extension TurnkeyClient {
     -> TGetSubOrgIdsResponse
   {
     return try await request("/public/v1/query/list_suborgs", body: input)
+  }
+
+  /// List supported assets
+  /// List supported assets for the specified network. This feature is in beta - please contact support for access.
+  public func listSupportedAssets(_ input: TListSupportedAssetsBody) async throws
+    -> TListSupportedAssetsResponse
+  {
+    return try await request("/public/v1/query/list_supported_assets", body: input)
   }
 
   /// List TVC Deployments
@@ -702,8 +710,8 @@ extension TurnkeyClient {
       resultKey: "ethSendRawTransactionResult")
   }
 
-  /// Submit a transaction intent for broadcasting.
-  /// Submit a transaction intent describing a transaction you would like to broadcast.
+  /// Broadcast EVM transaction
+  /// Submit a transaction intent describing an EVM transaction you would like to broadcast.
   public func ethSendTransaction(_ input: TEthSendTransactionBody) async throws
     -> TEthSendTransactionResponse
   {
@@ -922,8 +930,8 @@ extension TurnkeyClient {
       activityType: "ACTIVITY_TYPE_SIGN_TRANSACTION_V2", resultKey: "signTransactionResult")
   }
 
-  /// Submit a transaction intent for broadcasting.
-  /// Submit a transaction intent describing a transaction you would like to broadcast.
+  /// Broadcast SVM transaction
+  /// Submit a transaction intent describing an SVM transaction you would like to broadcast.
   public func solSendTransaction(_ input: TSolSendTransactionBody) async throws
     -> TSolSendTransactionResponse
   {
