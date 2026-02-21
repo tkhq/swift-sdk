@@ -795,6 +795,8 @@ public struct v1AssetBalance: Codable, Sendable {
   public let decimals: Int?
   /// Normalized balance values for display purposes only. Do not do any arithmetic or calculations with these, as the results could be imprecise. Use the balance field instead.
   public let display: v1AssetBalanceDisplay?
+  /// The asset name
+  public let name: String?
   /// The asset symbol
   public let symbol: String?
 
@@ -803,12 +805,14 @@ public struct v1AssetBalance: Codable, Sendable {
     caip19: String? = nil,
     decimals: Int? = nil,
     display: v1AssetBalanceDisplay? = nil,
+    name: String? = nil,
     symbol: String? = nil
   ) {
     self.balance = balance
     self.caip19 = caip19
     self.decimals = decimals
     self.display = display
+    self.name = name
     self.symbol = symbol
   }
 }
@@ -825,6 +829,33 @@ public struct v1AssetBalanceDisplay: Codable, Sendable {
   ) {
     self.crypto = crypto
     self.usd = usd
+  }
+}
+
+public struct v1AssetMetadata: Codable, Sendable {
+  /// The caip-19 asset identifier
+  public let caip19: String?
+  /// The number of decimals this asset uses
+  public let decimals: Int?
+  /// The url of the asset logo
+  public let logoUrl: String?
+  /// The asset name
+  public let name: String?
+  /// The asset symbol
+  public let symbol: String?
+
+  public init(
+    caip19: String? = nil,
+    decimals: Int? = nil,
+    logoUrl: String? = nil,
+    name: String? = nil,
+    symbol: String? = nil
+  ) {
+    self.caip19 = caip19
+    self.decimals = decimals
+    self.logoUrl = logoUrl
+    self.name = name
+    self.symbol = symbol
   }
 }
 
@@ -2431,6 +2462,8 @@ public struct v1CreateTvcDeploymentIntent: Codable, Sendable {
   public let expectedPivotDigest: String
   /// Arguments to pass to the host binary at startup. Encoded as a list of strings, for example ["--foo", "bar"]
   public let hostArgs: [String]
+  /// Optional encrypted pull secret to authorize Turnkey to pull the host container image. If your image is public, leave this empty.
+  public let hostContainerEncryptedPullSecret: String?
   /// URL of the container containing the host binary
   public let hostContainerImageUrl: String
   /// Location of the binary inside the host container
@@ -2439,6 +2472,8 @@ public struct v1CreateTvcDeploymentIntent: Codable, Sendable {
   public let nonce: Int?
   /// Arguments to pass to the pivot binary at startup. Encoded as a list of strings, for example ["--foo", "bar"]
   public let pivotArgs: [String]
+  /// Optional encrypted pull secret to authorize Turnkey to pull the pivot container image. If your image is public, leave this empty.
+  public let pivotContainerEncryptedPullSecret: String?
   /// URL of the container containing the pivot binary
   public let pivotContainerImageUrl: String
   /// Location of the binary in the pivot container
@@ -2450,10 +2485,12 @@ public struct v1CreateTvcDeploymentIntent: Codable, Sendable {
     appId: String,
     expectedPivotDigest: String,
     hostArgs: [String],
+    hostContainerEncryptedPullSecret: String? = nil,
     hostContainerImageUrl: String,
     hostPath: String,
     nonce: Int? = nil,
     pivotArgs: [String],
+    pivotContainerEncryptedPullSecret: String? = nil,
     pivotContainerImageUrl: String,
     pivotPath: String,
     qosVersion: String
@@ -2461,10 +2498,12 @@ public struct v1CreateTvcDeploymentIntent: Codable, Sendable {
     self.appId = appId
     self.expectedPivotDigest = expectedPivotDigest
     self.hostArgs = hostArgs
+    self.hostContainerEncryptedPullSecret = hostContainerEncryptedPullSecret
     self.hostContainerImageUrl = hostContainerImageUrl
     self.hostPath = hostPath
     self.nonce = nonce
     self.pivotArgs = pivotArgs
+    self.pivotContainerEncryptedPullSecret = pivotContainerEncryptedPullSecret
     self.pivotContainerImageUrl = pivotContainerImageUrl
     self.pivotPath = pivotPath
     self.qosVersion = qosVersion
@@ -4617,7 +4656,7 @@ public struct v1GetLatestBootProofRequest: Codable, Sendable {
 public struct v1GetNoncesRequest: Codable, Sendable {
   /// The Ethereum address to query nonces for.
   public let address: String
-  /// The network identifier in CAIP-2 format (e.g., 'eip155:1' for Ethereum mainnet).
+  /// CAIP-2 chain ID (e.g., 'eip155:1' for Ethereum mainnet).
   public let caip2: String
   /// Whether to fetch the gas station nonce used for sponsored transactions.
   public let gasStationNonce: Bool?
@@ -5275,7 +5314,7 @@ public struct v1GetWalletAccountsResponse: Codable, Sendable {
 public struct v1GetWalletAddressBalancesRequest: Codable, Sendable {
   /// Address corresponding to a wallet account.
   public let address: String
-  /// The network identifier in CAIP-2 format (e.g., 'eip155:1' for Ethereum mainnet).
+  /// CAIP-2 chain ID (e.g., 'eip155:1' for Ethereum mainnet).
   public let caip2: String
   /// Unique identifier for a given organization.
   public let organizationId: String
@@ -6631,6 +6670,32 @@ public struct v1ListPrivateKeyTagsResponse: Codable, Sendable {
     privateKeyTags: [datav1Tag]
   ) {
     self.privateKeyTags = privateKeyTags
+  }
+}
+
+public struct v1ListSupportedAssetsRequest: Codable, Sendable {
+  /// CAIP-2 chain ID (e.g., 'eip155:1' for Ethereum mainnet).
+  public let caip2: String
+  /// Unique identifier for a given organization.
+  public let organizationId: String
+
+  public init(
+    caip2: String,
+    organizationId: String
+  ) {
+    self.caip2 = caip2
+    self.organizationId = organizationId
+  }
+}
+
+public struct v1ListSupportedAssetsResponse: Codable, Sendable {
+  /// List of asset metadata
+  public let assets: [v1AssetMetadata]?
+
+  public init(
+    assets: [v1AssetMetadata]? = nil
+  ) {
+    self.assets = assets
   }
 }
 
@@ -10336,7 +10401,7 @@ public struct TGetNoncesBody: Codable, Sendable {
   public let organizationId: String?
   /// The Ethereum address to query nonces for.
   public let address: String
-  /// The network identifier in CAIP-2 format (e.g., 'eip155:1' for Ethereum mainnet).
+  /// CAIP-2 chain ID (e.g., 'eip155:1' for Ethereum mainnet).
   public let caip2: String
   /// Whether to fetch the gas station nonce used for sponsored transactions.
   public let gasStationNonce: Bool?
@@ -10916,7 +10981,7 @@ public struct TGetWalletAddressBalancesBody: Codable, Sendable {
   public let organizationId: String?
   /// Address corresponding to a wallet account.
   public let address: String
-  /// The network identifier in CAIP-2 format (e.g., 'eip155:1' for Ethereum mainnet).
+  /// CAIP-2 chain ID (e.g., 'eip155:1' for Ethereum mainnet).
   public let caip2: String
 
   public init(
@@ -11241,6 +11306,41 @@ public struct TGetSubOrgIdsInput: Codable, Sendable {
 
   public init(
     body: TGetSubOrgIdsBody
+  ) {
+    self.body = body
+  }
+}
+
+// MARK: - TListSupportedAssetsResponse
+
+public struct TListSupportedAssetsResponse: Codable, Sendable {
+  /// List of asset metadata
+  public let assets: [v1AssetMetadata]?
+}
+
+// MARK: - TListSupportedAssetsBody
+
+public struct TListSupportedAssetsBody: Codable, Sendable {
+  public let organizationId: String?
+  /// CAIP-2 chain ID (e.g., 'eip155:1' for Ethereum mainnet).
+  public let caip2: String
+
+  public init(
+    organizationId: String? = nil,
+    caip2: String
+  ) {
+    self.organizationId = organizationId
+    self.caip2 = caip2
+  }
+}
+
+// MARK: - TListSupportedAssetsInput
+
+public struct TListSupportedAssetsInput: Codable, Sendable {
+  public let body: TListSupportedAssetsBody
+
+  public init(
+    body: TListSupportedAssetsBody
   ) {
     self.body = body
   }
@@ -12386,6 +12486,8 @@ public struct TCreateTvcDeploymentBody: Codable, Sendable {
   public let expectedPivotDigest: String
   /// Arguments to pass to the host binary at startup. Encoded as a list of strings, for example ["--foo", "bar"]
   public let hostArgs: [String]
+  /// Optional encrypted pull secret to authorize Turnkey to pull the host container image. If your image is public, leave this empty.
+  public let hostContainerEncryptedPullSecret: String?
   /// URL of the container containing the host binary
   public let hostContainerImageUrl: String
   /// Location of the binary inside the host container
@@ -12394,6 +12496,8 @@ public struct TCreateTvcDeploymentBody: Codable, Sendable {
   public let nonce: Int?
   /// Arguments to pass to the pivot binary at startup. Encoded as a list of strings, for example ["--foo", "bar"]
   public let pivotArgs: [String]
+  /// Optional encrypted pull secret to authorize Turnkey to pull the pivot container image. If your image is public, leave this empty.
+  public let pivotContainerEncryptedPullSecret: String?
   /// URL of the container containing the pivot binary
   public let pivotContainerImageUrl: String
   /// Location of the binary in the pivot container
@@ -12407,10 +12511,12 @@ public struct TCreateTvcDeploymentBody: Codable, Sendable {
     appId: String,
     expectedPivotDigest: String,
     hostArgs: [String],
+    hostContainerEncryptedPullSecret: String? = nil,
     hostContainerImageUrl: String,
     hostPath: String,
     nonce: Int? = nil,
     pivotArgs: [String],
+    pivotContainerEncryptedPullSecret: String? = nil,
     pivotContainerImageUrl: String,
     pivotPath: String,
     qosVersion: String
@@ -12420,10 +12526,12 @@ public struct TCreateTvcDeploymentBody: Codable, Sendable {
     self.appId = appId
     self.expectedPivotDigest = expectedPivotDigest
     self.hostArgs = hostArgs
+    self.hostContainerEncryptedPullSecret = hostContainerEncryptedPullSecret
     self.hostContainerImageUrl = hostContainerImageUrl
     self.hostPath = hostPath
     self.nonce = nonce
     self.pivotArgs = pivotArgs
+    self.pivotContainerEncryptedPullSecret = pivotContainerEncryptedPullSecret
     self.pivotContainerImageUrl = pivotContainerImageUrl
     self.pivotPath = pivotPath
     self.qosVersion = qosVersion
