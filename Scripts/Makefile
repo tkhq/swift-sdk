@@ -1,4 +1,4 @@
-.PHONY: build types clients codegen format clean test test-modern test-stamper
+.PHONY: build types clients codegen format format-check clean test test-modern test-stamper
 
 # Build the codegen executables
 build:
@@ -24,6 +24,14 @@ format:
 	@swift-format ../Sources/TurnkeyTypes/Generated/ -i -r 2>/dev/null
 	@swift-format ../Sources/TurnkeyHttp/Public/TurnkeyClient+Public.swift -i 2>/dev/null
 	@swift-format ../Sources/TurnkeyHttp/Public/TurnkeyClient+AuthProxy.swift -i 2>/dev/null
+
+# Check formatting without modifying files (exits non-zero if formatting is needed)
+format-check:
+	@echo "🔍 Checking formatting..."
+	@swift-format lint -r ../Sources/TurnkeyTypes/Generated/ 2>/dev/null
+	@swift-format lint ../Sources/TurnkeyHttp/Public/TurnkeyClient+Public.swift 2>/dev/null
+	@swift-format lint ../Sources/TurnkeyHttp/Public/TurnkeyClient+AuthProxy.swift 2>/dev/null
+	@echo "✅ Formatting looks good!"
 
 # Clean build artifacts
 clean:

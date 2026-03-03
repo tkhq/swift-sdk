@@ -1,0 +1,46 @@
+name: swift-build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch: # Allows manual invocation
+
+jobs:
+  build:
+    runs-on: macos-latest # Use macOS for Swift builds
+    steps:
+        # https://github.com/actions/checkout
+        - name: Checkout
+          uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+        - name: Install swift-format
+          run: brew install swift-format
+
+        - name: Check formatting
+          run: make -C Scripts format-check
+
+        - name: Resolve dependencies
+          run: swift package resolve
+        
+        - name: Build
+          run: make -C Scripts build
+        
+        - name: Run codegen
+          run: make -C Scripts generate
+        
+        - name: Ensure git is clean
+          run: |
+            if [ -z "$( git status --porcelain )" ]; then
+              echo "Git is clean!"
+              exit 0
+            else
+              echo "Git is dirty!"
+              git add -A
+              git --no-pager diff HEAD
+              exit 1
+            fi
+        
+        - name: Test
+          run: make -C Scripts test
