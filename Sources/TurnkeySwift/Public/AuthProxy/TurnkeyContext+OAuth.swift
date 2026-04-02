@@ -54,7 +54,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
   /// Signs up a new sub-organization and user via OAuth, then performs login.
   ///
   /// Adds the OAuth provider details to the sub-organization parameters,
-  /// executes the signup request, and logs in using the same OIDC token.
+  /// executes the signup request via the v2 endpoint, and logs in using the same OIDC token.
   ///
   /// - Parameters:
   ///   - oidcToken: The OIDC token returned from the OAuth provider.
@@ -85,15 +85,15 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
 
     do {
       var merged = createSubOrgParams ?? CreateSubOrgParams()
-
       let resolvedProviderName =
         providerName ?? "OpenID Connect Provider \(Int(Date().timeIntervalSince1970))"
       var oauthProviders = merged.oauthProviders ?? []
-      oauthProviders.append(.init(providerName: resolvedProviderName, oidcToken: oidcToken))
+      oauthProviders.append(
+        .init(providerName: resolvedProviderName, oneOf: .oidcToken(oidcToken)))
       merged.oauthProviders = oauthProviders
 
       let signupBody = buildSignUpBody(createSubOrgParams: merged)
-      _ = try await client.proxySignup(signupBody)
+      _ = try await client.proxySignupV2(signupBody)
 
       // after signing up we login
       return try await loginWithOAuth(
@@ -372,7 +372,8 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     )
 
     // run system web auth to retrieve authorization code and state
-    let oauth = try await runOAuth2CodeSession(url: discordAuthUrl, scheme: scheme, anchor: anchor)
+    let oauth = try await runOAuth2CodeSession(
+      url: discordAuthUrl, scheme: scheme, anchor: anchor)
 
     // we validate that returned state matches what we sent
     guard oauth.state == state else {

@@ -207,6 +207,74 @@ enum HpkeHelpers {
     return String(decoding: jsonData, as: UTF8.self)
   }
 
+  static func encryptOtpCodeToBundle(
+    otpCode: String,
+    otpEncryptionTargetBundle: String,
+    publicKey: String,
+    dangerouslyOverrideSignerPublicKey: String?
+  ) throws -> String {
+    let outer: BundleOuter
+    do {
+      outer = try JSONDecoder().decode(BundleOuter.self, from: Data(otpEncryptionTargetBundle.utf8))
+    } catch {
+      throw CryptoError.decodingFailed(error)
+    }
+
+    guard
+      try SignatureVerifier.verifyEnclaveSignature(
+        enclaveQuorumPublic: outer.enclaveQuorumPublic,
+        publicSignature: outer.dataSignature,
+        signedData: outer.data,
+        dangerouslyOverrideSignerPublicKey: dangerouslyOverrideSignerPublicKey
+          ?? TurnkeyConstants.productionTlsFetcherSignPublicKey
+      )
+    else {
+      throw CryptoError.signatureVerificationFailed
+    }
+
+    guard let innerData = Data(hexString: outer.data) else {
+      throw CryptoError.invalidHexString(outer.data)
+    }
+
+    let inner: SignedInner
+    do {
+      inner = try JSONDecoder().decode(SignedInner.self, from: innerData)
+    } catch {
+      throw CryptoError.decodingFailed(error)
+    }
+
+    guard let targetHex = inner.targetPublic else {
+      throw CryptoError.missingEncappedPublic
+    }
+
+    let payload: [String: String] = ["otp_code": otpCode, "public_key": publicKey]
+    let plaintext = try JSONSerialization.data(withJSONObject: payload, options: .sortedKeys)
+
+    let bundleBytes = try hpkeEncrypt(
+      plaintext: plaintext,
+      recipientPubKeyHex: targetHex
+    )
+
+    guard bundleBytes.count > 33 else {
+      throw CryptoError.invalidCompressedKeyLength
+    }
+
+    let compressed = bundleBytes.prefix(33)
+    let cipher = bundleBytes.dropFirst(33)
+
+    let uncompressedPub = try P256.KeyAgreement.PublicKey(
+      compressedRepresentation: compressed
+    ).x963Representation
+
+    let json: [String: String] = [
+      "encappedPublic": uncompressedPub.toHexString(),
+      "ciphertext": cipher.toHexString(),
+    ]
+
+    let resultData = try JSONSerialization.data(withJSONObject: json, options: [])
+    return String(decoding: resultData, as: UTF8.self)
+  }
+
   static func hpkeDecrypt(
     ciphertext: Data,
     encappedKey: Data,

@@ -22,13 +22,14 @@ enum Constants {
                 curve: v1Curve.curve_secp256k1,
                 path: "m/44'/60'/0'/0/0",
                 pathFormat: v1PathFormat.path_format_bip32
-            ),
+            )
         ]
     }
 
     enum Ethereum {
         static let rpcURL = "https://rpc.sepolia.org"
-        static let coingeckoURL = "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"
+        static let coingeckoURL =
+            "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"
     }
 
     enum Google {

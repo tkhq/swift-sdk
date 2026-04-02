@@ -23,6 +23,12 @@ extension TurnkeyClient {
     return try await request("/public/v1/query/get_api_keys", body: input)
   }
 
+  /// Get TVC App status
+  /// Get live runtime status for a TVC App from the cluster.
+  public func getAppStatus(_ input: TGetAppStatusBody) async throws -> TGetAppStatusResponse {
+    return try await request("/public/v1/query/get_app_status", body: input)
+  }
+
   /// Get authenticator
   /// Get details about an authenticator.
   public func getAuthenticator(_ input: TGetAuthenticatorBody) async throws
@@ -89,14 +95,6 @@ extension TurnkeyClient {
     return try await request("/public/v1/query/get_onramp_transaction_status", body: input)
   }
 
-  /// Get organization
-  /// Get details about an organization.
-  public func getOrganization(_ input: TGetOrganizationBody = .init()) async throws
-    -> TGetOrganizationResponse
-  {
-    return try await request("/public/v1/query/get_organization", body: input)
-  }
-
   /// Get configs
   /// Get quorum settings and features for an organization.
   public func getOrganizationConfigs(_ input: TGetOrganizationConfigsBody) async throws
@@ -139,20 +137,6 @@ extension TurnkeyClient {
     -> TGetSmartContractInterfaceResponse
   {
     return try await request("/public/v1/query/get_smart_contract_interface", body: input)
-  }
-
-  /// Get TVC App
-  /// Get details about a single TVC App
-  public func getTvcApp(_ input: TGetTvcAppBody) async throws -> TGetTvcAppResponse {
-    return try await request("/public/v1/query/get_tvc_app", body: input)
-  }
-
-  /// Get TVC Deployment
-  /// Get details about a single TVC Deployment
-  public func getTvcDeployment(_ input: TGetTvcDeploymentBody) async throws
-    -> TGetTvcDeploymentResponse
-  {
-    return try await request("/public/v1/query/get_tvc_deployment", body: input)
   }
 
   /// Get user
@@ -260,20 +244,6 @@ extension TurnkeyClient {
     return try await request("/public/v1/query/list_supported_assets", body: input)
   }
 
-  /// List TVC Deployments
-  /// List all deployments for a given TVC App
-  public func getTvcAppDeployments(_ input: TGetTvcAppDeploymentsBody) async throws
-    -> TGetTvcAppDeploymentsResponse
-  {
-    return try await request("/public/v1/query/list_tvc_app_deployments", body: input)
-  }
-
-  /// List TVC Apps
-  /// List all TVC Apps within an organization.
-  public func getTvcApps(_ input: TGetTvcAppsBody) async throws -> TGetTvcAppsResponse {
-    return try await request("/public/v1/query/list_tvc_apps", body: input)
-  }
-
   /// List user tags
   /// List all user tags within an organization.
   public func listUserTags(_ input: TListUserTagsBody) async throws -> TListUserTagsResponse {
@@ -308,6 +278,14 @@ extension TurnkeyClient {
     return try await request("/public/v1/query/list_wallets", body: input)
   }
 
+  /// List webhook endpoints
+  /// List webhook endpoints within an organization.
+  public func listWebhookEndpoints(_ input: TListWebhookEndpointsBody) async throws
+    -> TListWebhookEndpointsResponse
+  {
+    return try await request("/public/v1/query/list_webhook_endpoints", body: input)
+  }
+
   /// Who am I?
   /// Get basic information about your current API or WebAuthN user and their organization. Affords sub-organization look ups via parent organization for WebAuthN or API key users.
   public func getWhoami(_ input: TGetWhoamiBody = .init()) async throws -> TGetWhoamiResponse {
@@ -330,16 +308,6 @@ extension TurnkeyClient {
     return try await activity(
       "/public/v1/submit/create_api_keys", body: input,
       activityType: "ACTIVITY_TYPE_CREATE_API_KEYS_V2", resultKey: "createApiKeysResult")
-  }
-
-  /// Create API-only users
-  /// Create API-only users in an existing organization.
-  public func createApiOnlyUsers(_ input: TCreateApiOnlyUsersBody) async throws
-    -> TCreateApiOnlyUsersResponse
-  {
-    return try await activity(
-      "/public/v1/submit/create_api_only_users", body: input,
-      activityType: "ACTIVITY_TYPE_CREATE_API_ONLY_USERS", resultKey: "createApiOnlyUsersResult")
   }
 
   /// Create authenticators
@@ -392,7 +360,8 @@ extension TurnkeyClient {
   {
     return try await activity(
       "/public/v1/submit/create_oauth_providers", body: input,
-      activityType: "ACTIVITY_TYPE_CREATE_OAUTH_PROVIDERS", resultKey: "createOauthProvidersResult")
+      activityType: "ACTIVITY_TYPE_CREATE_OAUTH_PROVIDERS_V2",
+      resultKey: "createOauthProvidersResultV2")
   }
 
   /// Create policies
@@ -450,7 +419,7 @@ extension TurnkeyClient {
     return try await activity(
       "/public/v1/submit/create_read_write_session", body: input,
       activityType: "ACTIVITY_TYPE_CREATE_READ_WRITE_SESSION_V2",
-      resultKey: "createReadWriteSessionResultV2")
+      resultKey: "createReadWriteSessionResult")
   }
 
   /// Create smart contract interface
@@ -471,37 +440,8 @@ extension TurnkeyClient {
   {
     return try await activity(
       "/public/v1/submit/create_sub_organization", body: input,
-      activityType: "ACTIVITY_TYPE_CREATE_SUB_ORGANIZATION_V7",
-      resultKey: "createSubOrganizationResultV7")
-  }
-
-  /// Create a TVC App
-  /// Create a new TVC application
-  public func createTvcApp(_ input: TCreateTvcAppBody) async throws -> TCreateTvcAppResponse {
-    return try await activity(
-      "/public/v1/submit/create_tvc_app", body: input, activityType: "ACTIVITY_TYPE_CREATE_TVC_APP",
-      resultKey: "createTvcAppResult")
-  }
-
-  /// Create a TVC Deployment
-  /// Create a new TVC Deployment
-  public func createTvcDeployment(_ input: TCreateTvcDeploymentBody) async throws
-    -> TCreateTvcDeploymentResponse
-  {
-    return try await activity(
-      "/public/v1/submit/create_tvc_deployment", body: input,
-      activityType: "ACTIVITY_TYPE_CREATE_TVC_DEPLOYMENT", resultKey: "createTvcDeploymentResult")
-  }
-
-  /// Create TVC Manifest Approvals
-  /// Post one or more manifest approvals for a TVC Manifest
-  public func createTvcManifestApprovals(_ input: TCreateTvcManifestApprovalsBody) async throws
-    -> TCreateTvcManifestApprovalsResponse
-  {
-    return try await activity(
-      "/public/v1/submit/create_tvc_manifest_approvals", body: input,
-      activityType: "ACTIVITY_TYPE_CREATE_TVC_MANIFEST_APPROVALS",
-      resultKey: "createTvcManifestApprovalsResult")
+      activityType: "ACTIVITY_TYPE_CREATE_SUB_ORGANIZATION_V8",
+      resultKey: "createSubOrganizationResultV8")
   }
 
   /// Create user tag
@@ -516,7 +456,7 @@ extension TurnkeyClient {
   /// Create users in an existing organization.
   public func createUsers(_ input: TCreateUsersBody) async throws -> TCreateUsersResponse {
     return try await activity(
-      "/public/v1/submit/create_users", body: input, activityType: "ACTIVITY_TYPE_CREATE_USERS_V3",
+      "/public/v1/submit/create_users", body: input, activityType: "ACTIVITY_TYPE_CREATE_USERS_V4",
       resultKey: "createUsersResult")
   }
 
@@ -536,6 +476,17 @@ extension TurnkeyClient {
     return try await activity(
       "/public/v1/submit/create_wallet_accounts", body: input,
       activityType: "ACTIVITY_TYPE_CREATE_WALLET_ACCOUNTS", resultKey: "createWalletAccountsResult")
+  }
+
+  /// Create webhook endpoint
+  /// Create a webhook endpoint for an organization.
+  public func createWebhookEndpoint(_ input: TCreateWebhookEndpointBody) async throws
+    -> TCreateWebhookEndpointResponse
+  {
+    return try await activity(
+      "/public/v1/submit/create_webhook_endpoint", body: input,
+      activityType: "ACTIVITY_TYPE_CREATE_WEBHOOK_ENDPOINT",
+      resultKey: "createWebhookEndpointResult")
   }
 
   /// Delete API keys
@@ -691,23 +642,23 @@ extension TurnkeyClient {
       resultKey: "deleteWalletsResult")
   }
 
+  /// Delete webhook endpoint
+  /// Delete a webhook endpoint for an organization.
+  public func deleteWebhookEndpoint(_ input: TDeleteWebhookEndpointBody) async throws
+    -> TDeleteWebhookEndpointResponse
+  {
+    return try await activity(
+      "/public/v1/submit/delete_webhook_endpoint", body: input,
+      activityType: "ACTIVITY_TYPE_DELETE_WEBHOOK_ENDPOINT",
+      resultKey: "deleteWebhookEndpointResult")
+  }
+
   /// Perform email auth
   /// Authenticate a user via email.
   public func emailAuth(_ input: TEmailAuthBody) async throws -> TEmailAuthResponse {
     return try await activity(
-      "/public/v1/submit/email_auth", body: input, activityType: "ACTIVITY_TYPE_EMAIL_AUTH_V2",
+      "/public/v1/submit/email_auth", body: input, activityType: "ACTIVITY_TYPE_EMAIL_AUTH_V3",
       resultKey: "emailAuthResult")
-  }
-
-  /// Submit a raw transaction for broadcasting.
-  /// Submit a raw transaction (serialized and signed) for broadcasting to the network.
-  public func ethSendRawTransaction(_ input: TEthSendRawTransactionBody) async throws
-    -> TEthSendRawTransactionResponse
-  {
-    return try await activity(
-      "/public/v1/submit/eth_send_raw_transaction", body: input,
-      activityType: "ACTIVITY_TYPE_ETH_SEND_RAW_TRANSACTION",
-      resultKey: "ethSendRawTransactionResult")
   }
 
   /// Broadcast EVM transaction
@@ -799,8 +750,8 @@ extension TurnkeyClient {
   /// Initiate a generic OTP activity.
   public func initOtp(_ input: TInitOtpBody) async throws -> TInitOtpResponse {
     return try await activity(
-      "/public/v1/submit/init_otp", body: input, activityType: "ACTIVITY_TYPE_INIT_OTP",
-      resultKey: "initOtpResult")
+      "/public/v1/submit/init_otp", body: input, activityType: "ACTIVITY_TYPE_INIT_OTP_V3",
+      resultKey: "initOtpResultV2")
   }
 
   /// Init OTP auth
@@ -808,7 +759,7 @@ extension TurnkeyClient {
   public func initOtpAuth(_ input: TInitOtpAuthBody) async throws -> TInitOtpAuthResponse {
     return try await activity(
       "/public/v1/submit/init_otp_auth", body: input,
-      activityType: "ACTIVITY_TYPE_INIT_OTP_AUTH_V2", resultKey: "initOtpAuthResultV2")
+      activityType: "ACTIVITY_TYPE_INIT_OTP_AUTH_V3", resultKey: "initOtpAuthResultV2")
   }
 
   /// Init email recovery
@@ -818,7 +769,7 @@ extension TurnkeyClient {
   {
     return try await activity(
       "/public/v1/submit/init_user_email_recovery", body: input,
-      activityType: "ACTIVITY_TYPE_INIT_USER_EMAIL_RECOVERY",
+      activityType: "ACTIVITY_TYPE_INIT_USER_EMAIL_RECOVERY_V2",
       resultKey: "initUserEmailRecoveryResult")
   }
 
@@ -860,7 +811,7 @@ extension TurnkeyClient {
   /// Create an OTP session for a user.
   public func otpLogin(_ input: TOtpLoginBody) async throws -> TOtpLoginResponse {
     return try await activity(
-      "/public/v1/submit/otp_login", body: input, activityType: "ACTIVITY_TYPE_OTP_LOGIN",
+      "/public/v1/submit/otp_login", body: input, activityType: "ACTIVITY_TYPE_OTP_LOGIN_V2",
       resultKey: "otpLoginResult")
   }
 
@@ -970,6 +921,17 @@ extension TurnkeyClient {
       resultKey: "updateOauth2CredentialResult")
   }
 
+  /// Update organization name
+  /// Update the name of an organization.
+  public func updateOrganizationName(_ input: TUpdateOrganizationNameBody) async throws
+    -> TUpdateOrganizationNameResponse
+  {
+    return try await activity(
+      "/public/v1/submit/update_organization_name", body: input,
+      activityType: "ACTIVITY_TYPE_UPDATE_ORGANIZATION_NAME",
+      resultKey: "updateOrganizationNameResult")
+  }
+
   /// Update policy
   /// Update an existing policy.
   public func updatePolicy(_ input: TUpdatePolicyBody) async throws -> TUpdatePolicyResponse {
@@ -1051,28 +1013,23 @@ extension TurnkeyClient {
       resultKey: "updateWalletResult")
   }
 
+  /// Update webhook endpoint
+  /// Update a webhook endpoint for an organization.
+  public func updateWebhookEndpoint(_ input: TUpdateWebhookEndpointBody) async throws
+    -> TUpdateWebhookEndpointResponse
+  {
+    return try await activity(
+      "/public/v1/submit/update_webhook_endpoint", body: input,
+      activityType: "ACTIVITY_TYPE_UPDATE_WEBHOOK_ENDPOINT",
+      resultKey: "updateWebhookEndpointResult")
+  }
+
   /// Verify generic OTP
   /// Verify a generic OTP.
   public func verifyOtp(_ input: TVerifyOtpBody) async throws -> TVerifyOtpResponse {
     return try await activity(
-      "/public/v1/submit/verify_otp", body: input, activityType: "ACTIVITY_TYPE_VERIFY_OTP",
+      "/public/v1/submit/verify_otp", body: input, activityType: "ACTIVITY_TYPE_VERIFY_OTP_V2",
       resultKey: "verifyOtpResult")
-  }
-
-  /// Refresh feature flags
-  /// Refresh feature flags by triggering a DB read to flush the in-memory cache.
-  public func refreshFeatureFlags(_ input: TRefreshFeatureFlagsBody) async throws
-    -> TRefreshFeatureFlagsResponse
-  {
-    return try await activity(
-      "/tkhq/api/v1/refresh_feature_flags", body: input,
-      activityType: "ACTIVITY_TYPE_REFRESH_FEATURE_FLAGS", resultKey: "RefreshFeatureFlagsResult")
-  }
-
-  /// Test rate limit
-  /// Set a rate local rate limit just on the current endpoint, for purposes of testing with Vivosuite.
-  public func testRateLimits(_ input: TTestRateLimitsBody) async throws -> TTestRateLimitsResponse {
-    return try await request("/tkhq/api/v1/test_rate_limits", body: input)
   }
 
 }

@@ -53,10 +53,11 @@ public struct Session: Codable, Equatable, Identifiable {
 // this is the verificationToken jwt returned by Turnkey decodes to
 public struct VerificationToken: Codable, Equatable {
   public let contact: String
-  public let exp: TimeInterval
+  public let exp: String
   public let id: String
   public let publicKey: String?
   public let verificationType: String
+  public let organizationId: String
 
   enum CodingKeys: String, CodingKey {
     case contact
@@ -64,6 +65,7 @@ public struct VerificationToken: Codable, Equatable {
     case id
     case publicKey = "public_key"
     case verificationType = "verification_type"
+    case organizationId = "organization_id"
   }
 }
 

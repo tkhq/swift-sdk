@@ -17,6 +17,7 @@ public struct PasskeyAuthResult: Codable {
 // OTP
 public struct InitOtpResult: Codable, Sendable {
   public let otpId: String
+  public let otpEncryptionTargetBundle: String
 }
 
 public struct VerifyOtpResult: Codable, Sendable {

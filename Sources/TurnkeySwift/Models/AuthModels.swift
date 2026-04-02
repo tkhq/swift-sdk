@@ -47,7 +47,7 @@ public struct CreateSubOrgParams: Codable, Sendable {
   public var customWallet: v1WalletParams?
 
   /// List of OAuth providers
-  public var oauthProviders: [Provider]?
+  public var oauthProviders: [v1OauthProviderParamsV2]?
 
   public struct Authenticator: Codable, Sendable {
     /// Name of the authenticator
@@ -80,13 +80,5 @@ public struct CreateSubOrgParams: Codable, Sendable {
 
     /// List of wallet accounts to create
     public var walletAccounts: [v1WalletAccountParams]
-  }
-
-  public struct Provider: Codable, Sendable {
-    /// Name of the OAuth provider
-    public var providerName: String
-
-    /// OIDC token
-    public var oidcToken: String
   }
 }

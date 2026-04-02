@@ -35,10 +35,24 @@ extension TurnkeyClient {
     return try await authProxyRequest("/v1/otp_init", body: input)
   }
 
+  /// Init OTP
+  /// Start a new OTP flow and return a new OTP flow ID.
+  public func proxyInitOtpV2(_ input: ProxyTInitOtpV2Body) async throws -> ProxyTInitOtpV2Response {
+    return try await authProxyRequest("/v1/otp_init_v2", body: input)
+  }
+
   /// OTP Login
   /// Login using a verification token and public key.
   public func proxyOtpLogin(_ input: ProxyTOtpLoginBody) async throws -> ProxyTOtpLoginResponse {
     return try await authProxyRequest("/v1/otp_login", body: input)
+  }
+
+  /// OTP Login
+  /// Login using an existing OTP Verification Token and a client-side signature. The signature's public key must match the public key contained within the OTP Verification Token.
+  public func proxyOtpLoginV2(_ input: ProxyTOtpLoginV2Body) async throws
+    -> ProxyTOtpLoginV2Response
+  {
+    return try await authProxyRequest("/v1/otp_login_v2", body: input)
   }
 
   /// Verify OTP
@@ -47,10 +61,24 @@ extension TurnkeyClient {
     return try await authProxyRequest("/v1/otp_verify", body: input)
   }
 
+  /// Verify OTP
+  /// Verify the OTP code previously sent to the user's contact and return a verification token.
+  public func proxyVerifyOtpV2(_ input: ProxyTVerifyOtpV2Body) async throws
+    -> ProxyTVerifyOtpV2Response
+  {
+    return try await authProxyRequest("/v1/otp_verify_v2", body: input)
+  }
+
   /// Signup
   /// Onboard a new user.
   public func proxySignup(_ input: ProxyTSignupBody) async throws -> ProxyTSignupResponse {
     return try await authProxyRequest("/v1/signup", body: input)
+  }
+
+  /// Signup
+  /// Onboard a new user.
+  public func proxySignupV2(_ input: ProxyTSignupV2Body) async throws -> ProxyTSignupV2Response {
+    return try await authProxyRequest("/v1/signup_v2", body: input)
   }
 
   /// Get WalletKit Config
