@@ -90,8 +90,9 @@ extension TurnkeyClient {
     func handleResponse(_ data: Data) throws -> TResponse {
       // Check status first
       guard let responseDict = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-            let activity = responseDict["activity"] as? [String: Any],
-            let status = activity["status"] as? String else {
+        let activity = responseDict["activity"] as? [String: Any],
+        let status = activity["status"] as? String
+      else {
         throw TurnkeyRequestError.invalidResponse
       }
 
@@ -109,7 +110,7 @@ extension TurnkeyClient {
     // Recursive polling function
     func pollStatus(_ activityId: String) async throws -> TResponse {
       let pollBody = TGetActivityBody(activityId: activityId)
-      
+
       // Make raw request to get Data
       let stamperToUse = stampWith ?? self.stamper
       guard let stamper = stamperToUse else {
@@ -131,7 +132,8 @@ extension TurnkeyClient {
       let (data, response) = try await URLSession.shared.data(for: request)
 
       guard let httpResponse = response as? HTTPURLResponse,
-            (200...299).contains(httpResponse.statusCode) else {
+        (200...299).contains(httpResponse.statusCode)
+      else {
         throw TurnkeyRequestError.invalidResponse
       }
 
@@ -143,9 +145,10 @@ extension TurnkeyClient {
 
       // Check if we need to continue polling
       if let responseDict = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-         let activity = responseDict["activity"] as? [String: Any],
-         let status = activity["status"] as? String,
-         !TERMINAL_ACTIVITY_STATUSES.contains(status) {
+        let activity = responseDict["activity"] as? [String: Any],
+        let status = activity["status"] as? String,
+        !TERMINAL_ACTIVITY_STATUSES.contains(status)
+      {
         try await Task.sleep(nanoseconds: UInt64(pollingDuration * 1_000_000_000))
         return try await pollStatus(activityId)
       }
@@ -183,10 +186,11 @@ extension TurnkeyClient {
 
     // Check if we need to poll
     if let responseDict = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-       let activity = responseDict["activity"] as? [String: Any],
-       let status = activity["status"] as? String,
-       let activityId = activity["id"] as? String,
-       !TERMINAL_ACTIVITY_STATUSES.contains(status) {
+      let activity = responseDict["activity"] as? [String: Any],
+      let status = activity["status"] as? String,
+      let activityId = activity["id"] as? String,
+      !TERMINAL_ACTIVITY_STATUSES.contains(status)
+    {
       return try await pollStatus(activityId)
     }
 
@@ -224,9 +228,10 @@ extension TurnkeyClient {
   ) throws -> TResponse {
     // Parse the activity response as a dictionary (working with raw JSON, not AnyCodable)
     guard var responseDict = try JSONSerialization.jsonObject(with: activityData) as? [String: Any],
-          let activity = responseDict["activity"] as? [String: Any],
-          let result = activity["result"] as? [String: Any],
-          let specificResult = result[resultKey] as? [String: Any] else {
+      let activity = responseDict["activity"] as? [String: Any],
+      let result = activity["result"] as? [String: Any],
+      let specificResult = result[resultKey] as? [String: Any]
+    else {
       throw TurnkeyRequestError.invalidResponse
     }
 

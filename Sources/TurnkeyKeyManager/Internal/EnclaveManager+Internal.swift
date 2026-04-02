@@ -75,5 +75,3 @@ extension EnclaveManager {
     return nil
   }
 }
-
-

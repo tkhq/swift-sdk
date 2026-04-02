@@ -38,5 +38,3 @@ extension SecureStorageManager {
     return access
   }
 }
-
-

@@ -1,11 +1,10 @@
+import CoreFoundation
 import CryptoKit
 import Foundation
-import CoreFoundation
 import Security
-import TurnkeyEncoding
 import TurnkeyCrypto
+import TurnkeyEncoding
 import TurnkeyKeyManager
-
 
 /// A Secure Enclave–backed stamper for generating and using P-256 keys inside the device TEE.
 ///
@@ -88,7 +87,8 @@ enum SecureEnclaveStamper: KeyPairStamper {
       throw SecureEnclaveStamperError.payloadEncodingFailed
     }
     let manager = try EnclaveManager(publicKeyHex: publicKeyHex, label: label)
-    let derSignature = try manager.sign(message: payloadData, algorithm: .ecdsaSignatureDigestX962SHA256)
+    let derSignature = try manager.sign(
+      message: payloadData, algorithm: .ecdsaSignatureDigestX962SHA256)
     switch format {
     case .der:
       return derSignature.toHexString()
@@ -115,9 +115,9 @@ enum SecureEnclaveStamper: KeyPairStamper {
 }
 
 // MARK: - DER helpers
-private extension SecureEnclaveStamper {
+extension SecureEnclaveStamper {
   /// Convert an ASN.1 DER-encoded ECDSA signature into raw 64-byte R||S.
-  static func derToRawRS(_ der: Data) throws -> Data {
+  fileprivate static func derToRawRS(_ der: Data) throws -> Data {
     do {
       return try P256.Signing.ECDSASignature(derRepresentation: der).rawRepresentation
     } catch {

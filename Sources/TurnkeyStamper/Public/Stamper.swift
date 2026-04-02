@@ -16,7 +16,7 @@ public class Stamper {
   private let presentationAnchor: ASPresentationAnchor?
   private let passkeyManager: PasskeyStamper?
   private var configuration: StamperConfiguration? = nil
-  
+
   /// ECDSA signature output format.
   public enum SignatureFormat {
     /// ASN.1/DER-encoded ECDSA signature (X9.62). Default used for stamps.
@@ -24,7 +24,7 @@ public class Stamper {
     /// Raw 64-byte R||S big-endian concatenation. Required by some API fields like clientSignature.
     case raw
   }
-  
+
   // Selected stamping backend
   private enum StampingMode {
     case apiKey(pub: String, priv: String)
@@ -41,13 +41,13 @@ public class Stamper {
   public var publicKeyHex: String? {
     if let mode = self.mode {
       switch mode {
-      case let .apiKey(pub, _):
+      case .apiKey(let pub, _):
         return pub
       case .passkey:
         return nil
-      case let .secureEnclave(publicKey):
+      case .secureEnclave(let publicKey):
         return publicKey
-      case let .secureStorage(publicKey):
+      case .secureStorage(let publicKey):
         return publicKey
       }
     }
@@ -235,20 +235,20 @@ public class Stamper {
     // Route based on configured mode first
     if let mode = self.mode {
       switch mode {
-      case let .apiKey(pub, priv):
+      case .apiKey(let pub, let priv):
         let stamp = try ApiKeyStamper.stamp(
           payload: payloadHash, publicKeyHex: pub, privateKeyHex: priv)
         return ("X-Stamp", stamp)
-      case let .passkey(manager):
+      case .passkey(let manager):
         let stamp = try await PasskeyStampBuilder.stamp(
           payload: payloadHash, passkeyManager: manager)
         return ("X-Stamp-WebAuthn", stamp)
-      case let .secureEnclave(publicKey):
+      case .secureEnclave(let publicKey):
         let stamp = try SecureEnclaveStamper.stamp(
           payload: payload, publicKeyHex: publicKey)
         return ("X-Stamp", stamp)
-      case let .secureStorage(publicKey):
-        if case let .secureStorage(cfg) = self.configuration {
+      case .secureStorage(let publicKey):
+        if case .secureStorage(let cfg) = self.configuration {
           let stamp = try SecureStorageStamper.stamp(
             payload: payload,
             publicKeyHex: publicKey,
@@ -294,14 +294,15 @@ public class Stamper {
     // Route based on configured mode first
     if let mode = self.mode {
       switch mode {
-      case let .apiKey(_, priv):
+      case .apiKey(_, let priv):
         return try ApiKeyStamper.sign(payload: payloadHash, privateKeyHex: priv, format: format)
       case .passkey:
         throw StampError.signNotSupportedForPasskey
-      case let .secureEnclave(publicKey):
-        return try SecureEnclaveStamper.sign(payload: payload, publicKeyHex: publicKey, format: format)
-      case let .secureStorage(publicKey):
-        if case let .secureStorage(cfg) = self.configuration {
+      case .secureEnclave(let publicKey):
+        return try SecureEnclaveStamper.sign(
+          payload: payload, publicKeyHex: publicKey, format: format)
+      case .secureStorage(let publicKey):
+        if case .secureStorage(let cfg) = self.configuration {
           return try SecureStorageStamper.sign(
             payload: payload,
             publicKeyHex: publicKey,
@@ -319,7 +320,7 @@ public class Stamper {
     }
 
     // Backward compatibility: derive from legacy properties if possible
-    if let _ = apiPublicKey, let priv = apiPrivateKey {
+    if apiPublicKey != nil, let priv = apiPrivateKey {
       return try ApiKeyStamper.sign(payload: payloadHash, privateKeyHex: priv, format: format)
     }
     if passkeyManager != nil {
@@ -330,8 +331,10 @@ public class Stamper {
 }
 
 // MARK: - Config mappers
-private extension Stamper {
-  static func mapSecureEnclaveConfig(_ config: SecureEnclaveStamperConfig) -> SecureEnclaveStamper.SecureEnclaveConfig {
+extension Stamper {
+  fileprivate static func mapSecureEnclaveConfig(_ config: SecureEnclaveStamperConfig)
+    -> SecureEnclaveStamper.SecureEnclaveConfig
+  {
     let mappedPolicy: SecureEnclaveStamper.SecureEnclaveConfig.AuthPolicy
     switch config.authPolicy {
     case .none: mappedPolicy = .none
@@ -342,7 +345,9 @@ private extension Stamper {
     return SecureEnclaveStamper.SecureEnclaveConfig(authPolicy: mappedPolicy)
   }
 
-  static func mapSecureStorageConfig(_ config: SecureStorageStamperConfig) -> SecureStorageStamper.SecureStorageConfig {
+  fileprivate static func mapSecureStorageConfig(_ config: SecureStorageStamperConfig)
+    -> SecureStorageStamper.SecureStorageConfig
+  {
     let accessibility: SecureStorageStamper.SecureStorageConfig.Accessibility
     switch config.accessibility {
     case .whenUnlockedThisDeviceOnly: accessibility = .whenUnlockedThisDeviceOnly
@@ -371,12 +376,12 @@ private extension Stamper {
 }
 
 // MARK: - Public key management helpers
-public extension Stamper {
+extension Stamper {
   /// Create a new on-device API key pair.
   ///
   /// Prefers Secure Enclave when supported; otherwise falls back to Secure Storage.
   /// Returns the compressed public key hex. The private key remains on-device.
-  static func createOnDeviceKeyPair() throws -> String {
+  public static func createOnDeviceKeyPair() throws -> String {
     if SecureEnclaveStamper.isSupported() {
       return try createSecureEnclaveKeyPair()
     }
@@ -384,12 +389,12 @@ public extension Stamper {
   }
 
   /// Create a new API key pair inside Secure Enclave. Throws if enclave is unavailable.
-  static func createSecureEnclaveKeyPair() throws -> String {
+  public static func createSecureEnclaveKeyPair() throws -> String {
     return try SecureEnclaveStamper.createKeyPair()
   }
 
   /// Create a new API key pair stored in Secure Storage (Keychain).
-  static func createSecureStorageKeyPair() throws -> String {
+  public static func createSecureStorageKeyPair() throws -> String {
     return try SecureStorageStamper.createKeyPair()
   }
 
@@ -397,7 +402,7 @@ public extension Stamper {
   ///
   /// Prefers Secure Enclave when supported; otherwise falls back to Secure Storage.
   /// Returns true if the key pair was deleted successfully.
-  static func deleteOnDeviceKeyPair(publicKeyHex: String) throws {
+  public static func deleteOnDeviceKeyPair(publicKeyHex: String) throws {
     if SecureEnclaveStamper.isSupported() {
       return try deleteSecureEnclaveKeyPair(publicKeyHex: publicKeyHex)
     }
@@ -405,12 +410,12 @@ public extension Stamper {
   }
 
   /// Delete an API key pair inside Secure Enclave.
-  static func deleteSecureEnclaveKeyPair(publicKeyHex: String) throws {
+  public static func deleteSecureEnclaveKeyPair(publicKeyHex: String) throws {
     return try SecureEnclaveStamper.deleteKeyPair(publicKeyHex: publicKeyHex)
   }
 
   /// Delete an API key pair stored in Secure Storage (Keychain).
-  static func deleteSecureStorageKeyPair(publicKeyHex: String) throws {
+  public static func deleteSecureStorageKeyPair(publicKeyHex: String) throws {
     return try SecureStorageStamper.deleteKeyPair(publicKeyHex: publicKeyHex)
   }
 
@@ -418,7 +423,7 @@ public extension Stamper {
   ///
   /// Prefers Secure Enclave when supported; otherwise falls back to Secure Storage.
   /// Returns true if the key pair exists.
-  static func existsOnDeviceKeyPair(publicKeyHex: String) throws -> Bool {
+  public static func existsOnDeviceKeyPair(publicKeyHex: String) throws -> Bool {
     if SecureEnclaveStamper.isSupported() {
       return try existsSecureEnclaveKeyPair(publicKeyHex: publicKeyHex)
     }
@@ -426,12 +431,12 @@ public extension Stamper {
   }
 
   /// Exists an API key pair inside Secure Enclave.
-  static func existsSecureEnclaveKeyPair(publicKeyHex: String) throws -> Bool {
-      return try SecureEnclaveStamper.listKeyPairs().contains(where: { $0 == publicKeyHex })
+  public static func existsSecureEnclaveKeyPair(publicKeyHex: String) throws -> Bool {
+    return try SecureEnclaveStamper.listKeyPairs().contains(where: { $0 == publicKeyHex })
   }
 
   /// Exists an API key pair stored in Secure Storage (Keychain).
-  static func existsSecureStorageKeyPair(publicKeyHex: String) throws -> Bool {
+  public static func existsSecureStorageKeyPair(publicKeyHex: String) throws -> Bool {
     return try SecureStorageStamper.listKeyPairs().contains(where: { $0 == publicKeyHex })
   }
 }
