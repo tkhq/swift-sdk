@@ -1,9 +1,9 @@
 import CryptoKit
 import Foundation
-import Security
 import LocalAuthentication
-import TurnkeyEncoding
+import Security
 import TurnkeyCrypto
+import TurnkeyEncoding
 import TurnkeyKeyManager
 
 /// A Keychain-backed stamper that stores private keys in the iOS Keychain as Generic Password entries with:
@@ -22,7 +22,7 @@ import TurnkeyKeyManager
 /// `importKeyPair` methods.
 enum SecureStorageStamper: KeyPairStamper {
   typealias Config = SecureStorageConfig
-  
+
   private static let account = "TurnkeySecureStorageStamper"
   private static let label = "TurnkeyApiKeyPair"
 
@@ -121,7 +121,10 @@ enum SecureStorageStamper: KeyPairStamper {
       throw SecureStorageStamperError.payloadEncodingFailed
     }
     let digest = SHA256.hash(data: payloadData)
-    guard let privateKeyHex = try SecureStorageManager.getPrivateKey(publicKeyHex: publicKeyHex, config: nil) else {
+    guard
+      let privateKeyHex = try SecureStorageManager.getPrivateKey(
+        publicKeyHex: publicKeyHex, config: nil)
+    else {
       throw SecureStorageStamperError.privateKeyNotFound(publicKeyHex: publicKeyHex)
     }
     return try ApiKeyStamper.sign(
@@ -150,7 +153,10 @@ enum SecureStorageStamper: KeyPairStamper {
       throw SecureStorageStamperError.payloadEncodingFailed
     }
     let digest = SHA256.hash(data: payloadData)
-    guard let privateKeyHex = try SecureStorageManager.getPrivateKey(publicKeyHex: publicKeyHex, config: config) else {
+    guard
+      let privateKeyHex = try SecureStorageManager.getPrivateKey(
+        publicKeyHex: publicKeyHex, config: config)
+    else {
       throw SecureStorageStamperError.privateKeyNotFound(publicKeyHex: publicKeyHex)
     }
     return try ApiKeyStamper.sign(
@@ -193,5 +199,3 @@ enum SecureStorageStamper: KeyPairStamper {
   }
 
 }
-
-

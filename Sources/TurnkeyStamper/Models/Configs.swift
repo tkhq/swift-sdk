@@ -1,5 +1,5 @@
-import Foundation
 import AuthenticationServices
+import Foundation
 
 /// Public configuration for API key–backed stamping.
 public struct ApiKeyStamperConfig: Sendable {
@@ -88,5 +88,3 @@ public enum StamperConfiguration: @unchecked Sendable {
   case secureEnclave(SecureEnclaveStamperConfig)
   case secureStorage(SecureStorageStamperConfig)
 }
-
-

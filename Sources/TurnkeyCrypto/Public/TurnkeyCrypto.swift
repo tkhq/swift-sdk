@@ -37,7 +37,6 @@ public struct TurnkeyCrypto {
     guard let publicKey = SecKeyCopyPublicKey(privateKey) else {
       throw CryptoError.invalidPublicKey
     }
-
     var externalError: Unmanaged<CFError>?
     guard let pubData = SecKeyCopyExternalRepresentation(publicKey, &externalError) as Data? else {
       throw CryptoError.invalidPublicKey

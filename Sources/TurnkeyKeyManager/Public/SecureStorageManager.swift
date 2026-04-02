@@ -1,6 +1,6 @@
 import Foundation
-import Security
 import LocalAuthentication
+import Security
 import TurnkeyCrypto
 
 /// A Keychain-backed manager that stores private keys in the iOS Keychain as Generic Password entries with:
@@ -205,5 +205,3 @@ public final class SecureStorageManager {
     }
   }
 }
-
-

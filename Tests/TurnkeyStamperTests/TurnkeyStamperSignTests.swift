@@ -1,14 +1,16 @@
-import Testing
-@testable import TurnkeyStamper
-@testable import TurnkeyCrypto
 import AuthenticationServices
 import CryptoKit
+import Testing
 import TurnkeyEncoding
+
+@testable import TurnkeyCrypto
+@testable import TurnkeyStamper
+
 #if canImport(UIKit)
-import UIKit
+  import UIKit
 #endif
 #if canImport(AppKit)
-import AppKit
+  import AppKit
 #endif
 
 struct TurnkeyStamperSignTests {
@@ -16,7 +18,8 @@ struct TurnkeyStamperSignTests {
   @Test
   func testApiKeySignReturnsHex() async throws {
     let pair = TurnkeyCrypto.generateP256KeyPair()
-    let cfg = ApiKeyStamperConfig(apiPublicKey: pair.publicKeyCompressed, apiPrivateKey: pair.privateKey)
+    let cfg = ApiKeyStamperConfig(
+      apiPublicKey: pair.publicKeyCompressed, apiPrivateKey: pair.privateKey)
     let stamper = Stamper(config: cfg)
     let sig = try await stamper.sign(payload: "hello")
     #expect(!sig.isEmpty)
@@ -25,8 +28,7 @@ struct TurnkeyStamperSignTests {
     // Verify signature using uncompressed public key and SHA-256 digest of message
     let messageData = Data("hello".utf8)
     let digest = SHA256.hash(data: messageData)
-    if
-      let pubData = Data(hexString: pair.publicKeyUncompressed),
+    if let pubData = Data(hexString: pair.publicKeyUncompressed),
       let sigData = Data(hexString: sig),
       let pubKey = try? P256.Signing.PublicKey(x963Representation: pubData),
       let signature = try? P256.Signing.ECDSASignature(derRepresentation: sigData)
@@ -40,17 +42,17 @@ struct TurnkeyStamperSignTests {
   @Test
   func testApiKeySignRawReturns64ByteHexAndVerifies() async throws {
     let pair = TurnkeyCrypto.generateP256KeyPair()
-    let cfg = ApiKeyStamperConfig(apiPublicKey: pair.publicKeyCompressed, apiPrivateKey: pair.privateKey)
+    let cfg = ApiKeyStamperConfig(
+      apiPublicKey: pair.publicKeyCompressed, apiPrivateKey: pair.privateKey)
     let stamper = Stamper(config: cfg)
     let sigRawHex = try await stamper.sign(payload: "hello", format: .raw)
     #expect(!sigRawHex.isEmpty)
     let hexChars = "0123456789abcdefABCDEF"
     #expect(sigRawHex.allSatisfy { hexChars.contains($0) })
-    #expect(sigRawHex.count == 128) // 64 bytes R||S in hex
+    #expect(sigRawHex.count == 128)  // 64 bytes R||S in hex
     let messageData = Data("hello".utf8)
     let digest = SHA256.hash(data: messageData)
-    if
-      let pubData = Data(hexString: pair.publicKeyUncompressed),
+    if let pubData = Data(hexString: pair.publicKeyUncompressed),
       let rawData = Data(hexString: sigRawHex),
       let pubKey = try? P256.Signing.PublicKey(x963Representation: pubData),
       let signature = try? P256.Signing.ECDSASignature(rawRepresentation: rawData)
@@ -64,11 +66,11 @@ struct TurnkeyStamperSignTests {
   @Test
   func testApiKeySignRawRoundTripsViaDER() async throws {
     let pair = TurnkeyCrypto.generateP256KeyPair()
-    let cfg = ApiKeyStamperConfig(apiPublicKey: pair.publicKeyCompressed, apiPrivateKey: pair.privateKey)
+    let cfg = ApiKeyStamperConfig(
+      apiPublicKey: pair.publicKeyCompressed, apiPrivateKey: pair.privateKey)
     let stamper = Stamper(config: cfg)
     let sigRawHex = try await stamper.sign(payload: "hello", format: .raw)
-    if
-      let rawData = Data(hexString: sigRawHex),
+    if let rawData = Data(hexString: sigRawHex),
       let sig = try? P256.Signing.ECDSASignature(rawRepresentation: rawData)
     {
       let der = sig.derRepresentation
@@ -83,43 +85,43 @@ struct TurnkeyStamperSignTests {
   @MainActor
   func testPasskeySignThrows() async throws {
     #if canImport(UIKit)
-    let window = UIWindow(frame: .zero)
-    let cfg = PasskeyStamperConfig(rpId: "example.com", presentationAnchor: window)
-    let stamper = Stamper(config: cfg)
-    do {
-      _ = try await stamper.sign(payload: "hello")
-      #expect(Bool(false), "Expected sign() to throw for passkey mode")
-    } catch let e as StampError {
-      switch e {
-      case .signNotSupportedForPasskey:
-        // expected
-        break
-      default:
-        #expect(Bool(false), "Unexpected StampError: \(e)")
+      let window = UIWindow(frame: .zero)
+      let cfg = PasskeyStamperConfig(rpId: "example.com", presentationAnchor: window)
+      let stamper = Stamper(config: cfg)
+      do {
+        _ = try await stamper.sign(payload: "hello")
+        #expect(Bool(false), "Expected sign() to throw for passkey mode")
+      } catch let e as StampError {
+        switch e {
+        case .signNotSupportedForPasskey:
+          // expected
+          break
+        default:
+          #expect(Bool(false), "Unexpected StampError: \(e)")
+        }
+      } catch {
+        #expect(Bool(false), "Unexpected error: \(error)")
       }
-    } catch {
-      #expect(Bool(false), "Unexpected error: \(error)")
-    }
     #elseif canImport(AppKit)
-    let window = NSWindow()
-    let cfg = PasskeyStamperConfig(rpId: "example.com", presentationAnchor: window)
-    let stamper = Stamper(config: cfg)
-    do {
-      _ = try await stamper.sign(payload: "hello")
-      #expect(Bool(false), "Expected sign() to throw for passkey mode")
-    } catch let e as StampError {
-      switch e {
-      case .signNotSupportedForPasskey:
-        // expected
-        break
-      default:
-        #expect(Bool(false), "Unexpected StampError: \(e)")
+      let window = NSWindow()
+      let cfg = PasskeyStamperConfig(rpId: "example.com", presentationAnchor: window)
+      let stamper = Stamper(config: cfg)
+      do {
+        _ = try await stamper.sign(payload: "hello")
+        #expect(Bool(false), "Expected sign() to throw for passkey mode")
+      } catch let e as StampError {
+        switch e {
+        case .signNotSupportedForPasskey:
+          // expected
+          break
+        default:
+          #expect(Bool(false), "Unexpected StampError: \(e)")
+        }
+      } catch {
+        #expect(Bool(false), "Unexpected error: \(error)")
       }
-    } catch {
-      #expect(Bool(false), "Unexpected error: \(error)")
-    }
     #else
-    throw Skip("Passkey anchor type not supported on this platform.")
+      throw Skip("Passkey anchor type not supported on this platform.")
     #endif
   }
 
@@ -135,8 +137,7 @@ struct TurnkeyStamperSignTests {
     // Verify signature using compressed public key and SHA-256 digest of message
     let messageData = Data("hello".utf8)
     let digest = SHA256.hash(data: messageData)
-    if
-      let pubData = Data(hexString: pub),
+    if let pubData = Data(hexString: pub),
       let sigData = Data(hexString: sig),
       let pubKey = try? P256.Signing.PublicKey(compressedRepresentation: pubData),
       let signature = try? P256.Signing.ECDSASignature(derRepresentation: sigData)
@@ -158,8 +159,7 @@ struct TurnkeyStamperSignTests {
     #expect(sigRawHex.count == 128)
     let messageData = Data("hello".utf8)
     let digest = SHA256.hash(data: messageData)
-    if
-      let pubData = Data(hexString: pub),
+    if let pubData = Data(hexString: pub),
       let rawData = Data(hexString: sigRawHex),
       let pubKey = try? P256.Signing.PublicKey(compressedRepresentation: pubData),
       let signature = try? P256.Signing.ECDSASignature(rawRepresentation: rawData)
@@ -178,14 +178,13 @@ struct TurnkeyStamperSignTests {
     }
     let pub = try Stamper.createSecureEnclaveKeyPair()
     let stamper = try Stamper(apiPublicKey: pub, onDevicePreference: .secureEnclave)
-    let sigDerHex = try await stamper.sign(payload: "hello") // default .der
+    let sigDerHex = try await stamper.sign(payload: "hello")  // default .der
     let sigRawHex = try await stamper.sign(payload: "hello", format: .raw)
     // Validate DER verifies
     do {
       let messageData = Data("hello".utf8)
       let digest = SHA256.hash(data: messageData)
-      if
-        let pubData = Data(hexString: pub),
+      if let pubData = Data(hexString: pub),
         let derData = Data(hexString: sigDerHex),
         let pubKey = try? P256.Signing.PublicKey(compressedRepresentation: pubData),
         let sigDer = try? P256.Signing.ECDSASignature(derRepresentation: derData)
@@ -199,8 +198,7 @@ struct TurnkeyStamperSignTests {
     do {
       let messageData = Data("hello".utf8)
       let digest = SHA256.hash(data: messageData)
-      if
-        let pubData = Data(hexString: pub),
+      if let pubData = Data(hexString: pub),
         let rawData = Data(hexString: sigRawHex),
         let pubKey = try? P256.Signing.PublicKey(compressedRepresentation: pubData),
         let sigRaw = try? P256.Signing.ECDSASignature(rawRepresentation: rawData)
@@ -212,5 +210,3 @@ struct TurnkeyStamperSignTests {
     }
   }
 }
-
-

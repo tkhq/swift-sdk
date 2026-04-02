@@ -1,7 +1,7 @@
 import Foundation
 
-public extension SecureStorageManager {
-  struct Config: Sendable {
+extension SecureStorageManager {
+  public struct Config: Sendable {
     public enum Accessibility: Sendable {
       case whenUnlockedThisDeviceOnly
       case afterFirstUnlockThisDeviceOnly
@@ -40,5 +40,3 @@ public extension SecureStorageManager {
     }
   }
 }
-
-

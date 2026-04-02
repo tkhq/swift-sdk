@@ -1,6 +1,6 @@
+import CoreFoundation
 import CryptoKit
 import Foundation
-import CoreFoundation
 import Security
 import TurnkeyCrypto
 
@@ -26,7 +26,9 @@ public final class EnclaveManager {
       let pair = try EnclaveManager.createKeyPair(authPolicy: authPolicy, label: label)
       self.keyPair = pair
       // Fetch the SecKey reference for the generated key by public key hex.
-      guard let priv = try EnclaveManager.findPrivateKey(publicKeyHex: pair.publicKeyHex, label: label) else {
+      guard
+        let priv = try EnclaveManager.findPrivateKey(publicKeyHex: pair.publicKeyHex, label: label)
+      else {
         fatalError("EnclaveManager: generated key not found immediately after creation.")
       }
       self.privateKey = priv
@@ -40,7 +42,8 @@ public final class EnclaveManager {
   ///   - publicKeyHex: Compressed public key hex.
   ///   - label: Keychain label domain used to scope lookup fallback. Defaults to `TurnkeyEnclaveManager`.
   public init(publicKeyHex: String, label: String = EnclaveManager.defaultLabel) throws {
-    guard let key = try EnclaveManager.findPrivateKey(publicKeyHex: publicKeyHex, label: label) else {
+    guard let key = try EnclaveManager.findPrivateKey(publicKeyHex: publicKeyHex, label: label)
+    else {
       throw EnclaveManagerError.keyNotFound(publicKeyHex)
     }
     self.privateKey = key
@@ -108,12 +111,14 @@ public final class EnclaveManager {
     // Try generating and immediately deleting a no-prompt key.
     let flags = accessControlFlags(for: .none)
     var acError: Unmanaged<CFError>?
-    guard let access = SecAccessControlCreateWithFlags(
-      kCFAllocatorDefault,
-      kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
-      flags,
-      &acError
-    ) else {
+    guard
+      let access = SecAccessControlCreateWithFlags(
+        kCFAllocatorDefault,
+        kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+        flags,
+        &acError
+      )
+    else {
       return false
     }
 
@@ -146,19 +151,23 @@ public final class EnclaveManager {
   /// - Parameters:
   ///   - authPolicy: Access control policy for the keypair.
   ///   - label: Keychain label domain used to scope storage and queries. Defaults to `TurnkeyEnclaveManager`.
-  public static func createKeyPair(authPolicy: AuthPolicy = .none, label: String = EnclaveManager.defaultLabel) throws -> KeyPair {
+  public static func createKeyPair(
+    authPolicy: AuthPolicy = .none, label: String = EnclaveManager.defaultLabel
+  ) throws -> KeyPair {
     guard isSecureEnclaveAvailable() else {
       throw EnclaveManagerError.secureEnclaveUnavailable
     }
 
     let flags = accessControlFlags(for: authPolicy)
     var acError: Unmanaged<CFError>?
-    guard let access = SecAccessControlCreateWithFlags(
-      kCFAllocatorDefault,
-      kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
-      flags,
-      &acError
-    ) else {
+    guard
+      let access = SecAccessControlCreateWithFlags(
+        kCFAllocatorDefault,
+        kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+        flags,
+        &acError
+      )
+    else {
       throw EnclaveManagerError.keyGenerationFailed(acError?.takeRetainedValue())
     }
 
@@ -189,7 +198,7 @@ public final class EnclaveManager {
         kSecValueRef as String: privateKey,
       ]
       let update: [String: Any] = [
-        kSecAttrApplicationTag as String: tagData,
+        kSecAttrApplicationTag as String: tagData
       ]
       let setTagStatus = SecItemUpdate(query as CFDictionary, update as CFDictionary)
       if setTagStatus != errSecSuccess && setTagStatus != errSecItemNotFound {
@@ -243,7 +252,9 @@ public final class EnclaveManager {
   /// - Parameters:
   ///   - publicKeyHex: Compressed public key hex.
   ///   - label: Keychain label domain used to scope lookup fallback. Defaults to `TurnkeyEnclaveManager`.
-  public static func deleteKeyPair(publicKeyHex: String, label: String = EnclaveManager.defaultLabel) throws {
+  public static func deleteKeyPair(
+    publicKeyHex: String, label: String = EnclaveManager.defaultLabel
+  ) throws {
     if let key = try findPrivateKey(publicKeyHex: publicKeyHex, label: label) {
       let query: [String: Any] = [
         kSecClass as String: kSecClassKey,
@@ -260,7 +271,3 @@ public final class EnclaveManager {
     }
   }
 }
-
-
-
-

@@ -99,12 +99,12 @@ extension SecureEnclaveStamperError {
     switch (lhs, rhs) {
     case (.secureEnclaveUnavailable, .secureEnclaveUnavailable):
       return true
-    case let (.keychainError(a), .keychainError(b)):
+    case (.keychainError(let a), .keychainError(let b)):
       return a == b
     case (.keyGenerationFailed, .keyGenerationFailed):
       // Compare only by case; underlying Error? is not Equatable
       return true
-    case let (.keyNotFound(a), .keyNotFound(b)):
+    case (.keyNotFound(let a), .keyNotFound(let b)):
       return a == b
     case (.publicKeyEncodingFailed, .publicKeyEncodingFailed):
       return true

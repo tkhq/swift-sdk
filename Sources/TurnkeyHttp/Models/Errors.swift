@@ -11,17 +11,17 @@ public enum TurnkeyRequestError: LocalizedError, Sendable, Equatable {
   case unknown(Error)
 
   public var statusCode: Int? {
-    if case let .apiError(code, _) = self { return code }
+    if case .apiError(let code, _) = self { return code }
     return nil
   }
 
   public var payload: Data? {
-    if case let .apiError(_, data) = self { return data }
+    if case .apiError(_, let data) = self { return data }
     return nil
   }
 
   public var fullMessage: String {
-    if case let .apiError(code, data?) = self {
+    if case .apiError(let code, let data?) = self {
       // try to pretty-print JSON
       if let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
         let json = try? JSONSerialization.data(
@@ -82,7 +82,7 @@ public enum TurnkeyRequestError: LocalizedError, Sendable, Equatable {
 
   public static func == (lhs: Self, rhs: Self) -> Bool {
     switch (lhs, rhs) {
-    case let (.apiError(c1, d1), .apiError(c2, d2)):
+    case (.apiError(let c1, let d1), .apiError(let c2, let d2)):
       return c1 == c2 && d1 == d2
     case (.invalidResponse, .invalidResponse):
       return true
