@@ -109,6 +109,32 @@ public struct TurnkeyCrypto {
     )
   }
 
+  /// Encrypts an OTP code and public key into a bundle for the OTP V2 verification flow.
+  ///
+  /// Verifies the enclave signature on the target bundle, extracts the target public key,
+  /// then HPKE-encrypts `{ otp_code, public_key }` into a formatted bundle.
+  ///
+  /// - Parameters:
+  ///   - otpCode: The OTP code entered by the user.
+  ///   - otpEncryptionTargetBundle: The signed encryption bundle returned from `initOtpV2`.
+  ///   - publicKey: The public key to bind to the verification token.
+  ///   - dangerouslyOverrideSignerPublicKey: Optional override of the signer public key (for dev/test).
+  /// - Returns: The encrypted bundle as a JSON string.
+  /// - Throws: `CryptoError` if validation or encryption fails.
+  public static func encryptOtpCodeToBundle(
+    otpCode: String,
+    otpEncryptionTargetBundle: String,
+    publicKey: String,
+    dangerouslyOverrideSignerPublicKey: String? = nil
+  ) throws -> String {
+    return try HpkeHelpers.encryptOtpCodeToBundle(
+      otpCode: otpCode,
+      otpEncryptionTargetBundle: otpEncryptionTargetBundle,
+      publicKey: publicKey,
+      dangerouslyOverrideSignerPublicKey: dangerouslyOverrideSignerPublicKey
+    )
+  }
+
   /// Encrypts a mnemonic into a bundle using the import payload from the enclave.
   ///
   /// - Parameters:

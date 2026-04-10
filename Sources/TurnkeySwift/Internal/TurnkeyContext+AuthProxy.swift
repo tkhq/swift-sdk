@@ -20,7 +20,8 @@ extension TurnkeyContext {
     var walletKitConfig: ProxyGetWalletKitConfigResponse?
     if let client, self.authProxyConfigId != nil {
       do {
-        let response = try await client.proxyGetWalletKitConfig(ProxyTGetWalletKitConfigBody())
+        let response = try await client.proxyGetWalletKitConfig(
+          ProxyTGetWalletKitConfigBody())
         walletKitConfig = response
       } catch {
         walletKitConfig = nil
@@ -131,13 +132,13 @@ extension TurnkeyContext {
 
   /// Builds a signup body for creating a new sub-organization.
   ///
-  /// Constructs a `ProxyTSignupBody` payload for the Turnkey Auth Proxy based on the provided
+  /// Constructs a `ProxyTSignupV2Body` payload for the Turnkey Auth Proxy based on the provided
   /// `CreateSubOrgParams`. Supports authenticators, API keys, OAuth providers, and user metadata.
   /// Default names are generated automatically when missing.
   ///
   /// - Parameter createSubOrgParams: Parameters describing the new sub-organization, credentials, and user details.
-  /// - Returns: A fully populated `ProxyTSignupBody` object suitable for submission to the Auth Proxy.
-  func buildSignUpBody(createSubOrgParams: CreateSubOrgParams) -> ProxyTSignupBody {
+  /// - Returns: A fully populated `ProxyTSignupV2Body` object suitable for submission to the Auth Proxy.
+  func buildSignUpBody(createSubOrgParams: CreateSubOrgParams) -> ProxyTSignupV2Body {
     // TODO: is there names have a uniqueness constraint per user?
     // if so then this will fail if we have to autofill multiple authenticators (e.g. two apiKeys)
     let now = Int(Date().timeIntervalSince1970)
@@ -171,24 +172,11 @@ extension TurnkeyContext {
       apiKeys = []
     }
 
-    // oauthProviders to v1OauthProviderParams
-    let oauthProviders: [v1OauthProviderParams]
-    if let list = createSubOrgParams.oauthProviders, !list.isEmpty {
-      oauthProviders = list.map { provider in
-        v1OauthProviderParams(
-          oidcToken: provider.oidcToken,
-          providerName: provider.providerName
-        )
-      }
-    } else {
-      oauthProviders = []
-    }
-
-    // Construct ProxyTSignupBody
-    return ProxyTSignupBody(
+    // Construct ProxyTSignupV2Body
+    return ProxyTSignupV2Body(
       apiKeys: apiKeys,
       authenticators: authenticators,
-      oauthProviders: oauthProviders,
+      oauthProviders: createSubOrgParams.oauthProviders ?? [],
       organizationName: createSubOrgParams.subOrgName ?? "sub-org-\(now)",
       userEmail: createSubOrgParams.userEmail,
       userName: createSubOrgParams.userName

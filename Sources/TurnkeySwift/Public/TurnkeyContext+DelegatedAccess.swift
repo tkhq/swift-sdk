@@ -49,7 +49,7 @@ extension TurnkeyContext {
       publicKey: params.publicKey
     )
 
-    let createParamsV3 = v1UserParamsV3(
+    let createParamsV4 = v1UserParamsV4(
       apiKeys: [apiKeyParams],
       authenticators: [],
       oauthProviders: [],
@@ -62,7 +62,7 @@ extension TurnkeyContext {
     let createResp = try await client.createUsers(
       TCreateUsersBody(
         organizationId: orgId,
-        users: [createParamsV3]
+        users: [createParamsV4]
       ))
 
     guard let newUserId = createResp.userIds.first, !newUserId.isEmpty else {
@@ -193,7 +193,7 @@ extension TurnkeyContext {
       intent.effect.rawValue,
       intent.condition ?? "",
       intent.consensus ?? "",
-      intent.notes ?? "",
+      intent.notes,
     ].joined(separator: "|")
   }
 }

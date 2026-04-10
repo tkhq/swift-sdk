@@ -69,24 +69,26 @@ public enum ClientSignature {
     phoneNumber: String? = nil,
     apiKeys: [v1ApiKeyParamsV2]? = nil,
     authenticators: [v1AuthenticatorParamsV2]? = nil,
-    oauthProviders: [v1OauthProviderParams]? = nil
+    oauthProviders: [v1OauthProviderParamsV2]? = nil
   ) throws -> (message: String, clientSignaturePublicKey: String) {
+
     let decoded: VerificationToken = try decodeVerificationToken(verificationToken)
+
     guard let verificationPublicKey = decoded.publicKey else {
       throw TurnkeySwiftError.invalidConfiguration(
         "Verification token is missing a public key"
       )
     }
 
-    let usage = v1SignupUsage(
+    let usage = v1SignupUsageV2(
       apiKeys: apiKeys,
       authenticators: authenticators,
       email: email,
       oauthProviders: oauthProviders,
-      phoneNumber: phoneNumber,
+      phoneNumber: phoneNumber
     )
 
-    let payload = v1TokenUsage(signup: usage, tokenId: decoded.id, type: .usage_type_signup)
+    let payload = v1TokenUsage(signupV2: usage, tokenId: decoded.id, type: .usage_type_signup)
 
     let encoder = JSONEncoder()
     let data = try encoder.encode(payload)

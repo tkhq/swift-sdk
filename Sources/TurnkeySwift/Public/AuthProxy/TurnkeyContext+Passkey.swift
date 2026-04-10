@@ -54,7 +54,8 @@ extension TurnkeyContext {
       let resp = try await client.stampLogin(
         TStampLoginBody(
           organizationId: orgId,
-          expirationSeconds: resolvedSessionExpirationSeconds(expirationSeconds: expirationSeconds),
+          expirationSeconds: resolvedSessionExpirationSeconds(
+            expirationSeconds: expirationSeconds),
           publicKey: resolvedPublicKey
         ))
 
@@ -126,7 +127,8 @@ extension TurnkeyContext {
         TurnkeyCrypto.generateP256KeyPair()
 
       let passkey = try await createPasskey(
-        user: PasskeyUser(id: UUID().uuidString, name: passkeyName, displayName: passkeyName),
+        user: PasskeyUser(
+          id: UUID().uuidString, name: passkeyName, displayName: passkeyName),
         rp: RelyingParty(id: rpId, name: ""),
         presentationAnchor: anchor
       )
@@ -152,7 +154,7 @@ extension TurnkeyContext {
       mergedParams.apiKeys = (mergedParams.apiKeys ?? []) + [newApiKey]
 
       let signupBody = buildSignUpBody(createSubOrgParams: mergedParams)
-      let response = try await client.proxySignup(signupBody)
+      let response = try await client.proxySignupV2(signupBody)
 
       let organizationId = response.organizationId
 
@@ -167,7 +169,8 @@ extension TurnkeyContext {
       let loginResponse = try await temporaryClient.stampLogin(
         TStampLoginBody(
           organizationId: organizationId,
-          expirationSeconds: resolvedSessionExpirationSeconds(expirationSeconds: expirationSeconds),
+          expirationSeconds: resolvedSessionExpirationSeconds(
+            expirationSeconds: expirationSeconds),
           invalidateExisting: true,
           publicKey: newKeyPairResult
         ))
@@ -181,7 +184,8 @@ extension TurnkeyContext {
       try await storeSession(
         jwt: session, refreshedSessionTTLSeconds: resolvedRefreshedSessionTTLSeconds)
 
-      return PasskeyAuthResult(session: session, credentialId: passkey.attestation.credentialId)
+      return PasskeyAuthResult(
+        session: session, credentialId: passkey.attestation.credentialId)
 
     } catch {
       throw TurnkeySwiftError.failedToSignUpWithPasskey(underlying: error)

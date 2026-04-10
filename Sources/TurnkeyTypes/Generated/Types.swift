@@ -606,6 +606,16 @@ public enum v1ActivityType: String, Codable, Sendable {
   case activity_type_create_tvc_deployment = "ACTIVITY_TYPE_CREATE_TVC_DEPLOYMENT"
   case activity_type_create_tvc_manifest_approvals = "ACTIVITY_TYPE_CREATE_TVC_MANIFEST_APPROVALS"
   case activity_type_sol_send_transaction = "ACTIVITY_TYPE_SOL_SEND_TRANSACTION"
+  case activity_type_init_otp_v3 = "ACTIVITY_TYPE_INIT_OTP_V3"
+  case activity_type_verify_otp_v2 = "ACTIVITY_TYPE_VERIFY_OTP_V2"
+  case activity_type_otp_login_v2 = "ACTIVITY_TYPE_OTP_LOGIN_V2"
+  case activity_type_update_organization_name = "ACTIVITY_TYPE_UPDATE_ORGANIZATION_NAME"
+  case activity_type_create_sub_organization_v8 = "ACTIVITY_TYPE_CREATE_SUB_ORGANIZATION_V8"
+  case activity_type_create_oauth_providers_v2 = "ACTIVITY_TYPE_CREATE_OAUTH_PROVIDERS_V2"
+  case activity_type_create_users_v4 = "ACTIVITY_TYPE_CREATE_USERS_V4"
+  case activity_type_create_webhook_endpoint = "ACTIVITY_TYPE_CREATE_WEBHOOK_ENDPOINT"
+  case activity_type_update_webhook_endpoint = "ACTIVITY_TYPE_UPDATE_WEBHOOK_ENDPOINT"
+  case activity_type_delete_webhook_endpoint = "ACTIVITY_TYPE_DELETE_WEBHOOK_ENDPOINT"
 }
 
 public enum v1AddressFormat: String, Codable, Sendable {
@@ -748,6 +758,25 @@ public struct v1AppProof: Codable, Sendable {
     self.publicKey = publicKey
     self.scheme = scheme
     self.signature = signature
+  }
+}
+
+public struct v1AppStatus: Codable, Sendable {
+  /// Unique identifier for this TVC App
+  public let appId: String
+  /// List of deployment statuses for this app
+  public let deployments: [v1DeploymentStatus]
+  /// The deployment ID currently serving traffic for this app
+  public let targetedDeploymentId: String
+
+  public init(
+    appId: String,
+    deployments: [v1DeploymentStatus],
+    targetedDeploymentId: String
+  ) {
+    self.appId = appId
+    self.deployments = deployments
+    self.targetedDeploymentId = targetedDeploymentId
   }
 }
 
@@ -1158,30 +1187,6 @@ public struct v1CreateApiOnlyUsersIntent: Codable, Sendable {
   }
 }
 
-public struct v1CreateApiOnlyUsersRequest: Codable, Sendable {
-  public let generateAppProofs: Bool?
-  /// Unique identifier for a given Organization.
-  public let organizationId: String
-  public let parameters: v1CreateApiOnlyUsersIntent
-  /// Timestamp (in milliseconds) of the request, used to verify liveness of user requests.
-  public let timestampMs: String
-  public let type: String
-
-  public init(
-    generateAppProofs: Bool? = nil,
-    organizationId: String,
-    parameters: v1CreateApiOnlyUsersIntent,
-    timestampMs: String,
-    type: String
-  ) {
-    self.generateAppProofs = generateAppProofs
-    self.organizationId = organizationId
-    self.parameters = parameters
-    self.timestampMs = timestampMs
-    self.type = type
-  }
-}
-
 public struct v1CreateApiOnlyUsersResult: Codable, Sendable {
   /// A list of API-only User IDs.
   public let userIds: [String]
@@ -1439,11 +1444,26 @@ public struct v1CreateOauthProvidersIntent: Codable, Sendable {
   }
 }
 
+public struct v1CreateOauthProvidersIntentV2: Codable, Sendable {
+  /// A list of Oauth providers.
+  public let oauthProviders: [v1OauthProviderParamsV2]
+  /// The ID of the User to add an Oauth provider to
+  public let userId: String
+
+  public init(
+    oauthProviders: [v1OauthProviderParamsV2],
+    userId: String
+  ) {
+    self.oauthProviders = oauthProviders
+    self.userId = userId
+  }
+}
+
 public struct v1CreateOauthProvidersRequest: Codable, Sendable {
   public let generateAppProofs: Bool?
   /// Unique identifier for a given Organization.
   public let organizationId: String
-  public let parameters: v1CreateOauthProvidersIntent
+  public let parameters: v1CreateOauthProvidersIntentV2
   /// Timestamp (in milliseconds) of the request, used to verify liveness of user requests.
   public let timestampMs: String
   public let type: String
@@ -1451,7 +1471,7 @@ public struct v1CreateOauthProvidersRequest: Codable, Sendable {
   public init(
     generateAppProofs: Bool? = nil,
     organizationId: String,
-    parameters: v1CreateOauthProvidersIntent,
+    parameters: v1CreateOauthProvidersIntentV2,
     timestampMs: String,
     type: String
   ) {
@@ -1464,6 +1484,17 @@ public struct v1CreateOauthProvidersRequest: Codable, Sendable {
 }
 
 public struct v1CreateOauthProvidersResult: Codable, Sendable {
+  /// A list of unique identifiers for Oauth Providers
+  public let providerIds: [String]
+
+  public init(
+    providerIds: [String]
+  ) {
+    self.providerIds = providerIds
+  }
+}
+
+public struct v1CreateOauthProvidersResultV2: Codable, Sendable {
   /// A list of unique identifiers for Oauth Providers
   public let providerIds: [String]
 
@@ -2258,11 +2289,58 @@ public struct v1CreateSubOrganizationIntentV7: Codable, Sendable {
   }
 }
 
+public struct v1CreateSubOrganizationIntentV8: Codable, Sendable {
+  /// Optional signature proving authorization for this sub-organization creation. The signature is over the verification token ID and the root user parameters for the root user associated with the verification token. Only required if a public key was provided during the verification step.
+  public let clientSignature: v1ClientSignature?
+  /// Disable email auth for the sub-organization
+  public let disableEmailAuth: Bool?
+  /// Disable email recovery for the sub-organization
+  public let disableEmailRecovery: Bool?
+  /// Disable OTP email auth for the sub-organization
+  public let disableOtpEmailAuth: Bool?
+  /// Disable OTP SMS auth for the sub-organization
+  public let disableSmsAuth: Bool?
+  /// The threshold of unique approvals to reach root quorum. This value must be less than or equal to the number of root users
+  public let rootQuorumThreshold: Int
+  /// Root users to create within this sub-organization
+  public let rootUsers: [v1RootUserParamsV5]
+  /// Name for this sub-organization
+  public let subOrganizationName: String
+  /// Signed JWT containing a unique id, expiry, verification type, contact
+  public let verificationToken: String?
+  /// The wallet to create for the sub-organization
+  public let wallet: v1WalletParams?
+
+  public init(
+    clientSignature: v1ClientSignature? = nil,
+    disableEmailAuth: Bool? = nil,
+    disableEmailRecovery: Bool? = nil,
+    disableOtpEmailAuth: Bool? = nil,
+    disableSmsAuth: Bool? = nil,
+    rootQuorumThreshold: Int,
+    rootUsers: [v1RootUserParamsV5],
+    subOrganizationName: String,
+    verificationToken: String? = nil,
+    wallet: v1WalletParams? = nil
+  ) {
+    self.clientSignature = clientSignature
+    self.disableEmailAuth = disableEmailAuth
+    self.disableEmailRecovery = disableEmailRecovery
+    self.disableOtpEmailAuth = disableOtpEmailAuth
+    self.disableSmsAuth = disableSmsAuth
+    self.rootQuorumThreshold = rootQuorumThreshold
+    self.rootUsers = rootUsers
+    self.subOrganizationName = subOrganizationName
+    self.verificationToken = verificationToken
+    self.wallet = wallet
+  }
+}
+
 public struct v1CreateSubOrganizationRequest: Codable, Sendable {
   public let generateAppProofs: Bool?
   /// Unique identifier for a given Organization.
   public let organizationId: String
-  public let parameters: v1CreateSubOrganizationIntentV7
+  public let parameters: v1CreateSubOrganizationIntentV8
   /// Timestamp (in milliseconds) of the request, used to verify liveness of user requests.
   public let timestampMs: String
   public let type: String
@@ -2270,7 +2348,7 @@ public struct v1CreateSubOrganizationRequest: Codable, Sendable {
   public init(
     generateAppProofs: Bool? = nil,
     organizationId: String,
-    parameters: v1CreateSubOrganizationIntentV7,
+    parameters: v1CreateSubOrganizationIntentV8,
     timestampMs: String,
     type: String
   ) {
@@ -2376,9 +2454,25 @@ public struct v1CreateSubOrganizationResultV7: Codable, Sendable {
   }
 }
 
+public struct v1CreateSubOrganizationResultV8: Codable, Sendable {
+  public let rootUserIds: [String]?
+  public let subOrganizationId: String
+  public let wallet: v1WalletResult?
+
+  public init(
+    rootUserIds: [String]? = nil,
+    subOrganizationId: String,
+    wallet: v1WalletResult? = nil
+  ) {
+    self.rootUserIds = rootUserIds
+    self.subOrganizationId = subOrganizationId
+    self.wallet = wallet
+  }
+}
+
 public struct v1CreateTvcAppIntent: Codable, Sendable {
-  /// Enables external connectivity for this TVC app. Default if not provided: false.
-  public let externalConnectivity: Bool?
+  /// Enables network egress for this TVC app. Default if not provided: false.
+  public let enableEgress: Bool?
   /// Unique identifier for an existing TVC operator set to use as the Manifest Set for this TVC application. If left empty, a new Manifest Set configuration is required
   public let manifestSetId: String?
   /// Configuration to create a new TVC operator set, used as the Manifest Set for this TVC application. If left empty, a Manifest Set ID is required
@@ -2393,7 +2487,7 @@ public struct v1CreateTvcAppIntent: Codable, Sendable {
   public let shareSetParams: v1TvcOperatorSetParams?
 
   public init(
-    externalConnectivity: Bool? = nil,
+    enableEgress: Bool? = nil,
     manifestSetId: String? = nil,
     manifestSetParams: v1TvcOperatorSetParams? = nil,
     name: String,
@@ -2401,34 +2495,13 @@ public struct v1CreateTvcAppIntent: Codable, Sendable {
     shareSetId: String? = nil,
     shareSetParams: v1TvcOperatorSetParams? = nil
   ) {
-    self.externalConnectivity = externalConnectivity
+    self.enableEgress = enableEgress
     self.manifestSetId = manifestSetId
     self.manifestSetParams = manifestSetParams
     self.name = name
     self.quorumPublicKey = quorumPublicKey
     self.shareSetId = shareSetId
     self.shareSetParams = shareSetParams
-  }
-}
-
-public struct v1CreateTvcAppRequest: Codable, Sendable {
-  /// Unique identifier for a given Organization.
-  public let organizationId: String
-  public let parameters: v1CreateTvcAppIntent
-  /// Timestamp (in milliseconds) of the request, used to verify liveness of user requests.
-  public let timestampMs: String
-  public let type: String
-
-  public init(
-    organizationId: String,
-    parameters: v1CreateTvcAppIntent,
-    timestampMs: String,
-    type: String
-  ) {
-    self.organizationId = organizationId
-    self.parameters = parameters
-    self.timestampMs = timestampMs
-    self.type = type
   }
 }
 
@@ -2458,16 +2531,14 @@ public struct v1CreateTvcAppResult: Codable, Sendable {
 public struct v1CreateTvcDeploymentIntent: Codable, Sendable {
   /// The unique identifier of the to-be-deployed TVC application
   public let appId: String
+  /// Optional flag to indicate whether to deploy the TVC app in debug mode, which includes additional logging and debugging tools. Default is false.
+  public let debugMode: Bool?
   /// Digest of the pivot binary in the pivot container. This value will be inserted in the QOS manifest to ensure application integrity.
   public let expectedPivotDigest: String
-  /// Arguments to pass to the host binary at startup. Encoded as a list of strings, for example ["--foo", "bar"]
-  public let hostArgs: [String]
-  /// Optional encrypted pull secret to authorize Turnkey to pull the host container image. If your image is public, leave this empty.
-  public let hostContainerEncryptedPullSecret: String?
-  /// URL of the container containing the host binary
-  public let hostContainerImageUrl: String
-  /// Location of the binary inside the host container
-  public let hostPath: String
+  /// Port to use for health checks.
+  public let healthCheckPort: Int
+  /// Health check type (TVC_HEALTH_CHECK_TYPE_HTTP or TVC_HEALTH_CHECK_TYPE_GRPC). HTTP health checks are made with a GET request on /health, and gRPC health checks follow the standard gRPC health checking protocol.
+  public let healthCheckType: v1TvcHealthCheckType
   /// Optional nonce to ensure uniqueness of the deployment manifest. If not provided, it defaults to the current Unix timestamp in seconds.
   public let nonce: Int?
   /// Arguments to pass to the pivot binary at startup. Encoded as a list of strings, for example ["--foo", "bar"]
@@ -2478,56 +2549,37 @@ public struct v1CreateTvcDeploymentIntent: Codable, Sendable {
   public let pivotContainerImageUrl: String
   /// Location of the binary in the pivot container
   public let pivotPath: String
+  /// Port to use for public ingress.
+  public let publicIngressPort: Int
   /// The QuorumOS version to use to deploy this application
   public let qosVersion: String
 
   public init(
     appId: String,
+    debugMode: Bool? = nil,
     expectedPivotDigest: String,
-    hostArgs: [String],
-    hostContainerEncryptedPullSecret: String? = nil,
-    hostContainerImageUrl: String,
-    hostPath: String,
+    healthCheckPort: Int,
+    healthCheckType: v1TvcHealthCheckType,
     nonce: Int? = nil,
     pivotArgs: [String],
     pivotContainerEncryptedPullSecret: String? = nil,
     pivotContainerImageUrl: String,
     pivotPath: String,
+    publicIngressPort: Int,
     qosVersion: String
   ) {
     self.appId = appId
+    self.debugMode = debugMode
     self.expectedPivotDigest = expectedPivotDigest
-    self.hostArgs = hostArgs
-    self.hostContainerEncryptedPullSecret = hostContainerEncryptedPullSecret
-    self.hostContainerImageUrl = hostContainerImageUrl
-    self.hostPath = hostPath
+    self.healthCheckPort = healthCheckPort
+    self.healthCheckType = healthCheckType
     self.nonce = nonce
     self.pivotArgs = pivotArgs
     self.pivotContainerEncryptedPullSecret = pivotContainerEncryptedPullSecret
     self.pivotContainerImageUrl = pivotContainerImageUrl
     self.pivotPath = pivotPath
+    self.publicIngressPort = publicIngressPort
     self.qosVersion = qosVersion
-  }
-}
-
-public struct v1CreateTvcDeploymentRequest: Codable, Sendable {
-  /// Unique identifier for a given Organization.
-  public let organizationId: String
-  public let parameters: v1CreateTvcDeploymentIntent
-  /// Timestamp (in milliseconds) of the request, used to verify liveness of user requests.
-  public let timestampMs: String
-  public let type: String
-
-  public init(
-    organizationId: String,
-    parameters: v1CreateTvcDeploymentIntent,
-    timestampMs: String,
-    type: String
-  ) {
-    self.organizationId = organizationId
-    self.parameters = parameters
-    self.timestampMs = timestampMs
-    self.type = type
   }
 }
 
@@ -2558,27 +2610,6 @@ public struct v1CreateTvcManifestApprovalsIntent: Codable, Sendable {
   ) {
     self.approvals = approvals
     self.manifestId = manifestId
-  }
-}
-
-public struct v1CreateTvcManifestApprovalsRequest: Codable, Sendable {
-  /// Unique identifier for a given Organization.
-  public let organizationId: String
-  public let parameters: v1CreateTvcManifestApprovalsIntent
-  /// Timestamp (in milliseconds) of the request, used to verify liveness of user requests.
-  public let timestampMs: String
-  public let type: String
-
-  public init(
-    organizationId: String,
-    parameters: v1CreateTvcManifestApprovalsIntent,
-    timestampMs: String,
-    type: String
-  ) {
-    self.organizationId = organizationId
-    self.parameters = parameters
-    self.timestampMs = timestampMs
-    self.type = type
   }
 }
 
@@ -2680,11 +2711,22 @@ public struct v1CreateUsersIntentV3: Codable, Sendable {
   }
 }
 
+public struct v1CreateUsersIntentV4: Codable, Sendable {
+  /// A list of Users.
+  public let users: [v1UserParamsV4]
+
+  public init(
+    users: [v1UserParamsV4]
+  ) {
+    self.users = users
+  }
+}
+
 public struct v1CreateUsersRequest: Codable, Sendable {
   public let generateAppProofs: Bool?
   /// Unique identifier for a given Organization.
   public let organizationId: String
-  public let parameters: v1CreateUsersIntentV3
+  public let parameters: v1CreateUsersIntentV4
   /// Timestamp (in milliseconds) of the request, used to verify liveness of user requests.
   public let timestampMs: String
   public let type: String
@@ -2692,7 +2734,7 @@ public struct v1CreateUsersRequest: Codable, Sendable {
   public init(
     generateAppProofs: Bool? = nil,
     organizationId: String,
-    parameters: v1CreateUsersIntentV3,
+    parameters: v1CreateUsersIntentV4,
     timestampMs: String,
     type: String
   ) {
@@ -2824,6 +2866,64 @@ public struct v1CreateWalletResult: Codable, Sendable {
   ) {
     self.addresses = addresses
     self.walletId = walletId
+  }
+}
+
+public struct v1CreateWebhookEndpointIntent: Codable, Sendable {
+  /// Human-readable name for this webhook endpoint.
+  public let name: String
+  /// Event subscriptions to create for this endpoint.
+  public let subscriptions: [v1WebhookSubscriptionParams]?
+  /// The destination URL for webhook delivery.
+  public let url: String
+
+  public init(
+    name: String,
+    subscriptions: [v1WebhookSubscriptionParams]? = nil,
+    url: String
+  ) {
+    self.name = name
+    self.subscriptions = subscriptions
+    self.url = url
+  }
+}
+
+public struct v1CreateWebhookEndpointRequest: Codable, Sendable {
+  public let generateAppProofs: Bool?
+  /// Unique identifier for a given Organization.
+  public let organizationId: String
+  public let parameters: v1CreateWebhookEndpointIntent
+  /// Timestamp (in milliseconds) of the request, used to verify liveness of user requests.
+  public let timestampMs: String
+  public let type: String
+
+  public init(
+    generateAppProofs: Bool? = nil,
+    organizationId: String,
+    parameters: v1CreateWebhookEndpointIntent,
+    timestampMs: String,
+    type: String
+  ) {
+    self.generateAppProofs = generateAppProofs
+    self.organizationId = organizationId
+    self.parameters = parameters
+    self.timestampMs = timestampMs
+    self.type = type
+  }
+}
+
+public struct v1CreateWebhookEndpointResult: Codable, Sendable {
+  /// Unique identifier of the created webhook endpoint.
+  public let endpointId: String
+  /// The created webhook endpoint data.
+  public let webhookEndpoint: v1WebhookEndpointData
+
+  public init(
+    endpointId: String,
+    webhookEndpoint: v1WebhookEndpointData
+  ) {
+    self.endpointId = endpointId
+    self.webhookEndpoint = webhookEndpoint
   }
 }
 
@@ -3661,6 +3761,75 @@ public struct v1DeleteWalletsResult: Codable, Sendable {
   }
 }
 
+public struct v1DeleteWebhookEndpointIntent: Codable, Sendable {
+  /// Unique identifier of the webhook endpoint to delete.
+  public let endpointId: String
+
+  public init(
+    endpointId: String
+  ) {
+    self.endpointId = endpointId
+  }
+}
+
+public struct v1DeleteWebhookEndpointRequest: Codable, Sendable {
+  public let generateAppProofs: Bool?
+  /// Unique identifier for a given Organization.
+  public let organizationId: String
+  public let parameters: v1DeleteWebhookEndpointIntent
+  /// Timestamp (in milliseconds) of the request, used to verify liveness of user requests.
+  public let timestampMs: String
+  public let type: String
+
+  public init(
+    generateAppProofs: Bool? = nil,
+    organizationId: String,
+    parameters: v1DeleteWebhookEndpointIntent,
+    timestampMs: String,
+    type: String
+  ) {
+    self.generateAppProofs = generateAppProofs
+    self.organizationId = organizationId
+    self.parameters = parameters
+    self.timestampMs = timestampMs
+    self.type = type
+  }
+}
+
+public struct v1DeleteWebhookEndpointResult: Codable, Sendable {
+  /// Unique identifier of the deleted webhook endpoint.
+  public let endpointId: String
+
+  public init(
+    endpointId: String
+  ) {
+    self.endpointId = endpointId
+  }
+}
+
+public struct v1DeploymentStatus: Codable, Sendable {
+  /// Unique identifier for this deployment (corresponds to k8s deployment label)
+  public let deploymentId: String
+  /// Desired number of replicas
+  public let desiredReplicas: Int
+  /// Last time this deployment was updated
+  public let lastUpdatedTime: externaldatav1Timestamp
+  /// Number of ready replicas
+  public let readyReplicas: Int
+
+  public init(
+    deploymentId: String,
+    desiredReplicas: Int,
+    lastUpdatedTime: externaldatav1Timestamp,
+    readyReplicas: Int
+  ) {
+    self.deploymentId = deploymentId
+    self.desiredReplicas = desiredReplicas
+    self.lastUpdatedTime = lastUpdatedTime
+    self.readyReplicas = readyReplicas
+  }
+}
+
 public struct v1DisableAuthProxyIntent: Codable, Sendable {
   public init() {}
 }
@@ -3956,6 +4125,17 @@ public struct v1EnableAuthProxyResult: Codable, Sendable {
   }
 }
 
+public struct v1EthFailureDetails: Codable, Sendable {
+  /// Ethereum revert chain, ordered from outermost to innermost.
+  public let revertChain: [v1RevertChainEntry]?
+
+  public init(
+    revertChain: [v1RevertChainEntry]? = nil
+  ) {
+    self.revertChain = revertChain
+  }
+}
+
 public struct v1EthSendRawTransactionIntent: Codable, Sendable {
   /// CAIP-2 chain ID (e.g., 'eip155:1' for Ethereum mainnet).
   public let caip2: String
@@ -3968,30 +4148,6 @@ public struct v1EthSendRawTransactionIntent: Codable, Sendable {
   ) {
     self.caip2 = caip2
     self.signedTransaction = signedTransaction
-  }
-}
-
-public struct v1EthSendRawTransactionRequest: Codable, Sendable {
-  public let generateAppProofs: Bool?
-  /// Unique identifier for a given Organization.
-  public let organizationId: String
-  public let parameters: v1EthSendRawTransactionIntent
-  /// Timestamp (in milliseconds) of the request, used to verify liveness of user requests.
-  public let timestampMs: String
-  public let type: String
-
-  public init(
-    generateAppProofs: Bool? = nil,
-    organizationId: String,
-    parameters: v1EthSendRawTransactionIntent,
-    timestampMs: String,
-    type: String
-  ) {
-    self.generateAppProofs = generateAppProofs
-    self.organizationId = organizationId
-    self.parameters = parameters
-    self.timestampMs = timestampMs
-    self.type = type
   }
 }
 
@@ -4291,6 +4447,7 @@ public enum v1FeatureName: String, Codable, Sendable {
   case feature_name_sms_auth = "FEATURE_NAME_SMS_AUTH"
   case feature_name_otp_email_auth = "FEATURE_NAME_OTP_EMAIL_AUTH"
   case feature_name_auth_proxy = "FEATURE_NAME_AUTH_PROXY"
+  case feature_name_solana_rent_prefund_enabled = "FEATURE_NAME_SOLANA_RENT_PREFUND_ENABLED"
 }
 
 public enum v1FiatOnRampBlockchainNetwork: String, Codable, Sendable {
@@ -4538,6 +4695,32 @@ public struct v1GetAppProofsResponse: Codable, Sendable {
     appProofs: [v1AppProof]
   ) {
     self.appProofs = appProofs
+  }
+}
+
+public struct v1GetAppStatusRequest: Codable, Sendable {
+  /// Unique identifier for a given TVC App.
+  public let appId: String
+  /// Unique identifier for a given Organization.
+  public let organizationId: String
+
+  public init(
+    appId: String,
+    organizationId: String
+  ) {
+    self.appId = appId
+    self.organizationId = organizationId
+  }
+}
+
+public struct v1GetAppStatusResponse: Codable, Sendable {
+  /// Live runtime status for the TVC App
+  public let appStatus: v1AppStatus
+
+  public init(
+    appStatus: v1AppStatus
+  ) {
+    self.appStatus = appStatus
   }
 }
 
@@ -4798,28 +4981,6 @@ public struct v1GetOrganizationConfigsResponse: Codable, Sendable {
   }
 }
 
-public struct v1GetOrganizationRequest: Codable, Sendable {
-  /// Unique identifier for a given organization.
-  public let organizationId: String
-
-  public init(
-    organizationId: String
-  ) {
-    self.organizationId = organizationId
-  }
-}
-
-public struct v1GetOrganizationResponse: Codable, Sendable {
-  /// Object representing the full current and deleted / disabled collection of users, policies, private keys, and invitations attributable to a particular organization.
-  public let organizationData: v1OrganizationData
-
-  public init(
-    organizationData: v1OrganizationData
-  ) {
-    self.organizationData = organizationData
-  }
-}
-
 public struct v1GetPoliciesRequest: Codable, Sendable {
   /// Unique identifier for a given organization.
   public let organizationId: String
@@ -4961,6 +5122,8 @@ public struct v1GetSendTransactionStatusResponse: Codable, Sendable {
   public let error: v1TxError?
   /// Ethereum-specific transaction status.
   public let eth: v1EthSendTransactionStatus?
+  /// Solana-specific transaction status.
+  public let solana: v1SolanaSendTransactionStatus?
   /// The error encountered when broadcasting or confirming the transaction, if any.
   public let txError: String?
   /// The current status of the send transaction.
@@ -4969,11 +5132,13 @@ public struct v1GetSendTransactionStatusResponse: Codable, Sendable {
   public init(
     error: v1TxError? = nil,
     eth: v1EthSendTransactionStatus? = nil,
+    solana: v1SolanaSendTransactionStatus? = nil,
     txError: String? = nil,
     txStatus: String
   ) {
     self.error = error
     self.eth = eth
+    self.solana = solana
     self.txError = txError
     self.txStatus = txStatus
   }
@@ -5058,106 +5223,6 @@ public struct v1GetSubOrgIdsResponse: Codable, Sendable {
     organizationIds: [String]
   ) {
     self.organizationIds = organizationIds
-  }
-}
-
-public struct v1GetTvcAppDeploymentsRequest: Codable, Sendable {
-  /// Unique identifier for a given TVC App.
-  public let appId: String
-  /// Unique identifier for a given organization.
-  public let organizationId: String
-
-  public init(
-    appId: String,
-    organizationId: String
-  ) {
-    self.appId = appId
-    self.organizationId = organizationId
-  }
-}
-
-public struct v1GetTvcAppDeploymentsResponse: Codable, Sendable {
-  /// List of deployments for this TVC App
-  public let tvcDeployments: [v1TvcDeployment]
-
-  public init(
-    tvcDeployments: [v1TvcDeployment]
-  ) {
-    self.tvcDeployments = tvcDeployments
-  }
-}
-
-public struct v1GetTvcAppRequest: Codable, Sendable {
-  /// Unique identifier for a given organization.
-  public let organizationId: String
-  /// Unique identifier for a given TVC App.
-  public let tvcAppId: String
-
-  public init(
-    organizationId: String,
-    tvcAppId: String
-  ) {
-    self.organizationId = organizationId
-    self.tvcAppId = tvcAppId
-  }
-}
-
-public struct v1GetTvcAppResponse: Codable, Sendable {
-  /// Details about a single TVC App
-  public let tvcApp: v1TvcApp
-
-  public init(
-    tvcApp: v1TvcApp
-  ) {
-    self.tvcApp = tvcApp
-  }
-}
-
-public struct v1GetTvcAppsRequest: Codable, Sendable {
-  /// Unique identifier for a given organization.
-  public let organizationId: String
-
-  public init(
-    organizationId: String
-  ) {
-    self.organizationId = organizationId
-  }
-}
-
-public struct v1GetTvcAppsResponse: Codable, Sendable {
-  /// A list of TVC Apps.
-  public let tvcApps: [v1TvcApp]
-
-  public init(
-    tvcApps: [v1TvcApp]
-  ) {
-    self.tvcApps = tvcApps
-  }
-}
-
-public struct v1GetTvcDeploymentRequest: Codable, Sendable {
-  /// Unique identifier for a given TVC Deployment.
-  public let deploymentId: String
-  /// Unique identifier for a given organization.
-  public let organizationId: String
-
-  public init(
-    deploymentId: String,
-    organizationId: String
-  ) {
-    self.deploymentId = deploymentId
-    self.organizationId = organizationId
-  }
-}
-
-public struct v1GetTvcDeploymentResponse: Codable, Sendable {
-  /// Details about a single TVC Deployment
-  public let tvcDeployment: v1TvcDeployment
-
-  public init(
-    tvcDeployment: v1TvcDeployment
-  ) {
-    self.tvcDeployment = tvcDeployment
   }
 }
 
@@ -5312,9 +5377,9 @@ public struct v1GetWalletAccountsResponse: Codable, Sendable {
 }
 
 public struct v1GetWalletAddressBalancesRequest: Codable, Sendable {
-  /// Address corresponding to a wallet account.
+  /// Address corresponding to a wallet account. Private key addresses are not supported.
   public let address: String
-  /// CAIP-2 chain ID (e.g., 'eip155:1' for Ethereum mainnet).
+  /// CAIP-2 chain ID (e.g., 'eip155:1' for Ethereum mainnet or 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp' for Solana mainnet). Human-readable Solana aliases ('solana:mainnet', 'solana:devnet') are also accepted and normalized to canonical CAIP-2 values.
   public let caip2: String
   /// Unique identifier for a given organization.
   public let organizationId: String
@@ -5571,7 +5636,7 @@ public struct v1InitFiatOnRampIntent: Codable, Sendable {
   public let fiatCurrencyCode: v1FiatOnRampCurrency?
   /// Blockchain network to be used for the transaction, e.g., bitcoin, ethereum. Maps to MoonPay's network or Coinbase's defaultNetwork.
   public let network: v1FiatOnRampBlockchainNetwork
-  /// Enum to specifiy which on-ramp provider to use
+  /// Enum to specify which on-ramp provider to use
   public let onrampProvider: v1FiatOnRampProvider
   /// Pre-selected payment method, e.g., CREDIT_DEBIT_CARD, APPLE_PAY. Validated against the chosen provider.
   public let paymentMethod: v1FiatOnRampPaymentMethod?
@@ -5749,7 +5814,7 @@ public struct v1InitOtpAuthIntent: Codable, Sendable {
   public let contact: String
   /// Optional parameters for customizing emails. If not provided, the default email will be used.
   public let emailCustomization: v1EmailCustomizationParams?
-  /// Enum to specifiy whether to send OTP via SMS or email
+  /// Enum to specify whether to send OTP via SMS or email
   public let otpType: String
   /// Optional custom email address to use as reply-to
   public let replyToEmailAddress: String?
@@ -5792,7 +5857,7 @@ public struct v1InitOtpAuthIntentV2: Codable, Sendable {
   public let emailCustomization: v1EmailCustomizationParams?
   /// Optional length of the OTP code. Default = 9
   public let otpLength: Int?
-  /// Enum to specifiy whether to send OTP via SMS or email
+  /// Enum to specify whether to send OTP via SMS or email
   public let otpType: String
   /// Optional custom email address to use as reply-to
   public let replyToEmailAddress: String?
@@ -6037,11 +6102,66 @@ public struct v1InitOtpIntentV2: Codable, Sendable {
   }
 }
 
+public struct v1InitOtpIntentV3: Codable, Sendable {
+  /// Optional flag to specify if the OTP code should be alphanumeric (Crockford’s Base32). If set to false, OTP code will only be numeric. Default = true
+  public let alphanumeric: Bool?
+  /// The name of the application.
+  public let appName: String
+  /// Email or phone number to send the OTP code to
+  public let contact: String
+  /// Optional parameters for customizing emails. If not provided, the default email will be used.
+  public let emailCustomization: v1EmailCustomizationParamsV2?
+  /// Expiration window (in seconds) indicating how long the OTP is valid for. If not provided, a default of 5 minutes will be used. Maximum value is 600 seconds (10 minutes)
+  public let expirationSeconds: String?
+  /// Optional length of the OTP code. Default = 9
+  public let otpLength: Int?
+  /// Whether to send OTP via SMS or email. Possible values: OTP_TYPE_SMS, OTP_TYPE_EMAIL
+  public let otpType: String
+  /// Optional custom email address to use as reply-to
+  public let replyToEmailAddress: String?
+  /// Optional custom email address from which to send the OTP email
+  public let sendFromEmailAddress: String?
+  /// Optional custom sender name for use with sendFromEmailAddress; if left empty, will default to 'Notifications'
+  public let sendFromEmailSenderName: String?
+  /// Optional parameters for customizing SMS message. If not provided, the default sms message will be used.
+  public let smsCustomization: v1SmsCustomizationParams?
+  /// Optional client-generated user identifier to enable per-user rate limiting for SMS auth. We recommend using a hash of the client-side IP address.
+  public let userIdentifier: String?
+
+  public init(
+    alphanumeric: Bool? = nil,
+    appName: String,
+    contact: String,
+    emailCustomization: v1EmailCustomizationParamsV2? = nil,
+    expirationSeconds: String? = nil,
+    otpLength: Int? = nil,
+    otpType: String,
+    replyToEmailAddress: String? = nil,
+    sendFromEmailAddress: String? = nil,
+    sendFromEmailSenderName: String? = nil,
+    smsCustomization: v1SmsCustomizationParams? = nil,
+    userIdentifier: String? = nil
+  ) {
+    self.alphanumeric = alphanumeric
+    self.appName = appName
+    self.contact = contact
+    self.emailCustomization = emailCustomization
+    self.expirationSeconds = expirationSeconds
+    self.otpLength = otpLength
+    self.otpType = otpType
+    self.replyToEmailAddress = replyToEmailAddress
+    self.sendFromEmailAddress = sendFromEmailAddress
+    self.sendFromEmailSenderName = sendFromEmailSenderName
+    self.smsCustomization = smsCustomization
+    self.userIdentifier = userIdentifier
+  }
+}
+
 public struct v1InitOtpRequest: Codable, Sendable {
   public let generateAppProofs: Bool?
   /// Unique identifier for a given Organization.
   public let organizationId: String
-  public let parameters: v1InitOtpIntentV2
+  public let parameters: v1InitOtpIntentV3
   /// Timestamp (in milliseconds) of the request, used to verify liveness of user requests.
   public let timestampMs: String
   public let type: String
@@ -6049,7 +6169,7 @@ public struct v1InitOtpRequest: Codable, Sendable {
   public init(
     generateAppProofs: Bool? = nil,
     organizationId: String,
-    parameters: v1InitOtpIntentV2,
+    parameters: v1InitOtpIntentV3,
     timestampMs: String,
     type: String
   ) {
@@ -6068,6 +6188,21 @@ public struct v1InitOtpResult: Codable, Sendable {
   public init(
     otpId: String
   ) {
+    self.otpId = otpId
+  }
+}
+
+public struct v1InitOtpResultV2: Codable, Sendable {
+  /// Signed bundle containing a target encryption key to use when submitting OTP codes.
+  public let otpEncryptionTargetBundle: String
+  /// Unique identifier for an OTP flow
+  public let otpId: String
+
+  public init(
+    otpEncryptionTargetBundle: String,
+    otpId: String
+  ) {
+    self.otpEncryptionTargetBundle = otpEncryptionTargetBundle
     self.otpId = otpId
   }
 }
@@ -6191,6 +6326,7 @@ public struct v1Intent: Codable, Sendable {
   public let createInvitationsIntent: v1CreateInvitationsIntent?
   public let createOauth2CredentialIntent: v1CreateOauth2CredentialIntent?
   public let createOauthProvidersIntent: v1CreateOauthProvidersIntent?
+  public let createOauthProvidersIntentV2: v1CreateOauthProvidersIntentV2?
   public let createOrganizationIntent: v1CreateOrganizationIntent?
   public let createOrganizationIntentV2: v1CreateOrganizationIntentV2?
   public let createPoliciesIntent: v1CreatePoliciesIntent?
@@ -6211,6 +6347,7 @@ public struct v1Intent: Codable, Sendable {
   public let createSubOrganizationIntentV5: v1CreateSubOrganizationIntentV5?
   public let createSubOrganizationIntentV6: v1CreateSubOrganizationIntentV6?
   public let createSubOrganizationIntentV7: v1CreateSubOrganizationIntentV7?
+  public let createSubOrganizationIntentV8: v1CreateSubOrganizationIntentV8?
   public let createTvcAppIntent: v1CreateTvcAppIntent?
   public let createTvcDeploymentIntent: v1CreateTvcDeploymentIntent?
   public let createTvcManifestApprovalsIntent: v1CreateTvcManifestApprovalsIntent?
@@ -6218,8 +6355,10 @@ public struct v1Intent: Codable, Sendable {
   public let createUsersIntent: v1CreateUsersIntent?
   public let createUsersIntentV2: v1CreateUsersIntentV2?
   public let createUsersIntentV3: v1CreateUsersIntentV3?
+  public let createUsersIntentV4: v1CreateUsersIntentV4?
   public let createWalletAccountsIntent: v1CreateWalletAccountsIntent?
   public let createWalletIntent: v1CreateWalletIntent?
+  public let createWebhookEndpointIntent: v1CreateWebhookEndpointIntent?
   public let deleteApiKeysIntent: v1DeleteApiKeysIntent?
   public let deleteAuthenticatorsIntent: v1DeleteAuthenticatorsIntent?
   public let deleteFiatOnRampCredentialIntent: v1DeleteFiatOnRampCredentialIntent?
@@ -6238,6 +6377,7 @@ public struct v1Intent: Codable, Sendable {
   public let deleteUsersIntent: v1DeleteUsersIntent?
   public let deleteWalletAccountsIntent: v1DeleteWalletAccountsIntent?
   public let deleteWalletsIntent: v1DeleteWalletsIntent?
+  public let deleteWebhookEndpointIntent: v1DeleteWebhookEndpointIntent?
   public let disableAuthProxyIntent: v1DisableAuthProxyIntent?
   public let disablePrivateKeyIntent: v1DisablePrivateKeyIntent?
   public let emailAuthIntent: v1EmailAuthIntent?
@@ -6259,6 +6399,7 @@ public struct v1Intent: Codable, Sendable {
   public let initOtpAuthIntentV3: v1InitOtpAuthIntentV3?
   public let initOtpIntent: v1InitOtpIntent?
   public let initOtpIntentV2: v1InitOtpIntentV2?
+  public let initOtpIntentV3: v1InitOtpIntentV3?
   public let initUserEmailRecoveryIntent: v1InitUserEmailRecoveryIntent?
   public let initUserEmailRecoveryIntentV2: v1InitUserEmailRecoveryIntentV2?
   public let oauth2AuthenticateIntent: v1Oauth2AuthenticateIntent?
@@ -6266,6 +6407,7 @@ public struct v1Intent: Codable, Sendable {
   public let oauthLoginIntent: v1OauthLoginIntent?
   public let otpAuthIntent: v1OtpAuthIntent?
   public let otpLoginIntent: v1OtpLoginIntent?
+  public let otpLoginIntentV2: v1OtpLoginIntentV2?
   public let recoverUserIntent: v1RecoverUserIntent?
   public let rejectActivityIntent: v1RejectActivityIntent?
   public let removeOrganizationFeatureIntent: v1RemoveOrganizationFeatureIntent?
@@ -6283,6 +6425,7 @@ public struct v1Intent: Codable, Sendable {
   public let updateAuthProxyConfigIntent: v1UpdateAuthProxyConfigIntent?
   public let updateFiatOnRampCredentialIntent: v1UpdateFiatOnRampCredentialIntent?
   public let updateOauth2CredentialIntent: v1UpdateOauth2CredentialIntent?
+  public let updateOrganizationNameIntent: v1UpdateOrganizationNameIntent?
   public let updatePolicyIntent: v1UpdatePolicyIntent?
   public let updatePolicyIntentV2: v1UpdatePolicyIntentV2?
   public let updatePrivateKeyTagIntent: v1UpdatePrivateKeyTagIntent?
@@ -6293,8 +6436,10 @@ public struct v1Intent: Codable, Sendable {
   public let updateUserPhoneNumberIntent: v1UpdateUserPhoneNumberIntent?
   public let updateUserTagIntent: v1UpdateUserTagIntent?
   public let updateWalletIntent: v1UpdateWalletIntent?
+  public let updateWebhookEndpointIntent: v1UpdateWebhookEndpointIntent?
   public let upsertGasUsageConfigIntent: v1UpsertGasUsageConfigIntent?
   public let verifyOtpIntent: v1VerifyOtpIntent?
+  public let verifyOtpIntentV2: v1VerifyOtpIntentV2?
 
   public init(
     acceptInvitationIntent: v1AcceptInvitationIntent? = nil,
@@ -6310,6 +6455,7 @@ public struct v1Intent: Codable, Sendable {
     createInvitationsIntent: v1CreateInvitationsIntent? = nil,
     createOauth2CredentialIntent: v1CreateOauth2CredentialIntent? = nil,
     createOauthProvidersIntent: v1CreateOauthProvidersIntent? = nil,
+    createOauthProvidersIntentV2: v1CreateOauthProvidersIntentV2? = nil,
     createOrganizationIntent: v1CreateOrganizationIntent? = nil,
     createOrganizationIntentV2: v1CreateOrganizationIntentV2? = nil,
     createPoliciesIntent: v1CreatePoliciesIntent? = nil,
@@ -6330,6 +6476,7 @@ public struct v1Intent: Codable, Sendable {
     createSubOrganizationIntentV5: v1CreateSubOrganizationIntentV5? = nil,
     createSubOrganizationIntentV6: v1CreateSubOrganizationIntentV6? = nil,
     createSubOrganizationIntentV7: v1CreateSubOrganizationIntentV7? = nil,
+    createSubOrganizationIntentV8: v1CreateSubOrganizationIntentV8? = nil,
     createTvcAppIntent: v1CreateTvcAppIntent? = nil,
     createTvcDeploymentIntent: v1CreateTvcDeploymentIntent? = nil,
     createTvcManifestApprovalsIntent: v1CreateTvcManifestApprovalsIntent? = nil,
@@ -6337,8 +6484,10 @@ public struct v1Intent: Codable, Sendable {
     createUsersIntent: v1CreateUsersIntent? = nil,
     createUsersIntentV2: v1CreateUsersIntentV2? = nil,
     createUsersIntentV3: v1CreateUsersIntentV3? = nil,
+    createUsersIntentV4: v1CreateUsersIntentV4? = nil,
     createWalletAccountsIntent: v1CreateWalletAccountsIntent? = nil,
     createWalletIntent: v1CreateWalletIntent? = nil,
+    createWebhookEndpointIntent: v1CreateWebhookEndpointIntent? = nil,
     deleteApiKeysIntent: v1DeleteApiKeysIntent? = nil,
     deleteAuthenticatorsIntent: v1DeleteAuthenticatorsIntent? = nil,
     deleteFiatOnRampCredentialIntent: v1DeleteFiatOnRampCredentialIntent? = nil,
@@ -6357,6 +6506,7 @@ public struct v1Intent: Codable, Sendable {
     deleteUsersIntent: v1DeleteUsersIntent? = nil,
     deleteWalletAccountsIntent: v1DeleteWalletAccountsIntent? = nil,
     deleteWalletsIntent: v1DeleteWalletsIntent? = nil,
+    deleteWebhookEndpointIntent: v1DeleteWebhookEndpointIntent? = nil,
     disableAuthProxyIntent: v1DisableAuthProxyIntent? = nil,
     disablePrivateKeyIntent: v1DisablePrivateKeyIntent? = nil,
     emailAuthIntent: v1EmailAuthIntent? = nil,
@@ -6378,6 +6528,7 @@ public struct v1Intent: Codable, Sendable {
     initOtpAuthIntentV3: v1InitOtpAuthIntentV3? = nil,
     initOtpIntent: v1InitOtpIntent? = nil,
     initOtpIntentV2: v1InitOtpIntentV2? = nil,
+    initOtpIntentV3: v1InitOtpIntentV3? = nil,
     initUserEmailRecoveryIntent: v1InitUserEmailRecoveryIntent? = nil,
     initUserEmailRecoveryIntentV2: v1InitUserEmailRecoveryIntentV2? = nil,
     oauth2AuthenticateIntent: v1Oauth2AuthenticateIntent? = nil,
@@ -6385,6 +6536,7 @@ public struct v1Intent: Codable, Sendable {
     oauthLoginIntent: v1OauthLoginIntent? = nil,
     otpAuthIntent: v1OtpAuthIntent? = nil,
     otpLoginIntent: v1OtpLoginIntent? = nil,
+    otpLoginIntentV2: v1OtpLoginIntentV2? = nil,
     recoverUserIntent: v1RecoverUserIntent? = nil,
     rejectActivityIntent: v1RejectActivityIntent? = nil,
     removeOrganizationFeatureIntent: v1RemoveOrganizationFeatureIntent? = nil,
@@ -6402,6 +6554,7 @@ public struct v1Intent: Codable, Sendable {
     updateAuthProxyConfigIntent: v1UpdateAuthProxyConfigIntent? = nil,
     updateFiatOnRampCredentialIntent: v1UpdateFiatOnRampCredentialIntent? = nil,
     updateOauth2CredentialIntent: v1UpdateOauth2CredentialIntent? = nil,
+    updateOrganizationNameIntent: v1UpdateOrganizationNameIntent? = nil,
     updatePolicyIntent: v1UpdatePolicyIntent? = nil,
     updatePolicyIntentV2: v1UpdatePolicyIntentV2? = nil,
     updatePrivateKeyTagIntent: v1UpdatePrivateKeyTagIntent? = nil,
@@ -6412,8 +6565,10 @@ public struct v1Intent: Codable, Sendable {
     updateUserPhoneNumberIntent: v1UpdateUserPhoneNumberIntent? = nil,
     updateUserTagIntent: v1UpdateUserTagIntent? = nil,
     updateWalletIntent: v1UpdateWalletIntent? = nil,
+    updateWebhookEndpointIntent: v1UpdateWebhookEndpointIntent? = nil,
     upsertGasUsageConfigIntent: v1UpsertGasUsageConfigIntent? = nil,
-    verifyOtpIntent: v1VerifyOtpIntent? = nil
+    verifyOtpIntent: v1VerifyOtpIntent? = nil,
+    verifyOtpIntentV2: v1VerifyOtpIntentV2? = nil
   ) {
     self.acceptInvitationIntent = acceptInvitationIntent
     self.acceptInvitationIntentV2 = acceptInvitationIntentV2
@@ -6428,6 +6583,7 @@ public struct v1Intent: Codable, Sendable {
     self.createInvitationsIntent = createInvitationsIntent
     self.createOauth2CredentialIntent = createOauth2CredentialIntent
     self.createOauthProvidersIntent = createOauthProvidersIntent
+    self.createOauthProvidersIntentV2 = createOauthProvidersIntentV2
     self.createOrganizationIntent = createOrganizationIntent
     self.createOrganizationIntentV2 = createOrganizationIntentV2
     self.createPoliciesIntent = createPoliciesIntent
@@ -6448,6 +6604,7 @@ public struct v1Intent: Codable, Sendable {
     self.createSubOrganizationIntentV5 = createSubOrganizationIntentV5
     self.createSubOrganizationIntentV6 = createSubOrganizationIntentV6
     self.createSubOrganizationIntentV7 = createSubOrganizationIntentV7
+    self.createSubOrganizationIntentV8 = createSubOrganizationIntentV8
     self.createTvcAppIntent = createTvcAppIntent
     self.createTvcDeploymentIntent = createTvcDeploymentIntent
     self.createTvcManifestApprovalsIntent = createTvcManifestApprovalsIntent
@@ -6455,8 +6612,10 @@ public struct v1Intent: Codable, Sendable {
     self.createUsersIntent = createUsersIntent
     self.createUsersIntentV2 = createUsersIntentV2
     self.createUsersIntentV3 = createUsersIntentV3
+    self.createUsersIntentV4 = createUsersIntentV4
     self.createWalletAccountsIntent = createWalletAccountsIntent
     self.createWalletIntent = createWalletIntent
+    self.createWebhookEndpointIntent = createWebhookEndpointIntent
     self.deleteApiKeysIntent = deleteApiKeysIntent
     self.deleteAuthenticatorsIntent = deleteAuthenticatorsIntent
     self.deleteFiatOnRampCredentialIntent = deleteFiatOnRampCredentialIntent
@@ -6475,6 +6634,7 @@ public struct v1Intent: Codable, Sendable {
     self.deleteUsersIntent = deleteUsersIntent
     self.deleteWalletAccountsIntent = deleteWalletAccountsIntent
     self.deleteWalletsIntent = deleteWalletsIntent
+    self.deleteWebhookEndpointIntent = deleteWebhookEndpointIntent
     self.disableAuthProxyIntent = disableAuthProxyIntent
     self.disablePrivateKeyIntent = disablePrivateKeyIntent
     self.emailAuthIntent = emailAuthIntent
@@ -6496,6 +6656,7 @@ public struct v1Intent: Codable, Sendable {
     self.initOtpAuthIntentV3 = initOtpAuthIntentV3
     self.initOtpIntent = initOtpIntent
     self.initOtpIntentV2 = initOtpIntentV2
+    self.initOtpIntentV3 = initOtpIntentV3
     self.initUserEmailRecoveryIntent = initUserEmailRecoveryIntent
     self.initUserEmailRecoveryIntentV2 = initUserEmailRecoveryIntentV2
     self.oauth2AuthenticateIntent = oauth2AuthenticateIntent
@@ -6503,6 +6664,7 @@ public struct v1Intent: Codable, Sendable {
     self.oauthLoginIntent = oauthLoginIntent
     self.otpAuthIntent = otpAuthIntent
     self.otpLoginIntent = otpLoginIntent
+    self.otpLoginIntentV2 = otpLoginIntentV2
     self.recoverUserIntent = recoverUserIntent
     self.rejectActivityIntent = rejectActivityIntent
     self.removeOrganizationFeatureIntent = removeOrganizationFeatureIntent
@@ -6520,6 +6682,7 @@ public struct v1Intent: Codable, Sendable {
     self.updateAuthProxyConfigIntent = updateAuthProxyConfigIntent
     self.updateFiatOnRampCredentialIntent = updateFiatOnRampCredentialIntent
     self.updateOauth2CredentialIntent = updateOauth2CredentialIntent
+    self.updateOrganizationNameIntent = updateOrganizationNameIntent
     self.updatePolicyIntent = updatePolicyIntent
     self.updatePolicyIntentV2 = updatePolicyIntentV2
     self.updatePrivateKeyTagIntent = updatePrivateKeyTagIntent
@@ -6530,49 +6693,10 @@ public struct v1Intent: Codable, Sendable {
     self.updateUserPhoneNumberIntent = updateUserPhoneNumberIntent
     self.updateUserTagIntent = updateUserTagIntent
     self.updateWalletIntent = updateWalletIntent
+    self.updateWebhookEndpointIntent = updateWebhookEndpointIntent
     self.upsertGasUsageConfigIntent = upsertGasUsageConfigIntent
     self.verifyOtpIntent = verifyOtpIntent
-  }
-}
-
-public struct v1Invitation: Codable, Sendable {
-  /// The User's permissible access method(s).
-  public let accessType: v1AccessType
-  public let createdAt: externaldatav1Timestamp
-  /// Unique identifier for a given Invitation object.
-  public let invitationId: String
-  /// The email address of the intended Invitation recipient.
-  public let receiverEmail: String
-  /// The name of the intended Invitation recipient.
-  public let receiverUserName: String
-  /// A list of tags assigned to the Invitation recipient.
-  public let receiverUserTags: [String]
-  /// Unique identifier for the Sender of an Invitation.
-  public let senderUserId: String
-  /// The current processing status of a specified Invitation.
-  public let status: v1InvitationStatus
-  public let updatedAt: externaldatav1Timestamp
-
-  public init(
-    accessType: v1AccessType,
-    createdAt: externaldatav1Timestamp,
-    invitationId: String,
-    receiverEmail: String,
-    receiverUserName: String,
-    receiverUserTags: [String],
-    senderUserId: String,
-    status: v1InvitationStatus,
-    updatedAt: externaldatav1Timestamp
-  ) {
-    self.accessType = accessType
-    self.createdAt = createdAt
-    self.invitationId = invitationId
-    self.receiverEmail = receiverEmail
-    self.receiverUserName = receiverUserName
-    self.receiverUserTags = receiverUserTags
-    self.senderUserId = senderUserId
-    self.status = status
-    self.updatedAt = updatedAt
+    self.verifyOtpIntentV2 = verifyOtpIntentV2
   }
 }
 
@@ -6601,12 +6725,6 @@ public struct v1InvitationParams: Codable, Sendable {
     self.receiverUserTags = receiverUserTags
     self.senderUserId = senderUserId
   }
-}
-
-public enum v1InvitationStatus: String, Codable, Sendable {
-  case invitation_status_created = "INVITATION_STATUS_CREATED"
-  case invitation_status_accepted = "INVITATION_STATUS_ACCEPTED"
-  case invitation_status_revoked = "INVITATION_STATUS_REVOKED"
 }
 
 public struct v1ListFiatOnRampCredentialsRequest: Codable, Sendable {
@@ -6674,7 +6792,7 @@ public struct v1ListPrivateKeyTagsResponse: Codable, Sendable {
 }
 
 public struct v1ListSupportedAssetsRequest: Codable, Sendable {
-  /// CAIP-2 chain ID (e.g., 'eip155:1' for Ethereum mainnet).
+  /// CAIP-2 chain ID (e.g., 'eip155:1' for Ethereum mainnet or 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp' for Solana mainnet). Human-readable Solana aliases ('solana:mainnet', 'solana:devnet') are also accepted and normalized to canonical CAIP-2 values.
   public let caip2: String
   /// Unique identifier for a given organization.
   public let organizationId: String
@@ -6718,6 +6836,27 @@ public struct v1ListUserTagsResponse: Codable, Sendable {
     userTags: [datav1Tag]
   ) {
     self.userTags = userTags
+  }
+}
+
+public struct v1ListWebhookEndpointsRequest: Codable, Sendable {
+  /// Unique identifier for a given Organization.
+  public let organizationId: String
+
+  public init(
+    organizationId: String
+  ) {
+    self.organizationId = organizationId
+  }
+}
+
+public struct v1ListWebhookEndpointsResponse: Codable, Sendable {
+  public let webhookEndpoints: [v1WebhookEndpointData]
+
+  public init(
+    webhookEndpoints: [v1WebhookEndpointData]
+  ) {
+    self.webhookEndpoints = webhookEndpoints
   }
 }
 
@@ -7013,6 +7152,77 @@ public struct v1OauthProviderParams: Codable, Sendable {
   }
 }
 
+public struct v1OauthProviderParamsV2: Codable, Sendable {
+  /// Human-readable name to identify a Provider.
+  public let providerName: String
+  public let oneOf: OneOf
+
+  public enum OneOf: Codable, Sendable {
+    /// OIDC claims (iss, sub, aud) to uniquely identify the user
+    case oidcClaims(v1OidcClaims)
+    /// Base64 encoded OIDC token
+    case oidcToken(String)
+
+    private enum CodingKeys: String, CodingKey {
+      case oidcClaims
+      case oidcToken
+    }
+
+    public init(from decoder: Decoder) throws {
+      let container = try decoder.container(keyedBy: CodingKeys.self)
+      if let value = try container.decodeIfPresent(v1OidcClaims.self, forKey: .oidcClaims) {
+        self = .oidcClaims(value)
+        return
+      }
+      if let value = try container.decodeIfPresent(String.self, forKey: .oidcToken) {
+        self = .oidcToken(value)
+        return
+      }
+      throw DecodingError.dataCorrupted(
+        DecodingError.Context(
+          codingPath: decoder.codingPath,
+          debugDescription: "No valid oneOf field found for v1OauthProviderParamsV2")
+      )
+    }
+
+    public func encode(to encoder: Encoder) throws {
+      var container = encoder.container(keyedBy: CodingKeys.self)
+      switch self {
+      case .oidcClaims(let value):
+        try container.encode(value, forKey: .oidcClaims)
+      case .oidcToken(let value):
+        try container.encode(value, forKey: .oidcToken)
+      }
+    }
+  }
+
+  public init(
+    providerName: String,
+    oneOf: OneOf
+  ) {
+    self.providerName = providerName
+    self.oneOf = oneOf
+  }
+
+  private enum CodingKeys: String, CodingKey {
+    case providerName = "providerName"
+    case oidcClaims
+    case oidcToken
+  }
+
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    self.providerName = try container.decode(String.self, forKey: .providerName)
+    self.oneOf = try OneOf(from: decoder)
+  }
+
+  public func encode(to encoder: Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(self.providerName, forKey: .providerName)
+    try self.oneOf.encode(to: encoder)
+  }
+}
+
 public struct v1OauthRequest: Codable, Sendable {
   public let generateAppProofs: Bool?
   /// Unique identifier for a given Organization.
@@ -7056,6 +7266,25 @@ public struct v1OauthResult: Codable, Sendable {
   }
 }
 
+public struct v1OidcClaims: Codable, Sendable {
+  /// The audience from the OIDC token (aud claim)
+  public let aud: String
+  /// The issuer identifier from the OIDC token (iss claim)
+  public let iss: String
+  /// The subject identifier from the OIDC token (sub claim)
+  public let sub: String
+
+  public init(
+    aud: String,
+    iss: String,
+    sub: String
+  ) {
+    self.aud = aud
+    self.iss = iss
+    self.sub = sub
+  }
+}
+
 public enum v1Operator: String, Codable, Sendable {
   case operator_equal = "OPERATOR_EQUAL"
   case operator_more_than = "OPERATOR_MORE_THAN"
@@ -7068,46 +7297,6 @@ public enum v1Operator: String, Codable, Sendable {
   case operator_not_in = "OPERATOR_NOT_IN"
   case operator_contains_one = "OPERATOR_CONTAINS_ONE"
   case operator_contains_all = "OPERATOR_CONTAINS_ALL"
-}
-
-public struct v1OrganizationData: Codable, Sendable {
-  public let features: [v1Feature]?
-  public let invitations: [v1Invitation]?
-  public let name: String?
-  public let organizationId: String?
-  public let policies: [v1Policy]?
-  public let privateKeys: [v1PrivateKey]?
-  public let rootQuorum: externaldatav1Quorum?
-  public let smartContractInterfaceReferences: [v1SmartContractInterfaceReference]?
-  public let tags: [datav1Tag]?
-  public let users: [v1User]?
-  public let wallets: [v1Wallet]?
-
-  public init(
-    features: [v1Feature]? = nil,
-    invitations: [v1Invitation]? = nil,
-    name: String? = nil,
-    organizationId: String? = nil,
-    policies: [v1Policy]? = nil,
-    privateKeys: [v1PrivateKey]? = nil,
-    rootQuorum: externaldatav1Quorum? = nil,
-    smartContractInterfaceReferences: [v1SmartContractInterfaceReference]? = nil,
-    tags: [datav1Tag]? = nil,
-    users: [v1User]? = nil,
-    wallets: [v1Wallet]? = nil
-  ) {
-    self.features = features
-    self.invitations = invitations
-    self.name = name
-    self.organizationId = organizationId
-    self.policies = policies
-    self.privateKeys = privateKeys
-    self.rootQuorum = rootQuorum
-    self.smartContractInterfaceReferences = smartContractInterfaceReferences
-    self.tags = tags
-    self.users = users
-    self.wallets = wallets
-  }
 }
 
 public struct v1OtpAuthIntent: Codable, Sendable {
@@ -7211,11 +7400,38 @@ public struct v1OtpLoginIntent: Codable, Sendable {
   }
 }
 
+public struct v1OtpLoginIntentV2: Codable, Sendable {
+  /// Required signature proving authorization for this login. The signature is over the verification token ID and the public key. Required for secure OTP login process.
+  public let clientSignature: v1ClientSignature
+  /// Expiration window (in seconds) indicating how long the Session is valid for. If not provided, a default of 15 minutes will be used.
+  public let expirationSeconds: String?
+  /// Invalidate all other previously generated Login sessions
+  public let invalidateExisting: Bool?
+  /// Client-side public key generated by the user, used as the session public key upon successful login
+  public let publicKey: String
+  /// Signed Verification Token containing a unique id, expiry, verification type, contact
+  public let verificationToken: String
+
+  public init(
+    clientSignature: v1ClientSignature,
+    expirationSeconds: String? = nil,
+    invalidateExisting: Bool? = nil,
+    publicKey: String,
+    verificationToken: String
+  ) {
+    self.clientSignature = clientSignature
+    self.expirationSeconds = expirationSeconds
+    self.invalidateExisting = invalidateExisting
+    self.publicKey = publicKey
+    self.verificationToken = verificationToken
+  }
+}
+
 public struct v1OtpLoginRequest: Codable, Sendable {
   public let generateAppProofs: Bool?
   /// Unique identifier for a given Organization.
   public let organizationId: String
-  public let parameters: v1OtpLoginIntent
+  public let parameters: v1OtpLoginIntentV2
   /// Timestamp (in milliseconds) of the request, used to verify liveness of user requests.
   public let timestampMs: String
   public let type: String
@@ -7223,7 +7439,7 @@ public struct v1OtpLoginRequest: Codable, Sendable {
   public init(
     generateAppProofs: Bool? = nil,
     organizationId: String,
-    parameters: v1OtpLoginIntent,
+    parameters: v1OtpLoginIntentV2,
     timestampMs: String,
     type: String
   ) {
@@ -7478,14 +7694,6 @@ public struct v1RecoverUserResult: Codable, Sendable {
   }
 }
 
-public struct v1RefreshFeatureFlagsRequest: Codable, Sendable {
-  public init() {}
-}
-
-public struct v1RefreshFeatureFlagsResponse: Codable, Sendable {
-  public init() {}
-}
-
 public struct v1RejectActivityIntent: Codable, Sendable {
   /// An artifact verifying a User's action.
   public let fingerprint: String
@@ -7577,6 +7785,7 @@ public struct v1Result: Codable, Sendable {
   public let createInvitationsResult: v1CreateInvitationsResult?
   public let createOauth2CredentialResult: v1CreateOauth2CredentialResult?
   public let createOauthProvidersResult: v1CreateOauthProvidersResult?
+  public let createOauthProvidersResultV2: v1CreateOauthProvidersResultV2?
   public let createOrganizationResult: v1CreateOrganizationResult?
   public let createPoliciesResult: v1CreatePoliciesResult?
   public let createPolicyResult: v1CreatePolicyResult?
@@ -7593,6 +7802,7 @@ public struct v1Result: Codable, Sendable {
   public let createSubOrganizationResultV5: v1CreateSubOrganizationResultV5?
   public let createSubOrganizationResultV6: v1CreateSubOrganizationResultV6?
   public let createSubOrganizationResultV7: v1CreateSubOrganizationResultV7?
+  public let createSubOrganizationResultV8: v1CreateSubOrganizationResultV8?
   public let createTvcAppResult: v1CreateTvcAppResult?
   public let createTvcDeploymentResult: v1CreateTvcDeploymentResult?
   public let createTvcManifestApprovalsResult: v1CreateTvcManifestApprovalsResult?
@@ -7600,6 +7810,7 @@ public struct v1Result: Codable, Sendable {
   public let createUsersResult: v1CreateUsersResult?
   public let createWalletAccountsResult: v1CreateWalletAccountsResult?
   public let createWalletResult: v1CreateWalletResult?
+  public let createWebhookEndpointResult: v1CreateWebhookEndpointResult?
   public let deleteApiKeysResult: v1DeleteApiKeysResult?
   public let deleteAuthenticatorsResult: v1DeleteAuthenticatorsResult?
   public let deleteFiatOnRampCredentialResult: v1DeleteFiatOnRampCredentialResult?
@@ -7618,6 +7829,7 @@ public struct v1Result: Codable, Sendable {
   public let deleteUsersResult: v1DeleteUsersResult?
   public let deleteWalletAccountsResult: v1DeleteWalletAccountsResult?
   public let deleteWalletsResult: v1DeleteWalletsResult?
+  public let deleteWebhookEndpointResult: v1DeleteWebhookEndpointResult?
   public let disableAuthProxyResult: v1DisableAuthProxyResult?
   public let disablePrivateKeyResult: v1DisablePrivateKeyResult?
   public let emailAuthResult: v1EmailAuthResult?
@@ -7635,6 +7847,7 @@ public struct v1Result: Codable, Sendable {
   public let initOtpAuthResult: v1InitOtpAuthResult?
   public let initOtpAuthResultV2: v1InitOtpAuthResultV2?
   public let initOtpResult: v1InitOtpResult?
+  public let initOtpResultV2: v1InitOtpResultV2?
   public let initUserEmailRecoveryResult: v1InitUserEmailRecoveryResult?
   public let oauth2AuthenticateResult: v1Oauth2AuthenticateResult?
   public let oauthLoginResult: v1OauthLoginResult?
@@ -7654,6 +7867,7 @@ public struct v1Result: Codable, Sendable {
   public let updateAuthProxyConfigResult: v1UpdateAuthProxyConfigResult?
   public let updateFiatOnRampCredentialResult: v1UpdateFiatOnRampCredentialResult?
   public let updateOauth2CredentialResult: v1UpdateOauth2CredentialResult?
+  public let updateOrganizationNameResult: v1UpdateOrganizationNameResult?
   public let updatePolicyResult: v1UpdatePolicyResult?
   public let updatePolicyResultV2: v1UpdatePolicyResultV2?
   public let updatePrivateKeyTagResult: v1UpdatePrivateKeyTagResult?
@@ -7664,6 +7878,7 @@ public struct v1Result: Codable, Sendable {
   public let updateUserResult: v1UpdateUserResult?
   public let updateUserTagResult: v1UpdateUserTagResult?
   public let updateWalletResult: v1UpdateWalletResult?
+  public let updateWebhookEndpointResult: v1UpdateWebhookEndpointResult?
   public let upsertGasUsageConfigResult: v1UpsertGasUsageConfigResult?
   public let verifyOtpResult: v1VerifyOtpResult?
 
@@ -7677,6 +7892,7 @@ public struct v1Result: Codable, Sendable {
     createInvitationsResult: v1CreateInvitationsResult? = nil,
     createOauth2CredentialResult: v1CreateOauth2CredentialResult? = nil,
     createOauthProvidersResult: v1CreateOauthProvidersResult? = nil,
+    createOauthProvidersResultV2: v1CreateOauthProvidersResultV2? = nil,
     createOrganizationResult: v1CreateOrganizationResult? = nil,
     createPoliciesResult: v1CreatePoliciesResult? = nil,
     createPolicyResult: v1CreatePolicyResult? = nil,
@@ -7693,6 +7909,7 @@ public struct v1Result: Codable, Sendable {
     createSubOrganizationResultV5: v1CreateSubOrganizationResultV5? = nil,
     createSubOrganizationResultV6: v1CreateSubOrganizationResultV6? = nil,
     createSubOrganizationResultV7: v1CreateSubOrganizationResultV7? = nil,
+    createSubOrganizationResultV8: v1CreateSubOrganizationResultV8? = nil,
     createTvcAppResult: v1CreateTvcAppResult? = nil,
     createTvcDeploymentResult: v1CreateTvcDeploymentResult? = nil,
     createTvcManifestApprovalsResult: v1CreateTvcManifestApprovalsResult? = nil,
@@ -7700,6 +7917,7 @@ public struct v1Result: Codable, Sendable {
     createUsersResult: v1CreateUsersResult? = nil,
     createWalletAccountsResult: v1CreateWalletAccountsResult? = nil,
     createWalletResult: v1CreateWalletResult? = nil,
+    createWebhookEndpointResult: v1CreateWebhookEndpointResult? = nil,
     deleteApiKeysResult: v1DeleteApiKeysResult? = nil,
     deleteAuthenticatorsResult: v1DeleteAuthenticatorsResult? = nil,
     deleteFiatOnRampCredentialResult: v1DeleteFiatOnRampCredentialResult? = nil,
@@ -7718,6 +7936,7 @@ public struct v1Result: Codable, Sendable {
     deleteUsersResult: v1DeleteUsersResult? = nil,
     deleteWalletAccountsResult: v1DeleteWalletAccountsResult? = nil,
     deleteWalletsResult: v1DeleteWalletsResult? = nil,
+    deleteWebhookEndpointResult: v1DeleteWebhookEndpointResult? = nil,
     disableAuthProxyResult: v1DisableAuthProxyResult? = nil,
     disablePrivateKeyResult: v1DisablePrivateKeyResult? = nil,
     emailAuthResult: v1EmailAuthResult? = nil,
@@ -7735,6 +7954,7 @@ public struct v1Result: Codable, Sendable {
     initOtpAuthResult: v1InitOtpAuthResult? = nil,
     initOtpAuthResultV2: v1InitOtpAuthResultV2? = nil,
     initOtpResult: v1InitOtpResult? = nil,
+    initOtpResultV2: v1InitOtpResultV2? = nil,
     initUserEmailRecoveryResult: v1InitUserEmailRecoveryResult? = nil,
     oauth2AuthenticateResult: v1Oauth2AuthenticateResult? = nil,
     oauthLoginResult: v1OauthLoginResult? = nil,
@@ -7754,6 +7974,7 @@ public struct v1Result: Codable, Sendable {
     updateAuthProxyConfigResult: v1UpdateAuthProxyConfigResult? = nil,
     updateFiatOnRampCredentialResult: v1UpdateFiatOnRampCredentialResult? = nil,
     updateOauth2CredentialResult: v1UpdateOauth2CredentialResult? = nil,
+    updateOrganizationNameResult: v1UpdateOrganizationNameResult? = nil,
     updatePolicyResult: v1UpdatePolicyResult? = nil,
     updatePolicyResultV2: v1UpdatePolicyResultV2? = nil,
     updatePrivateKeyTagResult: v1UpdatePrivateKeyTagResult? = nil,
@@ -7764,6 +7985,7 @@ public struct v1Result: Codable, Sendable {
     updateUserResult: v1UpdateUserResult? = nil,
     updateUserTagResult: v1UpdateUserTagResult? = nil,
     updateWalletResult: v1UpdateWalletResult? = nil,
+    updateWebhookEndpointResult: v1UpdateWebhookEndpointResult? = nil,
     upsertGasUsageConfigResult: v1UpsertGasUsageConfigResult? = nil,
     verifyOtpResult: v1VerifyOtpResult? = nil
   ) {
@@ -7776,6 +7998,7 @@ public struct v1Result: Codable, Sendable {
     self.createInvitationsResult = createInvitationsResult
     self.createOauth2CredentialResult = createOauth2CredentialResult
     self.createOauthProvidersResult = createOauthProvidersResult
+    self.createOauthProvidersResultV2 = createOauthProvidersResultV2
     self.createOrganizationResult = createOrganizationResult
     self.createPoliciesResult = createPoliciesResult
     self.createPolicyResult = createPolicyResult
@@ -7792,6 +8015,7 @@ public struct v1Result: Codable, Sendable {
     self.createSubOrganizationResultV5 = createSubOrganizationResultV5
     self.createSubOrganizationResultV6 = createSubOrganizationResultV6
     self.createSubOrganizationResultV7 = createSubOrganizationResultV7
+    self.createSubOrganizationResultV8 = createSubOrganizationResultV8
     self.createTvcAppResult = createTvcAppResult
     self.createTvcDeploymentResult = createTvcDeploymentResult
     self.createTvcManifestApprovalsResult = createTvcManifestApprovalsResult
@@ -7799,6 +8023,7 @@ public struct v1Result: Codable, Sendable {
     self.createUsersResult = createUsersResult
     self.createWalletAccountsResult = createWalletAccountsResult
     self.createWalletResult = createWalletResult
+    self.createWebhookEndpointResult = createWebhookEndpointResult
     self.deleteApiKeysResult = deleteApiKeysResult
     self.deleteAuthenticatorsResult = deleteAuthenticatorsResult
     self.deleteFiatOnRampCredentialResult = deleteFiatOnRampCredentialResult
@@ -7817,6 +8042,7 @@ public struct v1Result: Codable, Sendable {
     self.deleteUsersResult = deleteUsersResult
     self.deleteWalletAccountsResult = deleteWalletAccountsResult
     self.deleteWalletsResult = deleteWalletsResult
+    self.deleteWebhookEndpointResult = deleteWebhookEndpointResult
     self.disableAuthProxyResult = disableAuthProxyResult
     self.disablePrivateKeyResult = disablePrivateKeyResult
     self.emailAuthResult = emailAuthResult
@@ -7834,6 +8060,7 @@ public struct v1Result: Codable, Sendable {
     self.initOtpAuthResult = initOtpAuthResult
     self.initOtpAuthResultV2 = initOtpAuthResultV2
     self.initOtpResult = initOtpResult
+    self.initOtpResultV2 = initOtpResultV2
     self.initUserEmailRecoveryResult = initUserEmailRecoveryResult
     self.oauth2AuthenticateResult = oauth2AuthenticateResult
     self.oauthLoginResult = oauthLoginResult
@@ -7853,6 +8080,7 @@ public struct v1Result: Codable, Sendable {
     self.updateAuthProxyConfigResult = updateAuthProxyConfigResult
     self.updateFiatOnRampCredentialResult = updateFiatOnRampCredentialResult
     self.updateOauth2CredentialResult = updateOauth2CredentialResult
+    self.updateOrganizationNameResult = updateOrganizationNameResult
     self.updatePolicyResult = updatePolicyResult
     self.updatePolicyResultV2 = updatePolicyResultV2
     self.updatePrivateKeyTagResult = updatePrivateKeyTagResult
@@ -7863,6 +8091,7 @@ public struct v1Result: Codable, Sendable {
     self.updateUserResult = updateUserResult
     self.updateUserTagResult = updateUserTagResult
     self.updateWalletResult = updateWalletResult
+    self.updateWebhookEndpointResult = updateWebhookEndpointResult
     self.upsertGasUsageConfigResult = upsertGasUsageConfigResult
     self.verifyOtpResult = verifyOtpResult
   }
@@ -7994,6 +8223,37 @@ public struct v1RootUserParamsV4: Codable, Sendable {
     apiKeys: [v1ApiKeyParamsV2],
     authenticators: [v1AuthenticatorParamsV2],
     oauthProviders: [v1OauthProviderParams],
+    userEmail: String? = nil,
+    userName: String,
+    userPhoneNumber: String? = nil
+  ) {
+    self.apiKeys = apiKeys
+    self.authenticators = authenticators
+    self.oauthProviders = oauthProviders
+    self.userEmail = userEmail
+    self.userName = userName
+    self.userPhoneNumber = userPhoneNumber
+  }
+}
+
+public struct v1RootUserParamsV5: Codable, Sendable {
+  /// A list of API Key parameters. This field, if not needed, should be an empty array in your request body.
+  public let apiKeys: [v1ApiKeyParamsV2]
+  /// A list of Authenticator parameters. This field, if not needed, should be an empty array in your request body.
+  public let authenticators: [v1AuthenticatorParamsV2]
+  /// A list of Oauth providers. This field, if not needed, should be an empty array in your request body.
+  public let oauthProviders: [v1OauthProviderParamsV2]
+  /// The user's email address.
+  public let userEmail: String?
+  /// Human-readable name for a User.
+  public let userName: String
+  /// The user's phone number in E.164 format e.g. +13214567890
+  public let userPhoneNumber: String?
+
+  public init(
+    apiKeys: [v1ApiKeyParamsV2],
+    authenticators: [v1AuthenticatorParamsV2],
+    oauthProviders: [v1OauthProviderParamsV2],
     userEmail: String? = nil,
     userName: String,
     userPhoneNumber: String? = nil
@@ -8339,6 +8599,28 @@ public struct v1SignupUsage: Codable, Sendable {
   }
 }
 
+public struct v1SignupUsageV2: Codable, Sendable {
+  public let apiKeys: [v1ApiKeyParamsV2]?
+  public let authenticators: [v1AuthenticatorParamsV2]?
+  public let email: String?
+  public let oauthProviders: [v1OauthProviderParamsV2]?
+  public let phoneNumber: String?
+
+  public init(
+    apiKeys: [v1ApiKeyParamsV2]? = nil,
+    authenticators: [v1AuthenticatorParamsV2]? = nil,
+    email: String? = nil,
+    oauthProviders: [v1OauthProviderParamsV2]? = nil,
+    phoneNumber: String? = nil
+  ) {
+    self.apiKeys = apiKeys
+    self.authenticators = authenticators
+    self.email = email
+    self.oauthProviders = oauthProviders
+    self.phoneNumber = phoneNumber
+  }
+}
+
 public struct v1SimpleClientExtensionResults: Codable, Sendable {
   public let appid: Bool?
   public let appidExclude: Bool?
@@ -8352,22 +8634,6 @@ public struct v1SimpleClientExtensionResults: Codable, Sendable {
     self.appid = appid
     self.appidExclude = appidExclude
     self.credProps = credProps
-  }
-}
-
-public struct v1SmartContractInterfaceReference: Codable, Sendable {
-  public let digest: String?
-  public let smartContractAddress: String?
-  public let smartContractInterfaceId: String?
-
-  public init(
-    digest: String? = nil,
-    smartContractAddress: String? = nil,
-    smartContractInterfaceId: String? = nil
-  ) {
-    self.digest = digest
-    self.smartContractAddress = smartContractAddress
-    self.smartContractInterfaceId = smartContractInterfaceId
   }
 }
 
@@ -8449,6 +8715,63 @@ public struct v1SolSendTransactionResult: Codable, Sendable {
   }
 }
 
+public struct v1SolanaConfig: Codable, Sendable {
+  /// Whether Solana rent prefunding is enabled for the organization. When omitted, the existing rent-prefund state is left unchanged.
+  public let rentPrefundEnabled: Bool?
+
+  public init(
+    rentPrefundEnabled: Bool? = nil
+  ) {
+    self.rentPrefundEnabled = rentPrefundEnabled
+  }
+}
+
+public struct v1SolanaFailureDetails: Codable, Sendable {
+  /// The raw Solana inner instructions payload serialized as JSON, if available.
+  public let innerInstructionsJson: String?
+  /// Program logs returned by Solana simulation or preflight, if available.
+  public let logs: [String]?
+  /// The Solana JSON-RPC error code, if available.
+  public let rpcCode: Int?
+  /// The Solana JSON-RPC error message, if available.
+  public let rpcMessage: String?
+  /// Where the Solana failure occurred, such as simulation or preflight.
+  public let source: String?
+  /// The raw Solana transaction error object serialized as JSON, if available.
+  public let transactionErrorJson: String?
+  /// Compute units consumed during simulation or preflight, if available.
+  public let unitsConsumed: String?
+
+  public init(
+    innerInstructionsJson: String? = nil,
+    logs: [String]? = nil,
+    rpcCode: Int? = nil,
+    rpcMessage: String? = nil,
+    source: String? = nil,
+    transactionErrorJson: String? = nil,
+    unitsConsumed: String? = nil
+  ) {
+    self.innerInstructionsJson = innerInstructionsJson
+    self.logs = logs
+    self.rpcCode = rpcCode
+    self.rpcMessage = rpcMessage
+    self.source = source
+    self.transactionErrorJson = transactionErrorJson
+    self.unitsConsumed = unitsConsumed
+  }
+}
+
+public struct v1SolanaSendTransactionStatus: Codable, Sendable {
+  /// The Solana transaction signature, if available.
+  public let signature: String?
+
+  public init(
+    signature: String? = nil
+  ) {
+    self.signature = signature
+  }
+}
+
 public struct v1StampLoginIntent: Codable, Sendable {
   /// Expiration window (in seconds) indicating how long the Session is valid for. If not provided, a default of 15 minutes will be used.
   public let expirationSeconds: String?
@@ -8508,32 +8831,10 @@ public enum v1TagType: String, Codable, Sendable {
   case tag_type_private_key = "TAG_TYPE_PRIVATE_KEY"
 }
 
-public struct v1TestRateLimitsRequest: Codable, Sendable {
-  /// Whether or not to set a limit on this request.
-  public let isSetLimit: Bool
-  /// Rate limit to set for org, if is_set_limit is set to true.
-  public let limit: Int
-  /// Unique identifier for a given organization. If the request is being made by a WebAuthN user and their sub-organization ID is unknown, this can be the parent organization ID; using the sub-organization ID when possible is preferred due to performance reasons.
-  public let organizationId: String
-
-  public init(
-    isSetLimit: Bool,
-    limit: Int,
-    organizationId: String
-  ) {
-    self.isSetLimit = isSetLimit
-    self.limit = limit
-    self.organizationId = organizationId
-  }
-}
-
-public struct v1TestRateLimitsResponse: Codable, Sendable {
-  public init() {}
-}
-
 public struct v1TokenUsage: Codable, Sendable {
   public let login: v1LoginUsage?
   public let signup: v1SignupUsage?
+  public let signupV2: v1SignupUsageV2?
   /// Unique identifier for the verification token
   public let tokenId: String
   /// Type of token usage
@@ -8542,11 +8843,13 @@ public struct v1TokenUsage: Codable, Sendable {
   public init(
     login: v1LoginUsage? = nil,
     signup: v1SignupUsage? = nil,
+    signupV2: v1SignupUsageV2? = nil,
     tokenId: String,
     type: v1UsageType
   ) {
     self.login = login
     self.signup = signup
+    self.signupV2 = signupV2
     self.tokenId = tokenId
     self.type = type
   }
@@ -8560,153 +8863,9 @@ public enum v1TransactionType: String, Codable, Sendable {
   case transaction_type_tempo = "TRANSACTION_TYPE_TEMPO"
 }
 
-public struct v1TvcApp: Codable, Sendable {
-  public let createdAt: externaldatav1Timestamp
-  /// Whether or not this TVC App has external connectivity enabled.
-  public let externalConnectivity: Bool
-  /// Unique Identifier for this TVC App.
-  public let id: String
-  /// Manifest Set (people who can approve manifests)
-  public let manifestSet: v1TvcOperatorSet
-  /// Name for this TVC App.
-  public let name: String
-  /// Unique Identifier of the Organization for this TVC App
-  public let organizationId: String
-  /// Public key for the Quorum Key associated with this TVC App
-  public let quorumPublicKey: String
-  /// Share Set (people who have a share of the Quorum Key)
-  public let shareSet: v1TvcOperatorSet
-  public let updatedAt: externaldatav1Timestamp
-
-  public init(
-    createdAt: externaldatav1Timestamp,
-    externalConnectivity: Bool,
-    id: String,
-    manifestSet: v1TvcOperatorSet,
-    name: String,
-    organizationId: String,
-    quorumPublicKey: String,
-    shareSet: v1TvcOperatorSet,
-    updatedAt: externaldatav1Timestamp
-  ) {
-    self.createdAt = createdAt
-    self.externalConnectivity = externalConnectivity
-    self.id = id
-    self.manifestSet = manifestSet
-    self.name = name
-    self.organizationId = organizationId
-    self.quorumPublicKey = quorumPublicKey
-    self.shareSet = shareSet
-    self.updatedAt = updatedAt
-  }
-}
-
-public struct v1TvcContainerSpec: Codable, Sendable {
-  /// The arguments to pass to the executable.
-  public let args: [String]
-  /// The URL for this container image.
-  public let containerUrl: String
-  /// Whether or not this container requires a pull secret to access.
-  public let hasPullSecret: Bool
-  /// The path (in-container) to the executable binary.
-  public let path: String
-
-  public init(
-    args: [String],
-    containerUrl: String,
-    hasPullSecret: Bool,
-    path: String
-  ) {
-    self.args = args
-    self.containerUrl = containerUrl
-    self.hasPullSecret = hasPullSecret
-    self.path = path
-  }
-}
-
-public struct v1TvcDeployment: Codable, Sendable {
-  /// Unique Identifier of the TVC App for this deployment
-  public let appId: String
-  public let createdAt: externaldatav1Timestamp
-  /// The pivot container spec for this deployment
-  public let hostContainer: v1TvcContainerSpec
-  /// Unique Identifier for this TVC Deployment.
-  public let id: String
-  /// The manifest used for this deployment
-  public let manifest: v1TvcManifest
-  /// List of operator approvals for this manifest
-  public let manifestApprovals: [v1TvcOperatorApproval]
-  /// Set of TVC operators who can approve this deployment
-  public let manifestSet: v1TvcOperatorSet
-  /// Unique Identifier of the Organization for this TVC Deployment
-  public let organizationId: String
-  /// The pivot container spec for this deployment
-  public let pivotContainer: v1TvcContainerSpec
-  /// QOS Version used for this deployment
-  public let qosVersion: String
-  /// Set of TVC operators who have a share of the Quorum Key
-  public let shareSet: v1TvcOperatorSet
-  /// Current stage for this deployment
-  public let stage: v1TvcDeploymentStage
-  public let updatedAt: externaldatav1Timestamp
-
-  public init(
-    appId: String,
-    createdAt: externaldatav1Timestamp,
-    hostContainer: v1TvcContainerSpec,
-    id: String,
-    manifest: v1TvcManifest,
-    manifestApprovals: [v1TvcOperatorApproval],
-    manifestSet: v1TvcOperatorSet,
-    organizationId: String,
-    pivotContainer: v1TvcContainerSpec,
-    qosVersion: String,
-    shareSet: v1TvcOperatorSet,
-    stage: v1TvcDeploymentStage,
-    updatedAt: externaldatav1Timestamp
-  ) {
-    self.appId = appId
-    self.createdAt = createdAt
-    self.hostContainer = hostContainer
-    self.id = id
-    self.manifest = manifest
-    self.manifestApprovals = manifestApprovals
-    self.manifestSet = manifestSet
-    self.organizationId = organizationId
-    self.pivotContainer = pivotContainer
-    self.qosVersion = qosVersion
-    self.shareSet = shareSet
-    self.stage = stage
-    self.updatedAt = updatedAt
-  }
-}
-
-public enum v1TvcDeploymentStage: String, Codable, Sendable {
-  case tvc_deployment_stage_approve = "TVC_DEPLOYMENT_STAGE_APPROVE"
-  case tvc_deployment_stage_provision = "TVC_DEPLOYMENT_STAGE_PROVISION"
-  case tvc_deployment_stage_live = "TVC_DEPLOYMENT_STAGE_LIVE"
-  case tvc_deployment_stage_delete = "TVC_DEPLOYMENT_STAGE_DELETE"
-}
-
-public struct v1TvcManifest: Codable, Sendable {
-  public let createdAt: externaldatav1Timestamp
-  /// Unique Identifier for this TVC Manifest.
-  public let id: String
-  /// The manifest content (raw UTF-8 JSON bytes)
-  public let manifest: String
-  public let updatedAt: externaldatav1Timestamp
-
-  public init(
-    createdAt: externaldatav1Timestamp,
-    id: String,
-    manifest: String,
-    updatedAt: externaldatav1Timestamp
-  ) {
-    self.createdAt = createdAt
-    self.id = id
-    self.manifest = manifest
-    self.updatedAt = updatedAt
-  }
+public enum v1TvcHealthCheckType: String, Codable, Sendable {
+  case tvc_health_check_type_http = "TVC_HEALTH_CHECK_TYPE_HTTP"
+  case tvc_health_check_type_grpc = "TVC_HEALTH_CHECK_TYPE_GRPC"
 }
 
 public struct v1TvcManifestApproval: Codable, Sendable {
@@ -8724,69 +8883,6 @@ public struct v1TvcManifestApproval: Codable, Sendable {
   }
 }
 
-public struct v1TvcOperator: Codable, Sendable {
-  public let createdAt: externaldatav1Timestamp
-  /// Unique Identifier for this TVC Operator.
-  public let id: String
-  /// Name of this TVC Operator.
-  public let name: String
-  /// Public key for this TVC Operator.
-  public let publicKey: String
-  public let updatedAt: externaldatav1Timestamp
-
-  public init(
-    createdAt: externaldatav1Timestamp,
-    id: String,
-    name: String,
-    publicKey: String,
-    updatedAt: externaldatav1Timestamp
-  ) {
-    self.createdAt = createdAt
-    self.id = id
-    self.name = name
-    self.publicKey = publicKey
-    self.updatedAt = updatedAt
-  }
-}
-
-public struct v1TvcOperatorApproval: Codable, Sendable {
-  /// Signature of the operator over the deployment manifest
-  public let approval: String
-  public let createdAt: externaldatav1Timestamp
-  /// Unique ID for this approval
-  public let id: String
-  /// Unique Identifier of the TVC Manifest being approved
-  public let manifestId: String
-  /// The TVC Operator who made this approval
-  public let _operator: v1TvcOperator
-  public let updatedAt: externaldatav1Timestamp
-
-  public init(
-    _operator: v1TvcOperator,
-    approval: String,
-    createdAt: externaldatav1Timestamp,
-    id: String,
-    manifestId: String,
-    updatedAt: externaldatav1Timestamp
-  ) {
-    self._operator = _operator
-    self.approval = approval
-    self.createdAt = createdAt
-    self.id = id
-    self.manifestId = manifestId
-    self.updatedAt = updatedAt
-  }
-
-  private enum CodingKeys: String, CodingKey {
-    case approval = "approval"
-    case createdAt = "createdAt"
-    case id = "id"
-    case manifestId = "manifestId"
-    case _operator = "operator"
-    case updatedAt = "updatedAt"
-  }
-}
-
 public struct v1TvcOperatorParams: Codable, Sendable {
   /// The name for this new operator
   public let name: String
@@ -8799,39 +8895,6 @@ public struct v1TvcOperatorParams: Codable, Sendable {
   ) {
     self.name = name
     self.publicKey = publicKey
-  }
-}
-
-public struct v1TvcOperatorSet: Codable, Sendable {
-  public let createdAt: externaldatav1Timestamp
-  /// Unique Identifier for this TVC Operator Set.
-  public let id: String
-  /// Name of this TVC Operator Set.
-  public let name: String
-  /// List of TVC Operators in this set
-  public let operators: [v1TvcOperator]
-  /// Unique Identifier of the Organization for this TVC Operator Set
-  public let organizationId: String
-  /// Threshold number of operators required for quorum.
-  public let threshold: Int
-  public let updatedAt: externaldatav1Timestamp
-
-  public init(
-    createdAt: externaldatav1Timestamp,
-    id: String,
-    name: String,
-    operators: [v1TvcOperator],
-    organizationId: String,
-    threshold: Int,
-    updatedAt: externaldatav1Timestamp
-  ) {
-    self.createdAt = createdAt
-    self.id = id
-    self.name = name
-    self.operators = operators
-    self.organizationId = organizationId
-    self.threshold = threshold
-    self.updatedAt = updatedAt
   }
 }
 
@@ -8859,17 +8922,25 @@ public struct v1TvcOperatorSetParams: Codable, Sendable {
 }
 
 public struct v1TxError: Codable, Sendable {
+  /// Ethereum-specific failure details, if available.
+  public let eth: v1EthFailureDetails?
   /// Human-readable error message describing what went wrong.
   public let message: String?
   /// Chain of revert errors from nested contract calls, ordered from outermost to innermost.
   public let revertChain: [v1RevertChainEntry]?
+  /// Solana-specific failure details for simulation or preflight errors, if available.
+  public let solana: v1SolanaFailureDetails?
 
   public init(
+    eth: v1EthFailureDetails? = nil,
     message: String? = nil,
-    revertChain: [v1RevertChainEntry]? = nil
+    revertChain: [v1RevertChainEntry]? = nil,
+    solana: v1SolanaFailureDetails? = nil
   ) {
+    self.eth = eth
     self.message = message
     self.revertChain = revertChain
+    self.solana = solana
   }
 }
 
@@ -8930,6 +9001,8 @@ public struct v1UpdateAuthProxyConfigIntent: Codable, Sendable {
   public let sessionExpirationSeconds: Int?
   /// Overrides for auth-related SMS content.
   public let smsCustomizationParams: v1SmsCustomizationParams?
+  /// Whitelisted OAuth client IDs for social account linking. When a user authenticates via a social provider with an email matching an existing account, the accounts will be linked if the client ID is in this list and the issuer is considered a trusted provider.
+  public let socialLinkingClientIds: [String]?
   /// Verification-token lifetime in seconds.
   public let verificationTokenExpirationSeconds: Int?
   /// Verification token required for get account with PII (email/phone number). Default false.
@@ -8951,6 +9024,7 @@ public struct v1UpdateAuthProxyConfigIntent: Codable, Sendable {
     sendFromEmailSenderName: String? = nil,
     sessionExpirationSeconds: Int? = nil,
     smsCustomizationParams: v1SmsCustomizationParams? = nil,
+    socialLinkingClientIds: [String]? = nil,
     verificationTokenExpirationSeconds: Int? = nil,
     verificationTokenRequiredForGetAccountPii: Bool? = nil,
     walletKitSettings: v1WalletKitSettingsParams? = nil
@@ -8968,6 +9042,7 @@ public struct v1UpdateAuthProxyConfigIntent: Codable, Sendable {
     self.sendFromEmailSenderName = sendFromEmailSenderName
     self.sessionExpirationSeconds = sessionExpirationSeconds
     self.smsCustomizationParams = smsCustomizationParams
+    self.socialLinkingClientIds = socialLinkingClientIds
     self.verificationTokenExpirationSeconds = verificationTokenExpirationSeconds
     self.verificationTokenRequiredForGetAccountPii = verificationTokenRequiredForGetAccountPii
     self.walletKitSettings = walletKitSettings
@@ -9106,6 +9181,53 @@ public struct v1UpdateOauth2CredentialResult: Codable, Sendable {
     oauth2CredentialId: String
   ) {
     self.oauth2CredentialId = oauth2CredentialId
+  }
+}
+
+public struct v1UpdateOrganizationNameIntent: Codable, Sendable {
+  /// New name for the Organization.
+  public let organizationName: String
+
+  public init(
+    organizationName: String
+  ) {
+    self.organizationName = organizationName
+  }
+}
+
+public struct v1UpdateOrganizationNameRequest: Codable, Sendable {
+  /// Unique identifier for a given Organization.
+  public let organizationId: String
+  public let parameters: v1UpdateOrganizationNameIntent
+  /// Timestamp (in milliseconds) of the request, used to verify liveness of user requests.
+  public let timestampMs: String
+  public let type: String
+
+  public init(
+    organizationId: String,
+    parameters: v1UpdateOrganizationNameIntent,
+    timestampMs: String,
+    type: String
+  ) {
+    self.organizationId = organizationId
+    self.parameters = parameters
+    self.timestampMs = timestampMs
+    self.type = type
+  }
+}
+
+public struct v1UpdateOrganizationNameResult: Codable, Sendable {
+  /// Unique identifier for the Organization.
+  public let organizationId: String
+  /// The updated organization name.
+  public let organizationName: String
+
+  public init(
+    organizationId: String,
+    organizationName: String
+  ) {
+    self.organizationId = organizationId
+    self.organizationName = organizationName
   }
 }
 
@@ -9646,11 +9768,75 @@ public struct v1UpdateWalletResult: Codable, Sendable {
   }
 }
 
+public struct v1UpdateWebhookEndpointIntent: Codable, Sendable {
+  /// Unique identifier of the webhook endpoint to update.
+  public let endpointId: String
+  /// Whether this webhook endpoint is active.
+  public let isActive: Bool?
+  /// Updated human-readable name for this webhook endpoint.
+  public let name: String?
+  /// Updated destination URL for webhook delivery.
+  public let url: String?
+
+  public init(
+    endpointId: String,
+    isActive: Bool? = nil,
+    name: String? = nil,
+    url: String? = nil
+  ) {
+    self.endpointId = endpointId
+    self.isActive = isActive
+    self.name = name
+    self.url = url
+  }
+}
+
+public struct v1UpdateWebhookEndpointRequest: Codable, Sendable {
+  public let generateAppProofs: Bool?
+  /// Unique identifier for a given Organization.
+  public let organizationId: String
+  public let parameters: v1UpdateWebhookEndpointIntent
+  /// Timestamp (in milliseconds) of the request, used to verify liveness of user requests.
+  public let timestampMs: String
+  public let type: String
+
+  public init(
+    generateAppProofs: Bool? = nil,
+    organizationId: String,
+    parameters: v1UpdateWebhookEndpointIntent,
+    timestampMs: String,
+    type: String
+  ) {
+    self.generateAppProofs = generateAppProofs
+    self.organizationId = organizationId
+    self.parameters = parameters
+    self.timestampMs = timestampMs
+    self.type = type
+  }
+}
+
+public struct v1UpdateWebhookEndpointResult: Codable, Sendable {
+  /// Unique identifier of the updated webhook endpoint.
+  public let endpointId: String
+  /// The updated webhook endpoint data.
+  public let webhookEndpoint: v1WebhookEndpointData
+
+  public init(
+    endpointId: String,
+    webhookEndpoint: v1WebhookEndpointData
+  ) {
+    self.endpointId = endpointId
+    self.webhookEndpoint = webhookEndpoint
+  }
+}
+
 public struct v1UpsertGasUsageConfigIntent: Codable, Sendable {
   /// Whether gas sponsorship is enabled for the organization.
   public let enabled: Bool?
   /// Gas sponsorship USD limit for the billing organization window.
   public let orgWindowLimitUsd: String
+  /// Optional Solana sponsorship settings. If omitted, the existing Solana sponsorship state is left unchanged.
+  public let solanaConfig: v1SolanaConfig?
   /// Gas sponsorship USD limit for sub-organizations under the billing organization.
   public let subOrgWindowLimitUsd: String
   /// Rolling sponsorship window duration, expressed in minutes.
@@ -9659,11 +9845,13 @@ public struct v1UpsertGasUsageConfigIntent: Codable, Sendable {
   public init(
     enabled: Bool? = nil,
     orgWindowLimitUsd: String,
+    solanaConfig: v1SolanaConfig? = nil,
     subOrgWindowLimitUsd: String,
     windowDurationMinutes: String
   ) {
     self.enabled = enabled
     self.orgWindowLimitUsd = orgWindowLimitUsd
+    self.solanaConfig = solanaConfig
     self.subOrgWindowLimitUsd = subOrgWindowLimitUsd
     self.windowDurationMinutes = windowDurationMinutes
   }
@@ -9823,6 +10011,41 @@ public struct v1UserParamsV3: Codable, Sendable {
   }
 }
 
+public struct v1UserParamsV4: Codable, Sendable {
+  /// A list of API Key parameters. This field, if not needed, should be an empty array in your request body.
+  public let apiKeys: [v1ApiKeyParamsV2]
+  /// A list of Authenticator parameters. This field, if not needed, should be an empty array in your request body.
+  public let authenticators: [v1AuthenticatorParamsV2]
+  /// A list of Oauth providers. This field, if not needed, should be an empty array in your request body.
+  public let oauthProviders: [v1OauthProviderParamsV2]
+  /// The user's email address.
+  public let userEmail: String?
+  /// Human-readable name for a User.
+  public let userName: String
+  /// The user's phone number in E.164 format e.g. +13214567890
+  public let userPhoneNumber: String?
+  /// A list of User Tag IDs. This field, if not needed, should be an empty array in your request body.
+  public let userTags: [String]
+
+  public init(
+    apiKeys: [v1ApiKeyParamsV2],
+    authenticators: [v1AuthenticatorParamsV2],
+    oauthProviders: [v1OauthProviderParamsV2],
+    userEmail: String? = nil,
+    userName: String,
+    userPhoneNumber: String? = nil,
+    userTags: [String]
+  ) {
+    self.apiKeys = apiKeys
+    self.authenticators = authenticators
+    self.oauthProviders = oauthProviders
+    self.userEmail = userEmail
+    self.userName = userName
+    self.userPhoneNumber = userPhoneNumber
+    self.userTags = userTags
+  }
+}
+
 public struct v1VerifyOtpIntent: Codable, Sendable {
   /// Expiration window (in seconds) indicating how long the verification token is valid for. If not provided, a default of 1 hour will be used. Maximum value is 86400 seconds (24 hours)
   public let expirationSeconds: String?
@@ -9846,11 +10069,30 @@ public struct v1VerifyOtpIntent: Codable, Sendable {
   }
 }
 
+public struct v1VerifyOtpIntentV2: Codable, Sendable {
+  /// Encrypted bundle containing the OTP code and a client-generated public key. Turnkey's secure enclaves will decrypt this bundle, verify the OTP code, and issue a new Verification Token. Encrypted using the target encryption key provided in the INIT_OTP activity result.
+  public let encryptedOtpBundle: String
+  /// Expiration window (in seconds) indicating how long the verification token is valid for. If not provided, a default of 1 hour will be used. Maximum value is 86400 seconds (24 hours)
+  public let expirationSeconds: String?
+  /// UUID representing an OTP flow. A new UUID is created for each init OTP activity.
+  public let otpId: String
+
+  public init(
+    encryptedOtpBundle: String,
+    expirationSeconds: String? = nil,
+    otpId: String
+  ) {
+    self.encryptedOtpBundle = encryptedOtpBundle
+    self.expirationSeconds = expirationSeconds
+    self.otpId = otpId
+  }
+}
+
 public struct v1VerifyOtpRequest: Codable, Sendable {
   public let generateAppProofs: Bool?
   /// Unique identifier for a given Organization.
   public let organizationId: String
-  public let parameters: v1VerifyOtpIntent
+  public let parameters: v1VerifyOtpIntentV2
   /// Timestamp (in milliseconds) of the request, used to verify liveness of user requests.
   public let timestampMs: String
   public let type: String
@@ -9858,7 +10100,7 @@ public struct v1VerifyOtpRequest: Codable, Sendable {
   public init(
     generateAppProofs: Bool? = nil,
     organizationId: String,
-    parameters: v1VerifyOtpIntent,
+    parameters: v1VerifyOtpIntentV2,
     timestampMs: String,
     type: String
   ) {
@@ -10106,6 +10348,56 @@ public struct v1WebAuthnStamp: Codable, Sendable {
   }
 }
 
+public struct v1WebhookEndpointData: Codable, Sendable {
+  /// Unique identifier of the webhook endpoint.
+  public let endpointId: String
+  /// Whether this webhook endpoint is active.
+  public let isActive: Bool
+  /// Human-readable name for this webhook endpoint.
+  public let name: String
+  /// Unique identifier for a given Organization.
+  public let organizationId: String
+  /// Current subscriptions attached to this endpoint.
+  public let subscriptions: [v1WebhookSubscriptionParams]?
+  /// The destination URL for webhook delivery.
+  public let url: String
+
+  public init(
+    endpointId: String,
+    isActive: Bool,
+    name: String,
+    organizationId: String,
+    subscriptions: [v1WebhookSubscriptionParams]? = nil,
+    url: String
+  ) {
+    self.endpointId = endpointId
+    self.isActive = isActive
+    self.name = name
+    self.organizationId = organizationId
+    self.subscriptions = subscriptions
+    self.url = url
+  }
+}
+
+public struct v1WebhookSubscriptionParams: Codable, Sendable {
+  /// The event type to subscribe to (for example, ACTIVITY_UPDATES or BALANCE_UPDATES).
+  public let eventType: String
+  /// JSON-encoded filter criteria for this subscription.
+  public let filtersJson: String?
+  /// Whether this subscription is active.
+  public let isActive: Bool?
+
+  public init(
+    eventType: String,
+    filtersJson: String? = nil,
+    isActive: Bool? = nil
+  ) {
+    self.eventType = eventType
+    self.filtersJson = filtersJson
+    self.isActive = isActive
+  }
+}
+
 // MARK: - API Types from Swagger Paths
 
 // MARK: - TGetActivityResponse
@@ -10208,6 +10500,41 @@ public struct TGetApiKeysInput: Codable, Sendable {
 
   public init(
     body: TGetApiKeysBody
+  ) {
+    self.body = body
+  }
+}
+
+// MARK: - TGetAppStatusResponse
+
+public struct TGetAppStatusResponse: Codable, Sendable {
+  /// Live runtime status for the TVC App
+  public let appStatus: v1AppStatus
+}
+
+// MARK: - TGetAppStatusBody
+
+public struct TGetAppStatusBody: Codable, Sendable {
+  public let organizationId: String?
+  /// Unique identifier for a given TVC App.
+  public let appId: String
+
+  public init(
+    organizationId: String? = nil,
+    appId: String
+  ) {
+    self.organizationId = organizationId
+    self.appId = appId
+  }
+}
+
+// MARK: - TGetAppStatusInput
+
+public struct TGetAppStatusInput: Codable, Sendable {
+  public let body: TGetAppStatusBody
+
+  public init(
+    body: TGetAppStatusBody
   ) {
     self.body = body
   }
@@ -10543,37 +10870,6 @@ public struct TGetOnRampTransactionStatusInput: Codable, Sendable {
   }
 }
 
-// MARK: - TGetOrganizationResponse
-
-public struct TGetOrganizationResponse: Codable, Sendable {
-  /// Object representing the full current and deleted / disabled collection of users, policies, private keys, and invitations attributable to a particular organization.
-  public let organizationData: v1OrganizationData
-}
-
-// MARK: - TGetOrganizationBody
-
-public struct TGetOrganizationBody: Codable, Sendable {
-  public let organizationId: String?
-
-  public init(
-    organizationId: String? = nil
-  ) {
-    self.organizationId = organizationId
-  }
-}
-
-// MARK: - TGetOrganizationInput
-
-public struct TGetOrganizationInput: Codable, Sendable {
-  public let body: TGetOrganizationBody
-
-  public init(
-    body: TGetOrganizationBody
-  ) {
-    self.body = body
-  }
-}
-
 // MARK: - TGetOrganizationConfigsResponse
 
 public struct TGetOrganizationConfigsResponse: Codable, Sendable {
@@ -10716,6 +11012,8 @@ public struct TGetSendTransactionStatusResponse: Codable, Sendable {
   public let error: v1TxError?
   /// Ethereum-specific transaction status.
   public let eth: v1EthSendTransactionStatus?
+  /// Solana-specific transaction status.
+  public let solana: v1SolanaSendTransactionStatus?
   /// The error encountered when broadcasting or confirming the transaction, if any.
   public let txError: String?
   /// The current status of the send transaction.
@@ -10780,76 +11078,6 @@ public struct TGetSmartContractInterfaceInput: Codable, Sendable {
 
   public init(
     body: TGetSmartContractInterfaceBody
-  ) {
-    self.body = body
-  }
-}
-
-// MARK: - TGetTvcAppResponse
-
-public struct TGetTvcAppResponse: Codable, Sendable {
-  /// Details about a single TVC App
-  public let tvcApp: v1TvcApp
-}
-
-// MARK: - TGetTvcAppBody
-
-public struct TGetTvcAppBody: Codable, Sendable {
-  public let organizationId: String?
-  /// Unique identifier for a given TVC App.
-  public let tvcAppId: String
-
-  public init(
-    organizationId: String? = nil,
-    tvcAppId: String
-  ) {
-    self.organizationId = organizationId
-    self.tvcAppId = tvcAppId
-  }
-}
-
-// MARK: - TGetTvcAppInput
-
-public struct TGetTvcAppInput: Codable, Sendable {
-  public let body: TGetTvcAppBody
-
-  public init(
-    body: TGetTvcAppBody
-  ) {
-    self.body = body
-  }
-}
-
-// MARK: - TGetTvcDeploymentResponse
-
-public struct TGetTvcDeploymentResponse: Codable, Sendable {
-  /// Details about a single TVC Deployment
-  public let tvcDeployment: v1TvcDeployment
-}
-
-// MARK: - TGetTvcDeploymentBody
-
-public struct TGetTvcDeploymentBody: Codable, Sendable {
-  public let organizationId: String?
-  /// Unique identifier for a given TVC Deployment.
-  public let deploymentId: String
-
-  public init(
-    organizationId: String? = nil,
-    deploymentId: String
-  ) {
-    self.organizationId = organizationId
-    self.deploymentId = deploymentId
-  }
-}
-
-// MARK: - TGetTvcDeploymentInput
-
-public struct TGetTvcDeploymentInput: Codable, Sendable {
-  public let body: TGetTvcDeploymentBody
-
-  public init(
-    body: TGetTvcDeploymentBody
   ) {
     self.body = body
   }
@@ -10979,9 +11207,9 @@ public struct TGetWalletAddressBalancesResponse: Codable, Sendable {
 
 public struct TGetWalletAddressBalancesBody: Codable, Sendable {
   public let organizationId: String?
-  /// Address corresponding to a wallet account.
+  /// Address corresponding to a wallet account. Private key addresses are not supported.
   public let address: String
-  /// CAIP-2 chain ID (e.g., 'eip155:1' for Ethereum mainnet).
+  /// CAIP-2 chain ID (e.g., 'eip155:1' for Ethereum mainnet or 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp' for Solana mainnet). Human-readable Solana aliases ('solana:mainnet', 'solana:devnet') are also accepted and normalized to canonical CAIP-2 values.
   public let caip2: String
 
   public init(
@@ -11322,7 +11550,7 @@ public struct TListSupportedAssetsResponse: Codable, Sendable {
 
 public struct TListSupportedAssetsBody: Codable, Sendable {
   public let organizationId: String?
-  /// CAIP-2 chain ID (e.g., 'eip155:1' for Ethereum mainnet).
+  /// CAIP-2 chain ID (e.g., 'eip155:1' for Ethereum mainnet or 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp' for Solana mainnet). Human-readable Solana aliases ('solana:mainnet', 'solana:devnet') are also accepted and normalized to canonical CAIP-2 values.
   public let caip2: String
 
   public init(
@@ -11341,72 +11569,6 @@ public struct TListSupportedAssetsInput: Codable, Sendable {
 
   public init(
     body: TListSupportedAssetsBody
-  ) {
-    self.body = body
-  }
-}
-
-// MARK: - TGetTvcAppDeploymentsResponse
-
-public struct TGetTvcAppDeploymentsResponse: Codable, Sendable {
-  /// List of deployments for this TVC App
-  public let tvcDeployments: [v1TvcDeployment]
-}
-
-// MARK: - TGetTvcAppDeploymentsBody
-
-public struct TGetTvcAppDeploymentsBody: Codable, Sendable {
-  public let organizationId: String?
-  /// Unique identifier for a given TVC App.
-  public let appId: String
-
-  public init(
-    organizationId: String? = nil,
-    appId: String
-  ) {
-    self.organizationId = organizationId
-    self.appId = appId
-  }
-}
-
-// MARK: - TGetTvcAppDeploymentsInput
-
-public struct TGetTvcAppDeploymentsInput: Codable, Sendable {
-  public let body: TGetTvcAppDeploymentsBody
-
-  public init(
-    body: TGetTvcAppDeploymentsBody
-  ) {
-    self.body = body
-  }
-}
-
-// MARK: - TGetTvcAppsResponse
-
-public struct TGetTvcAppsResponse: Codable, Sendable {
-  /// A list of TVC Apps.
-  public let tvcApps: [v1TvcApp]
-}
-
-// MARK: - TGetTvcAppsBody
-
-public struct TGetTvcAppsBody: Codable, Sendable {
-  public let organizationId: String?
-
-  public init(
-    organizationId: String? = nil
-  ) {
-    self.organizationId = organizationId
-  }
-}
-
-// MARK: - TGetTvcAppsInput
-
-public struct TGetTvcAppsInput: Codable, Sendable {
-  public let body: TGetTvcAppsBody
-
-  public init(
-    body: TGetTvcAppsBody
   ) {
     self.body = body
   }
@@ -11591,6 +11753,36 @@ public struct TGetWalletsInput: Codable, Sendable {
   }
 }
 
+// MARK: - TListWebhookEndpointsResponse
+
+public struct TListWebhookEndpointsResponse: Codable, Sendable {
+  public let webhookEndpoints: [v1WebhookEndpointData]
+}
+
+// MARK: - TListWebhookEndpointsBody
+
+public struct TListWebhookEndpointsBody: Codable, Sendable {
+  public let organizationId: String?
+
+  public init(
+    organizationId: String? = nil
+  ) {
+    self.organizationId = organizationId
+  }
+}
+
+// MARK: - TListWebhookEndpointsInput
+
+public struct TListWebhookEndpointsInput: Codable, Sendable {
+  public let body: TListWebhookEndpointsBody
+
+  public init(
+    body: TListWebhookEndpointsBody
+  ) {
+    self.body = body
+  }
+}
+
 // MARK: - TGetWhoamiResponse
 
 public struct TGetWhoamiResponse: Codable, Sendable {
@@ -11703,45 +11895,6 @@ public struct TCreateApiKeysInput: Codable, Sendable {
 
   public init(
     body: TCreateApiKeysBody
-  ) {
-    self.body = body
-  }
-}
-
-// MARK: - TCreateApiOnlyUsersResponse
-
-public struct TCreateApiOnlyUsersResponse: Codable, Sendable {
-  public let activity: v1Activity
-  /// A list of API-only User IDs.
-  public let userIds: [String]
-}
-
-// MARK: - TCreateApiOnlyUsersBody
-
-public struct TCreateApiOnlyUsersBody: Codable, Sendable {
-  public let timestampMs: String?
-  public let organizationId: String?
-  /// A list of API-only Users to create.
-  public let apiOnlyUsers: [v1ApiOnlyUserParams]
-
-  public init(
-    timestampMs: String? = nil,
-    organizationId: String? = nil,
-    apiOnlyUsers: [v1ApiOnlyUserParams]
-  ) {
-    self.timestampMs = timestampMs
-    self.organizationId = organizationId
-    self.apiOnlyUsers = apiOnlyUsers
-  }
-}
-
-// MARK: - TCreateApiOnlyUsersInput
-
-public struct TCreateApiOnlyUsersInput: Codable, Sendable {
-  public let body: TCreateApiOnlyUsersBody
-
-  public init(
-    body: TCreateApiOnlyUsersBody
   ) {
     self.body = body
   }
@@ -11949,14 +12102,14 @@ public struct TCreateOauthProvidersBody: Codable, Sendable {
   public let timestampMs: String?
   public let organizationId: String?
   /// A list of Oauth providers.
-  public let oauthProviders: [v1OauthProviderParams]
+  public let oauthProviders: [v1OauthProviderParamsV2]
   /// The ID of the User to add an Oauth provider to
   public let userId: String
 
   public init(
     timestampMs: String? = nil,
     organizationId: String? = nil,
-    oauthProviders: [v1OauthProviderParams],
+    oauthProviders: [v1OauthProviderParamsV2],
     userId: String
   ) {
     self.timestampMs = timestampMs
@@ -12347,7 +12500,7 @@ public struct TCreateSubOrganizationBody: Codable, Sendable {
   /// The threshold of unique approvals to reach root quorum. This value must be less than or equal to the number of root users
   public let rootQuorumThreshold: Int
   /// Root users to create within this sub-organization
-  public let rootUsers: [v1RootUserParamsV4]
+  public let rootUsers: [v1RootUserParamsV5]
   /// Name for this sub-organization
   public let subOrganizationName: String
   /// Signed JWT containing a unique id, expiry, verification type, contact
@@ -12364,7 +12517,7 @@ public struct TCreateSubOrganizationBody: Codable, Sendable {
     disableOtpEmailAuth: Bool? = nil,
     disableSmsAuth: Bool? = nil,
     rootQuorumThreshold: Int,
-    rootUsers: [v1RootUserParamsV4],
+    rootUsers: [v1RootUserParamsV5],
     subOrganizationName: String,
     verificationToken: String? = nil,
     wallet: v1WalletParams? = nil
@@ -12391,203 +12544,6 @@ public struct TCreateSubOrganizationInput: Codable, Sendable {
 
   public init(
     body: TCreateSubOrganizationBody
-  ) {
-    self.body = body
-  }
-}
-
-// MARK: - TCreateTvcAppResponse
-
-public struct TCreateTvcAppResponse: Codable, Sendable {
-  public let activity: v1Activity
-  /// The unique identifier for the TVC application
-  public let appId: String
-  /// The unique identifier for the TVC manifest set
-  public let manifestSetId: String
-  /// The unique identifier(s) of the manifest set operators
-  public let manifestSetOperatorIds: [String]
-  /// The required number of approvals for the manifest set
-  public let manifestSetThreshold: Int
-}
-
-// MARK: - TCreateTvcAppBody
-
-public struct TCreateTvcAppBody: Codable, Sendable {
-  public let timestampMs: String?
-  public let organizationId: String?
-  /// Enables external connectivity for this TVC app. Default if not provided: false.
-  public let externalConnectivity: Bool?
-  /// Unique identifier for an existing TVC operator set to use as the Manifest Set for this TVC application. If left empty, a new Manifest Set configuration is required
-  public let manifestSetId: String?
-  /// Configuration to create a new TVC operator set, used as the Manifest Set for this TVC application. If left empty, a Manifest Set ID is required
-  public let manifestSetParams: v1TvcOperatorSetParams?
-  /// The name of the new TVC application
-  public let name: String
-  /// Quorum public key to use for this application
-  public let quorumPublicKey: String
-  /// Unique identifier for an existing TVC operator set to use as the Share Set for this TVC application. If left empty, a new Share Set configuration is required
-  public let shareSetId: String?
-  /// Configuration to create a new TVC operator set, used as the Share Set for this TVC application. If left empty, a Share Set ID is required
-  public let shareSetParams: v1TvcOperatorSetParams?
-
-  public init(
-    timestampMs: String? = nil,
-    organizationId: String? = nil,
-    externalConnectivity: Bool? = nil,
-    manifestSetId: String? = nil,
-    manifestSetParams: v1TvcOperatorSetParams? = nil,
-    name: String,
-    quorumPublicKey: String,
-    shareSetId: String? = nil,
-    shareSetParams: v1TvcOperatorSetParams? = nil
-  ) {
-    self.timestampMs = timestampMs
-    self.organizationId = organizationId
-    self.externalConnectivity = externalConnectivity
-    self.manifestSetId = manifestSetId
-    self.manifestSetParams = manifestSetParams
-    self.name = name
-    self.quorumPublicKey = quorumPublicKey
-    self.shareSetId = shareSetId
-    self.shareSetParams = shareSetParams
-  }
-}
-
-// MARK: - TCreateTvcAppInput
-
-public struct TCreateTvcAppInput: Codable, Sendable {
-  public let body: TCreateTvcAppBody
-
-  public init(
-    body: TCreateTvcAppBody
-  ) {
-    self.body = body
-  }
-}
-
-// MARK: - TCreateTvcDeploymentResponse
-
-public struct TCreateTvcDeploymentResponse: Codable, Sendable {
-  public let activity: v1Activity
-  /// The unique identifier for the TVC deployment
-  public let deploymentId: String
-  /// The unique identifier for the TVC manifest
-  public let manifestId: String
-}
-
-// MARK: - TCreateTvcDeploymentBody
-
-public struct TCreateTvcDeploymentBody: Codable, Sendable {
-  public let timestampMs: String?
-  public let organizationId: String?
-  /// The unique identifier of the to-be-deployed TVC application
-  public let appId: String
-  /// Digest of the pivot binary in the pivot container. This value will be inserted in the QOS manifest to ensure application integrity.
-  public let expectedPivotDigest: String
-  /// Arguments to pass to the host binary at startup. Encoded as a list of strings, for example ["--foo", "bar"]
-  public let hostArgs: [String]
-  /// Optional encrypted pull secret to authorize Turnkey to pull the host container image. If your image is public, leave this empty.
-  public let hostContainerEncryptedPullSecret: String?
-  /// URL of the container containing the host binary
-  public let hostContainerImageUrl: String
-  /// Location of the binary inside the host container
-  public let hostPath: String
-  /// Optional nonce to ensure uniqueness of the deployment manifest. If not provided, it defaults to the current Unix timestamp in seconds.
-  public let nonce: Int?
-  /// Arguments to pass to the pivot binary at startup. Encoded as a list of strings, for example ["--foo", "bar"]
-  public let pivotArgs: [String]
-  /// Optional encrypted pull secret to authorize Turnkey to pull the pivot container image. If your image is public, leave this empty.
-  public let pivotContainerEncryptedPullSecret: String?
-  /// URL of the container containing the pivot binary
-  public let pivotContainerImageUrl: String
-  /// Location of the binary in the pivot container
-  public let pivotPath: String
-  /// The QuorumOS version to use to deploy this application
-  public let qosVersion: String
-
-  public init(
-    timestampMs: String? = nil,
-    organizationId: String? = nil,
-    appId: String,
-    expectedPivotDigest: String,
-    hostArgs: [String],
-    hostContainerEncryptedPullSecret: String? = nil,
-    hostContainerImageUrl: String,
-    hostPath: String,
-    nonce: Int? = nil,
-    pivotArgs: [String],
-    pivotContainerEncryptedPullSecret: String? = nil,
-    pivotContainerImageUrl: String,
-    pivotPath: String,
-    qosVersion: String
-  ) {
-    self.timestampMs = timestampMs
-    self.organizationId = organizationId
-    self.appId = appId
-    self.expectedPivotDigest = expectedPivotDigest
-    self.hostArgs = hostArgs
-    self.hostContainerEncryptedPullSecret = hostContainerEncryptedPullSecret
-    self.hostContainerImageUrl = hostContainerImageUrl
-    self.hostPath = hostPath
-    self.nonce = nonce
-    self.pivotArgs = pivotArgs
-    self.pivotContainerEncryptedPullSecret = pivotContainerEncryptedPullSecret
-    self.pivotContainerImageUrl = pivotContainerImageUrl
-    self.pivotPath = pivotPath
-    self.qosVersion = qosVersion
-  }
-}
-
-// MARK: - TCreateTvcDeploymentInput
-
-public struct TCreateTvcDeploymentInput: Codable, Sendable {
-  public let body: TCreateTvcDeploymentBody
-
-  public init(
-    body: TCreateTvcDeploymentBody
-  ) {
-    self.body = body
-  }
-}
-
-// MARK: - TCreateTvcManifestApprovalsResponse
-
-public struct TCreateTvcManifestApprovalsResponse: Codable, Sendable {
-  public let activity: v1Activity
-  /// The unique identifier(s) for the manifest approvals
-  public let approvalIds: [String]
-}
-
-// MARK: - TCreateTvcManifestApprovalsBody
-
-public struct TCreateTvcManifestApprovalsBody: Codable, Sendable {
-  public let timestampMs: String?
-  public let organizationId: String?
-  /// List of manifest approvals
-  public let approvals: [v1TvcManifestApproval]
-  /// Unique identifier of the TVC deployment to approve
-  public let manifestId: String
-
-  public init(
-    timestampMs: String? = nil,
-    organizationId: String? = nil,
-    approvals: [v1TvcManifestApproval],
-    manifestId: String
-  ) {
-    self.timestampMs = timestampMs
-    self.organizationId = organizationId
-    self.approvals = approvals
-    self.manifestId = manifestId
-  }
-}
-
-// MARK: - TCreateTvcManifestApprovalsInput
-
-public struct TCreateTvcManifestApprovalsInput: Codable, Sendable {
-  public let body: TCreateTvcManifestApprovalsBody
-
-  public init(
-    body: TCreateTvcManifestApprovalsBody
   ) {
     self.body = body
   }
@@ -12652,12 +12608,12 @@ public struct TCreateUsersBody: Codable, Sendable {
   public let timestampMs: String?
   public let organizationId: String?
   /// A list of Users.
-  public let users: [v1UserParamsV3]
+  public let users: [v1UserParamsV4]
 
   public init(
     timestampMs: String? = nil,
     organizationId: String? = nil,
-    users: [v1UserParamsV3]
+    users: [v1UserParamsV4]
   ) {
     self.timestampMs = timestampMs
     self.organizationId = organizationId
@@ -12768,6 +12724,55 @@ public struct TCreateWalletAccountsInput: Codable, Sendable {
 
   public init(
     body: TCreateWalletAccountsBody
+  ) {
+    self.body = body
+  }
+}
+
+// MARK: - TCreateWebhookEndpointResponse
+
+public struct TCreateWebhookEndpointResponse: Codable, Sendable {
+  public let activity: v1Activity
+  /// Unique identifier of the created webhook endpoint.
+  public let endpointId: String
+  /// The created webhook endpoint data.
+  public let webhookEndpoint: v1WebhookEndpointData
+}
+
+// MARK: - TCreateWebhookEndpointBody
+
+public struct TCreateWebhookEndpointBody: Codable, Sendable {
+  public let timestampMs: String?
+  public let organizationId: String?
+  /// Human-readable name for this webhook endpoint.
+  public let name: String
+  /// Event subscriptions to create for this endpoint.
+  public let subscriptions: [v1WebhookSubscriptionParams]?
+  /// The destination URL for webhook delivery.
+  public let url: String
+
+  public init(
+    timestampMs: String? = nil,
+    organizationId: String? = nil,
+    name: String,
+    subscriptions: [v1WebhookSubscriptionParams]? = nil,
+    url: String
+  ) {
+    self.timestampMs = timestampMs
+    self.organizationId = organizationId
+    self.name = name
+    self.subscriptions = subscriptions
+    self.url = url
+  }
+}
+
+// MARK: - TCreateWebhookEndpointInput
+
+public struct TCreateWebhookEndpointInput: Codable, Sendable {
+  public let body: TCreateWebhookEndpointBody
+
+  public init(
+    body: TCreateWebhookEndpointBody
   ) {
     self.body = body
   }
@@ -13425,6 +13430,45 @@ public struct TDeleteWalletsInput: Codable, Sendable {
   }
 }
 
+// MARK: - TDeleteWebhookEndpointResponse
+
+public struct TDeleteWebhookEndpointResponse: Codable, Sendable {
+  public let activity: v1Activity
+  /// Unique identifier of the deleted webhook endpoint.
+  public let endpointId: String
+}
+
+// MARK: - TDeleteWebhookEndpointBody
+
+public struct TDeleteWebhookEndpointBody: Codable, Sendable {
+  public let timestampMs: String?
+  public let organizationId: String?
+  /// Unique identifier of the webhook endpoint to delete.
+  public let endpointId: String
+
+  public init(
+    timestampMs: String? = nil,
+    organizationId: String? = nil,
+    endpointId: String
+  ) {
+    self.timestampMs = timestampMs
+    self.organizationId = organizationId
+    self.endpointId = endpointId
+  }
+}
+
+// MARK: - TDeleteWebhookEndpointInput
+
+public struct TDeleteWebhookEndpointInput: Codable, Sendable {
+  public let body: TDeleteWebhookEndpointBody
+
+  public init(
+    body: TDeleteWebhookEndpointBody
+  ) {
+    self.body = body
+  }
+}
+
 // MARK: - TEmailAuthResponse
 
 public struct TEmailAuthResponse: Codable, Sendable {
@@ -13493,49 +13537,6 @@ public struct TEmailAuthInput: Codable, Sendable {
 
   public init(
     body: TEmailAuthBody
-  ) {
-    self.body = body
-  }
-}
-
-// MARK: - TEthSendRawTransactionResponse
-
-public struct TEthSendRawTransactionResponse: Codable, Sendable {
-  public let activity: v1Activity
-  /// The transaction hash of the sent transaction
-  public let transactionHash: String
-}
-
-// MARK: - TEthSendRawTransactionBody
-
-public struct TEthSendRawTransactionBody: Codable, Sendable {
-  public let timestampMs: String?
-  public let organizationId: String?
-  /// CAIP-2 chain ID (e.g., 'eip155:1' for Ethereum mainnet).
-  public let caip2: String
-  /// The raw, signed transaction to be sent.
-  public let signedTransaction: String
-
-  public init(
-    timestampMs: String? = nil,
-    organizationId: String? = nil,
-    caip2: String,
-    signedTransaction: String
-  ) {
-    self.timestampMs = timestampMs
-    self.organizationId = organizationId
-    self.caip2 = caip2
-    self.signedTransaction = signedTransaction
-  }
-}
-
-// MARK: - TEthSendRawTransactionInput
-
-public struct TEthSendRawTransactionInput: Codable, Sendable {
-  public let body: TEthSendRawTransactionBody
-
-  public init(
-    body: TEthSendRawTransactionBody
   ) {
     self.body = body
   }
@@ -13898,7 +13899,7 @@ public struct TInitFiatOnRampBody: Codable, Sendable {
   public let fiatCurrencyCode: v1FiatOnRampCurrency?
   /// Blockchain network to be used for the transaction, e.g., bitcoin, ethereum. Maps to MoonPay's network or Coinbase's defaultNetwork.
   public let network: v1FiatOnRampBlockchainNetwork
-  /// Enum to specifiy which on-ramp provider to use
+  /// Enum to specify which on-ramp provider to use
   public let onrampProvider: v1FiatOnRampProvider
   /// Pre-selected payment method, e.g., CREDIT_DEBIT_CARD, APPLE_PAY. Validated against the chosen provider.
   public let paymentMethod: v1FiatOnRampPaymentMethod?
@@ -14034,7 +14035,9 @@ public struct TInitImportWalletInput: Codable, Sendable {
 
 public struct TInitOtpResponse: Codable, Sendable {
   public let activity: v1Activity
-  /// Unique identifier for an OTP authentication
+  /// Signed bundle containing a target encryption key to use when submitting OTP codes.
+  public let otpEncryptionTargetBundle: String
+  /// Unique identifier for an OTP flow
   public let otpId: String
 }
 
@@ -14043,9 +14046,9 @@ public struct TInitOtpResponse: Codable, Sendable {
 public struct TInitOtpBody: Codable, Sendable {
   public let timestampMs: String?
   public let organizationId: String?
-  /// Optional flag to specify if the OTP code should be alphanumeric (Crockford’s Base32). Default = true
+  /// Optional flag to specify if the OTP code should be alphanumeric (Crockford’s Base32). If set to false, OTP code will only be numeric. Default = true
   public let alphanumeric: Bool?
-  /// The name of the application. This field is required and will be used in email notifications if an email template is not provided.
+  /// The name of the application.
   public let appName: String
   /// Email or phone number to send the OTP code to
   public let contact: String
@@ -14063,7 +14066,7 @@ public struct TInitOtpBody: Codable, Sendable {
   public let sendFromEmailAddress: String?
   /// Optional custom sender name for use with sendFromEmailAddress; if left empty, will default to 'Notifications'
   public let sendFromEmailSenderName: String?
-  /// Optional parameters for customizing SMS message. If not provided, the default SMS message will be used.
+  /// Optional parameters for customizing SMS message. If not provided, the default sms message will be used.
   public let smsCustomization: v1SmsCustomizationParams?
   /// Optional client-generated user identifier to enable per-user rate limiting for SMS auth. We recommend using a hash of the client-side IP address.
   public let userIdentifier: String?
@@ -14504,21 +14507,21 @@ public struct TOtpLoginResponse: Codable, Sendable {
 public struct TOtpLoginBody: Codable, Sendable {
   public let timestampMs: String?
   public let organizationId: String?
-  /// Optional signature proving authorization for this login. The signature is over the verification token ID and the public key. Only required if a public key was provided during the verification step.
-  public let clientSignature: v1ClientSignature?
+  /// Required signature proving authorization for this login. The signature is over the verification token ID and the public key. Required for secure OTP login process.
+  public let clientSignature: v1ClientSignature
   /// Expiration window (in seconds) indicating how long the Session is valid for. If not provided, a default of 15 minutes will be used.
   public let expirationSeconds: String?
-  /// Invalidate all other previously generated Login API keys
+  /// Invalidate all other previously generated Login sessions
   public let invalidateExisting: Bool?
-  /// Client-side public key generated by the user, which will be conditionally added to org data based on the validity of the verification token
+  /// Client-side public key generated by the user, used as the session public key upon successful login
   public let publicKey: String
-  /// Signed JWT containing a unique id, expiry, verification type, contact
+  /// Signed Verification Token containing a unique id, expiry, verification type, contact
   public let verificationToken: String
 
   public init(
     timestampMs: String? = nil,
     organizationId: String? = nil,
-    clientSignature: v1ClientSignature? = nil,
+    clientSignature: v1ClientSignature,
     expirationSeconds: String? = nil,
     invalidateExisting: Bool? = nil,
     publicKey: String,
@@ -15070,6 +15073,47 @@ public struct TUpdateOauth2CredentialInput: Codable, Sendable {
   }
 }
 
+// MARK: - TUpdateOrganizationNameResponse
+
+public struct TUpdateOrganizationNameResponse: Codable, Sendable {
+  public let activity: v1Activity
+  /// Unique identifier for the Organization.
+  public let organizationId: String
+  /// The updated organization name.
+  public let organizationName: String
+}
+
+// MARK: - TUpdateOrganizationNameBody
+
+public struct TUpdateOrganizationNameBody: Codable, Sendable {
+  public let timestampMs: String?
+  public let organizationId: String?
+  /// New name for the Organization.
+  public let organizationName: String
+
+  public init(
+    timestampMs: String? = nil,
+    organizationId: String? = nil,
+    organizationName: String
+  ) {
+    self.timestampMs = timestampMs
+    self.organizationId = organizationId
+    self.organizationName = organizationName
+  }
+}
+
+// MARK: - TUpdateOrganizationNameInput
+
+public struct TUpdateOrganizationNameInput: Codable, Sendable {
+  public let body: TUpdateOrganizationNameBody
+
+  public init(
+    body: TUpdateOrganizationNameBody
+  ) {
+    self.body = body
+  }
+}
+
 // MARK: - TUpdatePolicyResponse
 
 public struct TUpdatePolicyResponse: Codable, Sendable {
@@ -15507,6 +15551,59 @@ public struct TUpdateWalletInput: Codable, Sendable {
   }
 }
 
+// MARK: - TUpdateWebhookEndpointResponse
+
+public struct TUpdateWebhookEndpointResponse: Codable, Sendable {
+  public let activity: v1Activity
+  /// Unique identifier of the updated webhook endpoint.
+  public let endpointId: String
+  /// The updated webhook endpoint data.
+  public let webhookEndpoint: v1WebhookEndpointData
+}
+
+// MARK: - TUpdateWebhookEndpointBody
+
+public struct TUpdateWebhookEndpointBody: Codable, Sendable {
+  public let timestampMs: String?
+  public let organizationId: String?
+  /// Unique identifier of the webhook endpoint to update.
+  public let endpointId: String
+  /// Whether this webhook endpoint is active.
+  public let isActive: Bool?
+  /// Updated human-readable name for this webhook endpoint.
+  public let name: String?
+  /// Updated destination URL for webhook delivery.
+  public let url: String?
+
+  public init(
+    timestampMs: String? = nil,
+    organizationId: String? = nil,
+    endpointId: String,
+    isActive: Bool? = nil,
+    name: String? = nil,
+    url: String? = nil
+  ) {
+    self.timestampMs = timestampMs
+    self.organizationId = organizationId
+    self.endpointId = endpointId
+    self.isActive = isActive
+    self.name = name
+    self.url = url
+  }
+}
+
+// MARK: - TUpdateWebhookEndpointInput
+
+public struct TUpdateWebhookEndpointInput: Codable, Sendable {
+  public let body: TUpdateWebhookEndpointBody
+
+  public init(
+    body: TUpdateWebhookEndpointBody
+  ) {
+    self.body = body
+  }
+}
+
 // MARK: - TVerifyOtpResponse
 
 public struct TVerifyOtpResponse: Codable, Sendable {
@@ -15520,29 +15617,25 @@ public struct TVerifyOtpResponse: Codable, Sendable {
 public struct TVerifyOtpBody: Codable, Sendable {
   public let timestampMs: String?
   public let organizationId: String?
+  /// Encrypted bundle containing the OTP code and a client-generated public key. Turnkey's secure enclaves will decrypt this bundle, verify the OTP code, and issue a new Verification Token. Encrypted using the target encryption key provided in the INIT_OTP activity result.
+  public let encryptedOtpBundle: String
   /// Expiration window (in seconds) indicating how long the verification token is valid for. If not provided, a default of 1 hour will be used. Maximum value is 86400 seconds (24 hours)
   public let expirationSeconds: String?
-  /// OTP sent out to a user's contact (email or SMS)
-  public let otpCode: String
-  /// ID representing the result of an init OTP activity.
+  /// UUID representing an OTP flow. A new UUID is created for each init OTP activity.
   public let otpId: String
-  /// Client-side public key generated by the user, which will be added to the JWT response and verified in subsequent requests via a client proof signature
-  public let publicKey: String?
 
   public init(
     timestampMs: String? = nil,
     organizationId: String? = nil,
+    encryptedOtpBundle: String,
     expirationSeconds: String? = nil,
-    otpCode: String,
-    otpId: String,
-    publicKey: String? = nil
+    otpId: String
   ) {
     self.timestampMs = timestampMs
     self.organizationId = organizationId
+    self.encryptedOtpBundle = encryptedOtpBundle
     self.expirationSeconds = expirationSeconds
-    self.otpCode = otpCode
     self.otpId = otpId
-    self.publicKey = publicKey
   }
 }
 
@@ -15568,76 +15661,6 @@ public struct TNOOPCodegenAnchorResponse: Codable, Sendable {
 
 public struct TNOOPCodegenAnchorBody: Codable, Sendable {
   public init() {}
-}
-
-// MARK: - TRefreshFeatureFlagsResponse
-
-public struct TRefreshFeatureFlagsResponse: Codable, Sendable {
-  public let activity: v1Activity
-}
-
-// MARK: - TRefreshFeatureFlagsBody
-
-public struct TRefreshFeatureFlagsBody: Codable, Sendable {
-  public let timestampMs: String?
-  public let organizationId: String?
-
-  public init(
-    timestampMs: String? = nil,
-    organizationId: String? = nil
-  ) {
-    self.timestampMs = timestampMs
-    self.organizationId = organizationId
-  }
-}
-
-// MARK: - TRefreshFeatureFlagsInput
-
-public struct TRefreshFeatureFlagsInput: Codable, Sendable {
-  public let body: TRefreshFeatureFlagsBody
-
-  public init(
-    body: TRefreshFeatureFlagsBody
-  ) {
-    self.body = body
-  }
-}
-
-// MARK: - TTestRateLimitsResponse
-
-public struct TTestRateLimitsResponse: Codable, Sendable {
-}
-
-// MARK: - TTestRateLimitsBody
-
-public struct TTestRateLimitsBody: Codable, Sendable {
-  public let organizationId: String?
-  /// Whether or not to set a limit on this request.
-  public let isSetLimit: Bool
-  /// Rate limit to set for org, if is_set_limit is set to true.
-  public let limit: Int
-
-  public init(
-    organizationId: String? = nil,
-    isSetLimit: Bool,
-    limit: Int
-  ) {
-    self.organizationId = organizationId
-    self.isSetLimit = isSetLimit
-    self.limit = limit
-  }
-}
-
-// MARK: - TTestRateLimitsInput
-
-public struct TTestRateLimitsInput: Codable, Sendable {
-  public let body: TTestRateLimitsBody
-
-  public init(
-    body: TTestRateLimitsBody
-  ) {
-    self.body = body
-  }
 }
 
 // MARK: - ProxyTGetAccountResponse
@@ -15791,7 +15814,7 @@ public struct ProxyTInitOtpResponse: Codable, Sendable {
 public struct ProxyTInitOtpBody: Codable, Sendable {
   /// Email or phone number to send the OTP code to
   public let contact: String
-  /// Enum to specifiy whether to send OTP via SMS or email
+  /// Enum to specify whether to send OTP via SMS or email
   public let otpType: String
 
   public init(
@@ -15810,6 +15833,44 @@ public struct ProxyTInitOtpInput: Codable, Sendable {
 
   public init(
     body: ProxyTInitOtpBody
+  ) {
+    self.body = body
+  }
+}
+
+// MARK: - ProxyTInitOtpV2Response
+
+public struct ProxyTInitOtpV2Response: Codable, Sendable {
+  /// Signed bundle containing a target encryption key to use when submitting OTP codes.
+  public let otpEncryptionTargetBundle: String
+  /// Unique identifier for an OTP flow.
+  public let otpId: String
+}
+
+// MARK: - ProxyTInitOtpV2Body
+
+public struct ProxyTInitOtpV2Body: Codable, Sendable {
+  /// Email or phone number to send the OTP code to
+  public let contact: String
+  /// Enum to specify whether to send OTP code via SMS or email
+  public let otpType: String
+
+  public init(
+    contact: String,
+    otpType: String
+  ) {
+    self.contact = contact
+    self.otpType = otpType
+  }
+}
+
+// MARK: - ProxyTInitOtpV2Input
+
+public struct ProxyTInitOtpV2Input: Codable, Sendable {
+  public let body: ProxyTInitOtpV2Body
+
+  public init(
+    body: ProxyTInitOtpV2Body
   ) {
     self.body = body
   }
@@ -15863,6 +15924,54 @@ public struct ProxyTOtpLoginInput: Codable, Sendable {
   }
 }
 
+// MARK: - ProxyTOtpLoginV2Response
+
+public struct ProxyTOtpLoginV2Response: Codable, Sendable {
+  /// Session containing an expiry, public key, session type, user id, and organization id
+  public let session: String
+}
+
+// MARK: - ProxyTOtpLoginV2Body
+
+public struct ProxyTOtpLoginV2Body: Codable, Sendable {
+  /// Signature proving authorization for this login. The signature is over the verification token ID and the new session public key.
+  public let clientSignature: v1ClientSignature
+  /// Invalidate all other previously generated Login sessions
+  public let invalidateExisting: Bool?
+  /// Unique identifier for a given Organization. If provided, this organization id will be used directly. If omitted, uses the verification token to look up the verified sub-organization based on the contact and verification type.
+  public let organizationId: String?
+  /// Client-side public key generated by the user, used as the session public key upon successful login.
+  public let publicKey: String
+  /// Session containing a unique id, expiry, verification type, contact. Verification status of a user is updated when the token is consumed (in OTP_LOGIN requests)
+  public let verificationToken: String
+
+  public init(
+    clientSignature: v1ClientSignature,
+    invalidateExisting: Bool? = nil,
+    organizationId: String? = nil,
+    publicKey: String,
+    verificationToken: String
+  ) {
+    self.clientSignature = clientSignature
+    self.invalidateExisting = invalidateExisting
+    self.organizationId = organizationId
+    self.publicKey = publicKey
+    self.verificationToken = verificationToken
+  }
+}
+
+// MARK: - ProxyTOtpLoginV2Input
+
+public struct ProxyTOtpLoginV2Input: Codable, Sendable {
+  public let body: ProxyTOtpLoginV2Body
+
+  public init(
+    body: ProxyTOtpLoginV2Body
+  ) {
+    self.body = body
+  }
+}
+
 // MARK: - ProxyTVerifyOtpResponse
 
 public struct ProxyTVerifyOtpResponse: Codable, Sendable {
@@ -15898,6 +16007,42 @@ public struct ProxyTVerifyOtpInput: Codable, Sendable {
 
   public init(
     body: ProxyTVerifyOtpBody
+  ) {
+    self.body = body
+  }
+}
+
+// MARK: - ProxyTVerifyOtpV2Response
+
+public struct ProxyTVerifyOtpV2Response: Codable, Sendable {
+  /// Verification Token containing a unique id, expiry, verification type, contact signed by Turnkey's enclaves. Verification status of a user is updated when the token is consumed (in OTP_LOGIN requests)
+  public let verificationToken: String
+}
+
+// MARK: - ProxyTVerifyOtpV2Body
+
+public struct ProxyTVerifyOtpV2Body: Codable, Sendable {
+  /// Encrypted bundle containing the OTP code and a client-generated public key. Turnkey's secure enclaves will decrypt this bundle, verify the OTP code, and issue a new Verification Token. Encrypted using the target encryption key provided in the INIT_OTP activity result.
+  public let encryptedOtpBundle: String
+  /// ID representing the result of an init OTP activity.
+  public let otpId: String
+
+  public init(
+    encryptedOtpBundle: String,
+    otpId: String
+  ) {
+    self.encryptedOtpBundle = encryptedOtpBundle
+    self.otpId = otpId
+  }
+}
+
+// MARK: - ProxyTVerifyOtpV2Input
+
+public struct ProxyTVerifyOtpV2Input: Codable, Sendable {
+  public let body: ProxyTVerifyOtpV2Body
+
+  public init(
+    body: ProxyTVerifyOtpV2Body
   ) {
     self.body = body
   }
@@ -15969,6 +16114,77 @@ public struct ProxyTSignupInput: Codable, Sendable {
 
   public init(
     body: ProxyTSignupBody
+  ) {
+    self.body = body
+  }
+}
+
+// MARK: - ProxyTSignupV2Response
+
+public struct ProxyTSignupV2Response: Codable, Sendable {
+  /// A list of App Proofs generated by enclaves during activity execution, providing verifiable attestations of performed operations.
+  public let appProofs: [v1AppProof]?
+  public let organizationId: String
+  /// Root user ID created for this sub-organization
+  public let userId: String
+  /// Wallet created for the sub-organization, if provided in the request
+  public let wallet: v1WalletResult?
+}
+
+// MARK: - ProxyTSignupV2Body
+
+public struct ProxyTSignupV2Body: Codable, Sendable {
+  /// A list of API Key parameters. This field, if not needed, should be an empty array in your request body.
+  public let apiKeys: [v1ApiKeyParamsV2]
+  /// A list of Authenticator parameters. This field, if not needed, should be an empty array in your request body.
+  public let authenticators: [v1AuthenticatorParamsV2]
+  /// Optional signature proving authorization for this signup. The signature is over the verification token ID and the root user parameters for the root user associated with the verification token. Only required if a public key was provided during the verification step.
+  public let clientSignature: v1ClientSignature?
+  /// A list of Oauth providers. This field, if not needed, should be an empty array in your request body.
+  public let oauthProviders: [v1OauthProviderParamsV2]
+  public let organizationName: String?
+  public let userEmail: String?
+  public let userName: String?
+  public let userPhoneNumber: String?
+  public let userTag: String?
+  public let verificationToken: String?
+  /// The wallet to create for the sub-organization
+  public let wallet: v1WalletParams?
+
+  public init(
+    apiKeys: [v1ApiKeyParamsV2],
+    authenticators: [v1AuthenticatorParamsV2],
+    clientSignature: v1ClientSignature? = nil,
+    oauthProviders: [v1OauthProviderParamsV2],
+    organizationName: String? = nil,
+    userEmail: String? = nil,
+    userName: String? = nil,
+    userPhoneNumber: String? = nil,
+    userTag: String? = nil,
+    verificationToken: String? = nil,
+    wallet: v1WalletParams? = nil
+  ) {
+    self.apiKeys = apiKeys
+    self.authenticators = authenticators
+    self.clientSignature = clientSignature
+    self.oauthProviders = oauthProviders
+    self.organizationName = organizationName
+    self.userEmail = userEmail
+    self.userName = userName
+    self.userPhoneNumber = userPhoneNumber
+    self.userTag = userTag
+    self.verificationToken = verificationToken
+    self.wallet = wallet
+  }
+}
+
+// MARK: - ProxyTSignupV2Input
+
+public struct ProxyTSignupV2Input: Codable, Sendable {
+  public let body: ProxyTSignupV2Body
+
+  public init(
+    body: ProxyTSignupV2Body
   ) {
     self.body = body
   }

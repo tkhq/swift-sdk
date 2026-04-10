@@ -2,7 +2,7 @@ import SwiftUI
 import TurnkeySwift
 
 enum AuthRoute: Hashable {
-    case otp(otpId: String, contact: String, otpType: OtpType)
+    case otp(otpId: String, otpEncryptionTargetBundle: String, contact: String, otpType: OtpType)
 }
 
 enum MainRoute: Hashable {
@@ -20,13 +20,14 @@ struct AuthFlow: View {
             AuthView()
                 .navigationDestination(for: AuthRoute.self) { route in
                     switch route {
-                    case let .otp(id, contact, otpType):
+                    case let .otp(id, otpEncryptionTargetBundle, contact, otpType):
                         OtpView(otpId: id, contact: contact, otpType: otpType) { otpCode in
                             Task {
                                 do {
                                     try await turnkey.completeOtp(
                                         otpId: id,
                                         otpCode: otpCode,
+                                        otpEncryptionTargetBundle: otpEncryptionTargetBundle,
                                         contact: contact,
                                         otpType: otpType
                                     )

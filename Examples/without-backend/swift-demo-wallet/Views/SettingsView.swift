@@ -11,6 +11,7 @@ struct SettingsView: View {
     @State private var showUpdatePhone = false
     @State private var showOtpView = false
     @State private var otpId = ""
+    @State private var otpEncryptionTargetBundle = ""
     @State private var otpContact = ""
     @State private var otpType: OtpType = .email
     @State private var updateType: UpdateType?
@@ -95,6 +96,7 @@ struct SettingsView: View {
             do {
                 let result = try await turnkey.initOtp(contact: newEmail, otpType: .email)
                 otpId = result.otpId
+                otpEncryptionTargetBundle = result.otpEncryptionTargetBundle
                 otpContact = newEmail
                 otpType = .email
                 updateType = .email
@@ -111,6 +113,7 @@ struct SettingsView: View {
             do {
                 let result = try await turnkey.initOtp(contact: newPhone, otpType: .sms)
                 otpId = result.otpId
+                otpEncryptionTargetBundle = result.otpEncryptionTargetBundle
                 otpContact = newPhone
                 otpType = .sms
                 updateType = .phone
@@ -125,7 +128,7 @@ struct SettingsView: View {
     private func handleOtpComplete(otpCode: String) async throws {
         guard let updateType = updateType else { return }
 
-        let verifyResult = try await turnkey.verifyOtp(otpId: otpId, otpCode: otpCode)
+        let verifyResult = try await turnkey.verifyOtp(otpId: otpId, otpCode: otpCode, otpEncryptionTargetBundle: otpEncryptionTargetBundle)
         let verificationToken = verifyResult.verificationToken
 
         switch updateType {
