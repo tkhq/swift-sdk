@@ -29,26 +29,20 @@ extension TurnkeyContext {
     additionalState: [String: String]?
   ) throws -> URL {
     let finalOriginUri = Constants.Turnkey.oauthOriginUrl
-    // Encode nested redirectUri like encodeURIComponent
-    let allowedUnreserved = CharacterSet(
-      charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
-    let encodedRedirectUri =
-      redirectUri.addingPercentEncoding(withAllowedCharacters: allowedUnreserved) ?? redirectUri
 
     var comps = URLComponents(string: finalOriginUri)!
     var items: [URLQueryItem] = [
       URLQueryItem(name: "provider", value: provider),
       URLQueryItem(name: "clientId", value: clientId),
-      URLQueryItem(name: "redirectUri", value: encodedRedirectUri),
+      URLQueryItem(name: "redirectUri", value: redirectUri),
       URLQueryItem(name: "nonce", value: nonce),
     ]
     if let state = additionalState, !state.isEmpty {
       for (k, v) in state {
-        let ev = v.addingPercentEncoding(withAllowedCharacters: allowedUnreserved) ?? v
-        items.append(URLQueryItem(name: k, value: ev))
+        items.append(URLQueryItem(name: k, value: v))
       }
     }
-    comps.percentEncodedQueryItems = items
+    comps.queryItems = items
     guard let url = comps.url else { throw TurnkeySwiftError.oauthInvalidURL }
     return url
   }
@@ -74,17 +68,17 @@ extension TurnkeyContext {
   internal func runOAuthSession(
     provider: String,
     clientId: String,
+    redirectUri: String,
     scheme: String,
     anchor: ASPresentationAnchor,
     nonce: String,
     additionalState: [String: String]? = nil
   ) async throws -> String {
     self.oauthAnchor = anchor
-    let settings = try getOAuthProviderSettings(provider: provider)
     let url = try buildOAuthURL(
       provider: provider,
       clientId: clientId,
-      redirectUri: settings.redirectUri,
+      redirectUri: redirectUri,
       nonce: nonce,
       additionalState: additionalState
     )
@@ -241,28 +235,4 @@ extension TurnkeyContext {
     }
   }
 
-  /// Resolves OAuth provider configuration for the given provider.
-  ///
-  /// Uses runtime and user configuration to determine client ID, redirect URI,
-  /// and app scheme for a specific OAuth provider.
-  ///
-  /// - Parameter provider: The provider identifier (e.g., "google", "apple", "x", "discord").
-  /// - Returns: A tuple containing the resolved `clientId`, `redirectUri`, and `appScheme`.
-  ///
-  /// - Throws: Never directly, but may return empty values if configuration is incomplete.
-  internal func getOAuthProviderSettings(provider: String) throws -> (
-    clientId: String, redirectUri: String, appScheme: String
-  ) {
-    let providerInfo = runtimeConfig?.auth.oauth.providers[provider]
-    let clientId = providerInfo?.clientId ?? ""
-    let appScheme = runtimeConfig?.auth.oauth.appScheme ?? ""
-    let redirectBase =
-      runtimeConfig?.auth.oauth.redirectBaseUrl ?? Constants.Turnkey.oauthRedirectUrl
-    let redirectUri =
-      (providerInfo?.redirectUri?.isEmpty == false)
-      ? (providerInfo!.redirectUri!)
-      : "\(redirectBase)?scheme=\(appScheme)"
-
-    return (clientId: clientId, redirectUri: redirectUri, appScheme: appScheme)
-  }
 }

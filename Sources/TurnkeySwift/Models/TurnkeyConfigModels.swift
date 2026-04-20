@@ -7,23 +7,88 @@ struct OtpConfigResolved: Sendable {
   var length: String
 }
 
-public struct OauthProviderOverride: Sendable {
-  public var clientId: String?
+public struct GoogleOAuthPrimaryClientId: Sendable {
+  public var webClientId: String?
+  public init(webClientId: String? = nil) {
+    self.webClientId = webClientId
+  }
+}
+
+public struct GoogleOAuthProviderParams: Sendable {
+  public var primaryClientId: GoogleOAuthPrimaryClientId?
+  public var secondaryClientIds: [String]?
   public var redirectUri: String?
-  public init(clientId: String? = nil, redirectUri: String? = nil) {
-    self.clientId = clientId
+  public init(
+    primaryClientId: GoogleOAuthPrimaryClientId? = nil,
+    secondaryClientIds: [String]? = nil,
+    redirectUri: String? = nil
+  ) {
+    self.primaryClientId = primaryClientId
+    self.secondaryClientIds = secondaryClientIds
     self.redirectUri = redirectUri
   }
 }
 
-public struct OauthProvidersPartial: Sendable {
-  public var google: OauthProviderOverride?
-  public var apple: OauthProviderOverride?
-  public var x: OauthProviderOverride?
-  public var discord: OauthProviderOverride?
+public struct AppleOAuthPrimaryClientId: Sendable {
+  public var serviceId: String?
+  public init(serviceId: String? = nil) {
+    self.serviceId = serviceId
+  }
+}
+
+public struct AppleOAuthProviderParams: Sendable {
+  public var primaryClientId: AppleOAuthPrimaryClientId?
+  public var secondaryClientIds: [String]?
+  public var redirectUri: String?
   public init(
-    google: OauthProviderOverride? = nil, apple: OauthProviderOverride? = nil,
-    x: OauthProviderOverride? = nil, discord: OauthProviderOverride? = nil
+    primaryClientId: AppleOAuthPrimaryClientId? = nil,
+    secondaryClientIds: [String]? = nil,
+    redirectUri: String? = nil
+  ) {
+    self.primaryClientId = primaryClientId
+    self.secondaryClientIds = secondaryClientIds
+    self.redirectUri = redirectUri
+  }
+}
+
+public struct XOAuthProviderParams: Sendable {
+  public var primaryClientId: String?
+  public var secondaryClientIds: [String]?
+  public var redirectUri: String?
+  public init(
+    primaryClientId: String? = nil,
+    secondaryClientIds: [String]? = nil,
+    redirectUri: String? = nil
+  ) {
+    self.primaryClientId = primaryClientId
+    self.secondaryClientIds = secondaryClientIds
+    self.redirectUri = redirectUri
+  }
+}
+
+public struct DiscordOAuthProviderParams: Sendable {
+  public var primaryClientId: String?
+  public var secondaryClientIds: [String]?
+  public var redirectUri: String?
+  public init(
+    primaryClientId: String? = nil,
+    secondaryClientIds: [String]? = nil,
+    redirectUri: String? = nil
+  ) {
+    self.primaryClientId = primaryClientId
+    self.secondaryClientIds = secondaryClientIds
+    self.redirectUri = redirectUri
+  }
+}
+
+public struct OAuthProviders: Sendable {
+  public var google: GoogleOAuthProviderParams?
+  public var apple: AppleOAuthProviderParams?
+  public var x: XOAuthProviderParams?
+  public var discord: DiscordOAuthProviderParams?
+  public init(
+    google: GoogleOAuthProviderParams? = nil, apple: AppleOAuthProviderParams? = nil,
+    x: XOAuthProviderParams? = nil, discord: DiscordOAuthProviderParams? = nil
   ) {
     self.google = google
     self.apple = apple
@@ -32,28 +97,17 @@ public struct OauthProvidersPartial: Sendable {
   }
 }
 
-struct OauthProviderResolved: Sendable {
-  var clientId: String?
-  var redirectUri: String?
-}
-
-public struct OauthConfigPartial: Sendable {
+public struct OAuthConfig: Sendable {
   public var redirectUri: String?
   public var appScheme: String?
-  public var providers: OauthProvidersPartial?
+  public var providers: OAuthProviders?
   public init(
-    redirectUri: String? = nil, appScheme: String? = nil, providers: OauthProvidersPartial? = nil
+    redirectUri: String? = nil, appScheme: String? = nil, providers: OAuthProviders? = nil
   ) {
     self.redirectUri = redirectUri
     self.appScheme = appScheme
     self.providers = providers
   }
-}
-
-struct OauthConfigResolved: Sendable {
-  var redirectBaseUrl: String
-  var appScheme: String?
-  var providers: [String: OauthProviderResolved]
 }
 
 public struct PasskeyOptionsPartial: Sendable {
@@ -100,10 +154,12 @@ struct CreateSuborgDefaultsResolved: Sendable {
 struct TurnkeyRuntimeConfig: Sendable {
   struct Auth: Sendable {
     struct Oauth: Sendable {
-      typealias Provider = OauthProviderResolved
       var redirectBaseUrl: String
       var appScheme: String?
-      var providers: [String: Provider]
+      var google: GoogleOAuthProviderParams?
+      var apple: AppleOAuthProviderParams?
+      var x: XOAuthProviderParams?
+      var discord: DiscordOAuthProviderParams?
     }
 
     var sessionExpirationSeconds: String
@@ -126,8 +182,7 @@ public struct TurnkeyConfig: Sendable {
   public struct Auth: Sendable {
 
     public struct Oauth: Sendable {
-      public typealias ProviderOverride = OauthProviderOverride
-      public typealias Providers = OauthProvidersPartial
+      public typealias Providers = OAuthProviders
       public var redirectUri: String?
       public var appScheme: String?
       public var providers: Providers?

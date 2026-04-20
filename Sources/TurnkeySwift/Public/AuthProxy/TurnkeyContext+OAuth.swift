@@ -200,12 +200,16 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     let nonce = SHA256.hash(data: nonceData).map { String(format: "%02x", $0) }.joined()
 
     // we resolve the provider settings
-    let settings = try getOAuthProviderSettings(provider: "google")
-    let clientId = clientId ?? settings.clientId
-    let scheme = settings.appScheme
+    let oauth = runtimeConfig?.auth.oauth
+    let clientId = clientId ?? oauth?.google?.primaryClientId?.webClientId ?? ""
+    let redirectUri = oauth?.google?.redirectUri ?? ""
+    let scheme = oauth?.appScheme ?? ""
 
     guard !clientId.isEmpty else {
-      throw TurnkeySwiftError.invalidConfiguration("Missing clientId for Google OAuth")
+      throw TurnkeySwiftError.invalidConfiguration("Missing webClientId for Google OAuth")
+    }
+    guard !redirectUri.isEmpty else {
+      throw TurnkeySwiftError.invalidConfiguration("Missing redirectUri for Google OAuth")
     }
     guard !scheme.isEmpty else {
       throw TurnkeySwiftError.invalidConfiguration("Missing app scheme for OAuth redirect")
@@ -215,6 +219,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     let oidcToken = try await runOAuthSession(
       provider: "google",
       clientId: clientId,
+      redirectUri: redirectUri,
       scheme: scheme,
       anchor: anchor,
       nonce: nonce,
@@ -267,12 +272,16 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     let nonce = SHA256.hash(data: nonceData).map { String(format: "%02x", $0) }.joined()
 
     // we resolve the provider settings
-    let settings = try getOAuthProviderSettings(provider: "apple")
-    let clientId = clientId ?? settings.clientId
-    let scheme = settings.appScheme
+    let oauth = runtimeConfig?.auth.oauth
+    let clientId = clientId ?? oauth?.apple?.primaryClientId?.serviceId ?? ""
+    let redirectUri = oauth?.apple?.redirectUri ?? ""
+    let scheme = oauth?.appScheme ?? ""
 
     guard !clientId.isEmpty else {
-      throw TurnkeySwiftError.invalidConfiguration("Missing clientId for Apple OAuth")
+      throw TurnkeySwiftError.invalidConfiguration("Missing serviceId for Apple OAuth")
+    }
+    guard !redirectUri.isEmpty else {
+      throw TurnkeySwiftError.invalidConfiguration("Missing redirectUri for Apple OAuth")
     }
     guard !scheme.isEmpty else {
       throw TurnkeySwiftError.invalidConfiguration("Missing app scheme for OAuth redirect")
@@ -282,6 +291,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     let oidcToken = try await runOAuthSession(
       provider: "apple",
       clientId: clientId,
+      redirectUri: redirectUri,
       scheme: scheme,
       anchor: anchor,
       nonce: nonce,
@@ -340,13 +350,13 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     let nonce = SHA256.hash(data: nonceData).map { String(format: "%02x", $0) }.joined()
 
     // we resolve the provider settings
-    let settings = try getOAuthProviderSettings(provider: "discord")
-    let clientId = clientId ?? settings.clientId
-    let redirectUri = settings.redirectUri
-    let scheme = settings.appScheme
+    let oauthConfig = runtimeConfig?.auth.oauth
+    let clientId = clientId ?? oauthConfig?.discord?.primaryClientId ?? ""
+    let redirectUri = oauthConfig?.discord?.redirectUri ?? ""
+    let scheme = oauthConfig?.appScheme ?? ""
 
     guard !clientId.isEmpty else {
-      throw TurnkeySwiftError.invalidConfiguration("Missing clientId for Discord OAuth")
+      throw TurnkeySwiftError.invalidConfiguration("Missing primaryClientId for Discord OAuth")
     }
     guard !redirectUri.isEmpty else {
       throw TurnkeySwiftError.invalidConfiguration("Missing redirectUri for OAuth")
@@ -453,13 +463,13 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     let nonce = SHA256.hash(data: nonceData).map { String(format: "%02x", $0) }.joined()
 
     // we resolve the provider settings
-    let settings = try getOAuthProviderSettings(provider: "x")
-    let clientId = clientId ?? settings.clientId
-    let redirectUri = settings.redirectUri
-    let scheme = settings.appScheme
+    let oauthConfig = runtimeConfig?.auth.oauth
+    let clientId = clientId ?? oauthConfig?.x?.primaryClientId ?? ""
+    let redirectUri = oauthConfig?.x?.redirectUri ?? ""
+    let scheme = oauthConfig?.appScheme ?? ""
 
     guard !clientId.isEmpty else {
-      throw TurnkeySwiftError.invalidConfiguration("Missing clientId for X OAuth")
+      throw TurnkeySwiftError.invalidConfiguration("Missing primaryClientId for X OAuth")
     }
     guard !redirectUri.isEmpty else {
       throw TurnkeySwiftError.invalidConfiguration("Missing redirectUri for OAuth")
