@@ -98,13 +98,13 @@ Session metadata is stored in **local storage** (UserDefaults) using the followi
   * Authenticates using a passkey and creates a new session.
 
 * `handleGoogleOAuth(clientId:originUrl:redirectUrl:sessionKey:expirationSeconds:invalidateExisting:) async throws -> CompleteOAuthResult`
-  * Authenticates using Google OAuth. Can work without auth proxy if `oauthSuccess` redirect is provided.
+  * Authenticates using Google OAuth. Can work without auth proxy if `oauthSuccess` callback is provided.
 
 * `handleAppleOAuth(sessionKey:onOAuthSuccess:) async throws`
-  * Authenticates using native Apple Sign-In via `ASAuthorizationAppleIDProvider`.
+  * Authenticates using native Apple Sign-In via `ASAuthorizationAppleIDProvider`. Can work without auth proxy if `onOAuthSuccess` callback is provided.
 
-* `handleAppleWebOauth(anchor:clientId:sessionKey:additionalState:onOAuthSuccess:) async throws`
-  * Authenticates using Apple OAuth via web-based `ASWebAuthenticationSession`.
+* `handleAppleWebOauth(anchor:clientId:sessionKey:additionalState:onOAuthSuccess:) async throws` *(deprecated)*
+  * Authenticates using Apple OAuth via web-based `ASWebAuthenticationSession`. Can work without auth proxy if `onOAuthSuccess` callback is provided. Use `handleAppleOAuth` instead.
 
 #### Requires Auth Proxy
 
