@@ -17,10 +17,22 @@ struct DemoWalletApp: App {
                 oauth: .init(
                     appScheme: Constants.App.scheme,
                     providers: .init(
-                        google: .init(primaryClientId: .init(webClientId: Constants.Google.clientId)),
-                        apple: .init(primaryClientId: .init(serviceId: Constants.Apple.clientId)),
-                        x: .init(primaryClientId: Constants.X.clientId),
-                        discord: .init(primaryClientId: Constants.Discord.clientId)
+                        google: .init(
+                            primaryClientId: .init(webClientId: Constants.Google.clientId),
+                            secondaryClientIds: Constants.Google.secondaryClientIds
+                        ),
+                        apple: .init(
+                            primaryClientId: .init(serviceId: Constants.Apple.clientId),
+                            secondaryClientIds: Constants.Apple.secondaryClientIds
+                        ),
+                        x: .init(
+                            primaryClientId: Constants.X.clientId,
+                            secondaryClientIds: Constants.X.secondaryClientIds
+                        ),
+                        discord: .init(
+                            primaryClientId: Constants.Discord.clientId,
+                            secondaryClientIds: Constants.Discord.secondaryClientIds
+                        )
                     )
                 )
             )

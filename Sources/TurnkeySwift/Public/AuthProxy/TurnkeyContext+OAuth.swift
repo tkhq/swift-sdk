@@ -267,6 +267,8 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
   ///
   /// Starts the native Apple Sign-In flow, handles the response,
   /// and either returns early via `onOAuthSuccess` or completes authentication internally.
+  /// If a serviceId (web/Android client ID) is configured, it is added to `secondaryClientIds`
+  /// so web and Android can work later.
   ///
   /// - Parameters:
   ///   - secondaryClientIds: Additional client IDs to register as secondary OAuth providers during sub-organization creation.
@@ -297,8 +299,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     let oidcToken = try await performNativeAppleSignIn(nonce: nonce)
 
     // on iOS, the native flow uses the bundle ID as the primary audience
-    // we prepend the serviceId to the secondary client IDs  so it gets
-    // registered as an additional OAuth provider for the sub-org as well
+    // if a serviceId is configured, we add it so web and Android can work later
     var allSecondaryClientIds = secondaryClientIds
     if let serviceId = serviceId {
       allSecondaryClientIds.insert(serviceId, at: 0)
@@ -342,6 +343,8 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
   ///
   /// Starts the OAuth flow in the system browser, handles the redirect response,
   /// and either returns early via `onOAuthSuccess` or completes authentication internally.
+  /// The app's bundle ID is always added to `secondaryClientIds` so native Apple Sign-In
+  /// can work later.
   ///
   /// - Parameters:
   ///   - anchor: The presentation anchor for the OAuth web session.
@@ -403,11 +406,18 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
       return
     }
 
+    // the web flow uses the serviceId as the primary audience
+    // we add the bundleId so native Apple Sign-In can work later
+    var allSecondaryClientIds = secondaryClientIds
+    if let bundleId = Bundle.main.bundleIdentifier {
+      allSecondaryClientIds.insert(bundleId, at: 0)
+    }
+
     // we build secondary OAuth providers for sub-org creation
     let secondaryProviders = buildSecondaryOauthProviders(
       oidcToken: oidcToken,
       providerName: "apple",
-      secondaryClientIds: secondaryClientIds
+      secondaryClientIds: allSecondaryClientIds
     )
 
     var createSubOrgParams: CreateSubOrgParams? = nil
