@@ -29,6 +29,7 @@ public final class TurnkeyContext: NSObject, ObservableObject {
   internal let rpId: String?
   internal let organizationId: String?
   internal weak var oauthAnchor: ASPresentationAnchor?
+  internal var appleSignInDelegate: AppleSignInDelegate?
 
   // Single user config captured at configure-time
   private static var _config: TurnkeyConfig = TurnkeyConfig()

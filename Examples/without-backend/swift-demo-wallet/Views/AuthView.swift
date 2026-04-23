@@ -102,13 +102,8 @@ struct AuthView: View {
 
     private func handleLoginWithApple() {
         Task {
-            guard let anchor = defaultAnchor() else {
-                toast.show(message: "No window available", type: .error)
-                return
-            }
-
             do {
-                try await turnkey.handleAppleOAuth(anchor: anchor)
+                try await turnkey.handleAppleOAuth()
             } catch {
                 let message = formatError(error, fallback: "Failed to log in with Apple")
                 print("[AuthView] Apple login error: \(message)")
