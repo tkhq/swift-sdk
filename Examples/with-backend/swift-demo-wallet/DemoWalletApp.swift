@@ -16,7 +16,7 @@ struct DemoWalletApp: App {
                 oauth: .init(
                     appScheme: Constants.App.scheme,
                     providers: .init(
-                        google: .init(clientId: Constants.Google.clientId)
+                        google: .init(primaryClientId: .init(webClientId: Constants.Google.clientId))
                     )
                 )
             )

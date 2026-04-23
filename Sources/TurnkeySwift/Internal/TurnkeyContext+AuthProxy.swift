@@ -2,6 +2,15 @@ import Foundation
 import TurnkeyHttp
 import TurnkeyTypes
 
+enum RedirectFallback {
+  /// Falls back to a scheme-based redirect URI (e.g., `myapp://`).
+  case scheme(String)
+  /// Falls back to the base redirect URL with the app scheme as a query parameter.
+  case baseUrl(redirectBaseUrl: String, appScheme: String?)
+  /// No fallback; leaves the redirect URI empty.
+  case none
+}
+
 extension TurnkeyContext {
   @MainActor
   internal func setRuntimeConfig(_ config: TurnkeyRuntimeConfig) {
@@ -58,36 +67,51 @@ extension TurnkeyContext {
     let appScheme = userConfig.auth?.oauth?.appScheme
 
     // we resolve per-provider OAuth info
-    var resolvedProviders: [String: TurnkeyRuntimeConfig.Auth.Oauth.Provider] = [:]
     let proxyClientIds = walletKitConfig?.oauthClientIds ?? [:]
-    let providers = ["google", "apple", "x", "discord"]
-    for provider in providers {
-      let override: TurnkeyConfig.Auth.Oauth.ProviderOverride? = {
-        switch provider {
-        case "google": return userConfig.auth?.oauth?.providers?.google
-        case "apple": return userConfig.auth?.oauth?.providers?.apple
-        case "x": return userConfig.auth?.oauth?.providers?.x
-        case "discord": return userConfig.auth?.oauth?.providers?.discord
-        default: return nil
-        }
-      }()
+    let baseUrlFallback: RedirectFallback = .baseUrl(
+      redirectBaseUrl: redirectBaseUrl, appScheme: appScheme)
+    let schemeFallback: RedirectFallback =
+      if let scheme = appScheme, !scheme.isEmpty { .scheme(scheme) } else { .none }
 
-      let clientId = override?.clientId ?? proxyClientIds[provider]
+    let resolvedGoogle = GoogleOAuthProviderParams(
+      primaryClientId: .init(
+        webClientId: userConfig.auth?.oauth?.providers?.google?.primaryClientId?.webClientId
+          ?? proxyClientIds["google"]
+      ),
+      secondaryClientIds: userConfig.auth?.oauth?.providers?.google?.secondaryClientIds,
+      redirectUri: Self.resolveRedirect(
+        userConfig.auth?.oauth?.providers?.google?.redirectUri,
+        fallback: baseUrlFallback)
+    )
 
-      // for X and Discord, if there is no explicit provider redirect and we have an appScheme
-      // we default to scheme://
-      let providerRedirect: String? = {
-        if let explicit = override?.redirectUri {
-          return explicit
-        }
-        if provider == "x" || provider == "discord", let scheme = appScheme, !scheme.isEmpty {
-          return scheme.hasSuffix("://") ? scheme : "\(scheme)://"
-        }
-        return nil
-      }()
+    let resolvedApple = AppleOAuthProviderParams(
+      primaryClientId: .init(
+        serviceId: userConfig.auth?.oauth?.providers?.apple?.primaryClientId?.serviceId
+          ?? proxyClientIds["apple"]
+      ),
+      secondaryClientIds: userConfig.auth?.oauth?.providers?.apple?.secondaryClientIds,
+      redirectUri: Self.resolveRedirect(
+        userConfig.auth?.oauth?.providers?.apple?.redirectUri,
+        fallback: baseUrlFallback)
+    )
 
-      resolvedProviders[provider] = .init(clientId: clientId, redirectUri: providerRedirect)
-    }
+    let resolvedX = XOAuthProviderParams(
+      primaryClientId: userConfig.auth?.oauth?.providers?.x?.primaryClientId
+        ?? proxyClientIds["x"],
+      secondaryClientIds: userConfig.auth?.oauth?.providers?.x?.secondaryClientIds,
+      redirectUri: Self.resolveRedirect(
+        userConfig.auth?.oauth?.providers?.x?.redirectUri,
+        fallback: schemeFallback)
+    )
+
+    let resolvedDiscord = DiscordOAuthProviderParams(
+      primaryClientId: userConfig.auth?.oauth?.providers?.discord?.primaryClientId
+        ?? proxyClientIds["discord"],
+      secondaryClientIds: userConfig.auth?.oauth?.providers?.discord?.secondaryClientIds,
+      redirectUri: Self.resolveRedirect(
+        userConfig.auth?.oauth?.providers?.discord?.redirectUri,
+        fallback: schemeFallback)
+    )
 
     // we resolve passkey options
     let passkey: TurnkeyRuntimeConfig.Auth.Passkey? = {
@@ -114,7 +138,10 @@ extension TurnkeyContext {
       oauth: .init(
         redirectBaseUrl: redirectBaseUrl,
         appScheme: appScheme,
-        providers: resolvedProviders
+        google: resolvedGoogle,
+        apple: resolvedApple,
+        x: resolvedX,
+        discord: resolvedDiscord
       ),
       autoRefreshSession: userConfig.auth?.autoRefreshSession ?? true,
       passkey: passkey,
@@ -242,4 +269,31 @@ extension TurnkeyContext {
     return expirationSeconds ?? runtimeConfig?.auth.sessionExpirationSeconds
       ?? Constants.Session.defaultExpirationSeconds
   }
+
+  /// Resolves the OAuth redirect URI for a provider.
+  ///
+  /// Returns the explicit redirect URI if provided, or computes a default based on the
+  /// fallback strategy: either a scheme-based URI (e.g., `scheme://`) or a base redirect
+  /// URL with the app scheme as a query parameter (e.g., `redirectBaseUrl?scheme=appScheme`).
+  ///
+  /// - Parameters:
+  ///   - redirectUriFromConfig: The redirect URI from the user's provider configuration.
+  ///   - fallback: The fallback strategy when no explicit redirect URI is provided.
+  /// - Returns: The fully resolved redirect URI.
+  private static func resolveRedirect(
+    _ redirectUriFromConfig: String?, fallback: RedirectFallback
+  ) -> String {
+    if let explicit = redirectUriFromConfig {
+      return explicit
+    }
+    switch fallback {
+    case .scheme(let scheme):
+      return scheme.hasSuffix("://") ? scheme : "\(scheme)://"
+    case .baseUrl(let redirectBaseUrl, let appScheme):
+      return "\(redirectBaseUrl)?scheme=\(appScheme ?? "")"
+    case .none:
+      return ""
+    }
+  }
+
 }

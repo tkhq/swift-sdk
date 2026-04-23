@@ -4,7 +4,43 @@ import Foundation
 import Security
 import TurnkeyTypes
 
+internal struct OidcPayload: Decodable {
+  let iss: String
+  let sub: String
+}
+
 extension TurnkeyContext {
+
+  /// Builds secondary OAuth provider entries for sub-organization creation.
+  ///
+  /// Decodes the OIDC token to extract `iss` and `sub` claims, then creates a
+  /// `v1OauthProviderParamsV2` entry for each secondary client ID using `oidcClaims`
+  /// with that client ID as the `aud`.
+  ///
+  /// - Parameters:
+  ///   - oidcToken: The OIDC token from the primary authentication.
+  ///   - providerName: The base provider name (e.g. "apple").
+  ///   - secondaryClientIds: Additional client IDs to register as providers.
+  ///
+  /// - Returns: An array of `v1OauthProviderParamsV2` for each secondary client ID.
+  internal func buildSecondaryOauthProviders(
+    oidcToken: String,
+    providerName: String,
+    secondaryClientIds: [String]
+  ) -> [v1OauthProviderParamsV2] {
+    guard !secondaryClientIds.isEmpty else { return [] }
+
+    guard let payload = try? JWTDecoder.decode(oidcToken, as: OidcPayload.self) else {
+      return []
+    }
+
+    return secondaryClientIds.map { clientId in
+      v1OauthProviderParamsV2(
+        providerName: providerName,
+        oneOf: .oidcClaims(v1OidcClaims(aud: clientId, iss: payload.iss, sub: payload.sub))
+      )
+    }
+  }
 
   /// Builds an OAuth URL for initiating a login or signup flow.
   ///
@@ -29,33 +65,27 @@ extension TurnkeyContext {
     additionalState: [String: String]?
   ) throws -> URL {
     let finalOriginUri = Constants.Turnkey.oauthOriginUrl
-    // Encode nested redirectUri like encodeURIComponent
-    let allowedUnreserved = CharacterSet(
-      charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
-    let encodedRedirectUri =
-      redirectUri.addingPercentEncoding(withAllowedCharacters: allowedUnreserved) ?? redirectUri
 
     var comps = URLComponents(string: finalOriginUri)!
     var items: [URLQueryItem] = [
       URLQueryItem(name: "provider", value: provider),
       URLQueryItem(name: "clientId", value: clientId),
-      URLQueryItem(name: "redirectUri", value: encodedRedirectUri),
+      URLQueryItem(name: "redirectUri", value: redirectUri),
       URLQueryItem(name: "nonce", value: nonce),
     ]
     if let state = additionalState, !state.isEmpty {
       for (k, v) in state {
-        let ev = v.addingPercentEncoding(withAllowedCharacters: allowedUnreserved) ?? v
-        items.append(URLQueryItem(name: k, value: ev))
+        items.append(URLQueryItem(name: k, value: v))
       }
     }
-    comps.percentEncodedQueryItems = items
+    comps.queryItems = items
     guard let url = comps.url else { throw TurnkeySwiftError.oauthInvalidURL }
     return url
   }
 
-  /// Runs an OAuth session and retrieves the OIDC token.
+  /// Runs a web-based OAuth session and retrieves the OIDC token.
   ///
-  /// Opens a system browser using `ASWebAuthenticationSession` to complete an OAuth flow,
+  /// Opens the system browser using `ASWebAuthenticationSession` to complete an OAuth flow,
   /// then extracts and returns the `id_token` (OIDC token) from the redirect URL upon successful authentication.
   ///
   /// - Parameters:
@@ -71,20 +101,20 @@ extension TurnkeyContext {
   /// - Throws:
   ///   - `TurnkeySwiftError.failedToRetrieveOAuthCredential` if the OAuth flow fails or is cancelled.
   ///   - `TurnkeySwiftError.oauthMissingIDToken` if the redirect URL does not include an `id_token`.
-  internal func runOAuthSession(
+  internal func runWebOAuthSession(
     provider: String,
     clientId: String,
+    redirectUri: String,
     scheme: String,
     anchor: ASPresentationAnchor,
     nonce: String,
     additionalState: [String: String]? = nil
   ) async throws -> String {
     self.oauthAnchor = anchor
-    let settings = try getOAuthProviderSettings(provider: provider)
     let url = try buildOAuthURL(
       provider: provider,
       clientId: clientId,
-      redirectUri: settings.redirectUri,
+      redirectUri: redirectUri,
       nonce: nonce,
       additionalState: additionalState
     )
@@ -241,28 +271,74 @@ extension TurnkeyContext {
     }
   }
 
-  /// Resolves OAuth provider configuration for the given provider.
+  /// Performs native Apple Sign-In using `ASAuthorizationAppleIDProvider`.
   ///
-  /// Uses runtime and user configuration to determine client ID, redirect URI,
-  /// and app scheme for a specific OAuth provider.
+  /// Apple's native flow SHA256-hashes the nonce internally, so the raw public key
+  /// should be passed as the nonce parameter.
   ///
-  /// - Parameter provider: The provider identifier (e.g., "google", "apple", "x", "discord").
-  /// - Returns: A tuple containing the resolved `clientId`, `redirectUri`, and `appScheme`.
+  /// - Parameter nonce: The nonce value (typically the raw public key).
   ///
-  /// - Throws: Never directly, but may return empty values if configuration is incomplete.
-  internal func getOAuthProviderSettings(provider: String) throws -> (
-    clientId: String, redirectUri: String, appScheme: String
-  ) {
-    let providerInfo = runtimeConfig?.auth.oauth.providers[provider]
-    let clientId = providerInfo?.clientId ?? ""
-    let appScheme = runtimeConfig?.auth.oauth.appScheme ?? ""
-    let redirectBase =
-      runtimeConfig?.auth.oauth.redirectBaseUrl ?? Constants.Turnkey.oauthRedirectUrl
-    let redirectUri =
-      (providerInfo?.redirectUri?.isEmpty == false)
-      ? (providerInfo!.redirectUri!)
-      : "\(redirectBase)?scheme=\(appScheme)"
+  /// - Returns: The identity token (OIDC token) from Apple.
+  ///
+  /// - Throws:
+  ///   - `TurnkeySwiftError.failedToRetrieveOAuthCredential` if the sign-in fails.
+  ///   - `TurnkeySwiftError.oauthMissingIDToken` if no identity token is returned.
+  internal func performNativeAppleSignIn(nonce: String) async throws -> String {
+    let provider = ASAuthorizationAppleIDProvider()
+    let request = provider.createRequest()
+    request.requestedScopes = [.fullName, .email]
+    request.nonce = nonce
 
-    return (clientId: clientId, redirectUri: redirectUri, appScheme: appScheme)
+    return try await withCheckedThrowingContinuation { continuation in
+      let delegate = AppleSignInDelegate { [weak self] in
+        self?.appleSignInDelegate = nil
+      }
+      delegate.continuation = continuation
+      self.appleSignInDelegate = delegate
+      let controller = ASAuthorizationController(authorizationRequests: [request])
+      controller.delegate = delegate
+      controller.presentationContextProvider = self
+      controller.performRequests()
+    }
+  }
+
+}
+
+/// Internal delegate class that bridges `ASAuthorizationControllerDelegate` callbacks
+/// into a `CheckedContinuation` for async/await usage.
+internal final class AppleSignInDelegate: NSObject, ASAuthorizationControllerDelegate,
+  @unchecked
+  Sendable
+{
+  nonisolated(unsafe) var continuation: CheckedContinuation<String, Error>?
+  private let cleanup: @Sendable () -> Void
+
+  nonisolated init(cleanup: @escaping @Sendable () -> Void) {
+    self.cleanup = cleanup
+    super.init()
+  }
+
+  nonisolated func authorizationController(
+    controller: ASAuthorizationController,
+    didCompleteWithAuthorization authorization: ASAuthorization
+  ) {
+    defer { cleanup() }
+    guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+      let identityTokenData = credential.identityToken,
+      let oidcToken = String(data: identityTokenData, encoding: .utf8)
+    else {
+      continuation?.resume(throwing: TurnkeySwiftError.oauthMissingIDToken)
+      return
+    }
+    continuation?.resume(returning: oidcToken)
+  }
+
+  nonisolated func authorizationController(
+    controller: ASAuthorizationController, didCompleteWithError error: Error
+  ) {
+    defer { cleanup() }
+    continuation?.resume(
+      throwing: TurnkeySwiftError.failedToRetrieveOAuthCredential(
+        type: .oidcToken, underlying: error))
   }
 }

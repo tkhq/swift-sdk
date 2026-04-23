@@ -178,6 +178,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
   /// - Parameters:
   ///   - anchor: The presentation anchor for the OAuth web session.
   ///   - clientId: Optional Google OAuth client ID override.
+  ///   - secondaryClientIds: Additional client IDs to register as secondary OAuth providers during sub-organization creation.
   ///   - sessionKey: Optional session key returned from the OAuth redirect.
   ///   - additionalState: Optional key-value pairs appended to the OAuth request state.
   ///   - onOAuthSuccess: Optional callback invoked with the OIDC token and public key before auto-login.
@@ -189,6 +190,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
   public func handleGoogleOAuth(
     anchor: ASPresentationAnchor,
     clientId: String? = nil,
+    secondaryClientIds: [String]? = nil,
     sessionKey: String? = nil,
     additionalState: [String: String]? = nil,
     onOAuthSuccess: (@Sendable (OAuthSuccess) -> Void)? = nil
@@ -200,21 +202,27 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     let nonce = SHA256.hash(data: nonceData).map { String(format: "%02x", $0) }.joined()
 
     // we resolve the provider settings
-    let settings = try getOAuthProviderSettings(provider: "google")
-    let clientId = clientId ?? settings.clientId
-    let scheme = settings.appScheme
+    let oauth = runtimeConfig?.auth.oauth
+    let clientId = clientId ?? oauth?.google?.primaryClientId?.webClientId ?? ""
+    let redirectUri = oauth?.google?.redirectUri ?? ""
+    let scheme = oauth?.appScheme ?? ""
+    let secondaryClientIds = secondaryClientIds ?? oauth?.google?.secondaryClientIds ?? []
 
     guard !clientId.isEmpty else {
-      throw TurnkeySwiftError.invalidConfiguration("Missing clientId for Google OAuth")
+      throw TurnkeySwiftError.invalidConfiguration("Missing webClientId for Google OAuth")
+    }
+    guard !redirectUri.isEmpty else {
+      throw TurnkeySwiftError.invalidConfiguration("Missing redirectUri for Google OAuth")
     }
     guard !scheme.isEmpty else {
       throw TurnkeySwiftError.invalidConfiguration("Missing app scheme for OAuth redirect")
     }
 
     // we start OAuth flow in the system browser and get an oidcToken
-    let oidcToken = try await runOAuthSession(
+    let oidcToken = try await runWebOAuthSession(
       provider: "google",
       clientId: clientId,
+      redirectUri: redirectUri,
       scheme: scheme,
       anchor: anchor,
       nonce: nonce,
@@ -228,12 +236,105 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
       return
     }
 
+    // we build secondary OAuth providers for sub-org creation
+    let secondaryProviders = buildSecondaryOauthProviders(
+      oidcToken: oidcToken,
+      providerName: "google",
+      secondaryClientIds: secondaryClientIds
+    )
+
+    var createSubOrgParams: CreateSubOrgParams? = nil
+    if !secondaryProviders.isEmpty {
+      var params = runtimeConfig?.auth.createSuborgParams?.oauth ?? CreateSubOrgParams()
+      var providers = params.oauthProviders ?? []
+      providers.append(contentsOf: secondaryProviders)
+      params.oauthProviders = providers
+      createSubOrgParams = params
+    }
+
     // since theres no onOAuthSuccess then we handle auth for them
     // via the authProxy
     try await completeOAuth(
       oidcToken: oidcToken,
       publicKey: publicKey,
       providerName: "google",
+      createSubOrgParams: createSubOrgParams,
+      sessionKey: sessionKey
+    )
+  }
+
+  /// Launches the native Apple Sign-In flow, retrieves the OIDC token, and completes login or signup.
+  ///
+  /// Starts the native Apple Sign-In flow, handles the response,
+  /// and either returns early via `onOAuthSuccess` or completes authentication internally.
+  /// If a serviceId (web/Android client ID) is configured, it is added to `secondaryClientIds`
+  /// so web and Android can work later.
+  ///
+  /// - Parameters:
+  ///   - secondaryClientIds: Additional client IDs to register as secondary OAuth providers during sub-organization creation.
+  ///   - sessionKey: Optional session key returned from the OAuth redirect.
+  ///   - onOAuthSuccess: Optional callback invoked with the OIDC token and public key before auto-login.
+  ///
+  /// - Throws:
+  ///   - `TurnkeySwiftError.failedToRetrieveOAuthCredential` if Apple Sign-In fails.
+  ///   - `TurnkeySwiftError.oauthMissingIDToken` if no identity token is returned.
+  ///   - `TurnkeySwiftError.failedToCompleteOAuth` if login or signup via Auth Proxy fails.
+  public func handleAppleOAuth(
+    secondaryClientIds: [String]? = nil,
+    sessionKey: String? = nil,
+    onOAuthSuccess: (@Sendable (OAuthSuccess) -> Void)? = nil
+  ) async throws {
+
+    // we create a keypair and compute the nonce based on the publicKey
+    let publicKey = try createKeyPair()
+    let nonceData = Data(publicKey.utf8)
+    let nonce = SHA256.hash(data: nonceData).map { String(format: "%02x", $0) }.joined()
+
+    // we resolve the provider settings
+    let settings = runtimeConfig?.auth.oauth.apple
+    let serviceId = settings?.primaryClientId?.serviceId
+    let secondaryClientIds = secondaryClientIds ?? settings?.secondaryClientIds ?? []
+
+    // we start native Apple Sign-In and get an oidcToken
+    let oidcToken = try await performNativeAppleSignIn(nonce: nonce)
+
+    // on iOS, the native flow uses the bundle ID as the primary audience
+    // if a serviceId is configured, we add it so web and Android can work later
+    var allSecondaryClientIds = secondaryClientIds
+    if let serviceId = serviceId {
+      allSecondaryClientIds.insert(serviceId, at: 0)
+    }
+
+    // if onOAuthSuccess was passed in then we run the callback
+    // and then return early
+    if let callback = onOAuthSuccess {
+      callback(.init(oidcToken: oidcToken, providerName: "apple", publicKey: publicKey))
+      return
+    }
+
+    // we build secondary OAuth providers for sub-org creation
+    let secondaryProviders = buildSecondaryOauthProviders(
+      oidcToken: oidcToken,
+      providerName: "apple",
+      secondaryClientIds: allSecondaryClientIds
+    )
+
+    var createSubOrgParams: CreateSubOrgParams? = nil
+    if !secondaryProviders.isEmpty {
+      var params = runtimeConfig?.auth.createSuborgParams?.oauth ?? CreateSubOrgParams()
+      var providers = params.oauthProviders ?? []
+      providers.append(contentsOf: secondaryProviders)
+      params.oauthProviders = providers
+      createSubOrgParams = params
+    }
+
+    // since theres no onOAuthSuccess then we handle auth for them
+    // via the authProxy
+    try await completeOAuth(
+      oidcToken: oidcToken,
+      publicKey: publicKey,
+      providerName: "apple",
+      createSubOrgParams: createSubOrgParams,
       sessionKey: sessionKey
     )
   }
@@ -242,10 +343,13 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
   ///
   /// Starts the OAuth flow in the system browser, handles the redirect response,
   /// and either returns early via `onOAuthSuccess` or completes authentication internally.
+  /// The app's bundle ID is always added to `secondaryClientIds` so native Apple Sign-In
+  /// can work later.
   ///
   /// - Parameters:
   ///   - anchor: The presentation anchor for the OAuth web session.
   ///   - clientId: Optional Apple OAuth client ID override.
+  ///   - secondaryClientIds: Additional client IDs to register as secondary OAuth providers during sub-organization creation.
   ///   - sessionKey: Optional session key returned from the OAuth redirect.
   ///   - additionalState: Optional key-value pairs appended to the OAuth request state.
   ///   - onOAuthSuccess: Optional callback invoked with the OIDC token and public key before auto-login.
@@ -254,9 +358,10 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
   ///   - `TurnkeySwiftError.invalidConfiguration` if required provider settings are missing.
   ///   - `TurnkeySwiftError.failedToRetrieveOAuthCredential` if the OAuth session fails.
   ///   - `TurnkeySwiftError.failedToCompleteOAuth` if login or signup via Auth Proxy fails.
-  public func handleAppleOAuth(
+  public func handleAppleWebOauth(
     anchor: ASPresentationAnchor,
     clientId: String? = nil,
+    secondaryClientIds: [String]? = nil,
     sessionKey: String? = nil,
     additionalState: [String: String]? = nil,
     onOAuthSuccess: (@Sendable (OAuthSuccess) -> Void)? = nil
@@ -267,21 +372,27 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     let nonce = SHA256.hash(data: nonceData).map { String(format: "%02x", $0) }.joined()
 
     // we resolve the provider settings
-    let settings = try getOAuthProviderSettings(provider: "apple")
-    let clientId = clientId ?? settings.clientId
-    let scheme = settings.appScheme
+    let oauth = runtimeConfig?.auth.oauth
+    let clientId = clientId ?? oauth?.apple?.primaryClientId?.serviceId ?? ""
+    let redirectUri = oauth?.apple?.redirectUri ?? ""
+    let scheme = oauth?.appScheme ?? ""
+    let secondaryClientIds = secondaryClientIds ?? oauth?.apple?.secondaryClientIds ?? []
 
     guard !clientId.isEmpty else {
-      throw TurnkeySwiftError.invalidConfiguration("Missing clientId for Apple OAuth")
+      throw TurnkeySwiftError.invalidConfiguration("Missing serviceId for Apple OAuth")
+    }
+    guard !redirectUri.isEmpty else {
+      throw TurnkeySwiftError.invalidConfiguration("Missing redirectUri for Apple OAuth")
     }
     guard !scheme.isEmpty else {
       throw TurnkeySwiftError.invalidConfiguration("Missing app scheme for OAuth redirect")
     }
 
     // we start OAuth flow in the system browser and get an oidcToken
-    let oidcToken = try await runOAuthSession(
+    let oidcToken = try await runWebOAuthSession(
       provider: "apple",
       clientId: clientId,
+      redirectUri: redirectUri,
       scheme: scheme,
       anchor: anchor,
       nonce: nonce,
@@ -295,12 +406,36 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
       return
     }
 
+    // the web flow uses the serviceId as the primary audience
+    // we add the bundleId so native Apple Sign-In can work later
+    var allSecondaryClientIds = secondaryClientIds
+    if let bundleId = Bundle.main.bundleIdentifier {
+      allSecondaryClientIds.insert(bundleId, at: 0)
+    }
+
+    // we build secondary OAuth providers for sub-org creation
+    let secondaryProviders = buildSecondaryOauthProviders(
+      oidcToken: oidcToken,
+      providerName: "apple",
+      secondaryClientIds: allSecondaryClientIds
+    )
+
+    var createSubOrgParams: CreateSubOrgParams? = nil
+    if !secondaryProviders.isEmpty {
+      var params = runtimeConfig?.auth.createSuborgParams?.oauth ?? CreateSubOrgParams()
+      var providers = params.oauthProviders ?? []
+      providers.append(contentsOf: secondaryProviders)
+      params.oauthProviders = providers
+      createSubOrgParams = params
+    }
+
     // since theres no onOAuthSuccess then we handle auth for them
     // via the authProxy
     try await completeOAuth(
       oidcToken: oidcToken,
       publicKey: publicKey,
       providerName: "apple",
+      createSubOrgParams: createSubOrgParams,
       sessionKey: sessionKey
     )
   }
@@ -314,6 +449,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
   /// - Parameters:
   ///   - anchor: The presentation anchor for the OAuth web session.
   ///   - clientId: Optional Discord OAuth client ID override.
+  ///   - secondaryClientIds: Additional client IDs to register as secondary OAuth providers during sub-organization creation.
   ///   - sessionKey: Optional session key returned from the OAuth redirect.
   ///   - additionalState: Optional key-value pairs appended to the OAuth request state.
   ///   - onOAuthSuccess: Optional callback invoked with the OIDC token and public key before auto-login.
@@ -326,6 +462,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
   public func handleDiscordOAuth(
     anchor: ASPresentationAnchor,
     clientId: String? = nil,
+    secondaryClientIds: [String]? = nil,
     sessionKey: String? = nil,
     additionalState: [String: String]? = nil,
     onOAuthSuccess: (@Sendable (OAuthSuccess) -> Void)? = nil
@@ -340,13 +477,14 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     let nonce = SHA256.hash(data: nonceData).map { String(format: "%02x", $0) }.joined()
 
     // we resolve the provider settings
-    let settings = try getOAuthProviderSettings(provider: "discord")
-    let clientId = clientId ?? settings.clientId
-    let redirectUri = settings.redirectUri
-    let scheme = settings.appScheme
+    let oauthConfig = runtimeConfig?.auth.oauth
+    let clientId = clientId ?? oauthConfig?.discord?.primaryClientId ?? ""
+    let redirectUri = oauthConfig?.discord?.redirectUri ?? ""
+    let scheme = oauthConfig?.appScheme ?? ""
+    let secondaryClientIds = secondaryClientIds ?? oauthConfig?.discord?.secondaryClientIds ?? []
 
     guard !clientId.isEmpty else {
-      throw TurnkeySwiftError.invalidConfiguration("Missing clientId for Discord OAuth")
+      throw TurnkeySwiftError.invalidConfiguration("Missing primaryClientId for Discord OAuth")
     }
     guard !redirectUri.isEmpty else {
       throw TurnkeySwiftError.invalidConfiguration("Missing redirectUri for OAuth")
@@ -407,12 +545,29 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
       return
     }
 
+    // we build secondary OAuth providers for sub-org creation
+    let secondaryProviders = buildSecondaryOauthProviders(
+      oidcToken: oidcToken,
+      providerName: "discord",
+      secondaryClientIds: secondaryClientIds
+    )
+
+    var createSubOrgParams: CreateSubOrgParams? = nil
+    if !secondaryProviders.isEmpty {
+      var params = runtimeConfig?.auth.createSuborgParams?.oauth ?? CreateSubOrgParams()
+      var providers = params.oauthProviders ?? []
+      providers.append(contentsOf: secondaryProviders)
+      params.oauthProviders = providers
+      createSubOrgParams = params
+    }
+
     // since theres no onOAuthSuccess then we handle auth for them
     // via the authProxy
     try await completeOAuth(
       oidcToken: oidcToken,
       publicKey: publicKey,
       providerName: "discord",
+      createSubOrgParams: createSubOrgParams,
       sessionKey: sessionKey
     )
   }
@@ -426,8 +581,8 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
   /// - Parameters:
   ///   - anchor: The presentation anchor for the OAuth web session.
   ///   - clientId: Optional X OAuth client ID override.
+  ///   - secondaryClientIds: Additional client IDs to register as secondary OAuth providers during sub-organization creation.
   ///   - sessionKey: Optional session key returned from the OAuth redirect.
-  ///   - sessionKey: Optional session storage key for the resulting session.
   ///   - additionalState: Optional key-value pairs appended to the OAuth request state.
   ///   - onOAuthSuccess: Optional callback invoked with the OIDC token and public key before auto-login.
   ///
@@ -439,6 +594,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
   public func handleXOauth(
     anchor: ASPresentationAnchor,
     clientId: String? = nil,
+    secondaryClientIds: [String]? = nil,
     sessionKey: String? = nil,
     additionalState: [String: String]? = nil,
     onOAuthSuccess: (@Sendable (OAuthSuccess) -> Void)? = nil
@@ -453,13 +609,14 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     let nonce = SHA256.hash(data: nonceData).map { String(format: "%02x", $0) }.joined()
 
     // we resolve the provider settings
-    let settings = try getOAuthProviderSettings(provider: "x")
-    let clientId = clientId ?? settings.clientId
-    let redirectUri = settings.redirectUri
-    let scheme = settings.appScheme
+    let oauthConfig = runtimeConfig?.auth.oauth
+    let clientId = clientId ?? oauthConfig?.x?.primaryClientId ?? ""
+    let redirectUri = oauthConfig?.x?.redirectUri ?? ""
+    let scheme = oauthConfig?.appScheme ?? ""
+    let secondaryClientIds = secondaryClientIds ?? oauthConfig?.x?.secondaryClientIds ?? []
 
     guard !clientId.isEmpty else {
-      throw TurnkeySwiftError.invalidConfiguration("Missing clientId for X OAuth")
+      throw TurnkeySwiftError.invalidConfiguration("Missing primaryClientId for X OAuth")
     }
     guard !redirectUri.isEmpty else {
       throw TurnkeySwiftError.invalidConfiguration("Missing redirectUri for OAuth")
@@ -519,17 +676,41 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
       return
     }
 
+    // we build secondary OAuth providers for sub-org creation
+    let secondaryProviders = buildSecondaryOauthProviders(
+      oidcToken: oidcToken,
+      providerName: "twitter",
+      secondaryClientIds: secondaryClientIds
+    )
+
+    var createSubOrgParams: CreateSubOrgParams? = nil
+    if !secondaryProviders.isEmpty {
+      var params = runtimeConfig?.auth.createSuborgParams?.oauth ?? CreateSubOrgParams()
+      var providers = params.oauthProviders ?? []
+      providers.append(contentsOf: secondaryProviders)
+      params.oauthProviders = providers
+      createSubOrgParams = params
+    }
+
     // since theres no onOAuthSuccess then we handle auth for them
     // via the authProxy
     try await completeOAuth(
       oidcToken: oidcToken,
       publicKey: publicKey,
       providerName: "twitter",
+      createSubOrgParams: createSubOrgParams,
       sessionKey: sessionKey
     )
   }
 
   public func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
+    oauthAnchor ?? ASPresentationAnchor()
+  }
+}
+
+extension TurnkeyContext: ASAuthorizationControllerPresentationContextProviding {
+  public func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor
+  {
     oauthAnchor ?? ASPresentationAnchor()
   }
 }

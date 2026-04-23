@@ -32,17 +32,21 @@ enum Constants {
 
     enum Google {
         static let clientId = "<your_google_client_id>"
+        static let secondaryClientIds: [String] = []
     }
 
     enum Apple {
         static let clientId = "<your_apple_client_id>"
+        static let secondaryClientIds: [String] = []
     }
 
     enum X {
         static let clientId = "<your_x_client_id>"
+        static let secondaryClientIds: [String] = []
     }
 
     enum Discord {
         static let clientId = "<your_discord_client_id>"
+        static let secondaryClientIds: [String] = []
     }
 }

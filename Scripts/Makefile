@@ -1,4 +1,4 @@
-.PHONY: build types clients codegen format format-check clean test test-modern test-stamper
+.PHONY: build types clients codegen clean test test-modern test-stamper
 
 # Build the codegen executables
 build:
@@ -15,23 +15,9 @@ clients: build
 	@cd .. && Scripts/.build/debug/clientgen | grep -E "^(✅|❌)" || true
 
 # Generate everything
-generate: types clients format
+generate: types clients
+	@$(MAKE) -C .. format
 	@echo "✨ Code generation complete!"
-
-# Format all Swift files
-format:
-	@echo "🎨 Formatting..."
-	@swift-format -i -r ../Sources/ ../Tests/ 2>/dev/null
-
-# Check formatting without modifying files (exits non-zero if formatting is needed)
-format-check:
-	@echo "🔍 Checking formatting..."
-	@FAILED=0; \
-	for file in $$(find ../Sources/ ../Tests/ -name '*.swift'); do \
-		swift-format "$$file" 2>/dev/null | diff -q - "$$file" >/dev/null 2>&1 || { echo "❌ $$file needs formatting"; FAILED=1; }; \
-	done; \
-	if [ "$$FAILED" -eq 1 ]; then echo "Run 'make format' to fix."; exit 1; fi
-	@echo "✅ Formatting looks good!"
 
 # Clean build artifacts
 clean:
