@@ -106,18 +106,4 @@ public enum CodegenConfig {
     public static let oneOfFields: [String: [String]] = [
         "v1OauthProviderParamsV2": ["oidcToken", "oidcClaims"],
     ]
-
-    public static let methodsWithOnlyOptionalParameters = [
-        "tGetActivities",
-        "tGetApiKeys",
-        "tGetOrganization",
-        "tGetPolicies",
-        "tGetPrivateKeys",
-        "tGetSubOrgIds",
-        "tGetUsers",
-        "tGetWallets",
-        "tGetWhoami",
-        "tListPrivateKeys",
-        "tListUserTags",
-    ]
 }
