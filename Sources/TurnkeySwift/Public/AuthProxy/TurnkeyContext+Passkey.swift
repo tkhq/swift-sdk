@@ -36,15 +36,11 @@ extension TurnkeyContext {
       throw TurnkeySwiftError.invalidConfiguration(
         "Missing rpId; set via TurnkeyContext.configure(rpId:)")
     }
-    let resolvedOrganizationId = organizationId ?? self.organizationId
-    guard let orgId = resolvedOrganizationId, !orgId.isEmpty else {
-      throw TurnkeySwiftError.invalidConfiguration(
-        "Missing organizationId; pass as parameter or set via TurnkeyContext.configure(organizationId:)"
-      )
-    }
+    let orgId = organizationId ?? self.organizationId
     let client = TurnkeyClient(
       rpId: rpId,
       presentationAnchor: anchor,
+      organizationId: orgId,
       baseUrl: apiUrl
     )
 
@@ -161,6 +157,7 @@ extension TurnkeyContext {
       let temporaryClient = TurnkeyClient(
         apiPrivateKey: privateKey,
         apiPublicKey: generatedPublicKey,
+        organizationId: organizationId,
         baseUrl: apiUrl
       )
 

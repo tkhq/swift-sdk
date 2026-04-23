@@ -250,6 +250,7 @@ extension TurnkeyContext {
 
       clientToUse = try TurnkeyClient(
         apiPublicKey: stored.publicKey,
+        organizationId: stored.organizationId,
         baseUrl: apiUrl
       )
       orgId = stored.organizationId

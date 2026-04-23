@@ -27,31 +27,23 @@ public final class TurnkeyContext: NSObject, ObservableObject {
   internal let authProxyUrl: String
   internal let authProxyConfigId: String?
   internal let rpId: String?
-  internal let organizationId: String?
+  internal let organizationId: String
   internal weak var oauthAnchor: ASPresentationAnchor?
   internal var appleSignInDelegate: AppleSignInDelegate?
 
   // Single user config captured at configure-time
-  private static var _config: TurnkeyConfig = TurnkeyConfig()
+  private static var _config: TurnkeyConfig?
 
   public static func configure(_ config: TurnkeyConfig) {
     _config = config
   }
 
-  public static let shared = TurnkeyContext(config: _config)
-
-  private override init() {
-    let cfg = TurnkeyConfig()
-    self.apiUrl = cfg.apiUrl
-    self.authProxyUrl = cfg.authProxyUrl
-    self.authProxyConfigId = cfg.authProxyConfigId
-    self.rpId = cfg.rpId
-    self.organizationId = cfg.organizationId
-    self.userConfig = cfg
-    self.client = nil
-    super.init()
-    self.postInitSetup()
-  }
+  public static let shared: TurnkeyContext = {
+    guard let config = _config else {
+      fatalError("TurnkeyContext.configure() must be called before accessing .shared")
+    }
+    return TurnkeyContext(config: config)
+  }()
 
   private init(config: TurnkeyConfig) {
     self.apiUrl = config.apiUrl
