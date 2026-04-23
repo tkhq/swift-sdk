@@ -11,7 +11,7 @@ internal struct OidcPayload: Decodable {
 
 extension TurnkeyContext {
 
-    /// Builds secondary OAuth provider entries for sub-organization creation.
+  /// Builds secondary OAuth provider entries for sub-organization creation.
   ///
   /// Decodes the OIDC token to extract `iss` and `sub` claims, then creates a
   /// `v1OauthProviderParamsV2` entry for each secondary client ID using `oidcClaims`
@@ -41,7 +41,6 @@ extension TurnkeyContext {
       )
     }
   }
-
 
   /// Builds an OAuth URL for initiating a login or signup flow.
   ///

@@ -297,7 +297,7 @@ extension TurnkeyContext: ASWebAuthenticationPresentationContextProviding {
     let oidcToken = try await performNativeAppleSignIn(nonce: nonce)
 
     // on iOS, the native flow uses the bundle ID as the primary audience
-    // we prepend the serviceId to the secondary client IDs  so it gets 
+    // we prepend the serviceId to the secondary client IDs  so it gets
     // registered as an additional OAuth provider for the sub-org as well
     var allSecondaryClientIds = secondaryClientIds
     if let serviceId = serviceId {
