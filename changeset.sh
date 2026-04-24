@@ -58,9 +58,9 @@ parse_bump() {
 
 parse_description() {
     local file="$1"
+    # Capture everything after the second '---' delimiter, trimming leading/trailing blank lines
     awk 'BEGIN{n=0} /^---$/{n++; next} n>=2{print}' "$file" | \
-        sed '/^[[:space:]]*$/d' | \
-        head -1
+        sed -e '/./,$!d' -e :a -e '/^\n*$/{$d;N;ba' -e '}'
 }
 
 collect_changesets() {
@@ -203,7 +203,12 @@ cmd_changelog() {
     if [[ ${#major_changes[@]} -gt 0 ]]; then
         section+="### Major Changes"$'\n\n'
         for entry in "${major_changes[@]}"; do
-            section+="- $entry"$'\n'
+            # Multi-line entries are rendered as-is; single-line as bullet
+            if [[ "$entry" == *$'\n'* ]]; then
+                section+="$entry"$'\n\n'
+            else
+                section+="- $entry"$'\n'
+            fi
         done
         section+=$'\n'
     fi
@@ -211,7 +216,11 @@ cmd_changelog() {
     if [[ ${#minor_changes[@]} -gt 0 ]]; then
         section+="### Minor Changes"$'\n\n'
         for entry in "${minor_changes[@]}"; do
-            section+="- $entry"$'\n'
+            if [[ "$entry" == *$'\n'* ]]; then
+                section+="$entry"$'\n\n'
+            else
+                section+="- $entry"$'\n'
+            fi
         done
         section+=$'\n'
     fi
@@ -219,7 +228,11 @@ cmd_changelog() {
     if [[ ${#patch_changes[@]} -gt 0 ]]; then
         section+="### Patch Changes"$'\n\n'
         for entry in "${patch_changes[@]}"; do
-            section+="- $entry"$'\n'
+            if [[ "$entry" == *$'\n'* ]]; then
+                section+="$entry"$'\n\n'
+            else
+                section+="- $entry"$'\n'
+            fi
         done
         section+=$'\n'
     fi
