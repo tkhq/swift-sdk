@@ -225,8 +225,9 @@ extension TurnkeyContext {
   internal func makeAuthProxyClientIfNeeded() -> TurnkeyClient? {
     if let configId = self.authProxyConfigId {
       return TurnkeyClient(
-        authProxyConfigId: configId,
-        authProxyUrl: self.authProxyUrl
+        organizationId: self.organizationId,
+        authProxyUrl: self.authProxyUrl,
+        authProxyConfigId: configId
       )
     } else {
       return nil
@@ -247,12 +248,14 @@ extension TurnkeyContext {
       return try TurnkeyClient(
         apiPublicKey: apiPublicKey,
         authProxyConfigId: authProxyConfigId,
+        organizationId: self.organizationId,
         baseUrl: apiUrl,
         authProxyUrl: authProxyUrl
       )
     } else {
       return try TurnkeyClient(
         apiPublicKey: apiPublicKey,
+        organizationId: self.organizationId,
         baseUrl: apiUrl
       )
     }

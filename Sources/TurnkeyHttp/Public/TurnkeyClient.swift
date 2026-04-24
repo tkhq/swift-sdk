@@ -23,18 +23,21 @@ public struct TurnkeyClient {
 
   // Configuration
   internal let baseUrl: String
+  internal let organizationId: String
   internal let authProxyUrl: String?
   internal let authProxyConfigId: String?
   internal let stamper: Stamper?
   internal let activityPoller: ActivityPollerConfig
 
   public init(
+    organizationId: String,
     baseUrl: String = TurnkeyClient.baseURLString,
     authProxyUrl: String? = nil,
     authProxyConfigId: String? = nil,
     stamper: Stamper? = nil,
     activityPoller: ActivityPollerConfig = ActivityPollerConfig()
   ) {
+    self.organizationId = organizationId
     self.baseUrl = baseUrl
     self.authProxyUrl = authProxyUrl
     self.authProxyConfigId = authProxyConfigId
@@ -47,16 +50,19 @@ public struct TurnkeyClient {
   /// - Parameters:
   ///   - apiPrivateKey: The hex-encoded API private key.
   ///   - apiPublicKey: The hex-encoded API public key.
+  ///   - organizationId: The Turnkey organization ID to use as the default for all requests.
   ///   - baseUrl: Optional base URL (defaults to Turnkey production).
   ///   - activityPoller: Optional activity polling configuration.
   public init(
     apiPrivateKey: String,
     apiPublicKey: String,
+    organizationId: String,
     baseUrl: String = TurnkeyClient.baseURLString,
     activityPoller: ActivityPollerConfig = ActivityPollerConfig()
   ) {
     let stamper = Stamper(apiPublicKey: apiPublicKey, apiPrivateKey: apiPrivateKey)
     self.init(
+      organizationId: organizationId,
       baseUrl: baseUrl,
       stamper: stamper,
       activityPoller: activityPoller
@@ -70,15 +76,18 @@ public struct TurnkeyClient {
   ///
   /// - Parameters:
   ///   - apiPublicKey: The hex-encoded API public key (compressed) whose private key is stored on-device.
+  ///   - organizationId: The Turnkey organization ID to use as the default for all requests.
   ///   - baseUrl: Optional base URL (defaults to Turnkey production).
   ///   - activityPoller: Optional activity polling configuration.
   public init(
     apiPublicKey: String,
+    organizationId: String,
     baseUrl: String = TurnkeyClient.baseURLString,
     activityPoller: ActivityPollerConfig = ActivityPollerConfig()
   ) throws {
     let stamper = try Stamper(apiPublicKey: apiPublicKey)
     self.init(
+      organizationId: organizationId,
       baseUrl: baseUrl,
       stamper: stamper,
       activityPoller: activityPoller
@@ -90,14 +99,17 @@ public struct TurnkeyClient {
   /// - Parameters:
   ///   - rpId: The Relying Party ID (must match your app's associated domain config).
   ///   - presentationAnchor: The window or view used to present authentication prompts.
+  ///   - organizationId: The Turnkey organization ID to use as the default for all requests.
   ///   - baseUrl: Optional base URL (defaults to Turnkey production).
   public init(
     rpId: String,
     presentationAnchor: ASPresentationAnchor,
+    organizationId: String,
     baseUrl: String = TurnkeyClient.baseURLString
   ) {
     let stamper = Stamper(rpId: rpId, presentationAnchor: presentationAnchor)
     self.init(
+      organizationId: organizationId,
       baseUrl: baseUrl,
       stamper: stamper
     )
@@ -107,12 +119,15 @@ public struct TurnkeyClient {
   ///
   /// - Parameters:
   ///   - authProxyConfigId: The Auth Proxy config ID to include in requests.
+  ///   - organizationId: The Turnkey organization ID to use as the default for all requests.
   ///   - authProxyUrl: Optional Auth Proxy URL (defaults to Turnkey production).
   public init(
     authProxyConfigId: String,
+    organizationId: String,
     authProxyUrl: String = TurnkeyClient.authProxyBaseURLString
   ) {
     self.init(
+      organizationId: organizationId,
       authProxyUrl: authProxyUrl,
       authProxyConfigId: authProxyConfigId,
       stamper: nil
@@ -125,17 +140,20 @@ public struct TurnkeyClient {
   ///   - apiPrivateKey: The hex-encoded API private key.
   ///   - apiPublicKey: The hex-encoded API public key.
   ///   - authProxyConfigId: The Auth Proxy config ID to include in requests.
+  ///   - organizationId: The Turnkey organization ID to use as the default for all requests.
   ///   - baseUrl: Optional base URL (defaults to Turnkey production).
   ///   - authProxyUrl: Optional Auth Proxy URL (defaults to Turnkey production).
   public init(
     apiPrivateKey: String,
     apiPublicKey: String,
     authProxyConfigId: String,
+    organizationId: String,
     baseUrl: String = TurnkeyClient.baseURLString,
     authProxyUrl: String = TurnkeyClient.authProxyBaseURLString
   ) {
     let stamper = Stamper(apiPublicKey: apiPublicKey, apiPrivateKey: apiPrivateKey)
     self.init(
+      organizationId: organizationId,
       baseUrl: baseUrl,
       authProxyUrl: authProxyUrl,
       authProxyConfigId: authProxyConfigId,
@@ -151,16 +169,19 @@ public struct TurnkeyClient {
   /// - Parameters:
   ///   - apiPublicKey: The hex-encoded API public key (compressed) whose private key is stored on-device.
   ///   - authProxyConfigId: The Auth Proxy config ID to include in requests.
+  ///   - organizationId: The Turnkey organization ID to use as the default for all requests.
   ///   - baseUrl: Optional base URL (defaults to Turnkey production).
   ///   - authProxyUrl: Optional Auth Proxy URL (defaults to Turnkey production).
   public init(
     apiPublicKey: String,
     authProxyConfigId: String,
+    organizationId: String,
     baseUrl: String = TurnkeyClient.baseURLString,
     authProxyUrl: String = TurnkeyClient.authProxyBaseURLString
   ) throws {
     let stamper = try Stamper(apiPublicKey: apiPublicKey)
     self.init(
+      organizationId: organizationId,
       baseUrl: baseUrl,
       authProxyUrl: authProxyUrl,
       authProxyConfigId: authProxyConfigId,
@@ -174,17 +195,20 @@ public struct TurnkeyClient {
   ///   - rpId: The Relying Party ID (must match your app's associated domain config).
   ///   - presentationAnchor: The window or view used to present authentication prompts.
   ///   - authProxyConfigId: The Auth Proxy config ID to include in requests.
+  ///   - organizationId: The Turnkey organization ID to use as the default for all requests.
   ///   - baseUrl: Optional base URL (defaults to Turnkey production).
   ///   - authProxyUrl: Optional Auth Proxy URL (defaults to Turnkey production).
   public init(
     rpId: String,
     presentationAnchor: ASPresentationAnchor,
     authProxyConfigId: String,
+    organizationId: String,
     baseUrl: String = TurnkeyClient.baseURLString,
     authProxyUrl: String = TurnkeyClient.authProxyBaseURLString
   ) {
     let stamper = Stamper(rpId: rpId, presentationAnchor: presentationAnchor)
     self.init(
+      organizationId: organizationId,
       baseUrl: baseUrl,
       authProxyUrl: authProxyUrl,
       authProxyConfigId: authProxyConfigId,

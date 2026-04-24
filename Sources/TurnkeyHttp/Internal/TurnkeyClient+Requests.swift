@@ -15,31 +15,19 @@ private let TERMINAL_ACTIVITY_STATUSES: Set<String> = [
 
 extension TurnkeyClient {
 
-  // MARK: - Query/Request Methods
+  // MARK: - Core HTTP Method
 
-  /// Make a simple HTTP request (for query methods)
-  /// - Parameters:
-  ///   - path: The API endpoint path
-  ///   - body: The request body
-  ///   - stampWith: Optional stamper to use instead of the client's default stamper
-  internal func request<TBody: Codable, TResponse: Codable>(
-    _ path: String,
-    body: TBody,
-    stampWith: Stamper? = nil
-  ) async throws -> TResponse {
-    let stamperToUse = stampWith ?? self.stamper
-    guard let stamper = stamperToUse else {
+  /// Stamp, send, and validate an HTTP request. Returns raw response data.
+  private func stampAndSend(_ path: String, body jsonData: Data) async throws -> Data {
+    guard let stamper = self.stamper else {
       throw TurnkeyRequestError.clientNotConfigured("stamper not configured")
     }
 
     let fullUrl = URL(string: baseUrl + path)!
-    let jsonData = try JSONEncoder().encode(body)
     let jsonString = String(data: jsonData, encoding: .utf8)!
 
-    // Stamp the request
     let (stampHeaderName, stampHeaderValue) = try await stamper.stamp(payload: jsonString)
 
-    // Build request
     var request = URLRequest(url: fullUrl)
     request.httpMethod = "POST"
     request.httpBody = jsonData
@@ -47,10 +35,8 @@ extension TurnkeyClient {
     request.setValue(stampHeaderValue, forHTTPHeaderField: stampHeaderName)
     request.setValue("turnkey-swift/\(sdkVersion)", forHTTPHeaderField: "X-Client-Version")
 
-    // Execute request
     let (data, response) = try await URLSession.shared.data(for: request)
 
-    // Check response
     guard let httpResponse = response as? HTTPURLResponse else {
       throw TurnkeyRequestError.invalidResponse
     }
@@ -59,9 +45,23 @@ extension TurnkeyClient {
       throw TurnkeyRequestError.apiError(statusCode: httpResponse.statusCode, payload: data)
     }
 
-    // Decode response
-    let decoder = JSONDecoder()
-    return try decoder.decode(TResponse.self, from: data)
+    return data
+  }
+
+  // MARK: - Query/Request Methods
+
+  /// Make an HTTP request with a `Codable` body.
+  /// Automatically injects the client's `organizationId` if not present in the body.
+  internal func request<TBody: Codable, TResponse: Codable>(
+    _ path: String,
+    body: TBody
+  ) async throws -> TResponse {
+    let bodyData = try JSONEncoder().encode(body)
+    var bodyDict = try JSONSerialization.jsonObject(with: bodyData) as! [String: Any]
+    bodyDict["organizationId"] = (bodyDict["organizationId"] as? String) ?? self.organizationId
+    let jsonData = try JSONSerialization.data(withJSONObject: bodyDict)
+    let data = try await stampAndSend(path, body: jsonData)
+    return try JSONDecoder().decode(TResponse.self, from: data)
   }
 
   // MARK: - Activity Methods
@@ -72,13 +72,11 @@ extension TurnkeyClient {
   ///   - body: The request body (should contain organizationId, timestampMs, and parameters)
   ///   - activityType: The activity type to add to the request
   ///   - resultKey: The key in the activity result to extract
-  ///   - stampWith: Optional stamper to use instead of the client's default stamper
   internal func activity<TBody: Codable, TResponse: Codable>(
     _ path: String,
     body: TBody,
     activityType: String,
-    resultKey: String,
-    stampWith: Stamper? = nil
+    resultKey: String
   ) async throws -> TResponse {
     let pollingDuration = Double(self.activityPoller.intervalMs) / 1000.0
     let maxRetries = self.activityPoller.numRetries
@@ -110,32 +108,8 @@ extension TurnkeyClient {
     // Recursive polling function
     func pollStatus(_ activityId: String) async throws -> TResponse {
       let pollBody = TGetActivityBody(activityId: activityId)
-
-      // Make raw request to get Data
-      let stamperToUse = stampWith ?? self.stamper
-      guard let stamper = stamperToUse else {
-        throw TurnkeyRequestError.clientNotConfigured("stamper not configured")
-      }
-
-      let fullUrl = URL(string: baseUrl + "/public/v1/query/get_activity")!
       let jsonData = try JSONEncoder().encode(pollBody)
-      let jsonString = String(data: jsonData, encoding: .utf8)!
-      let (stampHeaderName, stampHeaderValue) = try await stamper.stamp(payload: jsonString)
-
-      var request = URLRequest(url: fullUrl)
-      request.httpMethod = "POST"
-      request.httpBody = jsonData
-      request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-      request.setValue(stampHeaderValue, forHTTPHeaderField: stampHeaderName)
-      request.setValue("turnkey-swift/\(sdkVersion)", forHTTPHeaderField: "X-Client-Version")
-
-      let (data, response) = try await URLSession.shared.data(for: request)
-
-      guard let httpResponse = response as? HTTPURLResponse,
-        (200...299).contains(httpResponse.statusCode)
-      else {
-        throw TurnkeyRequestError.invalidResponse
-      }
+      let data = try await stampAndSend("/public/v1/query/get_activity", body: jsonData)
 
       if attempts > maxRetries {
         return try handleResponse(data)
@@ -156,33 +130,9 @@ extension TurnkeyClient {
       return try handleResponse(data)
     }
 
-    // Make initial request - get raw Data
-    let stamperToUse = stampWith ?? self.stamper
-    guard let stamper = stamperToUse else {
-      throw TurnkeyRequestError.clientNotConfigured("stamper not configured")
-    }
-
-    let fullUrl = URL(string: baseUrl + path)!
+    // Make initial request
     let jsonData = try JSONEncoder().encode(wrappedBody)
-    let jsonString = String(data: jsonData, encoding: .utf8)!
-    let (stampHeaderName, stampHeaderValue) = try await stamper.stamp(payload: jsonString)
-
-    var request = URLRequest(url: fullUrl)
-    request.httpMethod = "POST"
-    request.httpBody = jsonData
-    request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.setValue(stampHeaderValue, forHTTPHeaderField: stampHeaderName)
-    request.setValue("turnkey-swift/\(sdkVersion)", forHTTPHeaderField: "X-Client-Version")
-
-    let (data, response) = try await URLSession.shared.data(for: request)
-
-    guard let httpResponse = response as? HTTPURLResponse else {
-      throw TurnkeyRequestError.invalidResponse
-    }
-
-    guard (200...299).contains(httpResponse.statusCode) else {
-      throw TurnkeyRequestError.apiError(statusCode: httpResponse.statusCode, payload: data)
-    }
+    let data = try await stampAndSend(path, body: jsonData)
 
     // Check if we need to poll
     if let responseDict = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
@@ -206,7 +156,7 @@ extension TurnkeyClient {
     var bodyDict = try JSONSerialization.jsonObject(with: bodyData) as! [String: Any]
 
     // Extract organizationId and timestampMs if present
-    let organizationId = bodyDict["organizationId"] as? String
+    let organizationId = (bodyDict["organizationId"] as? String) ?? self.organizationId
     let timestampMs =
       bodyDict["timestampMs"] as? String ?? String(Int(Date().timeIntervalSince1970 * 1000))
 
@@ -252,15 +202,12 @@ extension TurnkeyClient {
   /// - Parameters:
   ///   - path: The API endpoint path
   ///   - body: The request body
-  ///   - stampWith: Optional stamper to use instead of the client's default stamper
   internal func activityDecision<TBody: Codable, TResponse: Codable>(
     _ path: String,
     body: TBody,
-    activityType: String,
-    stampWith: Stamper? = nil
+    activityType: String
   ) async throws -> TResponse {
-    // Use the specified stamper for this request
-    let activityData: TActivityResponse = try await request(path, body: body, stampWith: stampWith)
+    let activityData: TActivityResponse = try await request(path, body: body)
 
     // Merge activity.result with activityData
     // This mimics the JS: { ...activityData["activity"]["result"], ...activityData }
@@ -333,7 +280,7 @@ extension TurnkeyClient {
 private struct ActivityRequestWrapper: Codable {
   let type: String
   let timestampMs: String
-  let organizationId: String?
+  let organizationId: String
   let parameters: AnyCodableDict
 }
 

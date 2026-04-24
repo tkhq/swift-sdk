@@ -240,25 +240,25 @@ public struct TurnkeyConfig: Sendable {
   public var authProxyUrl: String
   public var authProxyConfigId: String?
   public var rpId: String?
-  public var organizationId: String?
+  public var organizationId: String
 
   public var auth: Auth?
   public var autoRefreshManagedState: Bool?
 
   public init(
+    organizationId: String,
     apiUrl: String = Constants.Turnkey.defaultApiUrl,
     authProxyUrl: String = Constants.Turnkey.defaultAuthProxyUrl,
     authProxyConfigId: String? = nil,
     rpId: String? = nil,
-    organizationId: String? = nil,
     auth: Auth? = nil,
     autoRefreshManagedState: Bool? = nil
   ) {
+    self.organizationId = organizationId
     self.apiUrl = apiUrl
     self.authProxyUrl = authProxyUrl
     self.authProxyConfigId = authProxyConfigId
     self.rpId = rpId
-    self.organizationId = organizationId
     self.auth = auth
     self.autoRefreshManagedState = autoRefreshManagedState
   }

@@ -8,11 +8,11 @@ struct DemoWalletApp: App {
 
     init() {
         let config = TurnkeyConfig(
+            organizationId: Constants.Turnkey.organizationId,
             apiUrl: Constants.Turnkey.apiUrl,
             authProxyUrl: Constants.Turnkey.authProxyUrl,
             authProxyConfigId: Constants.Turnkey.authProxyConfigId,
             rpId: Constants.App.rpId,
-            organizationId: Constants.Turnkey.organizationId,
             auth: .init(
                 oauth: .init(
                     appScheme: Constants.App.scheme,
