@@ -1,4 +1,4 @@
-# swift-sdk
+# TurnkeySDK
 
 ## Getting Started
 

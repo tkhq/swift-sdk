@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "swift-sdk",
+    name: "TurnkeySDK",
     platforms: [.macOS(.v14), .iOS(.v17), .tvOS(.v16), .watchOS(.v9), .visionOS(.v1)],
     products: [
         .library(name: "TurnkeyEncoding", targets: ["TurnkeyEncoding"]),
