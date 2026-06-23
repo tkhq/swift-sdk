@@ -99,11 +99,16 @@ public enum CodegenConfig {
             intentKey: "v1CreateOauthProvidersIntentV2",
             resultKey: "v1CreateOauthProvidersResultV2"
         ),
+        "ACTIVITY_TYPE_ETH_SEND_TRANSACTION": ActivityVersion(
+            activityType: "ACTIVITY_TYPE_ETH_SEND_TRANSACTION",
+            intentKey: "v1EthSendTransactionIntent",
+            resultKey: "v1EthSendTransactionResult"
+        ),
     ]
 
     // Fields that should be treated as oneOf unions rather than both-optional.
     // Maps swagger type name to the list of field names that form the oneOf group.
     public static let oneOfFields: [String: [String]] = [
-        "v1OauthProviderParamsV2": ["oidcToken", "oidcClaims"],
+        "v1OauthProviderParamsV2": ["oidcToken", "oidcClaims"]
     ]
 }
