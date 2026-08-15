@@ -14,6 +14,7 @@ private struct RecordedRequest {
 private final class LoopbackHTTPServer: @unchecked Sendable {
   private let listenFD: Int32
   private let lock = NSLock()
+  private let serverExited = DispatchGroup()
   private var recorded: [RecordedRequest] = []
   private let respond: @Sendable (String) -> (Int, String?)
   let port: Int
@@ -45,7 +46,9 @@ private final class LoopbackHTTPServer: @unchecked Sendable {
     }
     listenFD = fd
     port = Int(UInt16(bigEndian: boundAddress.sin_port))
+    serverExited.enter()
     Thread.detachNewThread { [self] in
+      defer { serverExited.leave() }
       while true {
         let connection = accept(listenFD, nil, nil)
         if connection < 0 { return }
@@ -57,7 +60,9 @@ private final class LoopbackHTTPServer: @unchecked Sendable {
   var baseUrl: String { "http://127.0.0.1:\(port)" }
 
   func stop() {
+    shutdown(listenFD, SHUT_RDWR)
     close(listenFD)
+    serverExited.wait()
   }
 
   private func handle(_ fd: Int32) {
@@ -155,6 +160,7 @@ struct RedirectBehaviorTests {
       Issue.record("expected redirect refusal")
     } catch let error as TurnkeyRequestError {
       #expect(error == .redirectRefused(statusCode: status, location: "/elsewhere"))
+      #expect(error.statusCode == status)
     }
 
     #expect(server.requests.count == 1)

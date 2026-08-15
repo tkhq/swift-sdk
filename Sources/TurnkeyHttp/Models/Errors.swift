@@ -13,6 +13,7 @@ public enum TurnkeyRequestError: LocalizedError, Sendable, Equatable {
 
   public var statusCode: Int? {
     if case .apiError(let code, _) = self { return code }
+    if case .redirectRefused(let code, _) = self { return code }
     return nil
   }
 
