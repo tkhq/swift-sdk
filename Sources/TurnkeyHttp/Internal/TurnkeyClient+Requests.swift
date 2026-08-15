@@ -5,6 +5,34 @@ import Foundation
 import TurnkeyStamper
 import TurnkeyTypes
 
+private final class SameOriginRedirectDelegate: NSObject, URLSessionTaskDelegate {
+  static let shared = SameOriginRedirectDelegate()
+
+  func urlSession(
+    _ session: URLSession,
+    task: URLSessionTask,
+    willPerformHTTPRedirection response: HTTPURLResponse,
+    newRequest request: URLRequest,
+    completionHandler: @escaping (URLRequest?) -> Void
+  ) {
+    guard let original = task.originalRequest?.url, let target = request.url else {
+      completionHandler(nil)
+      return
+    }
+
+    let originalScheme = original.scheme?.lowercased()
+    let targetScheme = target.scheme?.lowercased()
+    let ports = ["http": 80, "https": 443]
+    let originalPort = original.port ?? originalScheme.flatMap { ports[$0] }
+    let targetPort = target.port ?? targetScheme.flatMap { ports[$0] }
+    let sameOrigin =
+      originalScheme == targetScheme
+      && original.host?.lowercased() == target.host?.lowercased()
+      && originalPort != nil && originalPort == targetPort
+    completionHandler(sameOrigin ? request : nil)
+  }
+}
+
 // Activity status constants
 private let TERMINAL_ACTIVITY_STATUSES: Set<String> = [
   "ACTIVITY_STATUS_COMPLETED",

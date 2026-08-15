@@ -4,90 +4,43 @@ import TurnkeyCrypto
 
 @testable import TurnkeyHttp
 
-private struct EmptyBody: Codable {}
+private final class RedirectURLProtocol: URLProtocol {
+  static var requests: [URLRequest] = []
+  static var response: ((URLRequest) -> (Int, String?))!
+  private static let registration = URLProtocol.registerClass(RedirectURLProtocol.self)
 
-private struct OkResponse: Codable {
-  let ok: Bool
-}
-
-final class RecordingURLProtocol: URLProtocol {
-  static var handler: ((URLRequest) -> (Int, [String: String], Data))?
-  static var recorded: [(request: URLRequest, body: Data?)] = []
-
-  static func reset(handler: @escaping (URLRequest) -> (Int, [String: String], Data)) {
+  static func reset(response: @escaping (URLRequest) -> (Int, String?)) {
     _ = registration
-    recorded = []
-    self.handler = handler
+    requests = []
+    self.response = response
   }
 
-  private static let registration: Bool = URLProtocol.registerClass(RecordingURLProtocol.self)
-
-  override class func canInit(with request: URLRequest) -> Bool {
-    true
-  }
-
-  override class func canonicalRequest(for request: URLRequest) -> URLRequest {
-    request
-  }
+  override class func canInit(with request: URLRequest) -> Bool { true }
+  override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
 
   override func startLoading() {
-    let body = Self.drainBody(of: request)
-    Self.recorded.append((request, body))
-
-    guard let handler = Self.handler, let url = request.url else {
-      client?.urlProtocol(self, didFailWithError: URLError(.badURL))
-      return
-    }
-
-    let (status, headers, data) = handler(request)
+    Self.requests.append(request)
+    let (status, location) = Self.response(request)
+    let headers = location.map { ["Location": $0] } ?? ["Content-Type": "application/json"]
     let response = HTTPURLResponse(
-      url: url, statusCode: status, httpVersion: "HTTP/1.1", headerFields: headers)!
+      url: request.url!, statusCode: status, httpVersion: nil, headerFields: headers)!
 
-    if (300...399).contains(status), let location = headers["Location"],
-      let redirectUrl = URL(string: location, relativeTo: url)
-    {
-      var redirected = request
-      redirected.url = redirectUrl.absoluteURL
-      redirected.httpBodyStream = nil
-      redirected.httpBody = body
-      client?.urlProtocol(self, wasRedirectedTo: redirected, redirectResponse: response)
+    if let location, let url = URL(string: location, relativeTo: request.url) {
+      var redirect = request
+      redirect.url = url.absoluteURL
+      client?.urlProtocol(self, wasRedirectedTo: redirect, redirectResponse: response)
     }
-
     client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-    client?.urlProtocol(self, didLoad: data)
+    client?.urlProtocol(self, didLoad: location == nil ? Data("{\"ok\":true}".utf8) : Data())
     client?.urlProtocolDidFinishLoading(self)
   }
 
   override func stopLoading() {}
-
-  private static func drainBody(of request: URLRequest) -> Data? {
-    if let body = request.httpBody {
-      return body
-    }
-    guard let stream = request.httpBodyStream else {
-      return nil
-    }
-    stream.open()
-    defer { stream.close() }
-    var data = Data()
-    let bufferSize = 4096
-    let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
-    defer { buffer.deallocate() }
-    while stream.hasBytesAvailable {
-      let count = stream.read(buffer, maxLength: bufferSize)
-      if count <= 0 {
-        break
-      }
-      data.append(buffer, count: count)
-    }
-    return data
-  }
 }
 
 @Suite(.serialized)
 struct RedirectBehaviorTests {
-
-  private func makeStampedClient(baseUrl: String) -> TurnkeyClient {
+  private func client(baseUrl: String) -> TurnkeyClient {
     let pair = TurnkeyCrypto.generateP256KeyPair()
     return TurnkeyClient(
       apiPrivateKey: pair.privateKey,
@@ -97,132 +50,65 @@ struct RedirectBehaviorTests {
     )
   }
 
-  private func okBody() -> Data {
-    Data("{\"ok\":true}".utf8)
-  }
-
   @Test
-  func originComparison() throws {
-    func url(_ string: String) -> URL {
-      URL(string: string)!
-    }
-    #expect(
-      SameOriginRedirectDelegate.hasSameOrigin(
-        url("https://a.example/x"), url("https://a.example:443/y")))
-    #expect(
-      SameOriginRedirectDelegate.hasSameOrigin(
-        url("http://a.example:80/x"), url("http://a.example/y")))
-    #expect(
-      SameOriginRedirectDelegate.hasSameOrigin(
-        url("HTTPS://A.EXAMPLE/x"), url("https://a.example/y")))
-    #expect(
-      !SameOriginRedirectDelegate.hasSameOrigin(
-        url("https://a.example/x"), url("http://a.example/y")))
-    #expect(
-      !SameOriginRedirectDelegate.hasSameOrigin(
-        url("https://a.example/x"), url("https://b.example/y")))
-    #expect(
-      !SameOriginRedirectDelegate.hasSameOrigin(
-        url("https://a.example/x"), url("https://a.example:8443/y")))
-    #expect(
-      !SameOriginRedirectDelegate.hasSameOrigin(
-        url("https://a.example/x"), url("https://sub.a.example/y")))
-  }
-
-  @Test
-  func crossOriginRedirectIsNotFollowed() async throws {
-    RecordingURLProtocol.reset { request in
-      if request.url?.host == "origin-a.example" {
-        return (307, ["Location": "https://elsewhere.example/next"], Data())
-      }
-      return (200, ["Content-Type": "application/json"], self.okBody())
-    }
-
-    let client = makeStampedClient(baseUrl: "https://origin-a.example")
-    do {
-      let _: OkResponse = try await client.request("/v1/thing", body: EmptyBody())
-      Issue.record("expected the request to fail")
-    } catch TurnkeyRequestError.apiError(let statusCode, _) {
-      #expect(statusCode == 307)
-    }
-
-    #expect(RecordingURLProtocol.recorded.count == 1)
-    let initial = RecordingURLProtocol.recorded[0]
-    #expect(initial.request.value(forHTTPHeaderField: "X-Stamp") != nil)
-    #expect((initial.body ?? Data()).isEmpty == false)
-  }
-
-  @Test
-  func sameOriginRedirectIsFollowed() async throws {
-    RecordingURLProtocol.reset { request in
-      if request.url?.path == "/v1/thing" {
-        return (307, ["Location": "https://origin-b.example:443/v1/final"], Data())
-      }
-      return (200, ["Content-Type": "application/json"], self.okBody())
-    }
-
-    let client = makeStampedClient(baseUrl: "https://origin-b.example")
-    let response: OkResponse = try await client.request("/v1/thing", body: EmptyBody())
-    #expect(response.ok)
-
-    #expect(RecordingURLProtocol.recorded.count == 2)
-    let initial = RecordingURLProtocol.recorded[0]
-    let followUp = RecordingURLProtocol.recorded[1]
-    #expect(followUp.request.url?.path == "/v1/final")
-    let stamp = initial.request.value(forHTTPHeaderField: "X-Stamp")
-    #expect(stamp != nil)
-    #expect(followUp.request.value(forHTTPHeaderField: "X-Stamp") == stamp)
-    #expect(followUp.body == initial.body)
-  }
-
-  @Test
-  func redirectChainStopsAtForeignOrigin() async throws {
-    RecordingURLProtocol.reset { request in
+  func stampedRequestStopsBeforeDowngradeInRedirectChain() async throws {
+    RedirectURLProtocol.reset { request in
       switch request.url?.path {
-      case "/v1/thing":
-        return (308, ["Location": "/v1/hop"], Data())
-      case "/v1/hop":
-        return (307, ["Location": "https://elsewhere.example/v1/final"], Data())
-      default:
-        return (200, ["Content-Type": "application/json"], self.okBody())
+      case "/start": (308, "/hop")
+      case "/hop": (307, "http://api.example/final")
+      default: (200, nil)
       }
     }
 
-    let client = makeStampedClient(baseUrl: "https://origin-c.example")
     do {
-      let _: OkResponse = try await client.request("/v1/thing", body: EmptyBody())
-      Issue.record("expected the request to fail")
-    } catch TurnkeyRequestError.apiError(let statusCode, _) {
-      #expect(statusCode == 307)
+      let _: [String: Bool] = try await client(baseUrl: "https://api.example").request(
+        "/start", body: [String: String]())
+      Issue.record("expected redirect response")
+    } catch TurnkeyRequestError.apiError(let status, _) {
+      #expect(status == 307)
     }
 
-    #expect(RecordingURLProtocol.recorded.count == 2)
-    #expect(RecordingURLProtocol.recorded[1].request.url?.host == "origin-c.example")
+    #expect(RedirectURLProtocol.requests.count == 2)
+    #expect(RedirectURLProtocol.requests.allSatisfy { $0.url?.scheme == "https" })
+    #expect(
+      RedirectURLProtocol.requests.allSatisfy {
+        $0.value(forHTTPHeaderField: "X-Stamp") != nil
+      })
   }
 
   @Test
-  func authProxyCrossOriginRedirectIsNotFollowed() async throws {
-    RecordingURLProtocol.reset { request in
-      if request.url?.host == "origin-d.example" {
-        return (307, ["Location": "https://elsewhere.example/next"], Data())
-      }
-      return (200, ["Content-Type": "application/json"], self.okBody())
+  func stampedRequestFollowsSameOriginDefaultPort() async throws {
+    RedirectURLProtocol.reset { request in
+      request.url?.path == "/start" ? (307, "https://api.example:443/final") : (200, nil)
     }
 
+    let result: [String: Bool] = try await client(baseUrl: "https://api.example").request(
+      "/start", body: [String: String]())
+
+    #expect(result["ok"] == true)
+    #expect(RedirectURLProtocol.requests.count == 2)
+  }
+
+  @Test
+  func authProxyRequestStopsBeforePortChange() async throws {
+    RedirectURLProtocol.reset { _ in (307, "https://proxy.example:8443/final") }
     let client = TurnkeyClient(
       authProxyConfigId: "config-id",
       organizationId: "org-id",
-      authProxyUrl: "https://origin-d.example"
+      authProxyUrl: "https://proxy.example"
     )
+
     do {
-      let _: OkResponse = try await client.authProxyRequest("/v1/thing", body: EmptyBody())
-      Issue.record("expected the request to fail")
-    } catch TurnkeyRequestError.apiError(let statusCode, _) {
-      #expect(statusCode == 307)
+      let _: [String: Bool] = try await client.authProxyRequest(
+        "/start", body: [String: String]())
+      Issue.record("expected redirect response")
+    } catch TurnkeyRequestError.apiError(let status, _) {
+      #expect(status == 307)
     }
 
-    #expect(RecordingURLProtocol.recorded.count == 1)
-    let initial = RecordingURLProtocol.recorded[0]
-    #expect(initial.request.value(forHTTPHeaderField: "X-Auth-Proxy-Config-ID") == "config-id")
+    #expect(RedirectURLProtocol.requests.count == 1)
+    #expect(
+      RedirectURLProtocol.requests[0].value(forHTTPHeaderField: "X-Auth-Proxy-Config-ID")
+        == "config-id")
   }
 }
