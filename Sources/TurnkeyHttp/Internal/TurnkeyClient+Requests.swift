@@ -5,8 +5,8 @@ import Foundation
 import TurnkeyStamper
 import TurnkeyTypes
 
-private final class SameOriginRedirectDelegate: NSObject, URLSessionTaskDelegate {
-  static let shared = SameOriginRedirectDelegate()
+final class SameOriginRedirectDelegate: NSObject, URLSessionTaskDelegate {
+  private var remainingRedirects = 10
 
   func urlSession(
     _ session: URLSession,
@@ -15,21 +15,28 @@ private final class SameOriginRedirectDelegate: NSObject, URLSessionTaskDelegate
     newRequest request: URLRequest,
     completionHandler: @escaping (URLRequest?) -> Void
   ) {
-    guard let original = task.originalRequest?.url, let target = request.url else {
+    guard remainingRedirects > 0,
+      response.statusCode == 307 || response.statusCode == 308,
+      let original = task.originalRequest?.url,
+      let target = request.url,
+      let originalOrigin = Self.effectiveOrigin(original),
+      Self.effectiveOrigin(target) == originalOrigin
+    else {
       completionHandler(nil)
       return
     }
+    remainingRedirects -= 1
+    completionHandler(request)
+  }
 
-    let originalScheme = original.scheme?.lowercased()
-    let targetScheme = target.scheme?.lowercased()
-    let ports = ["http": 80, "https": 443]
-    let originalPort = original.port ?? originalScheme.flatMap { ports[$0] }
-    let targetPort = target.port ?? targetScheme.flatMap { ports[$0] }
-    let sameOrigin =
-      originalScheme == targetScheme
-      && original.host?.lowercased() == target.host?.lowercased()
-      && originalPort != nil && originalPort == targetPort
-    completionHandler(sameOrigin ? request : nil)
+  static func effectiveOrigin(_ url: URL) -> String? {
+    guard let scheme = url.scheme?.lowercased(),
+      let host = url.host?.lowercased(),
+      let port = url.port ?? ["http": 80, "https": 443][scheme]
+    else {
+      return nil
+    }
+    return "\(scheme)://\(host):\(port)"
   }
 }
 
@@ -64,17 +71,28 @@ extension TurnkeyClient {
     request.setValue("turnkey-swift/\(sdkVersion)", forHTTPHeaderField: "X-Client-Version")
 
     let (data, response) = try await URLSession.shared.data(
-      for: request, delegate: SameOriginRedirectDelegate.shared)
+      for: request, delegate: SameOriginRedirectDelegate())
 
     guard let httpResponse = response as? HTTPURLResponse else {
       throw TurnkeyRequestError.invalidResponse
     }
 
     guard (200...299).contains(httpResponse.statusCode) else {
-      throw TurnkeyRequestError.apiError(statusCode: httpResponse.statusCode, payload: data)
+      throw Self.responseError(httpResponse, data: data)
     }
 
     return data
+  }
+
+  private static func responseError(_ response: HTTPURLResponse, data: Data)
+    -> TurnkeyRequestError
+  {
+    if (300...399).contains(response.statusCode) {
+      return .redirectRefused(
+        statusCode: response.statusCode,
+        location: response.value(forHTTPHeaderField: "Location"))
+    }
+    return .apiError(statusCode: response.statusCode, payload: data)
   }
 
   // MARK: - Query/Request Methods
@@ -287,7 +305,7 @@ extension TurnkeyClient {
 
     // Execute request
     let (data, response) = try await URLSession.shared.data(
-      for: request, delegate: SameOriginRedirectDelegate.shared)
+      for: request, delegate: SameOriginRedirectDelegate())
 
     // Check response
     guard let httpResponse = response as? HTTPURLResponse else {
@@ -295,7 +313,7 @@ extension TurnkeyClient {
     }
 
     guard (200...299).contains(httpResponse.statusCode) else {
-      throw TurnkeyRequestError.apiError(statusCode: httpResponse.statusCode, payload: data)
+      throw Self.responseError(httpResponse, data: data)
     }
 
     // Decode response
