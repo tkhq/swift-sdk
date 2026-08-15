@@ -26,29 +26,30 @@ private final class LoopbackHTTPServer: @unchecked Sendable {
 
   init(respond: @escaping @Sendable (String) -> (Int, String?)) {
     self.respond = respond
-    listenFD = socket(AF_INET, SOCK_STREAM, 0)
+    let fd = socket(AF_INET, SOCK_STREAM, 0)
     var address = sockaddr_in()
     address.sin_family = sa_family_t(AF_INET)
     address.sin_addr = in_addr(s_addr: inet_addr("127.0.0.1"))
     let bound = withUnsafePointer(to: &address) {
       $0.withMemoryRebound(to: sockaddr.self, capacity: 1) {
-        bind(listenFD, $0, socklen_t(MemoryLayout<sockaddr_in>.size))
+        bind(fd, $0, socklen_t(MemoryLayout<sockaddr_in>.size))
       }
     }
-    precondition(bound == 0 && listen(listenFD, 16) == 0)
+    precondition(bound == 0 && listen(fd, 16) == 0)
     var boundAddress = sockaddr_in()
     var length = socklen_t(MemoryLayout<sockaddr_in>.size)
     _ = withUnsafeMutablePointer(to: &boundAddress) {
       $0.withMemoryRebound(to: sockaddr.self, capacity: 1) {
-        getsockname(listenFD, $0, &length)
+        getsockname(fd, $0, &length)
       }
     }
+    listenFD = fd
     port = Int(UInt16(bigEndian: boundAddress.sin_port))
     Thread.detachNewThread { [self] in
       while true {
-        let fd = accept(listenFD, nil, nil)
-        if fd < 0 { return }
-        handle(fd)
+        let connection = accept(listenFD, nil, nil)
+        if connection < 0 { return }
+        handle(connection)
       }
     }
   }
