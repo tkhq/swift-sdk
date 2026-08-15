@@ -35,7 +35,8 @@ extension TurnkeyClient {
     request.setValue(stampHeaderValue, forHTTPHeaderField: stampHeaderName)
     request.setValue("turnkey-swift/\(sdkVersion)", forHTTPHeaderField: "X-Client-Version")
 
-    let (data, response) = try await URLSession.shared.data(for: request)
+    let (data, response) = try await URLSession.shared.data(
+      for: request, delegate: SameOriginRedirectDelegate.shared)
 
     guard let httpResponse = response as? HTTPURLResponse else {
       throw TurnkeyRequestError.invalidResponse
@@ -257,7 +258,8 @@ extension TurnkeyClient {
     request.setValue(authProxyConfigId, forHTTPHeaderField: "X-Auth-Proxy-Config-ID")
 
     // Execute request
-    let (data, response) = try await URLSession.shared.data(for: request)
+    let (data, response) = try await URLSession.shared.data(
+      for: request, delegate: SameOriginRedirectDelegate.shared)
 
     // Check response
     guard let httpResponse = response as? HTTPURLResponse else {
