@@ -18,6 +18,11 @@ jobs:
         - name: Install swift-format
           run: brew install swift-format
 
+        - name: Print tool versions
+          run: |
+            swift --version
+            swift-format --version
+
         - name: Check formatting
           run: make format-check
 
