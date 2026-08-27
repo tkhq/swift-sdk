@@ -307,8 +307,7 @@ extension TurnkeyContext {
 /// Internal delegate class that bridges `ASAuthorizationControllerDelegate` callbacks
 /// into a `CheckedContinuation` for async/await usage.
 internal final class AppleSignInDelegate: NSObject, ASAuthorizationControllerDelegate,
-  @unchecked
-  Sendable
+  @unchecked Sendable
 {
   nonisolated(unsafe) var continuation: CheckedContinuation<String, Error>?
   private let cleanup: @Sendable () -> Void

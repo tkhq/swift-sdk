@@ -5,16 +5,13 @@ on:
     types: [closed]
     branches:
       - main
-  workflow_dispatch: # Allow manual triggering
 
 permissions:
   contents: write
 
 jobs:
   build:
-    if: >
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.pull_request.merged == true && startsWith(github.head_ref, 'release/v'))
+    if: github.event.pull_request.merged == true && startsWith(github.head_ref, 'release/v')
     runs-on: macos-latest # Use macOS for Swift builds
     outputs: 
       version: ${{ steps.extract-version.outputs.version }}
@@ -26,19 +23,8 @@ jobs:
       - name: Extract and validate version
         id: extract-version
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            # Manual trigger: read version from VERSION file
-            if [[ ! -f VERSION ]]; then
-              echo "::error::VERSION file not found"
-              exit 1
-            fi
-            VERSION="v$(cat VERSION)"
-            echo "Using version from VERSION file: $VERSION"
-          else
-            # PR merge trigger: extract from branch name
-            VERSION="${GITHUB_HEAD_REF#release/}"
-            echo "Extracted version from branch: $VERSION"
-          fi
+          VERSION="${GITHUB_HEAD_REF#release/}"
+          echo "Extracted version from branch: $VERSION"
 
           if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "::error::Version does not match expected format vX.X.X (got: $VERSION)"
@@ -47,7 +33,6 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Validate VERSION file matches
-        if: github.event_name != 'workflow_dispatch'
         run: |
           FILE_VERSION="v$(cat VERSION)"
           EXPECTED="${{ steps.extract-version.outputs.version }}"
