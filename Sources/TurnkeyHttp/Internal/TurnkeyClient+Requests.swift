@@ -5,6 +5,41 @@ import Foundation
 import TurnkeyStamper
 import TurnkeyTypes
 
+final class SameOriginRedirectDelegate: NSObject, URLSessionTaskDelegate {
+  private var remainingRedirects = 10
+
+  func urlSession(
+    _ session: URLSession,
+    task: URLSessionTask,
+    willPerformHTTPRedirection response: HTTPURLResponse,
+    newRequest request: URLRequest,
+    completionHandler: @escaping (URLRequest?) -> Void
+  ) {
+    guard remainingRedirects > 0,
+      response.statusCode == 307 || response.statusCode == 308,
+      let original = task.originalRequest?.url,
+      let target = request.url,
+      let originalOrigin = Self.effectiveOrigin(original),
+      Self.effectiveOrigin(target) == originalOrigin
+    else {
+      completionHandler(nil)
+      return
+    }
+    remainingRedirects -= 1
+    completionHandler(request)
+  }
+
+  static func effectiveOrigin(_ url: URL) -> String? {
+    guard let scheme = url.scheme?.lowercased(),
+      let host = url.host?.lowercased(),
+      let port = url.port ?? ["http": 80, "https": 443][scheme]
+    else {
+      return nil
+    }
+    return "\(scheme)://\(host):\(port)"
+  }
+}
+
 // Activity status constants
 private let TERMINAL_ACTIVITY_STATUSES: Set<String> = [
   "ACTIVITY_STATUS_COMPLETED",
@@ -35,17 +70,29 @@ extension TurnkeyClient {
     request.setValue(stampHeaderValue, forHTTPHeaderField: stampHeaderName)
     request.setValue("turnkey-swift/\(sdkVersion)", forHTTPHeaderField: "X-Client-Version")
 
-    let (data, response) = try await URLSession.shared.data(for: request)
+    let (data, response) = try await URLSession.shared.data(
+      for: request, delegate: SameOriginRedirectDelegate())
 
     guard let httpResponse = response as? HTTPURLResponse else {
       throw TurnkeyRequestError.invalidResponse
     }
 
     guard (200...299).contains(httpResponse.statusCode) else {
-      throw TurnkeyRequestError.apiError(statusCode: httpResponse.statusCode, payload: data)
+      throw Self.responseError(httpResponse, data: data)
     }
 
     return data
+  }
+
+  private static func responseError(_ response: HTTPURLResponse, data: Data)
+    -> TurnkeyRequestError
+  {
+    if (300...399).contains(response.statusCode) {
+      return .redirectRefused(
+        statusCode: response.statusCode,
+        location: response.value(forHTTPHeaderField: "Location"))
+    }
+    return .apiError(statusCode: response.statusCode, payload: data)
   }
 
   // MARK: - Query/Request Methods
@@ -257,7 +304,8 @@ extension TurnkeyClient {
     request.setValue(authProxyConfigId, forHTTPHeaderField: "X-Auth-Proxy-Config-ID")
 
     // Execute request
-    let (data, response) = try await URLSession.shared.data(for: request)
+    let (data, response) = try await URLSession.shared.data(
+      for: request, delegate: SameOriginRedirectDelegate())
 
     // Check response
     guard let httpResponse = response as? HTTPURLResponse else {
@@ -265,7 +313,7 @@ extension TurnkeyClient {
     }
 
     guard (200...299).contains(httpResponse.statusCode) else {
-      throw TurnkeyRequestError.apiError(statusCode: httpResponse.statusCode, payload: data)
+      throw Self.responseError(httpResponse, data: data)
     }
 
     // Decode response

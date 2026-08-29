@@ -4,6 +4,7 @@ import HTTPTypes
 public enum TurnkeyRequestError: LocalizedError, Sendable, Equatable {
 
   case apiError(statusCode: Int?, payload: Data?)
+  case redirectRefused(statusCode: Int, location: String?)
   case sdkError(Error)
   case network(Error)
   case invalidResponse
@@ -12,6 +13,7 @@ public enum TurnkeyRequestError: LocalizedError, Sendable, Equatable {
 
   public var statusCode: Int? {
     if case .apiError(let code, _) = self { return code }
+    if case .redirectRefused(let code, _) = self { return code }
     return nil
   }
 
@@ -54,6 +56,9 @@ public enum TurnkeyRequestError: LocalizedError, Sendable, Equatable {
       return fullMessage
     case .apiError:
       return "Turnkey API returned an error response."
+    case .redirectRefused(let statusCode, let location):
+      return
+        "Refused to follow redirect with status \(statusCode) to \(location ?? "<no location>")."
     case .sdkError(let e):
       return e.localizedDescription
     case .network(let e):
@@ -84,6 +89,8 @@ public enum TurnkeyRequestError: LocalizedError, Sendable, Equatable {
     switch (lhs, rhs) {
     case (.apiError(let c1, let d1), .apiError(let c2, let d2)):
       return c1 == c2 && d1 == d2
+    case (.redirectRefused(let c1, let l1), .redirectRefused(let c2, let l2)):
+      return c1 == c2 && l1 == l2
     case (.invalidResponse, .invalidResponse):
       return true
     default:
