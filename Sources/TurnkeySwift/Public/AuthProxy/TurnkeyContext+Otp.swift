@@ -89,6 +89,16 @@ extension TurnkeyContext {
     }
   }
 
+  /// Builds the legacy client signature used by Auth Proxy OTP login.
+  ///
+  /// Auth Proxy supplies the configured session expiration after this request, so the SDK cannot
+  /// safely bind the complete strict LoginUsageV2 contract here.
+  static func clientSignatureForAuthProxyOtpLogin(
+    verificationToken: String
+  ) throws -> (message: String, clientSignaturePublicKey: String) {
+    try ClientSignature.forLogin(verificationToken: verificationToken)
+  }
+
   /// Logs in an existing user using a previously verified OTP.
   ///
   /// Decodes the verification token to extract the bound public key, creates a client signature,
@@ -117,9 +127,7 @@ extension TurnkeyContext {
     }
 
     do {
-      // The Auth Proxy applies its configured session expiration, which is not present in this flow.
-      // Keep the legacy payload rather than signing incomplete strict login semantics.
-      let (message, clientSignaturePublicKey) = try ClientSignature.forLogin(
+      let (message, clientSignaturePublicKey) = try Self.clientSignatureForAuthProxyOtpLogin(
         verificationToken: verificationToken
       )
 
