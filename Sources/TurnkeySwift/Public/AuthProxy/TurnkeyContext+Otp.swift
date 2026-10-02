@@ -117,9 +117,18 @@ extension TurnkeyContext {
     }
 
     do {
-      let (message, clientSignaturePublicKey) = try ClientSignature.forLogin(
-        verificationToken: verificationToken
-      )
+      let (message, clientSignaturePublicKey): (String, String)
+      if let organizationId {
+        (message, clientSignaturePublicKey) = try ClientSignature.forLoginV2(
+          verificationToken: verificationToken,
+          organizationId: organizationId,
+          invalidateExisting: invalidateExisting
+        )
+      } else {
+        (message, clientSignaturePublicKey) = try ClientSignature.forLogin(
+          verificationToken: verificationToken
+        )
+      }
 
       let stamper = try Stamper(apiPublicKey: clientSignaturePublicKey)
       let signature = try await stamper.sign(
@@ -309,6 +318,7 @@ extension TurnkeyContext {
         let loginResp = try await loginWithOtp(
           verificationToken: verificationToken,
           invalidateExisting: invalidateExisting,
+          organizationId: organizationId,
           sessionKey: sessionKey
         )
 

@@ -1045,7 +1045,12 @@ func main() throws {
     // --- Base Types ---
     output += "// MARK: - Base Types from Swagger Definitions\n\n"
 
-    for (defName, def) in publicSpec.definitions.sorted(by: { $0.key < $1.key }) {
+    var definitions = publicSpec.definitions
+    for (defName, def) in authProxySpec.definitions where definitions[defName] == nil {
+        definitions[defName] = def
+    }
+
+    for (defName, def) in definitions.sorted(by: { $0.key < $1.key }) {
         output += generateSwiftType(name: defName, def: def) + "\n"
     }
 
