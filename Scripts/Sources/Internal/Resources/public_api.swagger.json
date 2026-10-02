@@ -11603,6 +11603,10 @@
         "invalidateExisting": {
           "type": "boolean",
           "description": "Invalidate all other previously generated Login sessions"
+        },
+        "sessionProfileId": {
+          "type": "string",
+          "description": "Optional session profile ID to specify which Session Profile to use for this login. If not provided, the default read/write session will be used."
         }
       },
       "required": ["verificationToken", "publicKey", "clientSignature"]

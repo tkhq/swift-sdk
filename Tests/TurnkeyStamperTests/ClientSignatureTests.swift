@@ -15,7 +15,8 @@ struct ClientSignatureTests {
       organizationId: "org-id",
       sessionPublicKey: "session-public-key",
       invalidateExisting: true,
-      expirationSeconds: "3600"
+      expirationSeconds: "3600",
+      sessionProfileId: "session-profile-id"
     )
     let request = TOtpLoginBody(
       organizationId: "org-id",
@@ -23,6 +24,7 @@ struct ClientSignatureTests {
       expirationSeconds: "3600",
       invalidateExisting: true,
       publicKey: "session-public-key",
+      sessionProfileId: "session-profile-id",
       verificationToken: verificationToken
     )
 
@@ -36,7 +38,7 @@ struct ClientSignatureTests {
     #expect(usage["publicKey"] as? String == request.publicKey)
     #expect(usage["invalidateExisting"] as? Bool == request.invalidateExisting)
     #expect(usage["expirationSeconds"] as? String == request.expirationSeconds)
-    #expect(usage["sessionProfileId"] == nil)
+    #expect(usage["sessionProfileId"] as? String == request.sessionProfileId)
   }
 
   @Test
