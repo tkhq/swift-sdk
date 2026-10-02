@@ -7,6 +7,21 @@ import TurnkeyTypes
 
 extension TurnkeyContext {
 
+  private var hasAuthProxyConfig: Bool {
+    guard let authProxyConfigId else {
+      return false
+    }
+    return !authProxyConfigId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+  }
+
+  private static func signOtpClientSignature(
+    message: String,
+    publicKey: String
+  ) async throws -> String {
+    let stamper = try Stamper(apiPublicKey: publicKey)
+    return try await stamper.sign(payload: message, format: .raw)
+  }
+
   /// Initiates an OTP flow for the given contact and type.
   ///
   /// Sends an OTP to the specified contact using the configured Auth Proxy (v2 endpoint).
@@ -117,33 +132,16 @@ extension TurnkeyContext {
     }
 
     do {
-      let (message, clientSignaturePublicKey) = try ClientSignature.forLogin(
-        verificationToken: verificationToken
+      let flow = AuthProxyOtpFlow(
+        client: client,
+        fetchWalletKitConfig: hasAuthProxyConfig,
+        sign: Self.signOtpClientSignature
       )
-
-      let stamper = try Stamper(apiPublicKey: clientSignaturePublicKey)
-      let signature = try await stamper.sign(
-        payload: message,
-        format: .raw
+      let session = try await flow.loginWithOtp(
+        verificationToken: verificationToken,
+        organizationId: organizationId,
+        invalidateExisting: invalidateExisting
       )
-
-      let clientSignature = v1ClientSignature(
-        message: message,
-        publicKey: clientSignaturePublicKey,
-        scheme: .client_signature_scheme_api_p256,
-        signature: signature
-      )
-
-      let response = try await client.proxyOtpLoginV2(
-        ProxyTOtpLoginV2Body(
-          clientSignature: clientSignature,
-          invalidateExisting: invalidateExisting,
-          organizationId: organizationId,
-          publicKey: clientSignaturePublicKey,
-          verificationToken: verificationToken
-        ))
-
-      let session = response.session
 
       try await storeSession(jwt: session, sessionKey: sessionKey)
 
@@ -194,53 +192,21 @@ extension TurnkeyContext {
         mergedParams.userPhoneNumber = contact
       }
 
-      // we build the body without client signature first
-      var signupBody = buildSignUpBody(createSubOrgParams: mergedParams)
-
-      let (message, clientSignaturePublicKey) = try ClientSignature.forSignup(
+      // Build the final request before signing so strict signup usage binds its exact semantics.
+      let signupBody = buildSignUpBody(createSubOrgParams: mergedParams)
+      let flow = AuthProxyOtpFlow(
+        client: client,
+        fetchWalletKitConfig: hasAuthProxyConfig,
+        sign: Self.signOtpClientSignature
+      )
+      let session = try await flow.signUpWithOtp(
         verificationToken: verificationToken,
-        email: signupBody.userEmail,
-        phoneNumber: signupBody.userPhoneNumber,
-        apiKeys: signupBody.apiKeys,
-        authenticators: signupBody.authenticators,
-        oauthProviders: signupBody.oauthProviders
+        signupBody: signupBody,
+        invalidateExisting: invalidateExisting
       )
 
-      let stamper = try Stamper(apiPublicKey: clientSignaturePublicKey)
-      let signature = try await stamper.sign(
-        payload: message,
-        format: .raw
-      )
-
-      let clientSignature = v1ClientSignature(
-        message: message,
-        publicKey: clientSignaturePublicKey,
-        scheme: .client_signature_scheme_api_p256,
-        signature: signature
-      )
-
-      // then we add the client signature to the signup body
-      signupBody = ProxyTSignupV2Body(
-        apiKeys: signupBody.apiKeys,
-        authenticators: signupBody.authenticators,
-        clientSignature: clientSignature,
-        oauthProviders: signupBody.oauthProviders,
-        organizationName: signupBody.organizationName,
-        userEmail: signupBody.userEmail,
-        userName: signupBody.userName,
-        userPhoneNumber: signupBody.userPhoneNumber,
-        userTag: signupBody.userTag,
-        verificationToken: signupBody.verificationToken,
-        wallet: signupBody.wallet
-      )
-
-      _ = try await client.proxySignupV2(signupBody)
-
-      return try await loginWithOtp(
-        verificationToken: verificationToken,
-        invalidateExisting: invalidateExisting,
-        sessionKey: sessionKey
-      )
+      try await storeSession(jwt: session, sessionKey: sessionKey)
+      return BaseAuthResult(session: session)
 
     } catch {
       throw TurnkeySwiftError.failedToSignUpWithOtp(underlying: error)
@@ -309,6 +275,7 @@ extension TurnkeyContext {
         let loginResp = try await loginWithOtp(
           verificationToken: verificationToken,
           invalidateExisting: invalidateExisting,
+          organizationId: organizationId,
           sessionKey: sessionKey
         )
 

@@ -52,6 +52,57 @@ public enum ClientSignature {
     return (message: json, clientSignaturePublicKey: verificationPublicKey)
   }
 
+  /// Creates a strict client signature payload for an OTP v2 login.
+  ///
+  /// This binds every field in `v1LoginUsageV2` to the signature. Pass the exact final values
+  /// that will be used for the login request.
+  ///
+  /// - Parameters:
+  ///   - verificationToken: The JWT verification token to decode.
+  ///   - organizationId: The non-empty organization ID for the login.
+  ///   - sessionPublicKey: Optional public key to use instead of the one in the token.
+  ///   - invalidateExisting: Whether to invalidate existing sessions.
+  ///   - expirationSeconds: The requested session lifetime.
+  /// - Returns: A tuple containing the JSON string to sign and the public key for client signature.
+  /// - Throws: `TurnkeySwiftError.invalidConfiguration` if no public key is available.
+  public static func forLoginV2(
+    verificationToken: String,
+    organizationId: String,
+    sessionPublicKey: String? = nil,
+    invalidateExisting: Bool? = nil,
+    expirationSeconds: String? = nil
+  ) throws -> (message: String, clientSignaturePublicKey: String) {
+    guard !organizationId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+      throw TurnkeySwiftError.invalidConfiguration(
+        "Organization ID is required for strict OTP login")
+    }
+
+    let decoded = try decodeVerificationToken(verificationToken)
+
+    guard let verificationPublicKey = decoded.publicKey else {
+      throw TurnkeySwiftError.invalidConfiguration(
+        "Verification token is missing a public key"
+      )
+    }
+
+    let usage = v1LoginUsageV2(
+      expirationSeconds: expirationSeconds,
+      invalidateExisting: invalidateExisting,
+      organizationId: organizationId,
+      publicKey: sessionPublicKey ?? verificationPublicKey
+    )
+    let payload = v1TokenUsage(loginV2: usage, tokenId: decoded.id, type: .usage_type_login)
+
+    let encoder = JSONEncoder()
+    let data = try encoder.encode(payload)
+    guard let json = String(data: data, encoding: .utf8) else {
+      throw TurnkeySwiftError.invalidConfiguration(
+        "Failed to encode client signature payload for login")
+    }
+
+    return (message: json, clientSignaturePublicKey: verificationPublicKey)
+  }
+
   /// Creates a client signature payload for signup
   ///
   /// - Parameters:
@@ -89,6 +140,68 @@ public enum ClientSignature {
     )
 
     let payload = v1TokenUsage(signupV2: usage, tokenId: decoded.id, type: .usage_type_signup)
+
+    let encoder = JSONEncoder()
+    let data = try encoder.encode(payload)
+    guard let json = String(data: data, encoding: .utf8) else {
+      throw TurnkeySwiftError.invalidConfiguration(
+        "Failed to encode client signature payload for signup")
+    }
+
+    return (message: json, clientSignaturePublicKey: verificationPublicKey)
+  }
+
+  /// Creates a strict client signature payload for an OTP signup that creates a sub-organization.
+  ///
+  /// This binds every field in `v1SignupUsageV3` to the signature. Required strings and arrays
+  /// are encoded as provided, including empty values.
+  ///
+  /// - Parameters:
+  ///   - verificationToken: The JWT verification token to decode.
+  ///   - parentOrganizationId: The parent organization ID.
+  ///   - signup: The final Auth Proxy signup request to bind to the signature.
+  /// - Returns: A tuple containing the JSON string to sign and the public key for client signature.
+  /// - Throws: `TurnkeySwiftError.invalidConfiguration` if strict signup inputs or the token public key are missing.
+  public static func forSignupV3(
+    verificationToken: String,
+    parentOrganizationId: String,
+    signup: ProxyTSignupV2Body
+  ) throws -> (message: String, clientSignaturePublicKey: String) {
+    guard !parentOrganizationId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+      let subOrganizationName = signup.organizationName,
+      !subOrganizationName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+      let userName = signup.userName,
+      !userName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    else {
+      throw TurnkeySwiftError.invalidConfiguration(
+        "Strict OTP signup requires parent organization, sub-organization, and user names"
+      )
+    }
+
+    let decoded = try decodeVerificationToken(verificationToken)
+
+    guard let verificationPublicKey = decoded.publicKey else {
+      throw TurnkeySwiftError.invalidConfiguration(
+        "Verification token is missing a public key"
+      )
+    }
+
+    let rootUser = v1RootUserParamsV5(
+      apiKeys: signup.apiKeys,
+      authenticators: signup.authenticators,
+      oauthProviders: signup.oauthProviders,
+      userEmail: signup.userEmail,
+      userName: userName,
+      userPhoneNumber: signup.userPhoneNumber
+    )
+    let usage = v1SignupUsageV3(
+      parentOrganizationId: parentOrganizationId,
+      rootQuorumThreshold: 1,
+      rootUsers: [rootUser],
+      subOrganizationName: subOrganizationName,
+      wallet: signup.wallet
+    )
+    let payload = v1TokenUsage(signupV3: usage, tokenId: decoded.id, type: .usage_type_signup)
 
     let encoder = JSONEncoder()
     let data = try encoder.encode(payload)

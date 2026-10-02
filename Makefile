@@ -17,6 +17,7 @@ prepare-release: version changelog
 
 # Format all Swift files
 format:
+	@command -v swift-format >/dev/null 2>&1 || { echo "Error: swift-format not installed. Try `brew install swift-format`?"; exit 1; }
 	@echo "🎨 Formatting..."
 	@swift-format -i -r Sources/ Tests/ 2>/dev/null
 
