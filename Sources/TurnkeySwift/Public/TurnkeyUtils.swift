@@ -59,7 +59,7 @@ public enum ClientSignature {
   ///
   /// - Parameters:
   ///   - verificationToken: The JWT verification token to decode.
-  ///   - organizationId: The organization ID for the login.
+  ///   - organizationId: The non-empty organization ID for the login.
   ///   - sessionPublicKey: Optional public key to use instead of the one in the token.
   ///   - invalidateExisting: Whether to invalidate existing sessions.
   ///   - expirationSeconds: The requested session lifetime.
@@ -74,6 +74,11 @@ public enum ClientSignature {
     expirationSeconds: String? = nil,
     sessionProfileId: String? = nil
   ) throws -> (message: String, clientSignaturePublicKey: String) {
+    guard !organizationId.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+      throw TurnkeySwiftError.invalidConfiguration(
+        "Organization ID is required for strict OTP login")
+    }
+
     let decoded = try decodeVerificationToken(verificationToken)
 
     guard let verificationPublicKey = decoded.publicKey else {
