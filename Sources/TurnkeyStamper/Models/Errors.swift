@@ -57,6 +57,7 @@ public enum StampError: Error {
   case secureEnclaveUnavailable
   case keyNotFound(publicKeyHex: String)
   case signNotSupportedForPasskey
+  case attestedStamperRequiresPublicKey
 
   public var localizedDescription: String {
     switch self {
@@ -80,6 +81,8 @@ public enum StampError: Error {
       return "No private key found for public key: \(publicKeyHex)"
     case .signNotSupportedForPasskey:
       return "Generic sign is not supported for passkeys. Use stamp()."
+    case .attestedStamperRequiresPublicKey:
+      return "Attested stamping requires a stamper backed by a P-256 API key."
     }
   }
 }

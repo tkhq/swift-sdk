@@ -3,1036 +3,1167 @@
 import Foundation
 import TurnkeyTypes
 
-extension TurnkeyClient {
-
-  /// Get activity
-  /// Get details about an activity.
-  public func getActivity(_ input: TGetActivityBody) async throws -> TGetActivityResponse {
-    return try await request("/public/v1/query/get_activity", body: input)
-  }
-
-  /// Get API key
-  /// Get details about an API key.
-  public func getApiKey(_ input: TGetApiKeyBody) async throws -> TGetApiKeyResponse {
-    return try await request("/public/v1/query/get_api_key", body: input)
-  }
-
-  /// Get API keys
-  /// Get details about API keys for a user.
-  public func getApiKeys(_ input: TGetApiKeysBody = .init()) async throws -> TGetApiKeysResponse {
-    return try await request("/public/v1/query/get_api_keys", body: input)
-  }
-
-  /// Get TVC App status
-  /// Get live runtime status for a TVC App from the cluster.
-  public func getAppStatus(_ input: TGetAppStatusBody) async throws -> TGetAppStatusResponse {
-    return try await request("/public/v1/query/get_app_status", body: input)
-  }
-
-  /// Get authenticator
-  /// Get details about an authenticator.
-  public func getAuthenticator(_ input: TGetAuthenticatorBody) async throws
-    -> TGetAuthenticatorResponse
-  {
-    return try await request("/public/v1/query/get_authenticator", body: input)
-  }
-
-  /// Get authenticators
-  /// Get details about authenticators for a user.
-  public func getAuthenticators(_ input: TGetAuthenticatorsBody) async throws
-    -> TGetAuthenticatorsResponse
-  {
-    return try await request("/public/v1/query/get_authenticators", body: input)
-  }
-
-  /// Get a specific boot proof
-  /// Get the boot proof for a given ephemeral key.
-  public func getBootProof(_ input: TGetBootProofBody) async throws -> TGetBootProofResponse {
-    return try await request("/public/v1/query/get_boot_proof", body: input)
-  }
-
-  /// Get gas usage
-  /// Get gas usage and gas limits for either the parent organization or a sub-organization.
-  public func getGasUsage(_ input: TGetGasUsageBody = .init()) async throws -> TGetGasUsageResponse
-  {
-    return try await request("/public/v1/query/get_gas_usage", body: input)
-  }
-
-  /// Get the latest boot proof for an app
-  /// Get the latest boot proof for a given enclave app name.
-  public func getLatestBootProof(_ input: TGetLatestBootProofBody) async throws
-    -> TGetLatestBootProofResponse
-  {
-    return try await request("/public/v1/query/get_latest_boot_proof", body: input)
-  }
-
-  /// Get nonces
-  /// Get nonce values for an address on a given network. Can fetch the standard on-chain nonce and/or the gas station nonce used for sponsored transactions.
-  public func getNonces(_ input: TGetNoncesBody) async throws -> TGetNoncesResponse {
-    return try await request("/public/v1/query/get_nonces", body: input)
-  }
-
-  /// Get OAuth 2.0 credential
-  /// Get details about an OAuth 2.0 credential.
-  public func getOauth2Credential(_ input: TGetOauth2CredentialBody) async throws
-    -> TGetOauth2CredentialResponse
-  {
-    return try await request("/public/v1/query/get_oauth2_credential", body: input)
-  }
-
-  /// Get Oauth providers
-  /// Get details about Oauth providers for a user.
-  public func getOauthProviders(_ input: TGetOauthProvidersBody = .init()) async throws
-    -> TGetOauthProvidersResponse
-  {
-    return try await request("/public/v1/query/get_oauth_providers", body: input)
-  }
-
-  /// Get On Ramp transaction status
-  /// Get the status of an on ramp transaction.
-  public func getOnRampTransactionStatus(_ input: TGetOnRampTransactionStatusBody) async throws
-    -> TGetOnRampTransactionStatusResponse
-  {
-    return try await request("/public/v1/query/get_onramp_transaction_status", body: input)
-  }
-
-  /// Get configs
-  /// Get quorum settings and features for an organization.
-  public func getOrganizationConfigs(_ input: TGetOrganizationConfigsBody = .init()) async throws
-    -> TGetOrganizationConfigsResponse
-  {
-    return try await request("/public/v1/query/get_organization_configs", body: input)
-  }
-
-  /// Get policy
-  /// Get details about a policy.
-  public func getPolicy(_ input: TGetPolicyBody) async throws -> TGetPolicyResponse {
-    return try await request("/public/v1/query/get_policy", body: input)
-  }
-
-  /// Get policy evaluations
-  /// Get the policy evaluations for an activity.
-  public func getPolicyEvaluations(_ input: TGetPolicyEvaluationsBody) async throws
-    -> TGetPolicyEvaluationsResponse
-  {
-    return try await request("/public/v1/query/get_policy_evaluations", body: input)
-  }
-
-  /// Get private key
-  /// Get details about a private key.
-  public func getPrivateKey(_ input: TGetPrivateKeyBody) async throws -> TGetPrivateKeyResponse {
-    return try await request("/public/v1/query/get_private_key", body: input)
-  }
-
-  /// Get send transaction status
-  /// Get the status of a send transaction request.
-  public func getSendTransactionStatus(_ input: TGetSendTransactionStatusBody) async throws
-    -> TGetSendTransactionStatusResponse
-  {
-    return try await request("/public/v1/query/get_send_transaction_status", body: input)
-  }
-
-  /// Get smart contract interface
-  /// Get details about a smart contract interface.
-  public func getSmartContractInterface(_ input: TGetSmartContractInterfaceBody) async throws
-    -> TGetSmartContractInterfaceResponse
-  {
-    return try await request("/public/v1/query/get_smart_contract_interface", body: input)
-  }
-
-  /// Get user
-  /// Get details about a user.
-  public func getUser(_ input: TGetUserBody) async throws -> TGetUserResponse {
-    return try await request("/public/v1/query/get_user", body: input)
-  }
-
-  /// Get wallet
-  /// Get details about a wallet.
-  public func getWallet(_ input: TGetWalletBody) async throws -> TGetWalletResponse {
-    return try await request("/public/v1/query/get_wallet", body: input)
-  }
-
-  /// Get wallet account
-  /// Get a single wallet account.
-  public func getWalletAccount(_ input: TGetWalletAccountBody) async throws
-    -> TGetWalletAccountResponse
-  {
-    return try await request("/public/v1/query/get_wallet_account", body: input)
-  }
-
-  /// Get balances
-  /// Get balances of supported assets for an address on the specified network. Only non-zero balances are returned. This feature is in beta - please contact support for access.
-  public func getWalletAddressBalances(_ input: TGetWalletAddressBalancesBody) async throws
-    -> TGetWalletAddressBalancesResponse
-  {
-    return try await request("/public/v1/query/get_wallet_address_balances", body: input)
-  }
-
-  /// List activities
-  /// List all activities within an organization.
-  public func getActivities(_ input: TGetActivitiesBody = .init()) async throws
-    -> TGetActivitiesResponse
-  {
-    return try await request("/public/v1/query/list_activities", body: input)
-  }
-
-  /// List App Proofs for an activity
-  /// List the App Proofs for the given activity.
-  public func getAppProofs(_ input: TGetAppProofsBody) async throws -> TGetAppProofsResponse {
-    return try await request("/public/v1/query/list_app_proofs", body: input)
-  }
-
-  /// List Fiat On Ramp Credentials
-  /// List all fiat on ramp provider credentials within an organization.
-  public func listFiatOnRampCredentials(_ input: TListFiatOnRampCredentialsBody = .init())
-    async throws -> TListFiatOnRampCredentialsResponse
-  {
-    return try await request("/public/v1/query/list_fiat_on_ramp_credentials", body: input)
-  }
-
-  /// List OAuth 2.0 Credentials
-  /// List all OAuth 2.0 credentials within an organization.
-  public func listOauth2Credentials(_ input: TListOauth2CredentialsBody = .init()) async throws
-    -> TListOauth2CredentialsResponse
-  {
-    return try await request("/public/v1/query/list_oauth2_credentials", body: input)
-  }
-
-  /// List policies
-  /// List all policies within an organization.
-  public func getPolicies(_ input: TGetPoliciesBody = .init()) async throws -> TGetPoliciesResponse
-  {
-    return try await request("/public/v1/query/list_policies", body: input)
-  }
-
-  /// List private key tags
-  /// List all private key tags within an organization.
-  public func listPrivateKeyTags(_ input: TListPrivateKeyTagsBody = .init()) async throws
-    -> TListPrivateKeyTagsResponse
-  {
-    return try await request("/public/v1/query/list_private_key_tags", body: input)
-  }
-
-  /// List private keys
-  /// List all private keys within an organization.
-  public func getPrivateKeys(_ input: TGetPrivateKeysBody = .init()) async throws
-    -> TGetPrivateKeysResponse
-  {
-    return try await request("/public/v1/query/list_private_keys", body: input)
-  }
-
-  /// List smart contract interfaces
-  /// List all smart contract interfaces within an organization.
-  public func getSmartContractInterfaces(_ input: TGetSmartContractInterfacesBody = .init())
-    async throws -> TGetSmartContractInterfacesResponse
-  {
-    return try await request("/public/v1/query/list_smart_contract_interfaces", body: input)
-  }
-
-  /// Get sub-organizations
-  /// Get all suborg IDs associated given a parent org ID and an optional filter.
-  public func getSubOrgIds(_ input: TGetSubOrgIdsBody = .init()) async throws
-    -> TGetSubOrgIdsResponse
-  {
-    return try await request("/public/v1/query/list_suborgs", body: input)
-  }
-
-  /// List supported assets
-  /// List supported assets for the specified network. This feature is in beta - please contact support for access.
-  public func listSupportedAssets(_ input: TListSupportedAssetsBody) async throws
-    -> TListSupportedAssetsResponse
-  {
-    return try await request("/public/v1/query/list_supported_assets", body: input)
-  }
-
-  /// List user tags
-  /// List all user tags within an organization.
-  public func listUserTags(_ input: TListUserTagsBody = .init()) async throws
-    -> TListUserTagsResponse
-  {
-    return try await request("/public/v1/query/list_user_tags", body: input)
-  }
-
-  /// List users
-  /// List all users within an organization.
-  public func getUsers(_ input: TGetUsersBody = .init()) async throws -> TGetUsersResponse {
-    return try await request("/public/v1/query/list_users", body: input)
-  }
-
-  /// Get verified sub-organizations
-  /// Get all email or phone verified suborg IDs associated given a parent org ID.
-  public func getVerifiedSubOrgIds(_ input: TGetVerifiedSubOrgIdsBody = .init()) async throws
-    -> TGetVerifiedSubOrgIdsResponse
-  {
-    return try await request("/public/v1/query/list_verified_suborgs", body: input)
-  }
-
-  /// List wallets accounts
-  /// List all accounts within a wallet.
-  public func getWalletAccounts(_ input: TGetWalletAccountsBody = .init()) async throws
-    -> TGetWalletAccountsResponse
-  {
-    return try await request("/public/v1/query/list_wallet_accounts", body: input)
-  }
-
-  /// List wallets
-  /// List all wallets within an organization.
-  public func getWallets(_ input: TGetWalletsBody = .init()) async throws -> TGetWalletsResponse {
-    return try await request("/public/v1/query/list_wallets", body: input)
-  }
-
-  /// List webhook endpoints
-  /// List webhook endpoints within an organization.
-  public func listWebhookEndpoints(_ input: TListWebhookEndpointsBody = .init()) async throws
-    -> TListWebhookEndpointsResponse
-  {
-    return try await request("/public/v1/query/list_webhook_endpoints", body: input)
-  }
-
-  /// Who am I?
-  /// Get basic information about your current API or WebAuthN user and their organization. Affords sub-organization look ups via parent organization for WebAuthN or API key users.
-  public func getWhoami(_ input: TGetWhoamiBody = .init()) async throws -> TGetWhoamiResponse {
-    return try await request("/public/v1/query/whoami", body: input)
-  }
-
-  /// Approve activity
-  /// Approve an activity.
-  public func approveActivity(_ input: TApproveActivityBody) async throws
-    -> TApproveActivityResponse
-  {
-    return try await activityDecision(
-      "/public/v1/submit/approve_activity", body: input,
-      activityType: "ACTIVITY_TYPE_APPROVE_ACTIVITY")
-  }
-
-  /// Create API keys
-  /// Add API keys to an existing user.
-  public func createApiKeys(_ input: TCreateApiKeysBody) async throws -> TCreateApiKeysResponse {
-    return try await activity(
-      "/public/v1/submit/create_api_keys", body: input,
-      activityType: "ACTIVITY_TYPE_CREATE_API_KEYS_V2", resultKey: "createApiKeysResult")
-  }
-
-  /// Create authenticators
-  /// Create authenticators to authenticate requests to Turnkey.
-  public func createAuthenticators(_ input: TCreateAuthenticatorsBody) async throws
-    -> TCreateAuthenticatorsResponse
-  {
-    return try await activity(
-      "/public/v1/submit/create_authenticators", body: input,
-      activityType: "ACTIVITY_TYPE_CREATE_AUTHENTICATORS_V2",
-      resultKey: "createAuthenticatorsResult")
-  }
-
-  /// Create a Fiat On Ramp Credential
-  /// Create a fiat on ramp provider credential
-  public func createFiatOnRampCredential(_ input: TCreateFiatOnRampCredentialBody) async throws
-    -> TCreateFiatOnRampCredentialResponse
-  {
-    return try await activity(
-      "/public/v1/submit/create_fiat_on_ramp_credential", body: input,
-      activityType: "ACTIVITY_TYPE_CREATE_FIAT_ON_RAMP_CREDENTIAL",
-      resultKey: "createFiatOnRampCredentialResult")
-  }
-
-  /// Create invitations
-  /// Create invitations to join an existing organization.
-  public func createInvitations(_ input: TCreateInvitationsBody) async throws
-    -> TCreateInvitationsResponse
-  {
-    return try await activity(
-      "/public/v1/submit/create_invitations", body: input,
-      activityType: "ACTIVITY_TYPE_CREATE_INVITATIONS", resultKey: "createInvitationsResult")
-  }
-
-  /// Create an OAuth 2.0 Credential
-  /// Enable authentication for end users with an OAuth 2.0 provider
-  public func createOauth2Credential(_ input: TCreateOauth2CredentialBody) async throws
-    -> TCreateOauth2CredentialResponse
-  {
-    return try await activity(
-      "/public/v1/submit/create_oauth2_credential", body: input,
-      activityType: "ACTIVITY_TYPE_CREATE_OAUTH2_CREDENTIAL",
-      resultKey: "createOauth2CredentialResult")
-  }
-
-  /// Create Oauth providers
-  /// Create Oauth providers for a specified user.
-  public func createOauthProviders(_ input: TCreateOauthProvidersBody) async throws
-    -> TCreateOauthProvidersResponse
-  {
-    return try await activity(
-      "/public/v1/submit/create_oauth_providers", body: input,
-      activityType: "ACTIVITY_TYPE_CREATE_OAUTH_PROVIDERS_V2",
-      resultKey: "createOauthProvidersResultV2")
-  }
-
-  /// Create policies
-  /// Create new policies.
-  public func createPolicies(_ input: TCreatePoliciesBody) async throws -> TCreatePoliciesResponse {
-    return try await activity(
-      "/public/v1/submit/create_policies", body: input,
-      activityType: "ACTIVITY_TYPE_CREATE_POLICIES", resultKey: "createPoliciesResult")
-  }
-
-  /// Create policy
-  /// Create a new policy.
-  public func createPolicy(_ input: TCreatePolicyBody) async throws -> TCreatePolicyResponse {
-    return try await activity(
-      "/public/v1/submit/create_policy", body: input,
-      activityType: "ACTIVITY_TYPE_CREATE_POLICY_V3", resultKey: "createPolicyResult")
-  }
-
-  /// Create private key tag
-  /// Create a private key tag and add it to private keys.
-  public func createPrivateKeyTag(_ input: TCreatePrivateKeyTagBody) async throws
-    -> TCreatePrivateKeyTagResponse
-  {
-    return try await activity(
-      "/public/v1/submit/create_private_key_tag", body: input,
-      activityType: "ACTIVITY_TYPE_CREATE_PRIVATE_KEY_TAG", resultKey: "createPrivateKeyTagResult")
-  }
-
-  /// Create private keys
-  /// Create new private keys.
-  public func createPrivateKeys(_ input: TCreatePrivateKeysBody) async throws
-    -> TCreatePrivateKeysResponse
-  {
-    return try await activity(
-      "/public/v1/submit/create_private_keys", body: input,
-      activityType: "ACTIVITY_TYPE_CREATE_PRIVATE_KEYS_V2", resultKey: "createPrivateKeysResultV2")
-  }
-
-  /// Create read only session
-  /// Create a read only session for a user (valid for 1 hour).
-  public func createReadOnlySession(_ input: TCreateReadOnlySessionBody) async throws
-    -> TCreateReadOnlySessionResponse
-  {
-    return try await activity(
-      "/public/v1/submit/create_read_only_session", body: input,
-      activityType: "ACTIVITY_TYPE_CREATE_READ_ONLY_SESSION",
-      resultKey: "createReadOnlySessionResult")
-  }
-
-  /// Create read write session
-  /// Create a read write session for a user.
-  public func createReadWriteSession(_ input: TCreateReadWriteSessionBody) async throws
-    -> TCreateReadWriteSessionResponse
-  {
-    return try await activity(
-      "/public/v1/submit/create_read_write_session", body: input,
-      activityType: "ACTIVITY_TYPE_CREATE_READ_WRITE_SESSION_V2",
-      resultKey: "createReadWriteSessionResult")
-  }
-
-  /// Create smart contract interface
-  /// Create an ABI/IDL in JSON.
-  public func createSmartContractInterface(_ input: TCreateSmartContractInterfaceBody) async throws
-    -> TCreateSmartContractInterfaceResponse
-  {
-    return try await activity(
-      "/public/v1/submit/create_smart_contract_interface", body: input,
-      activityType: "ACTIVITY_TYPE_CREATE_SMART_CONTRACT_INTERFACE",
-      resultKey: "createSmartContractInterfaceResult")
-  }
-
-  /// Create sub-organization
-  /// Create a new sub-organization.
-  public func createSubOrganization(_ input: TCreateSubOrganizationBody) async throws
-    -> TCreateSubOrganizationResponse
-  {
-    return try await activity(
-      "/public/v1/submit/create_sub_organization", body: input,
-      activityType: "ACTIVITY_TYPE_CREATE_SUB_ORGANIZATION_V8",
-      resultKey: "createSubOrganizationResultV8")
-  }
-
-  /// Create user tag
-  /// Create a user tag and add it to users.
-  public func createUserTag(_ input: TCreateUserTagBody) async throws -> TCreateUserTagResponse {
-    return try await activity(
-      "/public/v1/submit/create_user_tag", body: input,
-      activityType: "ACTIVITY_TYPE_CREATE_USER_TAG", resultKey: "createUserTagResult")
-  }
-
-  /// Create users
-  /// Create users in an existing organization.
-  public func createUsers(_ input: TCreateUsersBody) async throws -> TCreateUsersResponse {
-    return try await activity(
-      "/public/v1/submit/create_users", body: input, activityType: "ACTIVITY_TYPE_CREATE_USERS_V4",
-      resultKey: "createUsersResult")
-  }
-
-  /// Create wallet
-  /// Create a wallet and derive addresses.
-  public func createWallet(_ input: TCreateWalletBody) async throws -> TCreateWalletResponse {
-    return try await activity(
-      "/public/v1/submit/create_wallet", body: input, activityType: "ACTIVITY_TYPE_CREATE_WALLET",
-      resultKey: "createWalletResult")
-  }
-
-  /// Create wallet accounts
-  /// Derive additional addresses using an existing wallet.
-  public func createWalletAccounts(_ input: TCreateWalletAccountsBody) async throws
-    -> TCreateWalletAccountsResponse
-  {
-    return try await activity(
-      "/public/v1/submit/create_wallet_accounts", body: input,
-      activityType: "ACTIVITY_TYPE_CREATE_WALLET_ACCOUNTS", resultKey: "createWalletAccountsResult")
-  }
-
-  /// Create webhook endpoint
-  /// Create a webhook endpoint for an organization.
-  public func createWebhookEndpoint(_ input: TCreateWebhookEndpointBody) async throws
-    -> TCreateWebhookEndpointResponse
-  {
-    return try await activity(
-      "/public/v1/submit/create_webhook_endpoint", body: input,
-      activityType: "ACTIVITY_TYPE_CREATE_WEBHOOK_ENDPOINT",
-      resultKey: "createWebhookEndpointResult")
-  }
-
-  /// Delete API keys
-  /// Remove api keys from a user.
-  public func deleteApiKeys(_ input: TDeleteApiKeysBody) async throws -> TDeleteApiKeysResponse {
-    return try await activity(
-      "/public/v1/submit/delete_api_keys", body: input,
-      activityType: "ACTIVITY_TYPE_DELETE_API_KEYS", resultKey: "deleteApiKeysResult")
-  }
-
-  /// Delete authenticators
-  /// Remove authenticators from a user.
-  public func deleteAuthenticators(_ input: TDeleteAuthenticatorsBody) async throws
-    -> TDeleteAuthenticatorsResponse
-  {
-    return try await activity(
-      "/public/v1/submit/delete_authenticators", body: input,
-      activityType: "ACTIVITY_TYPE_DELETE_AUTHENTICATORS", resultKey: "deleteAuthenticatorsResult")
-  }
-
-  /// Delete a Fiat On Ramp Credential
-  /// Delete a fiat on ramp provider credential
-  public func deleteFiatOnRampCredential(_ input: TDeleteFiatOnRampCredentialBody) async throws
-    -> TDeleteFiatOnRampCredentialResponse
-  {
-    return try await activity(
-      "/public/v1/submit/delete_fiat_on_ramp_credential", body: input,
-      activityType: "ACTIVITY_TYPE_DELETE_FIAT_ON_RAMP_CREDENTIAL",
-      resultKey: "deleteFiatOnRampCredentialResult")
-  }
-
-  /// Delete invitation
-  /// Delete an existing invitation.
-  public func deleteInvitation(_ input: TDeleteInvitationBody) async throws
-    -> TDeleteInvitationResponse
-  {
-    return try await activity(
-      "/public/v1/submit/delete_invitation", body: input,
-      activityType: "ACTIVITY_TYPE_DELETE_INVITATION", resultKey: "deleteInvitationResult")
-  }
-
-  /// Delete an OAuth 2.0 Credential
-  /// Disable authentication for end users with an OAuth 2.0 provider
-  public func deleteOauth2Credential(_ input: TDeleteOauth2CredentialBody) async throws
-    -> TDeleteOauth2CredentialResponse
-  {
-    return try await activity(
-      "/public/v1/submit/delete_oauth2_credential", body: input,
-      activityType: "ACTIVITY_TYPE_DELETE_OAUTH2_CREDENTIAL",
-      resultKey: "deleteOauth2CredentialResult")
-  }
-
-  /// Delete Oauth providers
-  /// Remove Oauth providers for a specified user.
-  public func deleteOauthProviders(_ input: TDeleteOauthProvidersBody) async throws
-    -> TDeleteOauthProvidersResponse
-  {
-    return try await activity(
-      "/public/v1/submit/delete_oauth_providers", body: input,
-      activityType: "ACTIVITY_TYPE_DELETE_OAUTH_PROVIDERS", resultKey: "deleteOauthProvidersResult")
-  }
-
-  /// Delete policies
-  /// Delete existing policies.
-  public func deletePolicies(_ input: TDeletePoliciesBody) async throws -> TDeletePoliciesResponse {
-    return try await activity(
-      "/public/v1/submit/delete_policies", body: input,
-      activityType: "ACTIVITY_TYPE_DELETE_POLICIES", resultKey: "deletePoliciesResult")
-  }
-
-  /// Delete policy
-  /// Delete an existing policy.
-  public func deletePolicy(_ input: TDeletePolicyBody) async throws -> TDeletePolicyResponse {
-    return try await activity(
-      "/public/v1/submit/delete_policy", body: input, activityType: "ACTIVITY_TYPE_DELETE_POLICY",
-      resultKey: "deletePolicyResult")
-  }
-
-  /// Delete private key tags
-  /// Delete private key tags within an organization.
-  public func deletePrivateKeyTags(_ input: TDeletePrivateKeyTagsBody) async throws
-    -> TDeletePrivateKeyTagsResponse
-  {
-    return try await activity(
-      "/public/v1/submit/delete_private_key_tags", body: input,
-      activityType: "ACTIVITY_TYPE_DELETE_PRIVATE_KEY_TAGS", resultKey: "deletePrivateKeyTagsResult"
-    )
-  }
-
-  /// Delete private keys
-  /// Delete private keys for an organization.
-  public func deletePrivateKeys(_ input: TDeletePrivateKeysBody) async throws
-    -> TDeletePrivateKeysResponse
-  {
-    return try await activity(
-      "/public/v1/submit/delete_private_keys", body: input,
-      activityType: "ACTIVITY_TYPE_DELETE_PRIVATE_KEYS", resultKey: "deletePrivateKeysResult")
-  }
-
-  /// Delete smart contract interface
-  /// Delete a smart contract interface.
-  public func deleteSmartContractInterface(_ input: TDeleteSmartContractInterfaceBody) async throws
-    -> TDeleteSmartContractInterfaceResponse
-  {
-    return try await activity(
-      "/public/v1/submit/delete_smart_contract_interface", body: input,
-      activityType: "ACTIVITY_TYPE_DELETE_SMART_CONTRACT_INTERFACE",
-      resultKey: "deleteSmartContractInterfaceResult")
-  }
-
-  /// Delete sub-organization
-  /// Delete a sub-organization.
-  public func deleteSubOrganization(_ input: TDeleteSubOrganizationBody) async throws
-    -> TDeleteSubOrganizationResponse
-  {
-    return try await activity(
-      "/public/v1/submit/delete_sub_organization", body: input,
-      activityType: "ACTIVITY_TYPE_DELETE_SUB_ORGANIZATION",
-      resultKey: "deleteSubOrganizationResult")
-  }
-
-  /// Delete user tags
-  /// Delete user tags within an organization.
-  public func deleteUserTags(_ input: TDeleteUserTagsBody) async throws -> TDeleteUserTagsResponse {
-    return try await activity(
-      "/public/v1/submit/delete_user_tags", body: input,
-      activityType: "ACTIVITY_TYPE_DELETE_USER_TAGS", resultKey: "deleteUserTagsResult")
-  }
-
-  /// Delete users
-  /// Delete users within an organization.
-  public func deleteUsers(_ input: TDeleteUsersBody) async throws -> TDeleteUsersResponse {
-    return try await activity(
-      "/public/v1/submit/delete_users", body: input, activityType: "ACTIVITY_TYPE_DELETE_USERS",
-      resultKey: "deleteUsersResult")
-  }
-
-  /// Delete wallet accounts
-  /// Delete wallet accounts for an organization.
-  public func deleteWalletAccounts(_ input: TDeleteWalletAccountsBody) async throws
-    -> TDeleteWalletAccountsResponse
-  {
-    return try await activity(
-      "/public/v1/submit/delete_wallet_accounts", body: input,
-      activityType: "ACTIVITY_TYPE_DELETE_WALLET_ACCOUNTS", resultKey: "deleteWalletAccountsResult")
-  }
-
-  /// Delete wallets
-  /// Delete wallets for an organization.
-  public func deleteWallets(_ input: TDeleteWalletsBody) async throws -> TDeleteWalletsResponse {
-    return try await activity(
-      "/public/v1/submit/delete_wallets", body: input, activityType: "ACTIVITY_TYPE_DELETE_WALLETS",
-      resultKey: "deleteWalletsResult")
-  }
-
-  /// Delete webhook endpoint
-  /// Delete a webhook endpoint for an organization.
-  public func deleteWebhookEndpoint(_ input: TDeleteWebhookEndpointBody) async throws
-    -> TDeleteWebhookEndpointResponse
-  {
-    return try await activity(
-      "/public/v1/submit/delete_webhook_endpoint", body: input,
-      activityType: "ACTIVITY_TYPE_DELETE_WEBHOOK_ENDPOINT",
-      resultKey: "deleteWebhookEndpointResult")
-  }
-
-  /// Perform email auth
-  /// Authenticate a user via email.
-  public func emailAuth(_ input: TEmailAuthBody) async throws -> TEmailAuthResponse {
-    return try await activity(
-      "/public/v1/submit/email_auth", body: input, activityType: "ACTIVITY_TYPE_EMAIL_AUTH_V3",
-      resultKey: "emailAuthResult")
-  }
-
-  /// Broadcast EVM transaction
-  /// Submit a transaction intent describing an EVM transaction you would like to broadcast.
-  public func ethSendTransaction(_ input: TEthSendTransactionBody) async throws
-    -> TEthSendTransactionResponse
-  {
-    return try await activity(
-      "/public/v1/submit/eth_send_transaction", body: input,
-      activityType: "ACTIVITY_TYPE_ETH_SEND_TRANSACTION", resultKey: "ethSendTransactionResult")
-  }
-
-  /// Export private key
-  /// Export a private key.
-  public func exportPrivateKey(_ input: TExportPrivateKeyBody) async throws
-    -> TExportPrivateKeyResponse
-  {
-    return try await activity(
-      "/public/v1/submit/export_private_key", body: input,
-      activityType: "ACTIVITY_TYPE_EXPORT_PRIVATE_KEY", resultKey: "exportPrivateKeyResult")
-  }
-
-  /// Export wallet
-  /// Export a wallet.
-  public func exportWallet(_ input: TExportWalletBody) async throws -> TExportWalletResponse {
-    return try await activity(
-      "/public/v1/submit/export_wallet", body: input, activityType: "ACTIVITY_TYPE_EXPORT_WALLET",
-      resultKey: "exportWalletResult")
-  }
-
-  /// Export wallet account
-  /// Export a wallet account.
-  public func exportWalletAccount(_ input: TExportWalletAccountBody) async throws
-    -> TExportWalletAccountResponse
-  {
-    return try await activity(
-      "/public/v1/submit/export_wallet_account", body: input,
-      activityType: "ACTIVITY_TYPE_EXPORT_WALLET_ACCOUNT", resultKey: "exportWalletAccountResult")
-  }
-
-  /// Import private key
-  /// Import a private key.
-  public func importPrivateKey(_ input: TImportPrivateKeyBody) async throws
-    -> TImportPrivateKeyResponse
-  {
-    return try await activity(
-      "/public/v1/submit/import_private_key", body: input,
-      activityType: "ACTIVITY_TYPE_IMPORT_PRIVATE_KEY", resultKey: "importPrivateKeyResult")
-  }
-
-  /// Import wallet
-  /// Import a wallet.
-  public func importWallet(_ input: TImportWalletBody) async throws -> TImportWalletResponse {
-    return try await activity(
-      "/public/v1/submit/import_wallet", body: input, activityType: "ACTIVITY_TYPE_IMPORT_WALLET",
-      resultKey: "importWalletResult")
-  }
-
-  /// Init fiat on ramp
-  /// Initiate a fiat on ramp flow.
-  public func initFiatOnRamp(_ input: TInitFiatOnRampBody) async throws -> TInitFiatOnRampResponse {
-    return try await activity(
-      "/public/v1/submit/init_fiat_on_ramp", body: input,
-      activityType: "ACTIVITY_TYPE_INIT_FIAT_ON_RAMP", resultKey: "initFiatOnRampResult")
-  }
-
-  /// Init import private key
-  /// Initialize a new private key import.
-  public func initImportPrivateKey(_ input: TInitImportPrivateKeyBody) async throws
-    -> TInitImportPrivateKeyResponse
-  {
-    return try await activity(
-      "/public/v1/submit/init_import_private_key", body: input,
-      activityType: "ACTIVITY_TYPE_INIT_IMPORT_PRIVATE_KEY", resultKey: "initImportPrivateKeyResult"
-    )
-  }
-
-  /// Init import wallet
-  /// Initialize a new wallet import.
-  public func initImportWallet(_ input: TInitImportWalletBody) async throws
-    -> TInitImportWalletResponse
-  {
-    return try await activity(
-      "/public/v1/submit/init_import_wallet", body: input,
-      activityType: "ACTIVITY_TYPE_INIT_IMPORT_WALLET", resultKey: "initImportWalletResult")
-  }
-
-  /// Init generic OTP
-  /// Initiate a generic OTP activity.
-  public func initOtp(_ input: TInitOtpBody) async throws -> TInitOtpResponse {
-    return try await activity(
-      "/public/v1/submit/init_otp", body: input, activityType: "ACTIVITY_TYPE_INIT_OTP_V3",
-      resultKey: "initOtpResultV2")
-  }
-
-  /// Init OTP auth
-  /// Initiate an OTP auth activity.
-  public func initOtpAuth(_ input: TInitOtpAuthBody) async throws -> TInitOtpAuthResponse {
-    return try await activity(
-      "/public/v1/submit/init_otp_auth", body: input,
-      activityType: "ACTIVITY_TYPE_INIT_OTP_AUTH_V3", resultKey: "initOtpAuthResultV2")
-  }
-
-  /// Init email recovery
-  /// Initialize a new email recovery.
-  public func initUserEmailRecovery(_ input: TInitUserEmailRecoveryBody) async throws
-    -> TInitUserEmailRecoveryResponse
-  {
-    return try await activity(
-      "/public/v1/submit/init_user_email_recovery", body: input,
-      activityType: "ACTIVITY_TYPE_INIT_USER_EMAIL_RECOVERY_V2",
-      resultKey: "initUserEmailRecoveryResult")
-  }
-
-  /// Oauth
-  /// Authenticate a user with an OIDC token (Oauth).
-  public func oauth(_ input: TOauthBody) async throws -> TOauthResponse {
-    return try await activity(
-      "/public/v1/submit/oauth", body: input, activityType: "ACTIVITY_TYPE_OAUTH",
-      resultKey: "oauthResult")
-  }
-
-  /// OAuth 2.0 authentication
-  /// Authenticate a user with an OAuth 2.0 provider and receive an OIDC token to use with the LoginWithOAuth or CreateSubOrganization activities
-  public func oauth2Authenticate(_ input: TOauth2AuthenticateBody) async throws
-    -> TOauth2AuthenticateResponse
-  {
-    return try await activity(
-      "/public/v1/submit/oauth2_authenticate", body: input,
-      activityType: "ACTIVITY_TYPE_OAUTH2_AUTHENTICATE", resultKey: "oauth2AuthenticateResult")
-  }
-
-  /// Login with Oauth
-  /// Create an Oauth session for a user.
-  public func oauthLogin(_ input: TOauthLoginBody) async throws -> TOauthLoginResponse {
-    return try await activity(
-      "/public/v1/submit/oauth_login", body: input, activityType: "ACTIVITY_TYPE_OAUTH_LOGIN",
-      resultKey: "oauthLoginResult")
-  }
-
-  /// OTP auth
-  /// Authenticate a user with an OTP code sent via email or SMS.
-  public func otpAuth(_ input: TOtpAuthBody) async throws -> TOtpAuthResponse {
-    return try await activity(
-      "/public/v1/submit/otp_auth", body: input, activityType: "ACTIVITY_TYPE_OTP_AUTH",
-      resultKey: "otpAuthResult")
-  }
-
-  /// Login with OTP
-  /// Create an OTP session for a user.
-  public func otpLogin(_ input: TOtpLoginBody) async throws -> TOtpLoginResponse {
-    return try await activity(
-      "/public/v1/submit/otp_login", body: input, activityType: "ACTIVITY_TYPE_OTP_LOGIN_V2",
-      resultKey: "otpLoginResult")
-  }
-
-  /// Recover a user
-  /// Complete the process of recovering a user by adding an authenticator.
-  public func recoverUser(_ input: TRecoverUserBody) async throws -> TRecoverUserResponse {
-    return try await activity(
-      "/public/v1/submit/recover_user", body: input, activityType: "ACTIVITY_TYPE_RECOVER_USER",
-      resultKey: "recoverUserResult")
-  }
-
-  /// Reject activity
-  /// Reject an activity.
-  public func rejectActivity(_ input: TRejectActivityBody) async throws -> TRejectActivityResponse {
-    return try await activityDecision(
-      "/public/v1/submit/reject_activity", body: input,
-      activityType: "ACTIVITY_TYPE_REJECT_ACTIVITY")
-  }
-
-  /// Remove organization feature
-  /// Remove an organization feature. This activity must be approved by the current root quorum.
-  public func removeOrganizationFeature(_ input: TRemoveOrganizationFeatureBody) async throws
-    -> TRemoveOrganizationFeatureResponse
-  {
-    return try await activity(
-      "/public/v1/submit/remove_organization_feature", body: input,
-      activityType: "ACTIVITY_TYPE_REMOVE_ORGANIZATION_FEATURE",
-      resultKey: "removeOrganizationFeatureResult")
-  }
-
-  /// Set organization feature
-  /// Set an organization feature. This activity must be approved by the current root quorum.
-  public func setOrganizationFeature(_ input: TSetOrganizationFeatureBody) async throws
-    -> TSetOrganizationFeatureResponse
-  {
-    return try await activity(
-      "/public/v1/submit/set_organization_feature", body: input,
-      activityType: "ACTIVITY_TYPE_SET_ORGANIZATION_FEATURE",
-      resultKey: "setOrganizationFeatureResult")
-  }
-
-  /// Sign raw payload
-  /// Sign a raw payload.
-  public func signRawPayload(_ input: TSignRawPayloadBody) async throws -> TSignRawPayloadResponse {
-    return try await activity(
-      "/public/v1/submit/sign_raw_payload", body: input,
-      activityType: "ACTIVITY_TYPE_SIGN_RAW_PAYLOAD_V2", resultKey: "signRawPayloadResult")
-  }
-
-  /// Sign raw payloads
-  /// Sign multiple raw payloads with the same signing parameters.
-  public func signRawPayloads(_ input: TSignRawPayloadsBody) async throws
-    -> TSignRawPayloadsResponse
-  {
-    return try await activity(
-      "/public/v1/submit/sign_raw_payloads", body: input,
-      activityType: "ACTIVITY_TYPE_SIGN_RAW_PAYLOADS", resultKey: "signRawPayloadsResult")
-  }
-
-  /// Sign transaction
-  /// Sign a transaction.
-  public func signTransaction(_ input: TSignTransactionBody) async throws
-    -> TSignTransactionResponse
-  {
-    return try await activity(
-      "/public/v1/submit/sign_transaction", body: input,
-      activityType: "ACTIVITY_TYPE_SIGN_TRANSACTION_V2", resultKey: "signTransactionResult")
-  }
-
-  /// Broadcast SVM transaction
-  /// Submit a transaction intent describing an SVM transaction you would like to broadcast.
-  public func solSendTransaction(_ input: TSolSendTransactionBody) async throws
-    -> TSolSendTransactionResponse
-  {
-    return try await activity(
-      "/public/v1/submit/sol_send_transaction", body: input,
-      activityType: "ACTIVITY_TYPE_SOL_SEND_TRANSACTION", resultKey: "solSendTransactionResult")
-  }
-
-  /// Login with a stamp
-  /// Create a session for a user through stamping client side (API key, wallet client, or passkey client).
-  public func stampLogin(_ input: TStampLoginBody) async throws -> TStampLoginResponse {
-    return try await activity(
-      "/public/v1/submit/stamp_login", body: input, activityType: "ACTIVITY_TYPE_STAMP_LOGIN",
-      resultKey: "stampLoginResult")
-  }
-
-  /// Update a Fiat On Ramp Credential
-  /// Update a fiat on ramp provider credential
-  public func updateFiatOnRampCredential(_ input: TUpdateFiatOnRampCredentialBody) async throws
-    -> TUpdateFiatOnRampCredentialResponse
-  {
-    return try await activity(
-      "/public/v1/submit/update_fiat_on_ramp_credential", body: input,
-      activityType: "ACTIVITY_TYPE_UPDATE_FIAT_ON_RAMP_CREDENTIAL",
-      resultKey: "updateFiatOnRampCredentialResult")
-  }
-
-  /// Update an OAuth 2.0 Credential
-  /// Update an OAuth 2.0 provider credential
-  public func updateOauth2Credential(_ input: TUpdateOauth2CredentialBody) async throws
-    -> TUpdateOauth2CredentialResponse
-  {
-    return try await activity(
-      "/public/v1/submit/update_oauth2_credential", body: input,
-      activityType: "ACTIVITY_TYPE_UPDATE_OAUTH2_CREDENTIAL",
-      resultKey: "updateOauth2CredentialResult")
-  }
-
-  /// Update organization name
-  /// Update the name of an organization.
-  public func updateOrganizationName(_ input: TUpdateOrganizationNameBody) async throws
-    -> TUpdateOrganizationNameResponse
-  {
-    return try await activity(
-      "/public/v1/submit/update_organization_name", body: input,
-      activityType: "ACTIVITY_TYPE_UPDATE_ORGANIZATION_NAME",
-      resultKey: "updateOrganizationNameResult")
-  }
-
-  /// Update policy
-  /// Update an existing policy.
-  public func updatePolicy(_ input: TUpdatePolicyBody) async throws -> TUpdatePolicyResponse {
-    return try await activity(
-      "/public/v1/submit/update_policy", body: input,
-      activityType: "ACTIVITY_TYPE_UPDATE_POLICY_V2", resultKey: "updatePolicyResultV2")
-  }
-
-  /// Update private key tag
-  /// Update human-readable name or associated private keys. Note that this activity is atomic: all of the updates will succeed at once, or all of them will fail.
-  public func updatePrivateKeyTag(_ input: TUpdatePrivateKeyTagBody) async throws
-    -> TUpdatePrivateKeyTagResponse
-  {
-    return try await activity(
-      "/public/v1/submit/update_private_key_tag", body: input,
-      activityType: "ACTIVITY_TYPE_UPDATE_PRIVATE_KEY_TAG", resultKey: "updatePrivateKeyTagResult")
-  }
-
-  /// Update root quorum
-  /// Set the threshold and members of the root quorum. This activity must be approved by the current root quorum.
-  public func updateRootQuorum(_ input: TUpdateRootQuorumBody) async throws
-    -> TUpdateRootQuorumResponse
-  {
-    return try await activity(
-      "/public/v1/submit/update_root_quorum", body: input,
-      activityType: "ACTIVITY_TYPE_UPDATE_ROOT_QUORUM", resultKey: "updateRootQuorumResult")
-  }
-
-  /// Update user
-  /// Update a user in an existing organization.
-  public func updateUser(_ input: TUpdateUserBody) async throws -> TUpdateUserResponse {
-    return try await activity(
-      "/public/v1/submit/update_user", body: input, activityType: "ACTIVITY_TYPE_UPDATE_USER",
-      resultKey: "updateUserResult")
-  }
-
-  /// Update user's email
-  /// Update a user's email in an existing organization.
-  public func updateUserEmail(_ input: TUpdateUserEmailBody) async throws
-    -> TUpdateUserEmailResponse
-  {
-    return try await activity(
-      "/public/v1/submit/update_user_email", body: input,
-      activityType: "ACTIVITY_TYPE_UPDATE_USER_EMAIL", resultKey: "updateUserEmailResult")
-  }
-
-  /// Update user's name
-  /// Update a user's name in an existing organization.
-  public func updateUserName(_ input: TUpdateUserNameBody) async throws -> TUpdateUserNameResponse {
-    return try await activity(
-      "/public/v1/submit/update_user_name", body: input,
-      activityType: "ACTIVITY_TYPE_UPDATE_USER_NAME", resultKey: "updateUserNameResult")
-  }
-
-  /// Update user's phone number
-  /// Update a user's phone number in an existing organization.
-  public func updateUserPhoneNumber(_ input: TUpdateUserPhoneNumberBody) async throws
-    -> TUpdateUserPhoneNumberResponse
-  {
-    return try await activity(
-      "/public/v1/submit/update_user_phone_number", body: input,
-      activityType: "ACTIVITY_TYPE_UPDATE_USER_PHONE_NUMBER",
-      resultKey: "updateUserPhoneNumberResult")
-  }
-
-  /// Update user tag
-  /// Update human-readable name or associated users. Note that this activity is atomic: all of the updates will succeed at once, or all of them will fail.
-  public func updateUserTag(_ input: TUpdateUserTagBody) async throws -> TUpdateUserTagResponse {
-    return try await activity(
-      "/public/v1/submit/update_user_tag", body: input,
-      activityType: "ACTIVITY_TYPE_UPDATE_USER_TAG", resultKey: "updateUserTagResult")
-  }
-
-  /// Update wallet
-  /// Update a wallet for an organization.
-  public func updateWallet(_ input: TUpdateWalletBody) async throws -> TUpdateWalletResponse {
-    return try await activity(
-      "/public/v1/submit/update_wallet", body: input, activityType: "ACTIVITY_TYPE_UPDATE_WALLET",
-      resultKey: "updateWalletResult")
-  }
-
-  /// Update webhook endpoint
-  /// Update a webhook endpoint for an organization.
-  public func updateWebhookEndpoint(_ input: TUpdateWebhookEndpointBody) async throws
-    -> TUpdateWebhookEndpointResponse
-  {
-    return try await activity(
-      "/public/v1/submit/update_webhook_endpoint", body: input,
-      activityType: "ACTIVITY_TYPE_UPDATE_WEBHOOK_ENDPOINT",
-      resultKey: "updateWebhookEndpointResult")
-  }
-
-  /// Verify generic OTP
-  /// Verify a generic OTP.
-  public func verifyOtp(_ input: TVerifyOtpBody) async throws -> TVerifyOtpResponse {
-    return try await activity(
-      "/public/v1/submit/verify_otp", body: input, activityType: "ACTIVITY_TYPE_VERIFY_OTP_V2",
-      resultKey: "verifyOtpResult")
-  }
+public extension TurnkeyClient {
+
+    /// Get activity
+    /// Get details about an activity.
+    func getActivity(_ input: TGetActivityBody) async throws -> TGetActivityResponse {
+        return try await request("/public/v1/query/get_activity", body: input)
+    }
+
+
+    /// Get API key
+    /// Get details about an API key.
+    func getApiKey(_ input: TGetApiKeyBody) async throws -> TGetApiKeyResponse {
+        return try await request("/public/v1/query/get_api_key", body: input)
+    }
+
+
+    /// Get API keys
+    /// Get details about API keys for a user.
+    func getApiKeys(_ input: TGetApiKeysBody = .init()) async throws -> TGetApiKeysResponse {
+        return try await request("/public/v1/query/get_api_keys", body: input)
+    }
+
+
+    /// Get TVC App status
+    /// Get live runtime status for a TVC App from the cluster.
+    func getAppStatus(_ input: TGetAppStatusBody) async throws -> TGetAppStatusResponse {
+        return try await request("/public/v1/query/get_app_status", body: input)
+    }
+
+
+    /// Get authenticator
+    /// Get details about an authenticator.
+    func getAuthenticator(_ input: TGetAuthenticatorBody) async throws -> TGetAuthenticatorResponse {
+        return try await request("/public/v1/query/get_authenticator", body: input)
+    }
+
+
+    /// Get authenticators
+    /// Get details about authenticators for a user.
+    func getAuthenticators(_ input: TGetAuthenticatorsBody) async throws -> TGetAuthenticatorsResponse {
+        return try await request("/public/v1/query/get_authenticators", body: input)
+    }
+
+
+    /// Get a specific boot proof
+    /// Get the boot proof for a given ephemeral key.
+    func getBootProof(_ input: TGetBootProofBody) async throws -> TGetBootProofResponse {
+        return try await request("/public/v1/query/get_boot_proof", body: input)
+    }
+
+
+    /// Get Earn claim fees status
+    /// Poll the status of a fee claim by its claim_request_id.
+    func getClaimEarnFeesStatus(_ input: TGetClaimEarnFeesStatusBody) async throws -> TGetClaimEarnFeesStatusResponse {
+        return try await request("/public/v1/query/get_claim_earn_fees_status", body: input)
+    }
+
+
+    /// Get Earn deploy status
+    /// Poll the status of a wrapper deployment by its deploy_request_id.
+    func getEarnDeployStatus(_ input: TGetEarnDeployStatusBody) async throws -> TGetEarnDeployStatusResponse {
+        return try await request("/public/v1/query/get_earn_deploy_status", body: input)
+    }
+
+
+    /// Get Earn deposit status
+    /// Poll the status of a deposit by its deposit_request_id (for the async/sponsored deposit path).
+    func getEarnDepositStatus(_ input: TGetEarnDepositStatusBody) async throws -> TGetEarnDepositStatusResponse {
+        return try await request("/public/v1/query/get_earn_deposit_status", body: input)
+    }
+
+
+    /// Get Earn withdraw status
+    /// Poll the status of a withdrawal by its withdraw_request_id.
+    func getEarnWithdrawStatus(_ input: TGetEarnWithdrawStatusBody) async throws -> TGetEarnWithdrawStatusResponse {
+        return try await request("/public/v1/query/get_earn_withdraw_status", body: input)
+    }
+
+
+    /// Get gas usage
+    /// Get gas usage and gas limits for either the parent organization or a sub-organization.
+    func getGasUsage(_ input: TGetGasUsageBody = .init()) async throws -> TGetGasUsageResponse {
+        return try await request("/public/v1/query/get_gas_usage", body: input)
+    }
+
+
+    /// Get IP Allowlist
+    /// Get IP allowlist and rules for an organization.
+    func getIpAllowlist(_ input: TGetIpAllowlistBody = .init()) async throws -> TGetIpAllowlistResponse {
+        return try await request("/public/v1/query/get_ip_allowlist", body: input)
+    }
+
+
+    /// Get the latest boot proof for an app
+    /// Get the latest boot proof for a given enclave app name.
+    func getLatestBootProof(_ input: TGetLatestBootProofBody) async throws -> TGetLatestBootProofResponse {
+        return try await request("/public/v1/query/get_latest_boot_proof", body: input)
+    }
+
+
+    /// Get MFA policies
+    /// Get all MFA policies for a user.
+    func getMfaPolicies(_ input: TGetMfaPoliciesBody) async throws -> TGetMfaPoliciesResponse {
+        return try await request("/public/v1/query/get_mfa_policies", body: input)
+    }
+
+
+    /// Get MFA policy
+    /// Get a single MFA policy for a user.
+    func getMfaPolicy(_ input: TGetMfaPolicyBody) async throws -> TGetMfaPolicyResponse {
+        return try await request("/public/v1/query/get_mfa_policy", body: input)
+    }
+
+
+    /// Get MFA status
+    /// Get the MFA status of an activity for a specific user or all voting users.
+    func getMfaStatus(_ input: TGetMfaStatusBody) async throws -> TGetMfaStatusResponse {
+        return try await request("/public/v1/query/get_mfa_status", body: input)
+    }
+
+
+    /// Get nonces
+    /// Get nonce values for an address on a given network. Can fetch the standard on-chain nonce and/or the gas station nonce used for sponsored transactions.
+    func getNonces(_ input: TGetNoncesBody) async throws -> TGetNoncesResponse {
+        return try await request("/public/v1/query/get_nonces", body: input)
+    }
+
+
+    /// Get OAuth 2.0 credential
+    /// Get details about an OAuth 2.0 credential.
+    func getOauth2Credential(_ input: TGetOauth2CredentialBody) async throws -> TGetOauth2CredentialResponse {
+        return try await request("/public/v1/query/get_oauth2_credential", body: input)
+    }
+
+
+    /// Get Oauth providers
+    /// Get details about Oauth providers for a user.
+    func getOauthProviders(_ input: TGetOauthProvidersBody = .init()) async throws -> TGetOauthProvidersResponse {
+        return try await request("/public/v1/query/get_oauth_providers", body: input)
+    }
+
+
+    /// Get On Ramp transaction status
+    /// Get the status of an on ramp transaction.
+    func getOnRampTransactionStatus(_ input: TGetOnRampTransactionStatusBody) async throws -> TGetOnRampTransactionStatusResponse {
+        return try await request("/public/v1/query/get_onramp_transaction_status", body: input)
+    }
+
+
+    /// Get configs
+    /// Get quorum settings and features for an organization.
+    func getOrganizationConfigs(_ input: TGetOrganizationConfigsBody = .init()) async throws -> TGetOrganizationConfigsResponse {
+        return try await request("/public/v1/query/get_organization_configs", body: input)
+    }
+
+
+    /// Get policy
+    /// Get details about a policy.
+    func getPolicy(_ input: TGetPolicyBody) async throws -> TGetPolicyResponse {
+        return try await request("/public/v1/query/get_policy", body: input)
+    }
+
+
+    /// Get policy evaluations
+    /// Get the policy evaluations for an activity.
+    func getPolicyEvaluations(_ input: TGetPolicyEvaluationsBody) async throws -> TGetPolicyEvaluationsResponse {
+        return try await request("/public/v1/query/get_policy_evaluations", body: input)
+    }
+
+
+    /// Get private key
+    /// Get details about a private key.
+    func getPrivateKey(_ input: TGetPrivateKeyBody) async throws -> TGetPrivateKeyResponse {
+        return try await request("/public/v1/query/get_private_key", body: input)
+    }
+
+
+    /// Get send transaction status
+    /// Get the status of a send transaction request.
+    func getSendTransactionStatus(_ input: TGetSendTransactionStatusBody) async throws -> TGetSendTransactionStatusResponse {
+        return try await request("/public/v1/query/get_send_transaction_status", body: input)
+    }
+
+
+    /// Get session profile
+    /// Get a single session profile for an organization.
+    func getSessionProfile(_ input: TGetSessionProfileBody) async throws -> TGetSessionProfileResponse {
+        return try await request("/public/v1/query/get_session_profile", body: input)
+    }
+
+
+    /// Get session profiles
+    /// Get all session profiles for an organization.
+    func getSessionProfiles(_ input: TGetSessionProfilesBody = .init()) async throws -> TGetSessionProfilesResponse {
+        return try await request("/public/v1/query/get_session_profiles", body: input)
+    }
+
+
+    /// Get smart contract interface
+    /// Get details about a smart contract interface.
+    func getSmartContractInterface(_ input: TGetSmartContractInterfaceBody) async throws -> TGetSmartContractInterfaceResponse {
+        return try await request("/public/v1/query/get_smart_contract_interface", body: input)
+    }
+
+
+    /// Get swap status
+    /// Poll the status of a swap by its swap_request_id. Covers same-chain and cross-chain swaps.
+    func getSwapStatus(_ input: TGetSwapStatusBody) async throws -> TGetSwapStatusResponse {
+        return try await request("/public/v1/query/get_swap_status", body: input)
+    }
+
+
+    /// Get TVC App
+    /// Get details about a single TVC App
+    func getTvcApp(_ input: TGetTvcAppBody) async throws -> TGetTvcAppResponse {
+        return try await request("/public/v1/query/get_tvc_app", body: input)
+    }
+
+
+    /// Get TVC Deployment
+    /// Get details about a single TVC Deployment
+    func getTvcDeployment(_ input: TGetTvcDeploymentBody) async throws -> TGetTvcDeploymentResponse {
+        return try await request("/public/v1/query/get_tvc_deployment", body: input)
+    }
+
+
+    /// Get TVC Deployment debug logs
+    /// Get a bounded window of application logs from a debug-mode TVC deployment. Returned lines are collected from every running replica and sorted by platform timestamp.
+    func getTvcDeploymentDebugLogs(_ input: TGetTvcDeploymentDebugLogsBody) async throws -> TGetTvcDeploymentDebugLogsResponse {
+        return try await request("/public/v1/query/get_tvc_deployment_debug_logs", body: input)
+    }
+
+
+    /// Get user
+    /// Get details about a user.
+    func getUser(_ input: TGetUserBody) async throws -> TGetUserResponse {
+        return try await request("/public/v1/query/get_user", body: input)
+    }
+
+
+    /// Get wallet
+    /// Get details about a wallet.
+    func getWallet(_ input: TGetWalletBody) async throws -> TGetWalletResponse {
+        return try await request("/public/v1/query/get_wallet", body: input)
+    }
+
+
+    /// Get wallet account
+    /// Get a single wallet account.
+    func getWalletAccount(_ input: TGetWalletAccountBody) async throws -> TGetWalletAccountResponse {
+        return try await request("/public/v1/query/get_wallet_account", body: input)
+    }
+
+
+    /// Get balances
+    /// Get balances of supported assets for an address on the specified network. Only non-zero balances are returned.
+    func getWalletAddressBalances(_ input: TGetWalletAddressBalancesBody) async throws -> TGetWalletAddressBalancesResponse {
+        return try await request("/public/v1/query/get_wallet_address_balances", body: input)
+    }
+
+
+    /// List activities
+    /// List all activities within an organization.
+    func getActivities(_ input: TGetActivitiesBody = .init()) async throws -> TGetActivitiesResponse {
+        return try await request("/public/v1/query/list_activities", body: input)
+    }
+
+
+    /// List App Proofs for an activity
+    /// List the App Proofs for the given activity.
+    func getAppProofs(_ input: TGetAppProofsBody) async throws -> TGetAppProofsResponse {
+        return try await request("/public/v1/query/list_app_proofs", body: input)
+    }
+
+
+    /// Get Earn enabled vaults
+    /// Get the organization's deployed wrappers with on-chain total deposited and live APY. The management view, distinct from per-wallet positions.
+    func listEarnEnabledVaults(_ input: TListEarnEnabledVaultsBody = .init()) async throws -> TListEarnEnabledVaultsResponse {
+        return try await request("/public/v1/query/list_earn_enabled_vaults", body: input)
+    }
+
+
+    /// Get Earn positions
+    /// Get the active Earn positions for a specific wallet, including current value, cost basis, yield, and projected fees.
+    func listEarnPositions(_ input: TListEarnPositionsBody) async throws -> TListEarnPositionsResponse {
+        return try await request("/public/v1/query/list_earn_positions", body: input)
+    }
+
+
+    /// Get Earn vault catalog
+    /// Get the catalog of all wrappable yield vaults across supported chains, enriched with live TVL and APY. Annotates which vaults the organization has already enabled.
+    func listEarnVaults(_ input: TListEarnVaultsBody) async throws -> TListEarnVaultsResponse {
+        return try await request("/public/v1/query/list_earn_vaults", body: input)
+    }
+
+
+    /// List email events
+    /// List email events for the organization.
+    func listEmailEvents(_ input: TListEmailEventsBody) async throws -> TListEmailEventsResponse {
+        return try await request("/public/v1/query/list_email_events", body: input)
+    }
+
+
+    /// List Eth transaction history
+    /// List Ethereum transaction history for a wallet address on the specified network.
+    func listEthTransactionHistory(_ input: TListEthTransactionHistoryBody) async throws -> TListEthTransactionHistoryResponse {
+        return try await request("/public/v1/query/list_eth_transaction_history", body: input)
+    }
+
+
+    /// List Fiat On Ramp Credentials
+    /// List all fiat on ramp provider credentials within an organization.
+    func listFiatOnRampCredentials(_ input: TListFiatOnRampCredentialsBody = .init()) async throws -> TListFiatOnRampCredentialsResponse {
+        return try await request("/public/v1/query/list_fiat_on_ramp_credentials", body: input)
+    }
+
+
+    /// List OAuth 2.0 Credentials
+    /// List all OAuth 2.0 credentials within an organization.
+    func listOauth2Credentials(_ input: TListOauth2CredentialsBody = .init()) async throws -> TListOauth2CredentialsResponse {
+        return try await request("/public/v1/query/list_oauth2_credentials", body: input)
+    }
+
+
+    /// List policies
+    /// List all policies within an organization.
+    func getPolicies(_ input: TGetPoliciesBody = .init()) async throws -> TGetPoliciesResponse {
+        return try await request("/public/v1/query/list_policies", body: input)
+    }
+
+
+    /// List private key tags
+    /// List all private key tags within an organization.
+    func listPrivateKeyTags(_ input: TListPrivateKeyTagsBody = .init()) async throws -> TListPrivateKeyTagsResponse {
+        return try await request("/public/v1/query/list_private_key_tags", body: input)
+    }
+
+
+    /// List private keys
+    /// List all private keys within an organization.
+    func getPrivateKeys(_ input: TGetPrivateKeysBody = .init()) async throws -> TGetPrivateKeysResponse {
+        return try await request("/public/v1/query/list_private_keys", body: input)
+    }
+
+
+    /// List smart contract interfaces
+    /// List all smart contract interfaces within an organization.
+    func getSmartContractInterfaces(_ input: TGetSmartContractInterfacesBody = .init()) async throws -> TGetSmartContractInterfacesResponse {
+        return try await request("/public/v1/query/list_smart_contract_interfaces", body: input)
+    }
+
+
+    /// List Sol transaction history
+    /// List Solana transaction history for a wallet address on the specified network.
+    func listSolTransactionHistory(_ input: TListSolTransactionHistoryBody) async throws -> TListSolTransactionHistoryResponse {
+        return try await request("/public/v1/query/list_sol_transaction_history", body: input)
+    }
+
+
+    /// Get sub-organizations
+    /// Get all suborg IDs associated given a parent org ID and an optional filter.
+    func getSubOrgIds(_ input: TGetSubOrgIdsBody = .init()) async throws -> TGetSubOrgIdsResponse {
+        return try await request("/public/v1/query/list_suborgs", body: input)
+    }
+
+
+    /// List supported assets
+    /// List supported assets for the specified network.
+    func listSupportedAssets(_ input: TListSupportedAssetsBody) async throws -> TListSupportedAssetsResponse {
+        return try await request("/public/v1/query/list_supported_assets", body: input)
+    }
+
+
+    /// List TVC Deployments
+    /// List all deployments for a given TVC App
+    func getTvcAppDeployments(_ input: TGetTvcAppDeploymentsBody) async throws -> TGetTvcAppDeploymentsResponse {
+        return try await request("/public/v1/query/list_tvc_app_deployments", body: input)
+    }
+
+
+    /// List TVC Apps
+    /// List all TVC Apps within an organization.
+    func getTvcApps(_ input: TGetTvcAppsBody = .init()) async throws -> TGetTvcAppsResponse {
+        return try await request("/public/v1/query/list_tvc_apps", body: input)
+    }
+
+
+    /// List user tags
+    /// List all user tags within an organization.
+    func listUserTags(_ input: TListUserTagsBody = .init()) async throws -> TListUserTagsResponse {
+        return try await request("/public/v1/query/list_user_tags", body: input)
+    }
+
+
+    /// List users
+    /// List all users within an organization.
+    func getUsers(_ input: TGetUsersBody = .init()) async throws -> TGetUsersResponse {
+        return try await request("/public/v1/query/list_users", body: input)
+    }
+
+
+    /// Get verified sub-organizations
+    /// Get all email or phone verified suborg IDs associated given a parent org ID.
+    func getVerifiedSubOrgIds(_ input: TGetVerifiedSubOrgIdsBody = .init()) async throws -> TGetVerifiedSubOrgIdsResponse {
+        return try await request("/public/v1/query/list_verified_suborgs", body: input)
+    }
+
+
+    /// List wallet accounts
+    /// List all accounts within a wallet.
+    func getWalletAccounts(_ input: TGetWalletAccountsBody = .init()) async throws -> TGetWalletAccountsResponse {
+        return try await request("/public/v1/query/list_wallet_accounts", body: input)
+    }
+
+
+    /// List wallets
+    /// List all wallets within an organization.
+    func getWallets(_ input: TGetWalletsBody = .init()) async throws -> TGetWalletsResponse {
+        return try await request("/public/v1/query/list_wallets", body: input)
+    }
+
+
+    /// List webhook endpoints
+    /// List webhook endpoints within an organization.
+    func listWebhookEndpoints(_ input: TListWebhookEndpointsBody = .init()) async throws -> TListWebhookEndpointsResponse {
+        return try await request("/public/v1/query/list_webhook_endpoints", body: input)
+    }
+
+
+    /// Validate Container Image for TVC
+    /// Validate a container image URL and pull secret for TVC deployment
+    func validateTvcImage(_ input: TValidateTvcImageBody) async throws -> TValidateTvcImageResponse {
+        return try await activity("/public/v1/query/validate_tvc_image", body: input, activityType: "ACTIVITY_TYPE_VALIDATE_TVC_IMAGE", resultKey: "ValidateTvcImageResult")
+    }
+
+
+    /// Who am I?
+    /// Get basic information about your current API or WebAuthN user and their organization. Affords sub-organization look ups via parent organization for WebAuthN or API key users.
+    func getWhoami(_ input: TGetWhoamiBody = .init()) async throws -> TGetWhoamiResponse {
+        return try await request("/public/v1/query/whoami", body: input)
+    }
+
+
+    /// Approve activity
+    /// Approve an activity.
+    func approveActivity(_ input: TApproveActivityBody) async throws -> TApproveActivityResponse {
+        return try await activityDecision("/public/v1/submit/approve_activity", body: input, activityType: "ACTIVITY_TYPE_APPROVE_ACTIVITY")
+    }
+
+
+    /// Claim earn fees
+    /// Claim earn fees through the activity pipeline.
+    func claimEarnFees(_ input: TClaimEarnFeesBody) async throws -> TClaimEarnFeesResponse {
+        return try await activity("/public/v1/submit/claim_earn_fees", body: input, activityType: "ACTIVITY_TYPE_CLAIM_EARN_FEES", resultKey: "claimEarnFeesResult")
+    }
+
+
+    /// Claim swap fees
+    /// Claim swap fees through the activity pipeline.
+    func claimSwapFees(_ input: TClaimSwapFeesBody) async throws -> TClaimSwapFeesResponse {
+        return try await activity("/public/v1/submit/claim_swap_fees", body: input, activityType: "ACTIVITY_TYPE_CLAIM_SWAP_FEES", resultKey: "claimSwapFeesResult")
+    }
+
+
+    /// Create API keys
+    /// Add API keys to an existing user.
+    func createApiKeys(_ input: TCreateApiKeysBody) async throws -> TCreateApiKeysResponse {
+        return try await activity("/public/v1/submit/create_api_keys", body: input, activityType: "ACTIVITY_TYPE_CREATE_API_KEYS_V2", resultKey: "createApiKeysResult")
+    }
+
+
+    /// Create authenticators
+    /// Create authenticators to authenticate requests to Turnkey.
+    func createAuthenticators(_ input: TCreateAuthenticatorsBody) async throws -> TCreateAuthenticatorsResponse {
+        return try await activity("/public/v1/submit/create_authenticators", body: input, activityType: "ACTIVITY_TYPE_CREATE_AUTHENTICATORS_V2", resultKey: "createAuthenticatorsResult")
+    }
+
+
+    /// Create a Fiat On Ramp Credential
+    /// Create a fiat on ramp provider credential
+    func createFiatOnRampCredential(_ input: TCreateFiatOnRampCredentialBody) async throws -> TCreateFiatOnRampCredentialResponse {
+        return try await activity("/public/v1/submit/create_fiat_on_ramp_credential", body: input, activityType: "ACTIVITY_TYPE_CREATE_FIAT_ON_RAMP_CREDENTIAL", resultKey: "createFiatOnRampCredentialResult")
+    }
+
+
+    /// Create invitations
+    /// Create invitations to join an existing organization.
+    func createInvitations(_ input: TCreateInvitationsBody) async throws -> TCreateInvitationsResponse {
+        return try await activity("/public/v1/submit/create_invitations", body: input, activityType: "ACTIVITY_TYPE_CREATE_INVITATIONS", resultKey: "createInvitationsResult")
+    }
+
+
+    /// Create MFA policy
+    /// Create a new MFA policy for a user.
+    func createMfaPolicy(_ input: TCreateMfaPolicyBody) async throws -> TCreateMfaPolicyResponse {
+        return try await activity("/public/v1/submit/create_mfa_policy", body: input, activityType: "ACTIVITY_TYPE_CREATE_MFA_POLICY", resultKey: "createMfaPolicyResult")
+    }
+
+
+    /// Create an OAuth 2.0 Credential
+    /// Enable authentication for end users with an OAuth 2.0 provider
+    func createOauth2Credential(_ input: TCreateOauth2CredentialBody) async throws -> TCreateOauth2CredentialResponse {
+        return try await activity("/public/v1/submit/create_oauth2_credential", body: input, activityType: "ACTIVITY_TYPE_CREATE_OAUTH2_CREDENTIAL", resultKey: "createOauth2CredentialResult")
+    }
+
+
+    /// Create Oauth providers
+    /// Create Oauth providers for a specified user.
+    func createOauthProviders(_ input: TCreateOauthProvidersBody) async throws -> TCreateOauthProvidersResponse {
+        return try await activity("/public/v1/submit/create_oauth_providers", body: input, activityType: "ACTIVITY_TYPE_CREATE_OAUTH_PROVIDERS_V2", resultKey: "createOauthProvidersResultV2")
+    }
+
+
+    /// Create policies
+    /// Create new policies.
+    func createPolicies(_ input: TCreatePoliciesBody) async throws -> TCreatePoliciesResponse {
+        return try await activity("/public/v1/submit/create_policies", body: input, activityType: "ACTIVITY_TYPE_CREATE_POLICIES", resultKey: "createPoliciesResult")
+    }
+
+
+    /// Create policy
+    /// Create a new policy.
+    func createPolicy(_ input: TCreatePolicyBody) async throws -> TCreatePolicyResponse {
+        return try await activity("/public/v1/submit/create_policy", body: input, activityType: "ACTIVITY_TYPE_CREATE_POLICY_V3", resultKey: "createPolicyResult")
+    }
+
+
+    /// Create private key tag
+    /// Create a private key tag and add it to private keys.
+    func createPrivateKeyTag(_ input: TCreatePrivateKeyTagBody) async throws -> TCreatePrivateKeyTagResponse {
+        return try await activity("/public/v1/submit/create_private_key_tag", body: input, activityType: "ACTIVITY_TYPE_CREATE_PRIVATE_KEY_TAG", resultKey: "createPrivateKeyTagResult")
+    }
+
+
+    /// Create private keys
+    /// Create new private keys.
+    func createPrivateKeys(_ input: TCreatePrivateKeysBody) async throws -> TCreatePrivateKeysResponse {
+        return try await activity("/public/v1/submit/create_private_keys", body: input, activityType: "ACTIVITY_TYPE_CREATE_PRIVATE_KEYS_V2", resultKey: "createPrivateKeysResultV2")
+    }
+
+
+    /// Create read only session
+    /// Create a read only session for a user (valid for 1 hour).
+    func createReadOnlySession(_ input: TCreateReadOnlySessionBody) async throws -> TCreateReadOnlySessionResponse {
+        return try await activity("/public/v1/submit/create_read_only_session", body: input, activityType: "ACTIVITY_TYPE_CREATE_READ_ONLY_SESSION", resultKey: "createReadOnlySessionResult")
+    }
+
+
+    /// Create read write session
+    /// Create a read write session for a user.
+    func createReadWriteSession(_ input: TCreateReadWriteSessionBody) async throws -> TCreateReadWriteSessionResponse {
+        return try await activity("/public/v1/submit/create_read_write_session", body: input, activityType: "ACTIVITY_TYPE_CREATE_READ_WRITE_SESSION_V2", resultKey: "createReadWriteSessionResult")
+    }
+
+
+    /// Create session profile
+    /// Create a new session profile for an organization.
+    func createSessionProfile(_ input: TCreateSessionProfileBody) async throws -> TCreateSessionProfileResponse {
+        return try await activity("/public/v1/submit/create_session_profile", body: input, activityType: "ACTIVITY_TYPE_CREATE_SESSION_PROFILE", resultKey: "createSessionProfileResult")
+    }
+
+
+    /// Create smart contract interface
+    /// Create an ABI/IDL in JSON.
+    func createSmartContractInterface(_ input: TCreateSmartContractInterfaceBody) async throws -> TCreateSmartContractInterfaceResponse {
+        return try await activity("/public/v1/submit/create_smart_contract_interface", body: input, activityType: "ACTIVITY_TYPE_CREATE_SMART_CONTRACT_INTERFACE", resultKey: "createSmartContractInterfaceResult")
+    }
+
+
+    /// Create sub-organization
+    /// Create a new sub-organization. Each root user must have at least one valid credential: an API key, an authenticator, an OAuth provider, or an email or phone number with a login method enabled on the sub-organization (email, email OTP, or SMS).
+    func createSubOrganization(_ input: TCreateSubOrganizationBody) async throws -> TCreateSubOrganizationResponse {
+        return try await activity("/public/v1/submit/create_sub_organization", body: input, activityType: "ACTIVITY_TYPE_CREATE_SUB_ORGANIZATION_V8", resultKey: "createSubOrganizationResultV8")
+    }
+
+
+    /// Create a TVC App
+    /// Create a new TVC application
+    func createTvcApp(_ input: TCreateTvcAppBody) async throws -> TCreateTvcAppResponse {
+        return try await activity("/public/v1/submit/create_tvc_app", body: input, activityType: "ACTIVITY_TYPE_CREATE_TVC_APP", resultKey: "createTvcAppResult")
+    }
+
+
+    /// Create a TVC Deployment
+    /// Create a new TVC Deployment
+    func createTvcDeployment(_ input: TCreateTvcDeploymentBody) async throws -> TCreateTvcDeploymentResponse {
+        return try await activity("/public/v1/submit/create_tvc_deployment", body: input, activityType: "ACTIVITY_TYPE_CREATE_TVC_DEPLOYMENT", resultKey: "createTvcDeploymentResult")
+    }
+
+
+    /// Create TVC Manifest Approvals
+    /// Post one or more manifest approvals for a TVC Manifest
+    func createTvcManifestApprovals(_ input: TCreateTvcManifestApprovalsBody) async throws -> TCreateTvcManifestApprovalsResponse {
+        return try await activity("/public/v1/submit/create_tvc_manifest_approvals", body: input, activityType: "ACTIVITY_TYPE_CREATE_TVC_MANIFEST_APPROVALS", resultKey: "createTvcManifestApprovalsResult")
+    }
+
+
+    /// Create user tag
+    /// Create a user tag and add it to users.
+    func createUserTag(_ input: TCreateUserTagBody) async throws -> TCreateUserTagResponse {
+        return try await activity("/public/v1/submit/create_user_tag", body: input, activityType: "ACTIVITY_TYPE_CREATE_USER_TAG", resultKey: "createUserTagResult")
+    }
+
+
+    /// Create users
+    /// Create users in an existing organization. Each user must have at least one valid credential: an API key, an authenticator, an OAuth provider, or an email or phone number with a login method enabled on the organization (email, email OTP, or SMS).
+    func createUsers(_ input: TCreateUsersBody) async throws -> TCreateUsersResponse {
+        return try await activity("/public/v1/submit/create_users", body: input, activityType: "ACTIVITY_TYPE_CREATE_USERS_V4", resultKey: "createUsersResult")
+    }
+
+
+    /// Create wallet
+    /// Create a wallet and derive addresses.
+    func createWallet(_ input: TCreateWalletBody) async throws -> TCreateWalletResponse {
+        return try await activity("/public/v1/submit/create_wallet", body: input, activityType: "ACTIVITY_TYPE_CREATE_WALLET", resultKey: "createWalletResult")
+    }
+
+
+    /// Create wallet accounts
+    /// Derive additional addresses using an existing wallet.
+    func createWalletAccounts(_ input: TCreateWalletAccountsBody) async throws -> TCreateWalletAccountsResponse {
+        return try await activity("/public/v1/submit/create_wallet_accounts", body: input, activityType: "ACTIVITY_TYPE_CREATE_WALLET_ACCOUNTS", resultKey: "createWalletAccountsResult")
+    }
+
+
+    /// Create webhook endpoint
+    /// Create a webhook endpoint for an organization.
+    func createWebhookEndpoint(_ input: TCreateWebhookEndpointBody) async throws -> TCreateWebhookEndpointResponse {
+        return try await activity("/public/v1/submit/create_webhook_endpoint", body: input, activityType: "ACTIVITY_TYPE_CREATE_WEBHOOK_ENDPOINT", resultKey: "createWebhookEndpointResult")
+    }
+
+
+    /// Delete API keys
+    /// Remove api keys from a user.
+    func deleteApiKeys(_ input: TDeleteApiKeysBody) async throws -> TDeleteApiKeysResponse {
+        return try await activity("/public/v1/submit/delete_api_keys", body: input, activityType: "ACTIVITY_TYPE_DELETE_API_KEYS", resultKey: "deleteApiKeysResult")
+    }
+
+
+    /// Delete authenticators
+    /// Remove authenticators from a user.
+    func deleteAuthenticators(_ input: TDeleteAuthenticatorsBody) async throws -> TDeleteAuthenticatorsResponse {
+        return try await activity("/public/v1/submit/delete_authenticators", body: input, activityType: "ACTIVITY_TYPE_DELETE_AUTHENTICATORS", resultKey: "deleteAuthenticatorsResult")
+    }
+
+
+    /// Delete a Fiat On Ramp Credential
+    /// Delete a fiat on ramp provider credential
+    func deleteFiatOnRampCredential(_ input: TDeleteFiatOnRampCredentialBody) async throws -> TDeleteFiatOnRampCredentialResponse {
+        return try await activity("/public/v1/submit/delete_fiat_on_ramp_credential", body: input, activityType: "ACTIVITY_TYPE_DELETE_FIAT_ON_RAMP_CREDENTIAL", resultKey: "deleteFiatOnRampCredentialResult")
+    }
+
+
+    /// Delete invitation
+    /// Delete an existing invitation.
+    func deleteInvitation(_ input: TDeleteInvitationBody) async throws -> TDeleteInvitationResponse {
+        return try await activity("/public/v1/submit/delete_invitation", body: input, activityType: "ACTIVITY_TYPE_DELETE_INVITATION", resultKey: "deleteInvitationResult")
+    }
+
+
+    /// Delete MFA policy
+    /// Delete an MFA policy for a user.
+    func deleteMfaPolicy(_ input: TDeleteMfaPolicyBody) async throws -> TDeleteMfaPolicyResponse {
+        return try await activity("/public/v1/submit/delete_mfa_policy", body: input, activityType: "ACTIVITY_TYPE_DELETE_MFA_POLICY", resultKey: "deleteMfaPolicyResult")
+    }
+
+
+    /// Delete an OAuth 2.0 Credential
+    /// Disable authentication for end users with an OAuth 2.0 provider
+    func deleteOauth2Credential(_ input: TDeleteOauth2CredentialBody) async throws -> TDeleteOauth2CredentialResponse {
+        return try await activity("/public/v1/submit/delete_oauth2_credential", body: input, activityType: "ACTIVITY_TYPE_DELETE_OAUTH2_CREDENTIAL", resultKey: "deleteOauth2CredentialResult")
+    }
+
+
+    /// Delete Oauth providers
+    /// Remove Oauth providers for a specified user.
+    func deleteOauthProviders(_ input: TDeleteOauthProvidersBody) async throws -> TDeleteOauthProvidersResponse {
+        return try await activity("/public/v1/submit/delete_oauth_providers", body: input, activityType: "ACTIVITY_TYPE_DELETE_OAUTH_PROVIDERS", resultKey: "deleteOauthProvidersResult")
+    }
+
+
+    /// Delete policies
+    /// Delete existing policies.
+    func deletePolicies(_ input: TDeletePoliciesBody) async throws -> TDeletePoliciesResponse {
+        return try await activity("/public/v1/submit/delete_policies", body: input, activityType: "ACTIVITY_TYPE_DELETE_POLICIES", resultKey: "deletePoliciesResult")
+    }
+
+
+    /// Delete policy
+    /// Delete an existing policy.
+    func deletePolicy(_ input: TDeletePolicyBody) async throws -> TDeletePolicyResponse {
+        return try await activity("/public/v1/submit/delete_policy", body: input, activityType: "ACTIVITY_TYPE_DELETE_POLICY", resultKey: "deletePolicyResult")
+    }
+
+
+    /// Delete private key tags
+    /// Delete private key tags within an organization.
+    func deletePrivateKeyTags(_ input: TDeletePrivateKeyTagsBody) async throws -> TDeletePrivateKeyTagsResponse {
+        return try await activity("/public/v1/submit/delete_private_key_tags", body: input, activityType: "ACTIVITY_TYPE_DELETE_PRIVATE_KEY_TAGS", resultKey: "deletePrivateKeyTagsResult")
+    }
+
+
+    /// Delete private keys
+    /// Delete private keys for an organization.
+    func deletePrivateKeys(_ input: TDeletePrivateKeysBody) async throws -> TDeletePrivateKeysResponse {
+        return try await activity("/public/v1/submit/delete_private_keys", body: input, activityType: "ACTIVITY_TYPE_DELETE_PRIVATE_KEYS", resultKey: "deletePrivateKeysResult")
+    }
+
+
+    /// Delete smart contract interface
+    /// Delete a smart contract interface.
+    func deleteSmartContractInterface(_ input: TDeleteSmartContractInterfaceBody) async throws -> TDeleteSmartContractInterfaceResponse {
+        return try await activity("/public/v1/submit/delete_smart_contract_interface", body: input, activityType: "ACTIVITY_TYPE_DELETE_SMART_CONTRACT_INTERFACE", resultKey: "deleteSmartContractInterfaceResult")
+    }
+
+
+    /// Delete sub-organization
+    /// Delete a sub-organization.
+    func deleteSubOrganization(_ input: TDeleteSubOrganizationBody) async throws -> TDeleteSubOrganizationResponse {
+        return try await activity("/public/v1/submit/delete_sub_organization", body: input, activityType: "ACTIVITY_TYPE_DELETE_SUB_ORGANIZATION", resultKey: "deleteSubOrganizationResult")
+    }
+
+
+    /// Delete a TVC App and all of its deployments
+    /// Delete a TVC App and all of its deployments
+    func deleteTvcAppAndDeployments(_ input: TDeleteTvcAppAndDeploymentsBody) async throws -> TDeleteTvcAppAndDeploymentsResponse {
+        return try await activity("/public/v1/submit/delete_tvc_app_and_deployments", body: input, activityType: "ACTIVITY_TYPE_DELETE_TVC_APP_AND_DEPLOYMENTS", resultKey: "deleteTvcAppAndDeploymentsResult")
+    }
+
+
+    /// Delete a TVC Deployment
+    /// Delete a TVC Deployment
+    func deleteTvcDeployment(_ input: TDeleteTvcDeploymentBody) async throws -> TDeleteTvcDeploymentResponse {
+        return try await activity("/public/v1/submit/delete_tvc_deployment", body: input, activityType: "ACTIVITY_TYPE_DELETE_TVC_DEPLOYMENT", resultKey: "deleteTvcDeploymentResult")
+    }
+
+
+    /// Delete user tags
+    /// Delete user tags within an organization.
+    func deleteUserTags(_ input: TDeleteUserTagsBody) async throws -> TDeleteUserTagsResponse {
+        return try await activity("/public/v1/submit/delete_user_tags", body: input, activityType: "ACTIVITY_TYPE_DELETE_USER_TAGS", resultKey: "deleteUserTagsResult")
+    }
+
+
+    /// Delete users
+    /// Delete users within an organization.
+    func deleteUsers(_ input: TDeleteUsersBody) async throws -> TDeleteUsersResponse {
+        return try await activity("/public/v1/submit/delete_users", body: input, activityType: "ACTIVITY_TYPE_DELETE_USERS", resultKey: "deleteUsersResult")
+    }
+
+
+    /// Delete wallet accounts
+    /// Delete wallet accounts for an organization.
+    func deleteWalletAccounts(_ input: TDeleteWalletAccountsBody) async throws -> TDeleteWalletAccountsResponse {
+        return try await activity("/public/v1/submit/delete_wallet_accounts", body: input, activityType: "ACTIVITY_TYPE_DELETE_WALLET_ACCOUNTS", resultKey: "deleteWalletAccountsResult")
+    }
+
+
+    /// Delete wallets
+    /// Delete wallets for an organization.
+    func deleteWallets(_ input: TDeleteWalletsBody) async throws -> TDeleteWalletsResponse {
+        return try await activity("/public/v1/submit/delete_wallets", body: input, activityType: "ACTIVITY_TYPE_DELETE_WALLETS", resultKey: "deleteWalletsResult")
+    }
+
+
+    /// Delete webhook endpoint
+    /// Delete a webhook endpoint for an organization.
+    func deleteWebhookEndpoint(_ input: TDeleteWebhookEndpointBody) async throws -> TDeleteWebhookEndpointResponse {
+        return try await activity("/public/v1/submit/delete_webhook_endpoint", body: input, activityType: "ACTIVITY_TYPE_DELETE_WEBHOOK_ENDPOINT", resultKey: "deleteWebhookEndpointResult")
+    }
+
+
+    /// Deploy Earn wrapper
+    /// Enable a yield vault for an organization by deploying its fee wrapper. Must be called before any deposits into the vault.
+    func earnDeployWrapper(_ input: TEarnDeployWrapperBody) async throws -> TEarnDeployWrapperResponse {
+        return try await activity("/public/v1/submit/earn_deploy_wrapper", body: input, activityType: "ACTIVITY_TYPE_EARN_DEPLOY_WRAPPER", resultKey: "earnDeployWrapperResult")
+    }
+
+
+    /// Deposit into Earn vault
+    /// Deposit assets from a wallet into an enabled yield vault.
+    func earnDeposit(_ input: TEarnDepositBody) async throws -> TEarnDepositResponse {
+        return try await activity("/public/v1/submit/earn_deposit", body: input, activityType: "ACTIVITY_TYPE_EARN_DEPOSIT", resultKey: "earnDepositResult")
+    }
+
+
+    /// Set Earn wrapper state
+    /// Enable or disable deposits to a deployed Earn wrapper. Withdrawals are always allowed.
+    func earnSetWrapperState(_ input: TEarnSetWrapperStateBody) async throws -> TEarnSetWrapperStateResponse {
+        return try await activity("/public/v1/submit/earn_set_wrapper_state", body: input, activityType: "ACTIVITY_TYPE_EARN_SET_WRAPPER_STATE", resultKey: "earnSetWrapperStateResult")
+    }
+
+
+    /// Withdraw from Earn vault
+    /// Withdraw assets or redeem shares from an enabled yield vault.
+    func earnWithdraw(_ input: TEarnWithdrawBody) async throws -> TEarnWithdrawResponse {
+        return try await activity("/public/v1/submit/earn_withdraw", body: input, activityType: "ACTIVITY_TYPE_EARN_WITHDRAW", resultKey: "earnWithdrawResult")
+    }
+
+
+    /// Perform email auth
+    /// Authenticate a user via email.
+    func emailAuth(_ input: TEmailAuthBody) async throws -> TEmailAuthResponse {
+        return try await activity("/public/v1/submit/email_auth", body: input, activityType: "ACTIVITY_TYPE_EMAIL_AUTH_V3", resultKey: "emailAuthResult")
+    }
+
+
+    /// Broadcast EVM transaction
+    /// Submit a transaction intent describing an EVM transaction you would like to broadcast.
+    func ethSendTransaction(_ input: TEthSendTransactionBody) async throws -> TEthSendTransactionResponse {
+        return try await activity("/public/v1/submit/eth_send_transaction", body: input, activityType: "ACTIVITY_TYPE_ETH_SEND_TRANSACTION", resultKey: "ethSendTransactionResult")
+    }
+
+
+    /// Undelegate an EVM account
+    /// Submit an EIP-7702 undelegation transaction.
+    func ethUndelegate7702(_ input: TEthUndelegate7702Body) async throws -> TEthUndelegate7702Response {
+        return try await activity("/public/v1/submit/eth_undelegate_7702", body: input, activityType: "ACTIVITY_TYPE_ETH_UNDELEGATE7702", resultKey: "ethUndelegate7702Result")
+    }
+
+
+    /// Export private key
+    /// Export a private key.
+    func exportPrivateKey(_ input: TExportPrivateKeyBody) async throws -> TExportPrivateKeyResponse {
+        return try await activity("/public/v1/submit/export_private_key", body: input, activityType: "ACTIVITY_TYPE_EXPORT_PRIVATE_KEY", resultKey: "exportPrivateKeyResult")
+    }
+
+
+    /// Export wallet
+    /// Export a wallet.
+    func exportWallet(_ input: TExportWalletBody) async throws -> TExportWalletResponse {
+        return try await activity("/public/v1/submit/export_wallet", body: input, activityType: "ACTIVITY_TYPE_EXPORT_WALLET", resultKey: "exportWalletResult")
+    }
+
+
+    /// Export wallet account
+    /// Export a wallet account.
+    func exportWalletAccount(_ input: TExportWalletAccountBody) async throws -> TExportWalletAccountResponse {
+        return try await activity("/public/v1/submit/export_wallet_account", body: input, activityType: "ACTIVITY_TYPE_EXPORT_WALLET_ACCOUNT", resultKey: "exportWalletAccountResult")
+    }
+
+
+    /// Import private key
+    /// Import a private key.
+    func importPrivateKey(_ input: TImportPrivateKeyBody) async throws -> TImportPrivateKeyResponse {
+        return try await activity("/public/v1/submit/import_private_key", body: input, activityType: "ACTIVITY_TYPE_IMPORT_PRIVATE_KEY", resultKey: "importPrivateKeyResult")
+    }
+
+
+    /// Import wallet
+    /// Import a wallet.
+    func importWallet(_ input: TImportWalletBody) async throws -> TImportWalletResponse {
+        return try await activity("/public/v1/submit/import_wallet", body: input, activityType: "ACTIVITY_TYPE_IMPORT_WALLET", resultKey: "importWalletResult")
+    }
+
+
+    /// Init fiat on ramp
+    /// Initiate a fiat on ramp flow.
+    func initFiatOnRamp(_ input: TInitFiatOnRampBody) async throws -> TInitFiatOnRampResponse {
+        return try await activity("/public/v1/submit/init_fiat_on_ramp", body: input, activityType: "ACTIVITY_TYPE_INIT_FIAT_ON_RAMP", resultKey: "initFiatOnRampResult")
+    }
+
+
+    /// Init import private key
+    /// Initialize a new private key import.
+    func initImportPrivateKey(_ input: TInitImportPrivateKeyBody) async throws -> TInitImportPrivateKeyResponse {
+        return try await activity("/public/v1/submit/init_import_private_key", body: input, activityType: "ACTIVITY_TYPE_INIT_IMPORT_PRIVATE_KEY", resultKey: "initImportPrivateKeyResult")
+    }
+
+
+    /// Init import wallet
+    /// Initialize a new wallet import.
+    func initImportWallet(_ input: TInitImportWalletBody) async throws -> TInitImportWalletResponse {
+        return try await activity("/public/v1/submit/init_import_wallet", body: input, activityType: "ACTIVITY_TYPE_INIT_IMPORT_WALLET", resultKey: "initImportWalletResult")
+    }
+
+
+    /// Init generic OTP
+    /// Initiate a generic OTP activity.
+    func initOtp(_ input: TInitOtpBody) async throws -> TInitOtpResponse {
+        return try await activity("/public/v1/submit/init_otp", body: input, activityType: "ACTIVITY_TYPE_INIT_OTP_V3", resultKey: "initOtpResultV2")
+    }
+
+
+    /// Init OTP auth
+    /// Initiate an OTP auth activity.
+    func initOtpAuth(_ input: TInitOtpAuthBody) async throws -> TInitOtpAuthResponse {
+        return try await activity("/public/v1/submit/init_otp_auth", body: input, activityType: "ACTIVITY_TYPE_INIT_OTP_AUTH_V3", resultKey: "initOtpAuthResultV2")
+    }
+
+
+    /// Init email recovery
+    /// Initialize a new email recovery.
+    func initUserEmailRecovery(_ input: TInitUserEmailRecoveryBody) async throws -> TInitUserEmailRecoveryResponse {
+        return try await activity("/public/v1/submit/init_user_email_recovery", body: input, activityType: "ACTIVITY_TYPE_INIT_USER_EMAIL_RECOVERY_V2", resultKey: "initUserEmailRecoveryResult")
+    }
+
+
+    /// Oauth
+    /// Authenticate a user with an OIDC token (Oauth).
+    func oauth(_ input: TOauthBody) async throws -> TOauthResponse {
+        return try await activity("/public/v1/submit/oauth", body: input, activityType: "ACTIVITY_TYPE_OAUTH", resultKey: "oauthResult")
+    }
+
+
+    /// OAuth 2.0 authentication
+    /// Authenticate a user with an OAuth 2.0 provider and receive an OIDC token to use with the LoginWithOAuth or CreateSubOrganization activities
+    func oauth2Authenticate(_ input: TOauth2AuthenticateBody) async throws -> TOauth2AuthenticateResponse {
+        return try await activity("/public/v1/submit/oauth2_authenticate", body: input, activityType: "ACTIVITY_TYPE_OAUTH2_AUTHENTICATE", resultKey: "oauth2AuthenticateResult")
+    }
+
+
+    /// Login with Oauth
+    /// Create an Oauth session for a user.
+    func oauthLogin(_ input: TOauthLoginBody) async throws -> TOauthLoginResponse {
+        return try await activity("/public/v1/submit/oauth_login", body: input, activityType: "ACTIVITY_TYPE_OAUTH_LOGIN", resultKey: "oauthLoginResult")
+    }
+
+
+    /// OTP auth
+    /// Authenticate a user with an OTP code sent via email or SMS.
+    func otpAuth(_ input: TOtpAuthBody) async throws -> TOtpAuthResponse {
+        return try await activity("/public/v1/submit/otp_auth", body: input, activityType: "ACTIVITY_TYPE_OTP_AUTH", resultKey: "otpAuthResult")
+    }
+
+
+    /// Login with OTP
+    /// Create an OTP session for a user.
+    func otpLogin(_ input: TOtpLoginBody) async throws -> TOtpLoginResponse {
+        return try await activity("/public/v1/submit/otp_login", body: input, activityType: "ACTIVITY_TYPE_OTP_LOGIN_V2", resultKey: "otpLoginResult")
+    }
+
+
+    /// Recover a user
+    /// Complete the process of recovering a user by adding an authenticator.
+    func recoverUser(_ input: TRecoverUserBody) async throws -> TRecoverUserResponse {
+        return try await activity("/public/v1/submit/recover_user", body: input, activityType: "ACTIVITY_TYPE_RECOVER_USER", resultKey: "recoverUserResult")
+    }
+
+
+    /// Reject activity
+    /// Reject an activity.
+    func rejectActivity(_ input: TRejectActivityBody) async throws -> TRejectActivityResponse {
+        return try await activityDecision("/public/v1/submit/reject_activity", body: input, activityType: "ACTIVITY_TYPE_REJECT_ACTIVITY")
+    }
+
+
+    /// Remove IP Allowlist
+    /// Delete IP allowlist and all associated rules for organization or API key. After removal, access will be determined by organization-level allowlist (for API keys) or allowed from all IPs (for organizations).
+    func removeIpAllowlist(_ input: TRemoveIpAllowlistBody) async throws -> TRemoveIpAllowlistResponse {
+        return try await activity("/public/v1/submit/remove_ip_allowlist", body: input, activityType: "ACTIVITY_TYPE_REMOVE_IP_ALLOWLIST", resultKey: "removeIpAllowlistResult")
+    }
+
+
+    /// Remove organization feature
+    /// Remove an organization feature. This activity must be approved by the current root quorum.
+    func removeOrganizationFeature(_ input: TRemoveOrganizationFeatureBody) async throws -> TRemoveOrganizationFeatureResponse {
+        return try await activity("/public/v1/submit/remove_organization_feature", body: input, activityType: "ACTIVITY_TYPE_REMOVE_ORGANIZATION_FEATURE", resultKey: "removeOrganizationFeatureResult")
+    }
+
+
+    /// Restore a TVC Deployment
+    /// Restore a deleted TVC Deployment
+    func restoreTvcDeployment(_ input: TRestoreTvcDeploymentBody) async throws -> TRestoreTvcDeploymentResponse {
+        return try await activity("/public/v1/submit/restore_tvc_deployment", body: input, activityType: "ACTIVITY_TYPE_RESTORE_TVC_DEPLOYMENT", resultKey: "restoreTvcDeploymentResult")
+    }
+
+
+    /// Set IP Allowlist
+    /// Create or update IP allowlist and rules for organization or API key. The IP allowlist restricts API access to specific CIDR blocks. Organization-level allowlists apply to all API keys unless overridden by a key-specific allowlist.
+    func setIpAllowlist(_ input: TSetIpAllowlistBody) async throws -> TSetIpAllowlistResponse {
+        return try await activity("/public/v1/submit/set_ip_allowlist", body: input, activityType: "ACTIVITY_TYPE_SET_IP_ALLOWLIST", resultKey: "setIpAllowlistResult")
+    }
+
+
+    /// Set organization feature
+    /// Set an organization feature. This activity must be approved by the current root quorum.
+    func setOrganizationFeature(_ input: TSetOrganizationFeatureBody) async throws -> TSetOrganizationFeatureResponse {
+        return try await activity("/public/v1/submit/set_organization_feature", body: input, activityType: "ACTIVITY_TYPE_SET_ORGANIZATION_FEATURE", resultKey: "setOrganizationFeatureResult")
+    }
+
+
+    /// Set TVC App live deployment
+    /// Set the live deployment for a TVC App
+    func updateTvcAppLiveDeployment(_ input: TUpdateTvcAppLiveDeploymentBody) async throws -> TUpdateTvcAppLiveDeploymentResponse {
+        return try await activity("/public/v1/submit/set_tvc_app_live_deployment", body: input, activityType: "ACTIVITY_TYPE_UPDATE_TVC_APP_LIVE_DEPLOYMENT", resultKey: "updateTvcAppLiveDeploymentResult")
+    }
+
+
+    /// Sign raw payload
+    /// Sign a raw payload.
+    func signRawPayload(_ input: TSignRawPayloadBody) async throws -> TSignRawPayloadResponse {
+        return try await activity("/public/v1/submit/sign_raw_payload", body: input, activityType: "ACTIVITY_TYPE_SIGN_RAW_PAYLOAD_V2", resultKey: "signRawPayloadResult")
+    }
+
+
+    /// Sign raw payloads
+    /// Sign multiple raw payloads with the same signing parameters.
+    func signRawPayloads(_ input: TSignRawPayloadsBody) async throws -> TSignRawPayloadsResponse {
+        return try await activity("/public/v1/submit/sign_raw_payloads", body: input, activityType: "ACTIVITY_TYPE_SIGN_RAW_PAYLOADS", resultKey: "signRawPayloadsResult")
+    }
+
+
+    /// Sign transaction
+    /// Sign a transaction.
+    func signTransaction(_ input: TSignTransactionBody) async throws -> TSignTransactionResponse {
+        return try await activity("/public/v1/submit/sign_transaction", body: input, activityType: "ACTIVITY_TYPE_SIGN_TRANSACTION_V2", resultKey: "signTransactionResult")
+    }
+
+
+    /// Broadcast SVM transaction
+    /// Submit a transaction intent describing an SVM transaction you would like to broadcast. Supports single- and multi-signer intents via activity type versioning.
+    func solSendTransaction(_ input: TSolSendTransactionBody) async throws -> TSolSendTransactionResponse {
+        return try await activity("/public/v1/submit/sol_send_transaction", body: input, activityType: "ACTIVITY_TYPE_SOL_SEND_TRANSACTION_V2", resultKey: "solSendTransactionResultV2")
+    }
+
+
+    /// Claim Spark transfer
+    /// Construct receiver-side encrypted operator packages to claim a Spark transfer. Does not perform FROST signing.
+    func sparkClaimTransfer(_ input: TSparkClaimTransferBody) async throws -> TSparkClaimTransferResponse {
+        return try await activity("/public/v1/submit/spark_claim_transfer", body: input, activityType: "ACTIVITY_TYPE_SPARK_CLAIM_TRANSFER", resultKey: "sparkClaimTransferResult")
+    }
+
+
+    /// Spark prepare Lightning receive
+    /// Generate a Lightning preimage and distribute Feldman shares to operators for a Spark Lightning receive. Does not perform FROST signing.
+    func sparkPrepareLightningReceive(_ input: TSparkPrepareLightningReceiveBody) async throws -> TSparkPrepareLightningReceiveResponse {
+        return try await activity("/public/v1/submit/spark_prepare_lightning_receive", body: input, activityType: "ACTIVITY_TYPE_SPARK_PREPARE_LIGHTNING_RECEIVE", resultKey: "sparkPrepareLightningReceiveResult")
+    }
+
+
+    /// Prepare Spark transfer
+    /// Construct sender-side encrypted operator packages for a Spark BTC transfer. Does not perform FROST signing.
+    func sparkPrepareTransfer(_ input: TSparkPrepareTransferBody) async throws -> TSparkPrepareTransferResponse {
+        return try await activity("/public/v1/submit/spark_prepare_transfer", body: input, activityType: "ACTIVITY_TYPE_SPARK_PREPARE_TRANSFER", resultKey: "sparkPrepareTransferResult")
+    }
+
+
+    /// Sign Frost Spark
+    /// Perform pure FROST partial signing for a Spark wallet. Produces partial signatures without constructing operator packages.
+    func sparkSignFrost(_ input: TSparkSignFrostBody) async throws -> TSparkSignFrostResponse {
+        return try await activity("/public/v1/submit/spark_sign_frost", body: input, activityType: "ACTIVITY_TYPE_SPARK_SIGN_FROST", resultKey: "sparkSignFrostResult")
+    }
+
+
+    /// Login with a stamp
+    /// Create a session for a user through stamping client side (API key, wallet client, or passkey client).
+    func stampLogin(_ input: TStampLoginBody) async throws -> TStampLoginResponse {
+        return try await activity("/public/v1/submit/stamp_login", body: input, activityType: "ACTIVITY_TYPE_STAMP_LOGIN", resultKey: "stampLoginResult")
+    }
+
+
+    /// Update a Fiat On Ramp Credential
+    /// Update a fiat on ramp provider credential
+    func updateFiatOnRampCredential(_ input: TUpdateFiatOnRampCredentialBody) async throws -> TUpdateFiatOnRampCredentialResponse {
+        return try await activity("/public/v1/submit/update_fiat_on_ramp_credential", body: input, activityType: "ACTIVITY_TYPE_UPDATE_FIAT_ON_RAMP_CREDENTIAL", resultKey: "updateFiatOnRampCredentialResult")
+    }
+
+
+    /// Update MFA policy
+    /// Update an MFA policy for a user.
+    func updateMfaPolicy(_ input: TUpdateMfaPolicyBody) async throws -> TUpdateMfaPolicyResponse {
+        return try await activity("/public/v1/submit/update_mfa_policy", body: input, activityType: "ACTIVITY_TYPE_UPDATE_MFA_POLICY", resultKey: "updateMfaPolicyResult")
+    }
+
+
+    /// Update an OAuth 2.0 Credential
+    /// Update an OAuth 2.0 provider credential
+    func updateOauth2Credential(_ input: TUpdateOauth2CredentialBody) async throws -> TUpdateOauth2CredentialResponse {
+        return try await activity("/public/v1/submit/update_oauth2_credential", body: input, activityType: "ACTIVITY_TYPE_UPDATE_OAUTH2_CREDENTIAL", resultKey: "updateOauth2CredentialResult")
+    }
+
+
+    /// Update organization name
+    /// Update the name of an organization.
+    func updateOrganizationName(_ input: TUpdateOrganizationNameBody) async throws -> TUpdateOrganizationNameResponse {
+        return try await activity("/public/v1/submit/update_organization_name", body: input, activityType: "ACTIVITY_TYPE_UPDATE_ORGANIZATION_NAME", resultKey: "updateOrganizationNameResult")
+    }
+
+
+    /// Update policy
+    /// Update an existing policy.
+    func updatePolicy(_ input: TUpdatePolicyBody) async throws -> TUpdatePolicyResponse {
+        return try await activity("/public/v1/submit/update_policy", body: input, activityType: "ACTIVITY_TYPE_UPDATE_POLICY_V2", resultKey: "updatePolicyResultV2")
+    }
+
+
+    /// Update private key tag
+    /// Update human-readable name or associated private keys. Note that this activity is atomic: all of the updates will succeed at once, or all of them will fail.
+    func updatePrivateKeyTag(_ input: TUpdatePrivateKeyTagBody) async throws -> TUpdatePrivateKeyTagResponse {
+        return try await activity("/public/v1/submit/update_private_key_tag", body: input, activityType: "ACTIVITY_TYPE_UPDATE_PRIVATE_KEY_TAG", resultKey: "updatePrivateKeyTagResult")
+    }
+
+
+    /// Update root quorum
+    /// Set the threshold and members of the root quorum. This activity must be approved by the current root quorum.
+    func updateRootQuorum(_ input: TUpdateRootQuorumBody) async throws -> TUpdateRootQuorumResponse {
+        return try await activity("/public/v1/submit/update_root_quorum", body: input, activityType: "ACTIVITY_TYPE_UPDATE_ROOT_QUORUM", resultKey: "updateRootQuorumResult")
+    }
+
+
+    /// Update user
+    /// Update a user in an existing organization.
+    func updateUser(_ input: TUpdateUserBody) async throws -> TUpdateUserResponse {
+        return try await activity("/public/v1/submit/update_user", body: input, activityType: "ACTIVITY_TYPE_UPDATE_USER", resultKey: "updateUserResult")
+    }
+
+
+    /// Update user's email
+    /// Update a user's email in an existing organization.
+    func updateUserEmail(_ input: TUpdateUserEmailBody) async throws -> TUpdateUserEmailResponse {
+        return try await activity("/public/v1/submit/update_user_email", body: input, activityType: "ACTIVITY_TYPE_UPDATE_USER_EMAIL", resultKey: "updateUserEmailResult")
+    }
+
+
+    /// Update user's name
+    /// Update a user's name in an existing organization.
+    func updateUserName(_ input: TUpdateUserNameBody) async throws -> TUpdateUserNameResponse {
+        return try await activity("/public/v1/submit/update_user_name", body: input, activityType: "ACTIVITY_TYPE_UPDATE_USER_NAME", resultKey: "updateUserNameResult")
+    }
+
+
+    /// Update user's phone number
+    /// Update a user's phone number in an existing organization.
+    func updateUserPhoneNumber(_ input: TUpdateUserPhoneNumberBody) async throws -> TUpdateUserPhoneNumberResponse {
+        return try await activity("/public/v1/submit/update_user_phone_number", body: input, activityType: "ACTIVITY_TYPE_UPDATE_USER_PHONE_NUMBER", resultKey: "updateUserPhoneNumberResult")
+    }
+
+
+    /// Update user tag
+    /// Update human-readable name or associated users. Note that this activity is atomic: all of the updates will succeed at once, or all of them will fail.
+    func updateUserTag(_ input: TUpdateUserTagBody) async throws -> TUpdateUserTagResponse {
+        return try await activity("/public/v1/submit/update_user_tag", body: input, activityType: "ACTIVITY_TYPE_UPDATE_USER_TAG", resultKey: "updateUserTagResult")
+    }
+
+
+    /// Update wallet
+    /// Update a wallet for an organization.
+    func updateWallet(_ input: TUpdateWalletBody) async throws -> TUpdateWalletResponse {
+        return try await activity("/public/v1/submit/update_wallet", body: input, activityType: "ACTIVITY_TYPE_UPDATE_WALLET", resultKey: "updateWalletResult")
+    }
+
+
+    /// Update webhook endpoint
+    /// Update a webhook endpoint for an organization.
+    func updateWebhookEndpoint(_ input: TUpdateWebhookEndpointBody) async throws -> TUpdateWebhookEndpointResponse {
+        return try await activity("/public/v1/submit/update_webhook_endpoint", body: input, activityType: "ACTIVITY_TYPE_UPDATE_WEBHOOK_ENDPOINT", resultKey: "updateWebhookEndpointResult")
+    }
+
+
+    /// Upsert swap config
+    /// Enable or disable swap configuration for an organization.
+    func upsertSwapConfig(_ input: TUpsertSwapConfigBody) async throws -> TUpsertSwapConfigResponse {
+        return try await activity("/public/v1/submit/upsert_swap_config", body: input, activityType: "ACTIVITY_TYPE_UPSERT_SWAP_CONFIG", resultKey: "upsertSwapConfigResult")
+    }
+
+
+    /// Verify generic OTP
+    /// Verify a generic OTP.
+    func verifyOtp(_ input: TVerifyOtpBody) async throws -> TVerifyOtpResponse {
+        return try await activity("/public/v1/submit/verify_otp", body: input, activityType: "ACTIVITY_TYPE_VERIFY_OTP_V2", resultKey: "verifyOtpResult")
+    }
 
 }

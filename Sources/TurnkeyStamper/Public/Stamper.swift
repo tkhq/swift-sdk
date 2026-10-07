@@ -10,7 +10,14 @@ public enum OnDeviceStamperPreference {
   case secureStorage
 }
 
-public class Stamper {
+/// A value that can authenticate a request to Turnkey.
+public protocol StampProvider: Sendable {
+  func stamp(payload: String) async throws -> (
+    stampHeaderName: String, stampHeaderValue: String
+  )
+}
+
+public class Stamper: StampProvider {
   private let apiPublicKey: String?
   private let apiPrivateKey: String?
   private let presentationAnchor: ASPresentationAnchor?

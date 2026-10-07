@@ -17,6 +17,20 @@ public struct ActivityPollerConfig {
   }
 }
 
+/// Returned when an activity pauses until MFA authenticators approve it.
+///
+/// The initial request's stamper can query the outstanding requirements. Use the returned
+/// fingerprint with an `AttestedStamper` for the second factor's `approveActivity` call.
+public struct MfaRequiredError: Error, Sendable {
+  public let activity: v1Activity
+  public let mfaStatuses: [v1MfaStatus]
+
+  public init(activity: v1Activity, mfaStatuses: [v1MfaStatus]) {
+    self.activity = activity
+    self.mfaStatuses = mfaStatuses
+  }
+}
+
 public struct TurnkeyClient {
   public static let baseURLString = "https://api.turnkey.com"
   public static let authProxyBaseURLString = "https://authproxy.turnkey.com"
@@ -26,7 +40,7 @@ public struct TurnkeyClient {
   internal let organizationId: String
   internal let authProxyUrl: String?
   internal let authProxyConfigId: String?
-  internal let stamper: Stamper?
+  internal let stamper: (any StampProvider)?
   internal let activityPoller: ActivityPollerConfig
 
   public init(
@@ -34,7 +48,7 @@ public struct TurnkeyClient {
     baseUrl: String = TurnkeyClient.baseURLString,
     authProxyUrl: String? = nil,
     authProxyConfigId: String? = nil,
-    stamper: Stamper? = nil,
+    stamper: (any StampProvider)? = nil,
     activityPoller: ActivityPollerConfig = ActivityPollerConfig()
   ) {
     self.organizationId = organizationId

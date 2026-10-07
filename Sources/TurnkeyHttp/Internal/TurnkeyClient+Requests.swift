@@ -11,6 +11,7 @@ private let TERMINAL_ACTIVITY_STATUSES: Set<String> = [
   "ACTIVITY_STATUS_FAILED",
   "ACTIVITY_STATUS_CONSENSUS_NEEDED",
   "ACTIVITY_STATUS_REJECTED",
+  "ACTIVITY_STATUS_AUTHENTICATORS_NEEDED",
 ]
 
 extension TurnkeyClient {
@@ -85,7 +86,15 @@ extension TurnkeyClient {
     let wrappedBody = try wrapActivityBody(body, activityType: activityType)
 
     // Helper to handle response data
-    func handleResponse(_ data: Data) throws -> TResponse {
+    func mfaRequiredError(from data: Data) async throws -> MfaRequiredError {
+      let activity = try JSONDecoder().decode(TGetActivityResponse.self, from: data).activity
+      let mfaStatuses = try await getMfaStatus(
+        TGetMfaStatusBody(activityId: activity.id)
+      ).mfaStatuses
+      return MfaRequiredError(activity: activity, mfaStatuses: mfaStatuses)
+    }
+
+    func handleResponse(_ data: Data) async throws -> TResponse {
       // Check status first
       guard let responseDict = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
         let activity = responseDict["activity"] as? [String: Any],
@@ -97,6 +106,10 @@ extension TurnkeyClient {
       if status == "ACTIVITY_STATUS_COMPLETED" {
         // Merge result[resultKey] with activity response
         return try mergeActivityResponse(data, resultKey: resultKey)
+      }
+
+      if status == "ACTIVITY_STATUS_AUTHENTICATORS_NEEDED" {
+        throw try await mfaRequiredError(from: data)
       }
 
       // For non-completed states, decode as-is
@@ -112,7 +125,7 @@ extension TurnkeyClient {
       let data = try await stampAndSend("/public/v1/query/get_activity", body: jsonData)
 
       if attempts > maxRetries {
-        return try handleResponse(data)
+        return try await handleResponse(data)
       }
 
       attempts += 1
@@ -127,7 +140,7 @@ extension TurnkeyClient {
         return try await pollStatus(activityId)
       }
 
-      return try handleResponse(data)
+      return try await handleResponse(data)
     }
 
     // Make initial request
@@ -144,7 +157,7 @@ extension TurnkeyClient {
       return try await pollStatus(activityId)
     }
 
-    return try handleResponse(data)
+    return try await handleResponse(data)
   }
 
   /// Wraps an activity body by extracting organizationId/timestampMs and adding the type field

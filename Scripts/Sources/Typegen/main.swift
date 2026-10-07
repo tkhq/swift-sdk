@@ -1049,11 +1049,23 @@ func main() throws {
         output += generateSwiftType(name: defName, def: def) + "\n"
     }
 
+    // Auth Proxy request and response types can reference definitions that do not
+    // exist in the public API schema. Generate those additional definitions while
+    // preserving the public API definition as the source of truth for shared names.
+    for (defName, def) in authProxySpec.definitions.sorted(by: { $0.key < $1.key })
+    where publicSpec.definitions[defName] == nil {
+        output += generateSwiftType(name: defName, def: def) + "\n"
+    }
+
     // --- API Types ---
     output += "\n// MARK: - API Types from Swagger Paths\n\n"
 
     output += generateApiTypes(swagger: publicSpec)
     output += generateApiTypes(swagger: authProxySpec, prefix: "Proxy")
+
+    while output.hasSuffix("\n\n") {
+        output.removeLast()
+    }
 
     // Write to file
     try output.write(to: OUTPUT_PATH, atomically: true, encoding: .utf8)
