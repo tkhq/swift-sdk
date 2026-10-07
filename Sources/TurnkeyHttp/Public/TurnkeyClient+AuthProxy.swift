@@ -3,96 +3,98 @@
 import Foundation
 import TurnkeyTypes
 
-public extension TurnkeyClient {
+extension TurnkeyClient {
 
-    /// Get Account
-    /// Return organization id associated with a given phone number, email, public key, credential ID or OIDC token.
-    func proxyGetAccount(_ input: ProxyTGetAccountBody) async throws -> ProxyTGetAccountResponse {
-        return try await authProxyRequest("/v1/account", body: input)
-    }
+  /// Get Account
+  /// Return organization id associated with a given phone number, email, public key, credential ID or OIDC token.
+  public func proxyGetAccount(_ input: ProxyTGetAccountBody) async throws
+    -> ProxyTGetAccountResponse
+  {
+    return try await authProxyRequest("/v1/account", body: input)
+  }
 
+  /// OAuth 2.0 Authenticate
+  /// Authenticate with an OAuth 2.0 provider and receive an OIDC token issued by Turnkey in response.
+  public func proxyOAuth2Authenticate(_ input: ProxyTOAuth2AuthenticateBody) async throws
+    -> ProxyTOAuth2AuthenticateResponse
+  {
+    return try await authProxyRequest("/v1/oauth2_authenticate", body: input)
+  }
 
-    /// OAuth 2.0 Authenticate
-    /// Authenticate with an OAuth 2.0 provider and receive an OIDC token issued by Turnkey in response.
-    func proxyOAuth2Authenticate(_ input: ProxyTOAuth2AuthenticateBody) async throws -> ProxyTOAuth2AuthenticateResponse {
-        return try await authProxyRequest("/v1/oauth2_authenticate", body: input)
-    }
+  /// OAuth Login
+  /// Login using an OIDC token and public key.
+  public func proxyOAuthLogin(_ input: ProxyTOAuthLoginBody) async throws
+    -> ProxyTOAuthLoginResponse
+  {
+    return try await authProxyRequest("/v1/oauth_login", body: input)
+  }
 
+  /// Init OTP
+  /// Initialize an OTP (email or SMS) for a user.
+  public func proxyInitOtp(_ input: ProxyTInitOtpBody) async throws -> ProxyTInitOtpResponse {
+    return try await authProxyRequest("/v1/otp_init", body: input)
+  }
 
-    /// OAuth Login
-    /// Login using an OIDC token and public key.
-    func proxyOAuthLogin(_ input: ProxyTOAuthLoginBody) async throws -> ProxyTOAuthLoginResponse {
-        return try await authProxyRequest("/v1/oauth_login", body: input)
-    }
+  /// Init OTP
+  /// Start a new OTP flow and return a new OTP flow ID.
+  public func proxyInitOtpV2(_ input: ProxyTInitOtpV2Body) async throws -> ProxyTInitOtpV2Response {
+    return try await authProxyRequest("/v1/otp_init_v2", body: input)
+  }
 
+  /// OTP Login
+  /// Login using a verification token and public key.
+  public func proxyOtpLogin(_ input: ProxyTOtpLoginBody) async throws -> ProxyTOtpLoginResponse {
+    return try await authProxyRequest("/v1/otp_login", body: input)
+  }
 
-    /// Init OTP
-    /// Initialize an OTP (email or SMS) for a user.
-    func proxyInitOtp(_ input: ProxyTInitOtpBody) async throws -> ProxyTInitOtpResponse {
-        return try await authProxyRequest("/v1/otp_init", body: input)
-    }
+  /// OTP Login
+  /// Login using an existing OTP Verification Token and a client-side signature. The signature's public key must match the public key contained within the OTP Verification Token.
+  public func proxyOtpLoginV2(_ input: ProxyTOtpLoginV2Body) async throws
+    -> ProxyTOtpLoginV2Response
+  {
+    return try await authProxyRequest("/v1/otp_login_v2", body: input)
+  }
 
+  /// Verify OTP
+  /// Verify the OTP code previously sent to the user's contact and return a verification token.
+  public func proxyVerifyOtp(_ input: ProxyTVerifyOtpBody) async throws -> ProxyTVerifyOtpResponse {
+    return try await authProxyRequest("/v1/otp_verify", body: input)
+  }
 
-    /// Init OTP
-    /// Start a new OTP flow and return a new OTP flow ID.
-    func proxyInitOtpV2(_ input: ProxyTInitOtpV2Body) async throws -> ProxyTInitOtpV2Response {
-        return try await authProxyRequest("/v1/otp_init_v2", body: input)
-    }
+  /// Verify OTP
+  /// Verify the OTP code previously sent to the user's contact and return a verification token.
+  public func proxyVerifyOtpV2(_ input: ProxyTVerifyOtpV2Body) async throws
+    -> ProxyTVerifyOtpV2Response
+  {
+    return try await authProxyRequest("/v1/otp_verify_v2", body: input)
+  }
 
+  /// Signup
+  /// Onboard a new user.
+  public func proxySignup(_ input: ProxyTSignupBody) async throws -> ProxyTSignupResponse {
+    return try await authProxyRequest("/v1/signup", body: input)
+  }
 
-    /// OTP Login
-    /// Login using a verification token and public key.
-    func proxyOtpLogin(_ input: ProxyTOtpLoginBody) async throws -> ProxyTOtpLoginResponse {
-        return try await authProxyRequest("/v1/otp_login", body: input)
-    }
+  /// Signup
+  /// Onboard a new user.
+  public func proxySignupV2(_ input: ProxyTSignupV2Body) async throws -> ProxyTSignupV2Response {
+    return try await authProxyRequest("/v1/signup_v2", body: input)
+  }
 
+  /// Get WalletKit Client Params
+  /// Get client parameters needed to initialize WalletKit flows, such as a client token for the calling organization.
+  public func proxyGetWalletKitClientParams(_ input: ProxyTGetWalletKitClientParamsBody = .init())
+    async throws -> ProxyTGetWalletKitClientParamsResponse
+  {
+    return try await authProxyRequest("/v1/wallet_kit_client_params", body: input)
+  }
 
-    /// OTP Login
-    /// Login using an existing OTP Verification Token and a client-side signature. The signature's public key must match the public key contained within the OTP Verification Token.
-    func proxyOtpLoginV2(_ input: ProxyTOtpLoginV2Body) async throws -> ProxyTOtpLoginV2Response {
-        return try await authProxyRequest("/v1/otp_login_v2", body: input)
-    }
-
-
-    /// Verify OTP
-    /// Verify the OTP code previously sent to the user's contact and return a verification token.
-    func proxyVerifyOtp(_ input: ProxyTVerifyOtpBody) async throws -> ProxyTVerifyOtpResponse {
-        return try await authProxyRequest("/v1/otp_verify", body: input)
-    }
-
-
-    /// Verify OTP
-    /// Verify the OTP code previously sent to the user's contact and return a verification token.
-    func proxyVerifyOtpV2(_ input: ProxyTVerifyOtpV2Body) async throws -> ProxyTVerifyOtpV2Response {
-        return try await authProxyRequest("/v1/otp_verify_v2", body: input)
-    }
-
-
-    /// Signup
-    /// Onboard a new user.
-    func proxySignup(_ input: ProxyTSignupBody) async throws -> ProxyTSignupResponse {
-        return try await authProxyRequest("/v1/signup", body: input)
-    }
-
-
-    /// Signup
-    /// Onboard a new user.
-    func proxySignupV2(_ input: ProxyTSignupV2Body) async throws -> ProxyTSignupV2Response {
-        return try await authProxyRequest("/v1/signup_v2", body: input)
-    }
-
-
-    /// Get WalletKit Client Params
-    /// Get client parameters needed to initialize WalletKit flows, such as a client token for the calling organization.
-    func proxyGetWalletKitClientParams(_ input: ProxyTGetWalletKitClientParamsBody = .init()) async throws -> ProxyTGetWalletKitClientParamsResponse {
-        return try await authProxyRequest("/v1/wallet_kit_client_params", body: input)
-    }
-
-
-    /// Get WalletKit Config
-    /// Get wallet kit settings and feature toggles for the calling organization.
-    func proxyGetWalletKitConfig(_ input: ProxyTGetWalletKitConfigBody = .init()) async throws -> ProxyTGetWalletKitConfigResponse {
-        return try await authProxyRequest("/v1/wallet_kit_config", body: input)
-    }
+  /// Get WalletKit Config
+  /// Get wallet kit settings and feature toggles for the calling organization.
+  public func proxyGetWalletKitConfig(_ input: ProxyTGetWalletKitConfigBody = .init()) async throws
+    -> ProxyTGetWalletKitConfigResponse
+  {
+    return try await authProxyRequest("/v1/wallet_kit_config", body: input)
+  }
 
 }
