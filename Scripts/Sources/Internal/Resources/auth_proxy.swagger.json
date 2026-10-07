@@ -364,6 +364,38 @@
         "tags": ["Auth"]
       }
     },
+    "/v1/wallet_kit_client_params": {
+      "post": {
+        "summary": "Get WalletKit Client Params",
+        "description": "Get client parameters needed to initialize WalletKit flows, such as a client token for the calling organization.",
+        "operationId": "AuthProxyService_GetWalletKitClientParams",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1GetWalletKitClientParamsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1GetWalletKitClientParamsRequest"
+            }
+          }
+        ],
+        "tags": ["Wallet Kit"]
+      }
+    },
     "/v1/wallet_kit_config": {
       "post": {
         "summary": "Get WalletKit Config",
@@ -468,7 +500,9 @@
         "ADDRESS_FORMAT_TON_V3R2",
         "ADDRESS_FORMAT_TON_V4R2",
         "ADDRESS_FORMAT_TON_V5R1",
-        "ADDRESS_FORMAT_XRP"
+        "ADDRESS_FORMAT_XRP",
+        "ADDRESS_FORMAT_SPARK_MAINNET",
+        "ADDRESS_FORMAT_SPARK_REGTEST"
       ]
     },
     "v1ApiKeyCurve": {
@@ -641,6 +675,19 @@
         }
       }
     },
+    "v1GetWalletKitClientParamsRequest": {
+      "type": "object"
+    },
+    "v1GetWalletKitClientParamsResponse": {
+      "type": "object",
+      "properties": {
+        "turnstileSiteKey": {
+          "type": "string",
+          "description": "Site key for Turnstile, used to protect WalletKit flows with bot detection.",
+          "title": "Turnstile Site Key"
+        }
+      }
+    },
     "v1GetWalletKitConfigRequest": {
       "type": "object"
     },
@@ -701,6 +748,10 @@
         "contact": {
           "type": "string",
           "description": "Email or phone number to send the OTP code to"
+        },
+        "emailCustomization": {
+          "$ref": "#/definitions/v1ProxyEmailCustomizationParams",
+          "description": "Optional parameters for customizing emails. If not provided, the default email will be used."
         }
       },
       "required": ["otpType", "contact"]
@@ -725,6 +776,10 @@
         "contact": {
           "type": "string",
           "description": "Email or phone number to send the OTP code to"
+        },
+        "emailCustomization": {
+          "$ref": "#/definitions/v1ProxyEmailCustomizationParams",
+          "description": "Optional parameters for customizing emails. If not provided, the default email will be used."
         }
       },
       "required": ["otpType", "contact"]
@@ -764,7 +819,7 @@
         },
         "nonce": {
           "type": "string",
-          "description": "An optional nonce used by the client to prevent replay/substitution of an ID token"
+          "description": "A nonce value set to sha256(publicKey), used to bind the OIDC token to a specific public key"
         },
         "clientId": {
           "type": "string",
@@ -776,6 +831,7 @@
         "authCode",
         "redirectUri",
         "codeVerifier",
+        "nonce",
         "clientId"
       ]
     },
@@ -950,6 +1006,15 @@
     "v1PathFormat": {
       "type": "string",
       "enum": ["PATH_FORMAT_BIP32"]
+    },
+    "v1ProxyEmailCustomizationParams": {
+      "type": "object",
+      "properties": {
+        "templateId": {
+          "type": "string",
+          "description": "Unique identifier for a given Email Template. If not specified, the default is the most recent Email Template."
+        }
+      }
     },
     "v1SignupRequest": {
       "type": "object",
@@ -1187,6 +1252,10 @@
         "addressFormat": {
           "$ref": "#/definitions/v1AddressFormat",
           "description": "Address format used to generate a wallet Acccount."
+        },
+        "name": {
+          "type": "string",
+          "description": "Optional human-readable name for the account."
         }
       },
       "required": ["curve", "pathFormat", "path", "addressFormat"]

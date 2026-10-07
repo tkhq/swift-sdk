@@ -106,6 +106,8 @@ extension TurnkeyContext {
           sessionType: stored.sessionType,
           userId: stored.userId,
           organizationId: stored.organizationId,
+          sessionProfileId: stored.sessionProfileId,
+          scope: stored.scope,
           token: jwt
         )
 
@@ -155,6 +157,8 @@ extension TurnkeyContext {
         sessionType: stored.sessionType,
         userId: stored.userId,
         organizationId: stored.organizationId,
+        sessionProfileId: stored.sessionProfileId,
+        scope: stored.scope,
         token: jwt
       )
 
@@ -291,6 +295,8 @@ extension TurnkeyContext {
           sessionType: stored.sessionType,
           userId: stored.userId,
           organizationId: stored.organizationId,
+          sessionProfileId: stored.sessionProfileId,
+          scope: stored.scope,
           token: jwt
         )
 

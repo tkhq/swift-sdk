@@ -19,6 +19,8 @@ public struct TurnkeySession: Codable, Equatable {
   public let sessionType: SessionType
   public let userId: String
   public let organizationId: String
+  public let sessionProfileId: String?
+  public let scope: String?
 
   enum CodingKeys: String, CodingKey {
     case exp
@@ -26,6 +28,8 @@ public struct TurnkeySession: Codable, Equatable {
     case sessionType = "session_type"
     case userId = "user_id"
     case organizationId = "organization_id"
+    case sessionProfileId = "session_profile_id"
+    case scope
   }
 }
 
@@ -37,6 +41,8 @@ public struct Session: Codable, Equatable, Identifiable {
   public let sessionType: SessionType
   public let userId: String
   public let organizationId: String
+  public let sessionProfileId: String?
+  public let scope: String?
   public let token: String?
 
   public var id: String { publicKey }
@@ -47,6 +53,8 @@ public struct Session: Codable, Equatable, Identifiable {
     case sessionType = "session_type"
     case userId = "user_id"
     case organizationId = "organization_id"
+    case sessionProfileId = "session_profile_id"
+    case scope
     case token
   }
 }

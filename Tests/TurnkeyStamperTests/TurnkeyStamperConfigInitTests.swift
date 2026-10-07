@@ -1,7 +1,9 @@
 import AuthenticationServices
+import Foundation
 import Testing
 
 @testable import TurnkeyCrypto
+@testable import TurnkeyEncoding
 @testable import TurnkeyStamper
 
 #if canImport(UIKit)
@@ -56,5 +58,33 @@ struct TurnkeyStamperConfigInitTests {
     let result = try await stamper.stamp(payload: "hello")
     #expect(result.stampHeaderName == "X-Stamp")
     #expect(!result.stampHeaderValue.isEmpty)
+  }
+
+  @Test
+  func testAttestedStamperCreatesVerificationTokenStamp() async throws {
+    let pair = TurnkeyCrypto.generateP256KeyPair()
+    let stamper = Stamper(
+      config: ApiKeyStamperConfig(
+        apiPublicKey: pair.publicKeyCompressed,
+        apiPrivateKey: pair.privateKey
+      )
+    )
+    let attestedStamper = AttestedStamper(
+      attestedIdentity: "verification-token",
+      scheme: .p256VerificationToken,
+      stamper: stamper
+    )
+
+    let result = try await attestedStamper.stamp(payload: "hello")
+    #expect(result.stampHeaderName == "X-Stamp-Attested")
+
+    let stampData = try #require(Data(base64URLEncoded: result.stampHeaderValue))
+    let stamp = try #require(
+      JSONSerialization.jsonObject(with: stampData) as? [String: String]
+    )
+    #expect(stamp["publicKeyAttestation"] == "verification-token")
+    #expect(stamp["scheme"] == "STAMP_ATTESTED_SCHEME_P256_VERIFICATION_TOKEN")
+    #expect(stamp["publicKey"] == pair.publicKeyCompressed)
+    #expect(stamp["signature"]?.isEmpty == false)
   }
 }
