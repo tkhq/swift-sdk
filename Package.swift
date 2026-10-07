@@ -53,6 +53,18 @@ let package = Package(
                 "TurnkeyEncoding",
                 "TurnkeyKeyManager",
             ]),
+        .target(
+            name: "ScopedRecoveryExample",
+            dependencies: [
+                "TurnkeyHttp",
+                "TurnkeyPasskeys",
+                "TurnkeyStamper",
+                "TurnkeySwift",
+                "TurnkeyTypes",
+            ],
+            path: "Examples/scoped-recovery",
+            exclude: ["README.md"]
+        ),
         .testTarget(
             name: "TurnkeyStamperTests",
             dependencies: ["TurnkeyStamper", "TurnkeyCrypto"]
