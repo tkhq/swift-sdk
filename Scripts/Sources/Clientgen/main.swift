@@ -277,7 +277,7 @@ func generatePublicClientFile(swagger: SwaggerSpec) -> String {
         let methodName = operationNameWithoutNamespace.prefix(1).lowercased() + 
                         operationNameWithoutNamespace.dropFirst()
         
-        let methodType = methodTypeFromMethodName(methodName)
+        let methodType = endpointPath.contains("/query/") ? "query" : methodTypeFromMethodName(methodName)
         let inputType = "T\(operationNameWithoutNamespace)Body"
         let responseType = "T\(operationNameWithoutNamespace)Response"
         
@@ -307,7 +307,12 @@ func generatePublicClientFile(swagger: SwaggerSpec) -> String {
             """
         } else if methodType == "activity" {
             // Activity method - needs type, organizationId, timestampMs wrapping
-            let unversionedActivityType = "ACTIVITY_TYPE_\(snakeCase(operationNameWithoutNamespace).uppercased())"
+            // Endpoint names preserve protocol spelling, including numeric suffixes such as _7702.
+            let endpointActivityType = "ACTIVITY_TYPE_\(endpointPath.split(separator: "/").last!.uppercased())"
+            let knownTypes = swagger.definitions["v1ActivityType"]?.enumValues ?? []
+            let unversionedActivityType = knownTypes.contains(endpointActivityType)
+                ? endpointActivityType
+                : "ACTIVITY_TYPE_\(snakeCase(operationNameWithoutNamespace).uppercased())"
             let pinnedConfig = VERSIONED_ACTIVITY_TYPES[unversionedActivityType]
             let activityType =
                 pinnedConfig?.activityType
@@ -331,7 +336,12 @@ func generatePublicClientFile(swagger: SwaggerSpec) -> String {
             """
         } else if methodType == "activityDecision" {
             // Activity decision method
-            let unversionedActivityType = "ACTIVITY_TYPE_\(snakeCase(operationNameWithoutNamespace).uppercased())"
+            // Endpoint names preserve protocol spelling, including numeric suffixes such as _7702.
+            let endpointActivityType = "ACTIVITY_TYPE_\(endpointPath.split(separator: "/").last!.uppercased())"
+            let knownTypes = swagger.definitions["v1ActivityType"]?.enumValues ?? []
+            let unversionedActivityType = knownTypes.contains(endpointActivityType)
+                ? endpointActivityType
+                : "ACTIVITY_TYPE_\(snakeCase(operationNameWithoutNamespace).uppercased())"
             let activityType =
                 VERSIONED_ACTIVITY_TYPES[unversionedActivityType]?.activityType
                 ?? autoDetectedActivityTypes[unversionedActivityType]

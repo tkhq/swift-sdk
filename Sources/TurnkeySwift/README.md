@@ -269,3 +269,13 @@ See the [demo app README](../../Examples/swift-demo-wallet/README.md) for setup 
 * Swift 5.9+
 
 ---
+
+## Scoped recovery sessions
+
+Use the [scoped MFA recovery example](../../Examples/scoped-recovery/README.md) to recover a lost passkey while retaining the existing user, sub-organization, and wallets. Configure the MFA policies and recovery session profile in the dashboard or parent organization first. The profile must allow authenticator creation and exclude signing.
+
+Supply the recovery `sessionProfileId` in the generated `TOtpLoginBody`, `TOauthLoginBody`, or `TStampLoginBody`. For pre-session OTP or OIDC requests, use an `AttestedStamper` backed by the P-256 key bound to the verified identity.
+
+When a login throws `MfaRequiredError`, retain its `activity.id` and `activity.fingerprint`. `mfaStatuses` contains a best-effort lookup of the outstanding requirements. An empty list can mean the lookup failed or was cancelled; it does not mean MFA is satisfied. Retry `getMfaStatus` when needed. Approve the held activity with the second factor, then query the original activity for the completed login result.
+
+Store the resulting JWT with `storeSession`. `Session` retains `sessionProfileId`, `scope`, and the profile name as `sessionType.custom`. These claims describe the server-enforced session permissions. After enrolling the replacement passkey, log in with that passkey without the recovery profile to obtain a normal session.

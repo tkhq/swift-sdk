@@ -528,9 +528,7 @@ extension TurnkeyClient {
   public func validateTvcImage(_ input: TValidateTvcImageBody) async throws
     -> TValidateTvcImageResponse
   {
-    return try await activity(
-      "/public/v1/query/validate_tvc_image", body: input,
-      activityType: "ACTIVITY_TYPE_VALIDATE_TVC_IMAGE", resultKey: "ValidateTvcImageResult")
+    return try await request("/public/v1/query/validate_tvc_image", body: input)
   }
 
   /// Who am I?
@@ -1105,7 +1103,7 @@ extension TurnkeyClient {
   {
     return try await activity(
       "/public/v1/submit/eth_undelegate_7702", body: input,
-      activityType: "ACTIVITY_TYPE_ETH_UNDELEGATE7702", resultKey: "ethUndelegate7702Result")
+      activityType: "ACTIVITY_TYPE_ETH_UNDELEGATE_7702", resultKey: "ethUndelegate7702Result")
   }
 
   /// Execute Swap
