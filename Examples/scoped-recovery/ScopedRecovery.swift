@@ -140,8 +140,10 @@ public enum ScopedRecovery {
         }
         return session
       case .activity_status_authenticators_needed:
-        let statuses = try? await client.getMfaStatus(TGetMfaStatusBody(activityId: activity.id))
-          .mfaStatuses
+        let statuses = try? await client.getMfaStatus(
+          TGetMfaStatusBody(organizationId: activity.organizationId, activityId: activity.id)
+        )
+        .mfaStatuses
         throw MfaRequiredError(activity: activity, mfaStatuses: statuses ?? [])
       case .activity_status_failed, .activity_status_rejected:
         throw RecoveryError.activityFailed

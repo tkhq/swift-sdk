@@ -29,15 +29,15 @@ struct SessionTests {
     let payload = try JSONSerialization.data(withJSONObject: claims)
       .base64EncodedString().replacingOccurrences(of: "+", with: "-")
       .replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")
-    // Turnkey session JWTs have an empty signature segment.
-    let jwt = "e30.\(payload)."
+    // Session JWTs are signed by the notarizer; signature verification is separate from decoding.
+    let jwt = "e30.\(payload).signature"
     let decoded = try JWTDecoder.decode(jwt, as: TurnkeySession.self)
     #expect(decoded.sessionType == (scoped ? .custom("Passkey recovery") : .readWrite))
     #expect(decoded.sessionProfileId == (scoped ? "recovery-profile" : nil))
     #expect(decoded.scope == (scoped ? "ACTIVITY_TYPE_CREATE_AUTHENTICATORS_V2" : nil))
     #expect(decoded.userId == "same-user")
     #expect(decoded.organizationId == "same-suborg")
-    #expect(try JWTDecoder.decode("e30.\(payload).signature", as: TurnkeySession.self) == decoded)
+    #expect(try JWTDecoder.decode("e30.\(payload).", as: TurnkeySession.self) == decoded)
     let stored = StoredSession(decoded: decoded, jwt: jwt)
     let restored = try JSONDecoder().decode(StoredSession.self, from: JSONEncoder().encode(stored))
     #expect(restored.decoded == decoded)

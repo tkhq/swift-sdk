@@ -1,4 +1,5 @@
 import Foundation
+import ScopedRecoveryExample
 import TurnkeyStamper
 import TurnkeyTypes
 import XCTest
@@ -51,7 +52,7 @@ final class RecoveryRequestTests: XCTestCase {
     super.tearDown()
   }
 
-  private func response(status: String, result: [String: Any] = [:]) throws -> Data {
+  private func response(status: String, result: Any = NSNull()) throws -> Data {
     try JSONSerialization.data(withJSONObject: [
       "activity": [
         "id": "held-login", "fingerprint": "held-fingerprint", "organizationId": "suborg",
@@ -88,6 +89,98 @@ final class RecoveryRequestTests: XCTestCase {
       XCTAssertNil(payload["fingerprint"])
     }
     XCTAssertEqual(payloads[0]["timestampMs"] as? String, "123")
+  }
+
+  func testHeldQueriesAndDecisionsDecodeNullResults() async throws {
+    let held = try response(status: "ACTIVITY_STATUS_AUTHENTICATORS_NEEDED")
+    MockProtocol.handler = { _ in (200, held) }
+    let client = TurnkeyClient(
+      organizationId: "suborg", baseUrl: "https://recovery.test", stamper: RecordingStamper())
+    let queried = try await client.getActivity(TGetActivityBody(activityId: "held-login"))
+    let approved = try await client.approveActivity(
+      TApproveActivityBody(fingerprint: "held-fingerprint"))
+    let rejected = try await client.rejectActivity(
+      TRejectActivityBody(fingerprint: "held-fingerprint"))
+    for activity in [queried.activity, approved.activity, rejected.activity] {
+      XCTAssertEqual(activity.status, .activity_status_authenticators_needed)
+      XCTAssertNil(activity.result.otpLoginResult)
+    }
+    var json = try JSONSerialization.jsonObject(with: held) as! [String: Any]
+    var activity = json["activity"] as! [String: Any]
+    activity.removeValue(forKey: "result")
+    json["activity"] = activity
+    let missing = try JSONDecoder().decode(
+      TGetActivityResponse.self, from: JSONSerialization.data(withJSONObject: json))
+    XCTAssertNil(missing.activity.result.otpLoginResult)
+    activity["result"] = ["otpLoginResult": ["session": 123]]
+    json["activity"] = activity
+    XCTAssertThrowsError(
+      try JSONDecoder().decode(
+        TGetActivityResponse.self, from: JSONSerialization.data(withJSONObject: json)))
+  }
+
+  func testResumeHeldLoginDecodesNullResult() async throws {
+    let held = try response(status: "ACTIVITY_STATUS_AUTHENTICATORS_NEEDED")
+    let requirements = Data("{\"mfaStatuses\":[]}".utf8)
+    MockProtocol.handler = { request in
+      (200, request.url!.path.hasSuffix("get_mfa_status") ? requirements : held)
+    }
+    let key = try Stamper.createOnDeviceKeyPair()
+    defer { try? Stamper.deleteOnDeviceKeyPair(publicKeyHex: key) }
+    do {
+      _ = try await ScopedRecovery.resumeOtpLogin(
+        activityId: "held-login", attestedIdentity: "token", attestedPublicKey: key,
+        scheme: .p256VerificationToken,
+        configuration: .init(
+          organizationId: "suborg", sessionProfileId: "recovery", apiUrl: "https://recovery.test"),
+        maxAttempts: 1
+      )
+      XCTFail("Expected MFA hold")
+    } catch let error as MfaRequiredError {
+      XCTAssertEqual(error.activity.fingerprint, "held-fingerprint")
+      XCTAssertNil(error.activity.result.otpLoginResult)
+    }
+  }
+
+  func testValidateTvcImageUsesQueryTypes() async throws {
+    MockProtocol.handler = { _ in (200, Data("{\"resolvedImageDigest\":\"sha256:test\"}".utf8)) }
+    let stamper = RecordingStamper()
+    let client = TurnkeyClient(
+      organizationId: "suborg", baseUrl: "https://recovery.test", stamper: stamper)
+    let result = try await client.validateTvcImage(
+      TValidateTvcImageBody(pivotContainerImageUrl: "registry.test/image:tag"))
+    XCTAssertEqual(result.resolvedImageDigest, "sha256:test")
+    let payloads = await stamper.payloads
+    XCTAssertEqual(payloads[0]["pivotContainerImageUrl"] as? String, "registry.test/image:tag")
+    XCTAssertNil(payloads[0]["type"])
+    XCTAssertNil(payloads[0]["parameters"])
+  }
+
+  func testPollingAndMfaStatusUseActivityOrganization() async throws {
+    let pending = try response(status: "ACTIVITY_STATUS_PENDING")
+    let held = try response(status: "ACTIVITY_STATUS_AUTHENTICATORS_NEEDED")
+    MockProtocol.handler = { request in
+      if request.url!.path.hasSuffix("get_activity") { return (200, held) }
+      if request.url!.path.hasSuffix("get_mfa_status") {
+        return (200, Data("{\"mfaStatuses\":[]}".utf8))
+      }
+      return (200, pending)
+    }
+    let stamper = RecordingStamper()
+    let client = TurnkeyClient(
+      organizationId: "parent", baseUrl: "https://recovery.test", stamper: stamper,
+      activityPoller: .init(intervalMs: 0))
+    do {
+      let _: TOtpLoginResponse = try await client.activity(
+        "/login", body: TApproveActivityBody(organizationId: "suborg", fingerprint: "test"),
+        activityType: "ACTIVITY_TYPE_OTP_LOGIN_V2", resultKey: "otpLoginResult")
+      XCTFail("Expected MFA hold")
+    } catch let error as MfaRequiredError {
+      XCTAssertEqual(error.activity.organizationId, "suborg")
+    }
+    let payloads = await stamper.payloads
+    XCTAssertEqual(payloads.count, 3)
+    for payload in payloads { XCTAssertEqual(payload["organizationId"] as? String, "suborg") }
   }
 
   func testGeneratedEthereumMappings() async throws {

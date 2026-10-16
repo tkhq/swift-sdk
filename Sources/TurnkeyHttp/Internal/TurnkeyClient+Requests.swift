@@ -89,7 +89,7 @@ extension TurnkeyClient {
     func mfaRequiredError(from data: Data) async throws -> MfaRequiredError {
       let activity = try JSONDecoder().decode(TGetActivityResponse.self, from: data).activity
       let mfaStatuses = try? await getMfaStatus(
-        TGetMfaStatusBody(activityId: activity.id)
+        TGetMfaStatusBody(organizationId: activity.organizationId, activityId: activity.id)
       ).mfaStatuses
       return MfaRequiredError(activity: activity, mfaStatuses: mfaStatuses ?? [])
     }
@@ -119,7 +119,7 @@ extension TurnkeyClient {
     var attempts = 0
 
     // Recursive polling function
-    func pollStatus(_ activityId: String) async throws -> TResponse {
+    func pollStatus(_ activityId: String, organizationId: String) async throws -> TResponse {
       let pollBody = TGetActivityBody(organizationId: organizationId, activityId: activityId)
       let jsonData = try JSONEncoder().encode(pollBody)
       let data = try await stampAndSend("/public/v1/query/get_activity", body: jsonData)
@@ -137,7 +137,7 @@ extension TurnkeyClient {
         !TERMINAL_ACTIVITY_STATUSES.contains(status)
       {
         try await Task.sleep(nanoseconds: UInt64(pollingDuration * 1_000_000_000))
-        return try await pollStatus(activityId)
+        return try await pollStatus(activityId, organizationId: organizationId)
       }
 
       return try await handleResponse(data)
@@ -154,7 +154,9 @@ extension TurnkeyClient {
       let activityId = activity["id"] as? String,
       !TERMINAL_ACTIVITY_STATUSES.contains(status)
     {
-      return try await pollStatus(activityId)
+      let activityOrganizationId =
+        activity["organizationId"] as? String ?? wrappedBody.organizationId
+      return try await pollStatus(activityId, organizationId: activityOrganizationId)
     }
 
     return try await handleResponse(data)
