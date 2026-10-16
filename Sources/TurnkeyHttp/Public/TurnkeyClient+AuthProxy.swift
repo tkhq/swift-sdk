@@ -81,6 +81,14 @@ extension TurnkeyClient {
     return try await authProxyRequest("/v1/signup_v2", body: input)
   }
 
+  /// Get WalletKit Client Params
+  /// Get client parameters needed to initialize WalletKit flows, such as a client token for the calling organization.
+  public func proxyGetWalletKitClientParams(_ input: ProxyTGetWalletKitClientParamsBody = .init())
+    async throws -> ProxyTGetWalletKitClientParamsResponse
+  {
+    return try await authProxyRequest("/v1/wallet_kit_client_params", body: input)
+  }
+
   /// Get WalletKit Config
   /// Get wallet kit settings and feature toggles for the calling organization.
   public func proxyGetWalletKitConfig(_ input: ProxyTGetWalletKitConfigBody = .init()) async throws
