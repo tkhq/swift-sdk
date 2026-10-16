@@ -1,4 +1,5 @@
 import AuthenticationServices
+import CryptoKit
 import Foundation
 import Testing
 
@@ -60,8 +61,8 @@ struct TurnkeyStamperConfigInitTests {
     #expect(!result.stampHeaderValue.isEmpty)
   }
 
-  @Test
-  func testAttestedStamperCreatesVerificationTokenStamp() async throws {
+  @Test(arguments: [AttestedStampScheme.p256OIDC, .p256VerificationToken])
+  func testAttestedStamperSignsPayload(_ scheme: AttestedStampScheme) async throws {
     let pair = TurnkeyCrypto.generateP256KeyPair()
     let stamper = Stamper(
       config: ApiKeyStamperConfig(
@@ -71,7 +72,7 @@ struct TurnkeyStamperConfigInitTests {
     )
     let attestedStamper = AttestedStamper(
       attestedIdentity: "verification-token",
-      scheme: .p256VerificationToken,
+      scheme: scheme,
       stamper: stamper
     )
 
@@ -83,8 +84,14 @@ struct TurnkeyStamperConfigInitTests {
       JSONSerialization.jsonObject(with: stampData) as? [String: String]
     )
     #expect(stamp["publicKeyAttestation"] == "verification-token")
-    #expect(stamp["scheme"] == "STAMP_ATTESTED_SCHEME_P256_VERIFICATION_TOKEN")
+    #expect(stamp["scheme"] == scheme.rawValue)
     #expect(stamp["publicKey"] == pair.publicKeyCompressed)
-    #expect(stamp["signature"]?.isEmpty == false)
+    let signatureHex = try #require(stamp["signature"])
+    let signatureData = try #require(Data(hexString: signatureHex))
+    let publicKeyData = try #require(Data(hexString: pair.publicKeyUncompressed))
+    let key = try P256.Signing.PublicKey(x963Representation: publicKeyData)
+    let signature = try P256.Signing.ECDSASignature(derRepresentation: signatureData)
+    #expect(key.isValidSignature(signature, for: SHA256.hash(data: Data("hello".utf8))))
+    #expect(!key.isValidSignature(signature, for: SHA256.hash(data: Data("changed".utf8))))
   }
 }

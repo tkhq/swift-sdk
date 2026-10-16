@@ -139,6 +139,10 @@ public enum ScopedRecovery {
           throw RecoveryError.missingOtpLoginSession
         }
         return session
+      case .activity_status_authenticators_needed:
+        let statuses = try? await client.getMfaStatus(TGetMfaStatusBody(activityId: activity.id))
+          .mfaStatuses
+        throw MfaRequiredError(activity: activity, mfaStatuses: statuses ?? [])
       case .activity_status_failed, .activity_status_rejected:
         throw RecoveryError.activityFailed
       default:
@@ -148,6 +152,29 @@ public enum ScopedRecovery {
     }
 
     throw RecoveryError.activityDidNotComplete
+  }
+
+  /// Enrolls for the user and sub-organization of the active recovery session.
+  @available(iOS 16.0, macOS 13.0, *)
+  public static func enrollReplacementPasskey(
+    session: Session,
+    passkeyName: String,
+    rpId: String,
+    presentationAnchor: ASPresentationAnchor,
+    apiUrl: String = TurnkeyClient.baseURLString
+  ) async throws -> TCreateAuthenticatorsResponse {
+    return try await enrollReplacementPasskey(
+      sessionPublicKey: session.publicKey,
+      userId: session.userId,
+      passkeyName: passkeyName,
+      rpId: rpId,
+      presentationAnchor: presentationAnchor,
+      configuration: Configuration(
+        organizationId: session.organizationId,
+        sessionProfileId: session.sessionProfileId ?? "",
+        apiUrl: apiUrl
+      )
+    )
   }
 
   /// Enrolls a replacement passkey while the scoped recovery session is active.

@@ -29,6 +29,10 @@ For setup instructions, refer to the [Demo App README](./Examples/swift-demo-wal
 
 ---
 
+## Scoped passkey recovery
+
+See the [scoped MFA recovery example](./Examples/scoped-recovery/README.md) for recovering a lost passkey while keeping the existing user and wallets.
+
 ## Development
 
 Code generation for types and client methods is handled by custom Swift executables in the [`Scripts/`](./Scripts) directory. See the [Scripts README](./Scripts/README.md) for details.

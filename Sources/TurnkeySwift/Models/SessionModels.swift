@@ -7,9 +7,37 @@ public enum AuthState {
   case unAuthenticated
 }
 
-public enum SessionType: String, Codable {
-  case readWrite = "SESSION_TYPE_READ_WRITE"
-  case readOnly = "SESSION_TYPE_READ_ONLY"
+/// Built-in session types and names supplied by configured session profiles.
+public enum SessionType: RawRepresentable, Codable, Hashable, Sendable {
+  case readWrite
+  case readOnly
+  case custom(String)
+
+  public init?(rawValue: String) {
+    switch rawValue {
+    case "SESSION_TYPE_READ_WRITE": self = .readWrite
+    case "SESSION_TYPE_READ_ONLY": self = .readOnly
+    default: self = .custom(rawValue)
+    }
+  }
+
+  public var rawValue: String {
+    switch self {
+    case .readWrite: return "SESSION_TYPE_READ_WRITE"
+    case .readOnly: return "SESSION_TYPE_READ_ONLY"
+    case .custom(let name): return name
+    }
+  }
+
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.singleValueContainer()
+    self = SessionType(rawValue: try container.decode(String.self))!
+  }
+
+  public func encode(to encoder: Encoder) throws {
+    var container = encoder.singleValueContainer()
+    try container.encode(rawValue)
+  }
 }
 
 // this is what the session jwt returned by Turnkey decodes to

@@ -65,6 +65,8 @@ let package = Package(
             path: "Examples/scoped-recovery",
             exclude: ["README.md"]
         ),
+        .testTarget(name: "TurnkeyHttpTests", dependencies: ["TurnkeyHttp", "TurnkeyTypes", "TurnkeyStamper"]),
+        .testTarget(name: "TurnkeySwiftTests", dependencies: ["TurnkeySwift"]),
         .testTarget(
             name: "TurnkeyStamperTests",
             dependencies: ["TurnkeyStamper", "TurnkeyCrypto"]

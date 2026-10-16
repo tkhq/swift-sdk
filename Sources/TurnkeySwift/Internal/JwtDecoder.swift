@@ -3,8 +3,10 @@ import Foundation
 struct JWTDecoder {
   static func decode<T: Decodable>(_ jwt: String, as type: T.Type) throws -> T {
     // split the JWT into three Base-64URL sections
-    let parts = jwt.split(separator: ".")
-    guard parts.count == 3 else { throw StorageError.invalidJWT }
+    let parts = jwt.split(separator: ".", omittingEmptySubsequences: false)
+    guard parts.count == 3, !parts[0].isEmpty, !parts[1].isEmpty else {
+      throw StorageError.invalidJWT
+    }
 
     // take the payload part and convert to base-64
     var b = parts[1]

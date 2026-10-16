@@ -23,6 +23,7 @@ public struct ActivityPollerConfig {
 /// fingerprint with an `AttestedStamper` for the second factor's `approveActivity` call.
 public struct MfaRequiredError: Error, Sendable {
   public let activity: v1Activity
+  /// Best-effort requirements lookup. Empty if unavailable; query `getMfaStatus` to retry.
   public let mfaStatuses: [v1MfaStatus]
 
   public init(activity: v1Activity, mfaStatuses: [v1MfaStatus]) {

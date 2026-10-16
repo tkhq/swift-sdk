@@ -88,10 +88,10 @@ extension TurnkeyClient {
     // Helper to handle response data
     func mfaRequiredError(from data: Data) async throws -> MfaRequiredError {
       let activity = try JSONDecoder().decode(TGetActivityResponse.self, from: data).activity
-      let mfaStatuses = try await getMfaStatus(
+      let mfaStatuses = try? await getMfaStatus(
         TGetMfaStatusBody(activityId: activity.id)
       ).mfaStatuses
-      return MfaRequiredError(activity: activity, mfaStatuses: mfaStatuses)
+      return MfaRequiredError(activity: activity, mfaStatuses: mfaStatuses ?? [])
     }
 
     func handleResponse(_ data: Data) async throws -> TResponse {
@@ -120,7 +120,7 @@ extension TurnkeyClient {
 
     // Recursive polling function
     func pollStatus(_ activityId: String) async throws -> TResponse {
-      let pollBody = TGetActivityBody(activityId: activityId)
+      let pollBody = TGetActivityBody(organizationId: organizationId, activityId: activityId)
       let jsonData = try JSONEncoder().encode(pollBody)
       let data = try await stampAndSend("/public/v1/query/get_activity", body: jsonData)
 
@@ -220,29 +220,9 @@ extension TurnkeyClient {
     body: TBody,
     activityType: String
   ) async throws -> TResponse {
-    let activityData: TActivityResponse = try await request(path, body: body)
-
-    // Merge activity.result with activityData
-    // This mimics the JS: { ...activityData["activity"]["result"], ...activityData }
-    let encoder = JSONEncoder()
-    let decoder = JSONDecoder()
-
-    var activityDict =
-      try JSONSerialization.jsonObject(
-        with: encoder.encode(activityData)
-      ) as! [String: Any]
-
-    // Extract result and merge
-    if let activity = activityDict["activity"] as? [String: Any],
-      let result = activity["result"] as? [String: Any]
-    {
-      // Merge result into activityDict (result values take precedence)
-      activityDict = activityDict.merging(result) { _, new in new }
-    }
-
-    // Convert back to TResponse
-    let mergedData = try JSONSerialization.data(withJSONObject: activityDict)
-    return try decoder.decode(TResponse.self, from: mergedData)
+    let wrappedBody = try wrapActivityBody(body, activityType: activityType)
+    let data = try await stampAndSend(path, body: JSONEncoder().encode(wrappedBody))
+    return try JSONDecoder().decode(TResponse.self, from: data)
   }
 
   // MARK: - Auth Proxy Methods
@@ -320,23 +300,6 @@ private struct AnyCodableDict: Codable {
     }
     try container.encode(codableDict)
   }
-}
-
-// MARK: - Helper Types for Activity Handling
-
-// Helper types for activity handling
-private struct TActivityResponse: Codable {
-  let activity: Activity
-
-  struct Activity: Codable {
-    let id: String
-    let status: String
-    let result: [String: AnyCodable]?
-  }
-}
-
-private struct TGetActivityBody: Codable {
-  let activityId: String
 }
 
 // Helper for decoding any JSON value
