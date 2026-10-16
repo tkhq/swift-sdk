@@ -104,6 +104,11 @@ public enum CodegenConfig {
             intentKey: "v1EthSendTransactionIntent",
             resultKey: "v1EthSendTransactionResult"
         ),
+        "ACTIVITY_TYPE_SOL_SEND_TRANSACTION": ActivityVersion(
+            activityType: "ACTIVITY_TYPE_SOL_SEND_TRANSACTION",
+            intentKey: "v1SolSendTransactionIntent",
+            resultKey: "v1SolSendTransactionResult"
+        ),
     ]
 
     // Fields that should be treated as oneOf unions rather than both-optional.
