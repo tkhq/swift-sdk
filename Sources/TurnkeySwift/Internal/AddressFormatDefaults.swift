@@ -55,9 +55,9 @@ struct AddressFormatDefaults {
       .address_format_bitcoin_regtest_p2tr,
       .address_format_doge_mainnet,
       .address_format_doge_testnet,
+      .address_format_xrp,
       .address_format_spark_mainnet,
-      .address_format_spark_regtest,
-      .address_format_xrp:
+      .address_format_spark_regtest:
       return .init(encoding: .payload_encoding_hexadecimal, hashFunction: .hash_function_sha256)
     }
   }

@@ -2,17 +2,28 @@
 
 ### MFA recovery and scoped sessions
 
-- Sync public API and Auth Proxy types with the mono schemas, including MFA policies, MFA status, session profiles, and `sessionProfileId` on login requests.
 - Add `AttestedStamper` for OTP verification tokens and OIDC tokens bound to a local P-256 key.
 - Stop activity polling at `AUTHENTICATORS_NEEDED` and throw `MfaRequiredError` with the held activity, fingerprint, and best-effort MFA requirements. Failed or cancelled status lookups preserve the held activity.
 - Preserve session profile IDs, scopes, and custom profile names when decoding and storing sessions. Accept the empty signature segment in Turnkey session JWTs.
 - Wrap approval and rejection requests in activity envelopes and include the organization ID when polling.
-- Correct generated Ethereum send-transaction V2 and EIP-7702 undelegation activity mappings.
+- Correct the generated EIP-7702 undelegation activity mapping and query endpoint classification.
 - Add a compile-checked [scoped recovery example](Examples/scoped-recovery/README.md).
 
 `SessionType` now includes `.custom(String)` for session profile names. Applications with exhaustive switches must handle this case. `rawValue` continues to return the original wire string.
 
-The schema sync changes `ethSendTransaction` to the V2 intent (`calls` replaces `to`) and result (`sendTransactionStatusId` identifies the submitted transaction status). Update callers when upgrading.
+## 4.1.0 - 2026-10-16
+
+### Minor Changes
+
+Sync the generated client and types with the Turnkey API.
+
+- Add swaps: `createSwapQuote` (sends `ACTIVITY_TYPE_CREATE_SWAP_QUOTE_V3`, with optional `feeSponsorship` and `fixedRate`), `executeSwap` (`ACTIVITY_TYPE_EXECUTE_SWAP_V3`), `getSwapStatus`, `upsertSwapConfig`, and `claimSwapFees`.
+- Add swap fee sponsorship and fixed-rate controls: `upsertSwapFeeSponsorshipLimitConfig`, `upsertSwapFixedRateLimitConfig`, and `getSwapSponsorshipUsage`.
+- Add the other API methods released since the last sync, including Earn, fiat on-ramp quotes and sessions, external signer tasks, and TVC operators and quorum keys.
+- `ethSendTransaction` and `solSendTransaction` keep sending their V1 activities with the same request bodies. The API's default moved to V2, and the code generator now builds pinned activities' bodies from the pinned intent.
+- Matches API changes already live: `FiatOnRampBlockchainNetwork.bitcoin` is removed, and `nonce` is required on OAuth2 authenticate.
+- Add the Spark mainnet and regtest address formats to the default payload encodings.
+
 
 ## 4.0.0 - 2026-04-24
 

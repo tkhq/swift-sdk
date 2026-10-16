@@ -100,9 +100,14 @@ public enum CodegenConfig {
             resultKey: "v1CreateOauthProvidersResultV2"
         ),
         "ACTIVITY_TYPE_ETH_SEND_TRANSACTION": ActivityVersion(
-            activityType: "ACTIVITY_TYPE_ETH_SEND_TRANSACTION_V2",
-            intentKey: "v1EthSendTransactionIntentV2",
-            resultKey: "v1EthSendTransactionResultV2"
+            activityType: "ACTIVITY_TYPE_ETH_SEND_TRANSACTION",
+            intentKey: "v1EthSendTransactionIntent",
+            resultKey: "v1EthSendTransactionResult"
+        ),
+        "ACTIVITY_TYPE_SOL_SEND_TRANSACTION": ActivityVersion(
+            activityType: "ACTIVITY_TYPE_SOL_SEND_TRANSACTION",
+            intentKey: "v1SolSendTransactionIntent",
+            resultKey: "v1SolSendTransactionResult"
         ),
     ]
 

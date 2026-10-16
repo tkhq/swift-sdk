@@ -94,7 +94,7 @@ final class RecoveryRequestTests: XCTestCase {
     let sent = try response(
       status: "ACTIVITY_STATUS_COMPLETED",
       result: [
-        "ethSendTransactionResultV2": ["sendTransactionStatusId": "status-id"]
+        "ethSendTransactionResult": ["sendTransactionStatusId": "status-id"]
       ])
     let undelegated = try response(
       status: "ACTIVITY_STATUS_COMPLETED",
@@ -109,12 +109,12 @@ final class RecoveryRequestTests: XCTestCase {
       organizationId: "suborg", baseUrl: "https://recovery.test", stamper: stamper)
     let result = try await client.ethSendTransaction(
       TEthSendTransactionBody(
-        caip2: "eip155:1", calls: [], from: "0x123"
+        caip2: "eip155:1", from: "0x123", to: "0x456"
       ))
     XCTAssertEqual(result.sendTransactionStatusId, "status-id")
     _ = try await client.ethUndelegate7702(TEthUndelegate7702Body(caip2: "eip155:1", from: "0x123"))
     let payloads = await stamper.payloads
-    XCTAssertEqual(payloads[0]["type"] as? String, "ACTIVITY_TYPE_ETH_SEND_TRANSACTION_V2")
+    XCTAssertEqual(payloads[0]["type"] as? String, "ACTIVITY_TYPE_ETH_SEND_TRANSACTION")
     XCTAssertEqual(payloads[1]["type"] as? String, "ACTIVITY_TYPE_ETH_UNDELEGATE_7702")
   }
 

@@ -5,6 +5,14 @@ import TurnkeyTypes
 
 extension TurnkeyClient {
 
+  /// Get active policies
+  /// For each policy in an organization, report whether it is currently active based on the enclave's trusted timestamp and the policy's time window (if any). Policies without a time field are always active.
+  public func getActivePolicies(_ input: TGetActivePoliciesBody = .init()) async throws
+    -> TGetActivePoliciesResponse
+  {
+    return try await request("/public/v1/query/get_active_policies", body: input)
+  }
+
   /// Get activity
   /// Get details about an activity.
   public func getActivity(_ input: TGetActivityBody) async throws -> TGetActivityResponse {
@@ -23,8 +31,8 @@ extension TurnkeyClient {
     return try await request("/public/v1/query/get_api_keys", body: input)
   }
 
-  /// Get TVC App status
-  /// Get live runtime status for a TVC App from the cluster.
+  /// Get TVC app status
+  /// Get live runtime status for a TVC app from the cluster.
   public func getAppStatus(_ input: TGetAppStatusBody) async throws -> TGetAppStatusResponse {
     return try await request("/public/v1/query/get_app_status", body: input)
   }
@@ -45,8 +53,8 @@ extension TurnkeyClient {
     return try await request("/public/v1/query/get_authenticators", body: input)
   }
 
-  /// Get a specific boot proof
-  /// Get the boot proof for a given ephemeral key.
+  /// Get a specific Boot Proof
+  /// Get the Boot Proof for a given ephemeral key.
   public func getBootProof(_ input: TGetBootProofBody) async throws -> TGetBootProofResponse {
     return try await request("/public/v1/query/get_boot_proof", body: input)
   }
@@ -57,6 +65,14 @@ extension TurnkeyClient {
     -> TGetClaimEarnFeesStatusResponse
   {
     return try await request("/public/v1/query/get_claim_earn_fees_status", body: input)
+  }
+
+  /// Get Earn claim rewards status
+  /// Poll the status of a rewards claim by its claim_request_id.
+  public func getEarnClaimRewardsStatus(_ input: TGetEarnClaimRewardsStatusBody) async throws
+    -> TGetEarnClaimRewardsStatusResponse
+  {
+    return try await request("/public/v1/query/get_earn_claim_rewards_status", body: input)
   }
 
   /// Get Earn deploy status
@@ -98,8 +114,8 @@ extension TurnkeyClient {
     return try await request("/public/v1/query/get_ip_allowlist", body: input)
   }
 
-  /// Get the latest boot proof for an app
-  /// Get the latest boot proof for a given enclave app name.
+  /// Get the latest Boot Proof for an app
+  /// Get the latest Boot Proof for a given enclave app name.
   public func getLatestBootProof(_ input: TGetLatestBootProofBody) async throws
     -> TGetLatestBootProofResponse
   {
@@ -138,7 +154,7 @@ extension TurnkeyClient {
     return try await request("/public/v1/query/get_oauth2_credential", body: input)
   }
 
-  /// Get Oauth providers
+  /// Get OAuth providers
   /// Get details about Oauth providers for a user.
   public func getOauthProviders(_ input: TGetOauthProvidersBody = .init()) async throws
     -> TGetOauthProvidersResponse
@@ -214,32 +230,57 @@ extension TurnkeyClient {
     return try await request("/public/v1/query/get_smart_contract_interface", body: input)
   }
 
-  /// Get swap status
+  /// Get swap sponsorship usage
+  /// Read each swap sponsorship feature's spending window and settled spending in the current rolling window. Parents see aggregate spending; children see their own spending. Pending swaps are not reserved.
+  public func getSwapSponsorshipUsage(_ input: TGetSwapSponsorshipUsageBody = .init()) async throws
+    -> TGetSwapSponsorshipUsageResponse
+  {
+    return try await request("/public/v1/query/get_swap_sponsorship_usage", body: input)
+  }
+
+  /// Get Swap status
   /// Poll the status of a swap by its swap_request_id. Covers same-chain and cross-chain swaps.
   public func getSwapStatus(_ input: TGetSwapStatusBody) async throws -> TGetSwapStatusResponse {
     return try await request("/public/v1/query/get_swap_status", body: input)
   }
 
-  /// Get TVC App
-  /// Get details about a single TVC App
+  /// Get TVC app
+  /// Get details about a single TVC app.
   public func getTvcApp(_ input: TGetTvcAppBody) async throws -> TGetTvcAppResponse {
     return try await request("/public/v1/query/get_tvc_app", body: input)
   }
 
-  /// Get TVC Deployment
-  /// Get details about a single TVC Deployment
+  /// Get TVC deployment
+  /// Get details about a single TVC deployment.
   public func getTvcDeployment(_ input: TGetTvcDeploymentBody) async throws
     -> TGetTvcDeploymentResponse
   {
     return try await request("/public/v1/query/get_tvc_deployment", body: input)
   }
 
-  /// Get TVC Deployment debug logs
+  /// Get TVC deployment debug logs
   /// Get a bounded window of application logs from a debug-mode TVC deployment. Returned lines are collected from every running replica and sorted by platform timestamp.
   public func getTvcDeploymentDebugLogs(_ input: TGetTvcDeploymentDebugLogsBody) async throws
     -> TGetTvcDeploymentDebugLogsResponse
   {
     return try await request("/public/v1/query/get_tvc_deployment_debug_logs", body: input)
+  }
+
+  /// Get TVC deployment's provisioning details
+  /// Get the attestation document and manifest envelope of the provisioning enclave for a TVC deployment.
+  public func getTvcDeploymentProvisioningDetails(_ input: TGetTvcDeploymentProvisioningDetailsBody)
+    async throws -> TGetTvcDeploymentProvisioningDetailsResponse
+  {
+    return try await request(
+      "/public/v1/query/get_tvc_deployment_provisioning_details", body: input)
+  }
+
+  /// Get TVC QOS versions
+  /// List QOS versions supported for new TVC deployments and the latest recommended QOS version.
+  public func getTvcQosVersions(_ input: TGetTvcQosVersionsBody = .init()) async throws
+    -> TGetTvcQosVersionsResponse
+  {
+    return try await request("/public/v1/query/get_tvc_qos_versions", body: input)
   }
 
   /// Get user
@@ -300,6 +341,14 @@ extension TurnkeyClient {
     return try await request("/public/v1/query/list_earn_positions", body: input)
   }
 
+  /// List Earn rewards
+  /// List the protocol rewards (e.g. MORPHO and third-party campaign tokens, distributed off-chain via Merkl) attributed to a wallet: claimable, lifetime claimed, and pending amounts per reward token.
+  public func listEarnRewards(_ input: TListEarnRewardsBody) async throws
+    -> TListEarnRewardsResponse
+  {
+    return try await request("/public/v1/query/list_earn_rewards", body: input)
+  }
+
   /// Get Earn vault catalog
   /// Get the catalog of all wrappable yield vaults across supported chains, enriched with live TVL and APY. Annotates which vaults the organization has already enabled.
   public func listEarnVaults(_ input: TListEarnVaultsBody) async throws -> TListEarnVaultsResponse {
@@ -322,7 +371,7 @@ extension TurnkeyClient {
     return try await request("/public/v1/query/list_eth_transaction_history", body: input)
   }
 
-  /// List Fiat On Ramp Credentials
+  /// List Fiat On Ramp credentials
   /// List all fiat on ramp provider credentials within an organization.
   public func listFiatOnRampCredentials(_ input: TListFiatOnRampCredentialsBody = .init())
     async throws -> TListFiatOnRampCredentialsResponse
@@ -330,7 +379,7 @@ extension TurnkeyClient {
     return try await request("/public/v1/query/list_fiat_on_ramp_credentials", body: input)
   }
 
-  /// List OAuth 2.0 Credentials
+  /// List OAuth 2.0 credentials
   /// List all OAuth 2.0 credentials within an organization.
   public func listOauth2Credentials(_ input: TListOauth2CredentialsBody = .init()) async throws
     -> TListOauth2CredentialsResponse
@@ -361,6 +410,13 @@ extension TurnkeyClient {
     return try await request("/public/v1/query/list_private_keys", body: input)
   }
 
+  /// List secrets
+  /// List secret metadata for an organization.
+  public func listSecrets(_ input: TListSecretsBody = .init()) async throws -> TListSecretsResponse
+  {
+    return try await request("/public/v1/query/list_secrets", body: input)
+  }
+
   /// List smart contract interfaces
   /// List all smart contract interfaces within an organization.
   public func getSmartContractInterfaces(_ input: TGetSmartContractInterfacesBody = .init())
@@ -378,7 +434,7 @@ extension TurnkeyClient {
   }
 
   /// Get sub-organizations
-  /// Get all suborg IDs associated given a parent org ID and an optional filter.
+  /// Get all suborg IDs (verified and unverified) associated with a given parent organization ID and an optional filter.
   public func getSubOrgIds(_ input: TGetSubOrgIdsBody = .init()) async throws
     -> TGetSubOrgIdsResponse
   {
@@ -393,18 +449,34 @@ extension TurnkeyClient {
     return try await request("/public/v1/query/list_supported_assets", body: input)
   }
 
-  /// List TVC Deployments
-  /// List all deployments for a given TVC App
+  /// List TVC deployments
+  /// List all deployments for a given TVC app.
   public func getTvcAppDeployments(_ input: TGetTvcAppDeploymentsBody) async throws
     -> TGetTvcAppDeploymentsResponse
   {
     return try await request("/public/v1/query/list_tvc_app_deployments", body: input)
   }
 
-  /// List TVC Apps
-  /// List all TVC Apps within an organization.
+  /// List TVC apps
+  /// List all TVC apps within an organization.
   public func getTvcApps(_ input: TGetTvcAppsBody = .init()) async throws -> TGetTvcAppsResponse {
     return try await request("/public/v1/query/list_tvc_apps", body: input)
+  }
+
+  /// List TVC operators
+  /// List all TVC operators within an organization, newest first.
+  public func getTvcOperators(_ input: TGetTvcOperatorsBody = .init()) async throws
+    -> TGetTvcOperatorsResponse
+  {
+    return try await request("/public/v1/query/list_tvc_operators", body: input)
+  }
+
+  /// List TVC Quorum Keys
+  /// List all hosted TVC Quorum Keys within an organization, newest first.
+  public func getTvcQuorumKeys(_ input: TGetTvcQuorumKeysBody = .init()) async throws
+    -> TGetTvcQuorumKeysResponse
+  {
+    return try await request("/public/v1/query/list_tvc_quorum_keys", body: input)
   }
 
   /// List user tags
@@ -422,7 +494,7 @@ extension TurnkeyClient {
   }
 
   /// Get verified sub-organizations
-  /// Get all email or phone verified suborg IDs associated given a parent org ID.
+  /// Get all verified suborg IDs associated with a given parent organization ID and an optional filter.
   public func getVerifiedSubOrgIds(_ input: TGetVerifiedSubOrgIdsBody = .init()) async throws
     -> TGetVerifiedSubOrgIdsResponse
   {
@@ -451,8 +523,8 @@ extension TurnkeyClient {
     return try await request("/public/v1/query/list_webhook_endpoints", body: input)
   }
 
-  /// Validate Container Image for TVC
-  /// Validate a container image URL and pull secret for TVC deployment
+  /// Validate container image for TVC
+  /// Validate a container image URL and pull secret for TVC deployment.
   public func validateTvcImage(_ input: TValidateTvcImageBody) async throws
     -> TValidateTvcImageResponse
   {
@@ -460,7 +532,7 @@ extension TurnkeyClient {
   }
 
   /// Who am I?
-  /// Get basic information about your current API or WebAuthN user and their organization. Affords sub-organization look ups via parent organization for WebAuthN or API key users.
+  /// Get basic information about your current API or WebAuthn user and their organization. Affords sub-organization lookups via parent organization for WebAuthn or API key users.
   public func getWhoami(_ input: TGetWhoamiBody = .init()) async throws -> TGetWhoamiResponse {
     return try await request("/public/v1/query/whoami", body: input)
   }
@@ -475,7 +547,7 @@ extension TurnkeyClient {
       activityType: "ACTIVITY_TYPE_APPROVE_ACTIVITY")
   }
 
-  /// Claim earn fees
+  /// Claim Earn fees
   /// Claim earn fees through the activity pipeline.
   public func claimEarnFees(_ input: TClaimEarnFeesBody) async throws -> TClaimEarnFeesResponse {
     return try await activity(
@@ -483,7 +555,7 @@ extension TurnkeyClient {
       activityType: "ACTIVITY_TYPE_CLAIM_EARN_FEES", resultKey: "claimEarnFeesResult")
   }
 
-  /// Claim swap fees
+  /// Claim Swap fees
   /// Claim swap fees through the activity pipeline.
   public func claimSwapFees(_ input: TClaimSwapFeesBody) async throws -> TClaimSwapFeesResponse {
     return try await activity(
@@ -510,8 +582,8 @@ extension TurnkeyClient {
       resultKey: "createAuthenticatorsResult")
   }
 
-  /// Create a Fiat On Ramp Credential
-  /// Create a fiat on ramp provider credential
+  /// Create a Fiat On Ramp credential
+  /// Create a fiat on ramp provider credential.
   public func createFiatOnRampCredential(_ input: TCreateFiatOnRampCredentialBody) async throws
     -> TCreateFiatOnRampCredentialResponse
   {
@@ -541,8 +613,8 @@ extension TurnkeyClient {
       activityType: "ACTIVITY_TYPE_CREATE_MFA_POLICY", resultKey: "createMfaPolicyResult")
   }
 
-  /// Create an OAuth 2.0 Credential
-  /// Enable authentication for end users with an OAuth 2.0 provider
+  /// Create an OAuth 2.0 credential
+  /// Enable authentication for end users with an OAuth 2.0 provider.
   public func createOauth2Credential(_ input: TCreateOauth2CredentialBody) async throws
     -> TCreateOauth2CredentialResponse
   {
@@ -552,7 +624,7 @@ extension TurnkeyClient {
       resultKey: "createOauth2CredentialResult")
   }
 
-  /// Create Oauth providers
+  /// Create OAuth providers
   /// Create Oauth providers for a specified user.
   public func createOauthProviders(_ input: TCreateOauthProvidersBody) async throws
     -> TCreateOauthProvidersResponse
@@ -653,16 +725,26 @@ extension TurnkeyClient {
       resultKey: "createSubOrganizationResultV8")
   }
 
-  /// Create a TVC App
-  /// Create a new TVC application
+  /// Create Swap quote
+  /// Create a swap quote. Asset chains are derived from CAIP-19 asset IDs; cross-chain quotes are supported. Requests must use ACTIVITY_TYPE_CREATE_SWAP_QUOTE_V3.
+  public func createSwapQuote(_ input: TCreateSwapQuoteBody) async throws
+    -> TCreateSwapQuoteResponse
+  {
+    return try await activity(
+      "/public/v1/submit/create_swap_quote", body: input,
+      activityType: "ACTIVITY_TYPE_CREATE_SWAP_QUOTE_V3", resultKey: "createSwapQuoteResultV2")
+  }
+
+  /// Create a TVC app
+  /// Create a new TVC application.
   public func createTvcApp(_ input: TCreateTvcAppBody) async throws -> TCreateTvcAppResponse {
     return try await activity(
       "/public/v1/submit/create_tvc_app", body: input, activityType: "ACTIVITY_TYPE_CREATE_TVC_APP",
       resultKey: "createTvcAppResult")
   }
 
-  /// Create a TVC Deployment
-  /// Create a new TVC Deployment
+  /// Create a TVC deployment
+  /// Create a new TVC deployment.
   public func createTvcDeployment(_ input: TCreateTvcDeploymentBody) async throws
     -> TCreateTvcDeploymentResponse
   {
@@ -671,8 +753,8 @@ extension TurnkeyClient {
       activityType: "ACTIVITY_TYPE_CREATE_TVC_DEPLOYMENT", resultKey: "createTvcDeploymentResult")
   }
 
-  /// Create TVC Manifest Approvals
-  /// Post one or more manifest approvals for a TVC Manifest
+  /// Create TVC manifest approvals
+  /// Post one or more manifest approvals for a TVC manifest.
   public func createTvcManifestApprovals(_ input: TCreateTvcManifestApprovalsBody) async throws
     -> TCreateTvcManifestApprovalsResponse
   {
@@ -680,6 +762,26 @@ extension TurnkeyClient {
       "/public/v1/submit/create_tvc_manifest_approvals", body: input,
       activityType: "ACTIVITY_TYPE_CREATE_TVC_MANIFEST_APPROVALS",
       resultKey: "createTvcManifestApprovalsResult")
+  }
+
+  /// Create TVC operator
+  /// Create a TVC operator backed by uncompressed P-256 Turnkey wallet accounts.
+  public func createTvcOperator(_ input: TCreateTvcOperatorBody) async throws
+    -> TCreateTvcOperatorResponse
+  {
+    return try await activity(
+      "/public/v1/submit/create_tvc_operator", body: input,
+      activityType: "ACTIVITY_TYPE_CREATE_TVC_OPERATOR", resultKey: "createTvcOperatorResult")
+  }
+
+  /// Create TVC Quorum Key
+  /// Create a hosted TVC Quorum Key and encrypted shares.
+  public func createTvcQuorumKey(_ input: TCreateTvcQuorumKeyBody) async throws
+    -> TCreateTvcQuorumKeyResponse
+  {
+    return try await activity(
+      "/public/v1/submit/create_tvc_quorum_key", body: input,
+      activityType: "ACTIVITY_TYPE_CREATE_TVC_QUORUM_KEY", resultKey: "createTvcQuorumKeyResult")
   }
 
   /// Create user tag
@@ -728,7 +830,7 @@ extension TurnkeyClient {
   }
 
   /// Delete API keys
-  /// Remove api keys from a user.
+  /// Remove API keys from a user.
   public func deleteApiKeys(_ input: TDeleteApiKeysBody) async throws -> TDeleteApiKeysResponse {
     return try await activity(
       "/public/v1/submit/delete_api_keys", body: input,
@@ -745,8 +847,8 @@ extension TurnkeyClient {
       activityType: "ACTIVITY_TYPE_DELETE_AUTHENTICATORS", resultKey: "deleteAuthenticatorsResult")
   }
 
-  /// Delete a Fiat On Ramp Credential
-  /// Delete a fiat on ramp provider credential
+  /// Delete a Fiat On Ramp credential
+  /// Delete a fiat on ramp provider credential.
   public func deleteFiatOnRampCredential(_ input: TDeleteFiatOnRampCredentialBody) async throws
     -> TDeleteFiatOnRampCredentialResponse
   {
@@ -776,8 +878,8 @@ extension TurnkeyClient {
       activityType: "ACTIVITY_TYPE_DELETE_MFA_POLICY", resultKey: "deleteMfaPolicyResult")
   }
 
-  /// Delete an OAuth 2.0 Credential
-  /// Disable authentication for end users with an OAuth 2.0 provider
+  /// Delete an OAuth 2.0 credential
+  /// Disable authentication for end users with an OAuth 2.0 provider.
   public func deleteOauth2Credential(_ input: TDeleteOauth2CredentialBody) async throws
     -> TDeleteOauth2CredentialResponse
   {
@@ -787,7 +889,7 @@ extension TurnkeyClient {
       resultKey: "deleteOauth2CredentialResult")
   }
 
-  /// Delete Oauth providers
+  /// Delete OAuth providers
   /// Remove Oauth providers for a specified user.
   public func deleteOauthProviders(_ input: TDeleteOauthProvidersBody) async throws
     -> TDeleteOauthProvidersResponse
@@ -834,6 +936,14 @@ extension TurnkeyClient {
       activityType: "ACTIVITY_TYPE_DELETE_PRIVATE_KEYS", resultKey: "deletePrivateKeysResult")
   }
 
+  /// Delete secrets
+  /// Delete secrets by their unique identifiers. All secrets must belong to the organization.
+  public func deleteSecrets(_ input: TDeleteSecretsBody) async throws -> TDeleteSecretsResponse {
+    return try await activity(
+      "/public/v1/submit/delete_secrets", body: input, activityType: "ACTIVITY_TYPE_DELETE_SECRETS",
+      resultKey: "deleteSecretsResult")
+  }
+
   /// Delete smart contract interface
   /// Delete a smart contract interface.
   public func deleteSmartContractInterface(_ input: TDeleteSmartContractInterfaceBody) async throws
@@ -856,8 +966,8 @@ extension TurnkeyClient {
       resultKey: "deleteSubOrganizationResult")
   }
 
-  /// Delete a TVC App and all of its deployments
-  /// Delete a TVC App and all of its deployments
+  /// Delete a TVC app and all of its deployments
+  /// Delete a TVC app and all of its deployments.
   public func deleteTvcAppAndDeployments(_ input: TDeleteTvcAppAndDeploymentsBody) async throws
     -> TDeleteTvcAppAndDeploymentsResponse
   {
@@ -867,8 +977,8 @@ extension TurnkeyClient {
       resultKey: "deleteTvcAppAndDeploymentsResult")
   }
 
-  /// Delete a TVC Deployment
-  /// Delete a TVC Deployment
+  /// Delete a TVC deployment
+  /// Delete a TVC deployment.
   public func deleteTvcDeployment(_ input: TDeleteTvcDeploymentBody) async throws
     -> TDeleteTvcDeploymentResponse
   {
@@ -922,6 +1032,16 @@ extension TurnkeyClient {
       resultKey: "deleteWebhookEndpointResult")
   }
 
+  /// Claim Earn rewards
+  /// Claim the Merkl protocol rewards attributed to a wallet's Earn positions. The claim is signed by the wallet itself and every reward token is transferred to it; see ListEarnRewards for what is claimable.
+  public func earnClaimRewards(_ input: TEarnClaimRewardsBody) async throws
+    -> TEarnClaimRewardsResponse
+  {
+    return try await activity(
+      "/public/v1/submit/earn_claim_rewards", body: input,
+      activityType: "ACTIVITY_TYPE_EARN_CLAIM_REWARDS", resultKey: "earnClaimRewardsResult")
+  }
+
   /// Deploy Earn wrapper
   /// Enable a yield vault for an organization by deploying its fee wrapper. Must be called before any deposits into the vault.
   public func earnDeployWrapper(_ input: TEarnDeployWrapperBody) async throws
@@ -973,8 +1093,7 @@ extension TurnkeyClient {
   {
     return try await activity(
       "/public/v1/submit/eth_send_transaction", body: input,
-      activityType: "ACTIVITY_TYPE_ETH_SEND_TRANSACTION_V2", resultKey: "ethSendTransactionResultV2"
-    )
+      activityType: "ACTIVITY_TYPE_ETH_SEND_TRANSACTION", resultKey: "ethSendTransactionResult")
   }
 
   /// Undelegate an EVM account
@@ -987,6 +1106,14 @@ extension TurnkeyClient {
       activityType: "ACTIVITY_TYPE_ETH_UNDELEGATE_7702", resultKey: "ethUndelegate7702Result")
   }
 
+  /// Execute Swap
+  /// Execute the exact provider quote identified by quote_id through the activity pipeline and Turnkey broadcasting. Requests must use ACTIVITY_TYPE_EXECUTE_SWAP_V3.
+  public func executeSwap(_ input: TExecuteSwapBody) async throws -> TExecuteSwapResponse {
+    return try await activity(
+      "/public/v1/submit/execute_swap", body: input, activityType: "ACTIVITY_TYPE_EXECUTE_SWAP_V3",
+      resultKey: "executeSwapResult")
+  }
+
   /// Export private key
   /// Export a private key.
   public func exportPrivateKey(_ input: TExportPrivateKeyBody) async throws
@@ -995,6 +1122,14 @@ extension TurnkeyClient {
     return try await activity(
       "/public/v1/submit/export_private_key", body: input,
       activityType: "ACTIVITY_TYPE_EXPORT_PRIVATE_KEY", resultKey: "exportPrivateKeyResult")
+  }
+
+  /// Export secrets
+  /// Export secrets encrypted to client-provided target public keys.
+  public func exportSecrets(_ input: TExportSecretsBody) async throws -> TExportSecretsResponse {
+    return try await activity(
+      "/public/v1/submit/export_secrets", body: input, activityType: "ACTIVITY_TYPE_EXPORT_SECRETS",
+      resultKey: "exportSecretsResult")
   }
 
   /// Export wallet
@@ -1025,6 +1160,14 @@ extension TurnkeyClient {
       activityType: "ACTIVITY_TYPE_IMPORT_PRIVATE_KEY", resultKey: "importPrivateKeyResult")
   }
 
+  /// Import secrets
+  /// Import secrets encrypted to target keys returned from InitImportSecrets.
+  public func importSecrets(_ input: TImportSecretsBody) async throws -> TImportSecretsResponse {
+    return try await activity(
+      "/public/v1/submit/import_secrets", body: input, activityType: "ACTIVITY_TYPE_IMPORT_SECRETS",
+      resultKey: "importSecretsResult")
+  }
+
   /// Import wallet
   /// Import a wallet.
   public func importWallet(_ input: TImportWalletBody) async throws -> TImportWalletResponse {
@@ -1033,7 +1176,7 @@ extension TurnkeyClient {
       resultKey: "importWalletResult")
   }
 
-  /// Init fiat on ramp
+  /// Init Fiat On Ramp
   /// Initiate a fiat on ramp flow.
   public func initFiatOnRamp(_ input: TInitFiatOnRampBody) async throws -> TInitFiatOnRampResponse {
     return try await activity(
@@ -1050,6 +1193,16 @@ extension TurnkeyClient {
       "/public/v1/submit/init_import_private_key", body: input,
       activityType: "ACTIVITY_TYPE_INIT_IMPORT_PRIVATE_KEY", resultKey: "initImportPrivateKeyResult"
     )
+  }
+
+  /// Init import secrets
+  /// Initialize secret imports by generating Ingress Encryption Target Keys.
+  public func initImportSecrets(_ input: TInitImportSecretsBody) async throws
+    -> TInitImportSecretsResponse
+  {
+    return try await activity(
+      "/public/v1/submit/init_import_secrets", body: input,
+      activityType: "ACTIVITY_TYPE_INIT_IMPORT_SECRETS", resultKey: "initImportSecretsResult")
   }
 
   /// Init import wallet
@@ -1089,7 +1242,7 @@ extension TurnkeyClient {
       resultKey: "initUserEmailRecoveryResult")
   }
 
-  /// Oauth
+  /// OAuth
   /// Authenticate a user with an OIDC token (Oauth).
   public func oauth(_ input: TOauthBody) async throws -> TOauthResponse {
     return try await activity(
@@ -1098,7 +1251,7 @@ extension TurnkeyClient {
   }
 
   /// OAuth 2.0 authentication
-  /// Authenticate a user with an OAuth 2.0 provider and receive an OIDC token to use with the LoginWithOAuth or CreateSubOrganization activities
+  /// Authenticate a user with an OAuth 2.0 provider and receive an OIDC token to use with the LoginWithOAuth or CreateSubOrganization activities.
   public func oauth2Authenticate(_ input: TOauth2AuthenticateBody) async throws
     -> TOauth2AuthenticateResponse
   {
@@ -1107,7 +1260,7 @@ extension TurnkeyClient {
       activityType: "ACTIVITY_TYPE_OAUTH2_AUTHENTICATE", resultKey: "oauth2AuthenticateResult")
   }
 
-  /// Login with Oauth
+  /// Login with OAuth
   /// Create an Oauth session for a user.
   public func oauthLogin(_ input: TOauthLoginBody) async throws -> TOauthLoginResponse {
     return try await activity(
@@ -1129,6 +1282,28 @@ extension TurnkeyClient {
     return try await activity(
       "/public/v1/submit/otp_login", body: input, activityType: "ACTIVITY_TYPE_OTP_LOGIN_V2",
       resultKey: "otpLoginResult")
+  }
+
+  /// Post TVC Quorum Key share
+  /// Post re-encrypted Quorum Key share for a TVC deployment.
+  public func postTvcQuorumKeyShare(_ input: TPostTvcQuorumKeyShareBody) async throws
+    -> TPostTvcQuorumKeyShareResponse
+  {
+    return try await activity(
+      "/public/v1/submit/post_tvc_quorum_key_share", body: input,
+      activityType: "ACTIVITY_TYPE_POST_TVC_QUORUM_KEY_SHARE",
+      resultKey: "postTvcQuorumKeyShareResult")
+  }
+
+  /// Re-encrypt TVC Quorum Key share
+  /// Re-encrypt a hosted TVC Quorum Key share for a deployment.
+  public func reEncryptTvcQuorumKeyShare(_ input: TReEncryptTvcQuorumKeyShareBody) async throws
+    -> TReEncryptTvcQuorumKeyShareResponse
+  {
+    return try await activity(
+      "/public/v1/submit/re_encrypt_tvc_quorum_key_share", body: input,
+      activityType: "ACTIVITY_TYPE_RE_ENCRYPT_TVC_QUORUM_KEY_SHARE",
+      resultKey: "reEncryptTvcQuorumKeyShareResult")
   }
 
   /// Recover a user
@@ -1168,8 +1343,8 @@ extension TurnkeyClient {
       resultKey: "removeOrganizationFeatureResult")
   }
 
-  /// Restore a TVC Deployment
-  /// Restore a deleted TVC Deployment
+  /// Restore a TVC deployment
+  /// Restore a deleted TVC deployment.
   public func restoreTvcDeployment(_ input: TRestoreTvcDeploymentBody) async throws
     -> TRestoreTvcDeploymentResponse
   {
@@ -1197,8 +1372,8 @@ extension TurnkeyClient {
       resultKey: "setOrganizationFeatureResult")
   }
 
-  /// Set TVC App live deployment
-  /// Set the live deployment for a TVC App
+  /// Set TVC app live deployment
+  /// Set the live deployment for a TVC app.
   public func updateTvcAppLiveDeployment(_ input: TUpdateTvcAppLiveDeploymentBody) async throws
     -> TUpdateTvcAppLiveDeploymentResponse
   {
@@ -1243,8 +1418,7 @@ extension TurnkeyClient {
   {
     return try await activity(
       "/public/v1/submit/sol_send_transaction", body: input,
-      activityType: "ACTIVITY_TYPE_SOL_SEND_TRANSACTION_V2", resultKey: "solSendTransactionResultV2"
-    )
+      activityType: "ACTIVITY_TYPE_SOL_SEND_TRANSACTION", resultKey: "solSendTransactionResult")
   }
 
   /// Claim Spark transfer
@@ -1294,8 +1468,8 @@ extension TurnkeyClient {
       resultKey: "stampLoginResult")
   }
 
-  /// Update a Fiat On Ramp Credential
-  /// Update a fiat on ramp provider credential
+  /// Update a Fiat On Ramp credential
+  /// Update a fiat on ramp provider credential.
   public func updateFiatOnRampCredential(_ input: TUpdateFiatOnRampCredentialBody) async throws
     -> TUpdateFiatOnRampCredentialResponse
   {
@@ -1315,8 +1489,8 @@ extension TurnkeyClient {
       activityType: "ACTIVITY_TYPE_UPDATE_MFA_POLICY", resultKey: "updateMfaPolicyResult")
   }
 
-  /// Update an OAuth 2.0 Credential
-  /// Update an OAuth 2.0 provider credential
+  /// Update an OAuth 2.0 credential
+  /// Update an OAuth 2.0 provider credential.
   public func updateOauth2Credential(_ input: TUpdateOauth2CredentialBody) async throws
     -> TUpdateOauth2CredentialResponse
   {
@@ -1429,7 +1603,7 @@ extension TurnkeyClient {
       resultKey: "updateWebhookEndpointResult")
   }
 
-  /// Upsert swap config
+  /// Upsert Swap config
   /// Enable or disable swap configuration for an organization.
   public func upsertSwapConfig(_ input: TUpsertSwapConfigBody) async throws
     -> TUpsertSwapConfigResponse
@@ -1437,6 +1611,28 @@ extension TurnkeyClient {
     return try await activity(
       "/public/v1/submit/upsert_swap_config", body: input,
       activityType: "ACTIVITY_TYPE_UPSERT_SWAP_CONFIG", resultKey: "upsertSwapConfigResult")
+  }
+
+  /// Upsert swap fee sponsorship limits
+  /// Replace this feature's spending window. Requires the billing parent's signed permission and activity authorization.
+  public func upsertSwapFeeSponsorshipLimitConfig(_ input: TUpsertSwapFeeSponsorshipLimitConfigBody)
+    async throws -> TUpsertSwapFeeSponsorshipLimitConfigResponse
+  {
+    return try await activity(
+      "/public/v1/submit/upsert_swap_fee_sponsorship_limit_config", body: input,
+      activityType: "ACTIVITY_TYPE_UPSERT_SWAP_FEE_SPONSORSHIP_LIMIT_CONFIG",
+      resultKey: "upsertSwapFeeSponsorshipLimitConfigResult")
+  }
+
+  /// Upsert swap fixed rate limits
+  /// Replace this feature's spending window. Requires the billing parent's signed permission and activity authorization.
+  public func upsertSwapFixedRateLimitConfig(_ input: TUpsertSwapFixedRateLimitConfigBody)
+    async throws -> TUpsertSwapFixedRateLimitConfigResponse
+  {
+    return try await activity(
+      "/public/v1/submit/upsert_swap_fixed_rate_limit_config", body: input,
+      activityType: "ACTIVITY_TYPE_UPSERT_SWAP_FIXED_RATE_LIMIT_CONFIG",
+      resultKey: "upsertSwapFixedRateLimitConfigResult")
   }
 
   /// Verify generic OTP
