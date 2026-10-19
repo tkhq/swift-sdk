@@ -520,6 +520,41 @@ public struct v1Activity: Codable, Sendable {
     self.updatedAt = updatedAt
     self.votes = votes
   }
+
+  private enum CodingKeys: String, CodingKey {
+    case appProofs = "appProofs"
+    case canApprove = "canApprove"
+    case canReject = "canReject"
+    case createdAt = "createdAt"
+    case failure = "failure"
+    case fingerprint = "fingerprint"
+    case id = "id"
+    case intent = "intent"
+    case organizationId = "organizationId"
+    case result = "result"
+    case status = "status"
+    case type = "type"
+    case updatedAt = "updatedAt"
+    case votes = "votes"
+  }
+
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    self.appProofs = try container.decodeIfPresent([v1AppProof].self, forKey: .appProofs)
+    self.canApprove = try container.decode(Bool.self, forKey: .canApprove)
+    self.canReject = try container.decode(Bool.self, forKey: .canReject)
+    self.createdAt = try container.decode(externaldatav1Timestamp.self, forKey: .createdAt)
+    self.failure = try container.decodeIfPresent(rpcStatus.self, forKey: .failure)
+    self.fingerprint = try container.decode(String.self, forKey: .fingerprint)
+    self.id = try container.decode(String.self, forKey: .id)
+    self.intent = try container.decode(v1Intent.self, forKey: .intent)
+    self.organizationId = try container.decode(String.self, forKey: .organizationId)
+    self.result = try container.decodeIfPresent(v1Result.self, forKey: .result) ?? v1Result()
+    self.status = try container.decode(v1ActivityStatus.self, forKey: .status)
+    self.type = try container.decode(v1ActivityType.self, forKey: .type)
+    self.updatedAt = try container.decode(externaldatav1Timestamp.self, forKey: .updatedAt)
+    self.votes = try container.decode([v1Vote].self, forKey: .votes)
+  }
 }
 
 public struct v1ActivityResponse: Codable, Sendable {
@@ -18864,21 +18899,26 @@ public struct TListWebhookEndpointsInput: Codable, Sendable {
 // MARK: - TValidateTvcImageResponse
 
 public struct TValidateTvcImageResponse: Codable, Sendable {
-  public let activity: v1Activity
+  public let resolvedImageDigest: String?
 }
 
 // MARK: - TValidateTvcImageBody
 
 public struct TValidateTvcImageBody: Codable, Sendable {
-  public let timestampMs: String?
   public let organizationId: String?
+  /// HPKE-encrypted pull secret for private images.
+  public let pivotContainerEncryptedPullSecret: String?
+  /// URL of the container image.
+  public let pivotContainerImageUrl: String
 
   public init(
-    timestampMs: String? = nil,
-    organizationId: String? = nil
+    organizationId: String? = nil,
+    pivotContainerEncryptedPullSecret: String? = nil,
+    pivotContainerImageUrl: String
   ) {
-    self.timestampMs = timestampMs
     self.organizationId = organizationId
+    self.pivotContainerEncryptedPullSecret = pivotContainerEncryptedPullSecret
+    self.pivotContainerImageUrl = pivotContainerImageUrl
   }
 }
 

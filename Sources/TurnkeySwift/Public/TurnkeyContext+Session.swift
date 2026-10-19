@@ -106,6 +106,8 @@ extension TurnkeyContext {
           sessionType: stored.sessionType,
           userId: stored.userId,
           organizationId: stored.organizationId,
+          sessionProfileId: stored.sessionProfileId,
+          scope: stored.scope,
           token: jwt
         )
 
@@ -155,6 +157,8 @@ extension TurnkeyContext {
         sessionType: stored.sessionType,
         userId: stored.userId,
         organizationId: stored.organizationId,
+        sessionProfileId: stored.sessionProfileId,
+        scope: stored.scope,
         token: jwt
       )
 
@@ -227,6 +231,7 @@ extension TurnkeyContext {
     // pick the right client and user/org
     let clientToUse: TurnkeyClient
     let orgId: String
+    let sessionProfileId: String?
 
     if targetSessionKey == selectedSessionKey {
       // refreshing the selected session
@@ -239,6 +244,7 @@ extension TurnkeyContext {
 
       clientToUse = client
       orgId = currentSession.organizationId
+      sessionProfileId = currentSession.sessionProfileId
     } else {
       // refreshing a background session
 
@@ -254,6 +260,7 @@ extension TurnkeyContext {
         baseUrl: apiUrl
       )
       orgId = stored.organizationId
+      sessionProfileId = stored.sessionProfileId
     }
 
     let newPublicKey = try createKeyPair()
@@ -264,7 +271,8 @@ extension TurnkeyContext {
           organizationId: orgId,
           expirationSeconds: expirationSeconds,
           invalidateExisting: invalidateExisting,
-          publicKey: newPublicKey
+          publicKey: newPublicKey,
+          sessionProfileId: sessionProfileId
         ))
       let jwt = resp.session
 
@@ -291,6 +299,8 @@ extension TurnkeyContext {
           sessionType: stored.sessionType,
           userId: stored.userId,
           organizationId: stored.organizationId,
+          sessionProfileId: stored.sessionProfileId,
+          scope: stored.scope,
           token: jwt
         )
 

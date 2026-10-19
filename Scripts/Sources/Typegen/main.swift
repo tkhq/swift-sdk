@@ -353,6 +353,7 @@ func generateSwiftType(name: String, def: SwaggerSpec.Definition) -> String {
     output += "public struct \(name): Codable, Sendable {\n"
 
     let requiredProps = def.required ?? []
+    let decodesNullableResult = name == "v1Activity"
     var needsCodingKeys = false
     var codingKeys: [(swiftName: String, jsonName: String)] = []
     // Track oneOf field types for the enum generation
@@ -544,13 +545,35 @@ func generateSwiftType(name: String, def: SwaggerSpec.Definition) -> String {
       output += "    }\n"
     } else {
       // Add CodingKeys if needed (must include ALL properties)
-      if needsCodingKeys {
+      if needsCodingKeys || decodesNullableResult {
         output += "\n    private enum CodingKeys: String, CodingKey {\n"
         for key in codingKeys {
           output += "        case \(key.swiftName) = \"\(key.jsonName)\"\n"
         }
         output += "    }\n"
       }
+    }
+
+    // The gateway emits a null result before an activity completes, despite the schema
+    // marking it required. Preserve the public non-optional result as an empty result object.
+    if decodesNullableResult {
+      output += "\n    public init(from decoder: Decoder) throws {\n"
+      output += "        let container = try decoder.container(keyedBy: CodingKeys.self)\n"
+      for key in codingKeys {
+        if key.jsonName == "result" {
+          output +=
+            "        self.result = try container.decodeIfPresent(v1Result.self, forKey: .result) ?? v1Result()\n"
+          continue
+        }
+        let schema = properties[key.jsonName]!.value
+        let swiftType =
+          schema.ref.map { refToSwift($0) }
+          ?? swaggerTypeToSwift(schema.type ?? "object", schema: schema)
+        let decode = requiredProps.contains(key.jsonName) ? "decode" : "decodeIfPresent"
+        output +=
+          "        self.\(key.swiftName) = try container.\(decode)(\(swiftType).self, forKey: .\(key.swiftName))\n"
+      }
+      output += "    }\n"
     }
 
     // Add additional properties support if specified
@@ -673,7 +696,7 @@ func generateApiTypes(
   let latestVersions = extractLatestVersions(definitions: swagger.definitions)
   let definitions = swagger.definitions
 
-  for (_, pathItem) in swagger.paths.sorted(by: { $0.key < $1.key }) {
+  for (endpointPath, pathItem) in swagger.paths.sorted(by: { $0.key < $1.key }) {
     guard let operation = pathItem.post else { continue }
     let operationId = operation.operationId
 
@@ -683,7 +706,8 @@ func generateApiTypes(
     )
 
     let methodName = lowerFirstLetter(operationNameWithoutNamespace)
-    let methodType = MethodType.from(methodName: methodName)
+    let methodType: MethodType =
+      endpointPath.contains("/query/") ? .query : MethodType.from(methodName: methodName)
 
     // Get response schema
     let responseSchema = operation.responses?["200"]?.schema

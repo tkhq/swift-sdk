@@ -45,7 +45,7 @@ public final class TurnkeyContext: NSObject, ObservableObject {
     return TurnkeyContext(config: config)
   }()
 
-  private init(config: TurnkeyConfig) {
+  internal init(config: TurnkeyConfig, startBackgroundTasks: Bool = true) {
     self.apiUrl = config.apiUrl
     self.authProxyUrl = config.authProxyUrl
     self.authProxyConfigId = config.authProxyConfigId
@@ -54,7 +54,7 @@ public final class TurnkeyContext: NSObject, ObservableObject {
     self.userConfig = config
     super.init()
     self.client = self.makeAuthProxyClientIfNeeded()
-    self.postInitSetup()
+    if startBackgroundTasks { self.postInitSetup() }
   }
 
   private func postInitSetup() {
